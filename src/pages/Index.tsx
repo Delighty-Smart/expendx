@@ -22,6 +22,8 @@ import {
   Cell,
 } from "recharts";
 import Layout from "@/components/Layout";
+import { TransactionForm } from "@/components/TransactionForm";
+import { useState } from "react";
 
 // Temporary data for demonstration
 const spendingData = [
@@ -35,12 +37,17 @@ const spendingData = [
 const COLORS = ["#4A6741", "#6B8E4E", "#8CB25C", "#AAD66A", "#C8E87D"];
 
 const Dashboard = () => {
+  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+
   return (
     <Layout>
       <div className="space-y-8">
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-4">
-          <Button className="flex items-center gap-2 bg-primary hover:bg-primary/90">
+          <Button
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+            onClick={() => setIsTransactionFormOpen(true)}
+          >
             <PlusCircle className="h-4 w-4" />
             Add Transaction
           </Button>
@@ -52,6 +59,11 @@ const Dashboard = () => {
             Export Report
           </Button>
         </div>
+
+        <TransactionForm
+          open={isTransactionFormOpen}
+          onOpenChange={setIsTransactionFormOpen}
+        />
 
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
