@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import TransactionsPage from "./pages/Transactions";
+import BudgetsPage from "./pages/Budgets";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -67,7 +68,7 @@ const App = () => (
             path="/budgets"
             element={
               <ProtectedRoute>
-                <Index />
+                <BudgetsPage />
               </ProtectedRoute>
             }
           />
