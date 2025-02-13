@@ -3,16 +3,18 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, AlertCircle } from "lucide-react";
+import { PlusCircle, AlertCircle, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BudgetForm } from "@/components/BudgetForm";
 import { BudgetChart } from "@/components/BudgetChart";
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 
 const BudgetsPage = () => {
   const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
+  const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
 
   const { data: budgetCategories, refetch: refetchBudgets } = useQuery({
     queryKey: ["budgets"],
@@ -22,6 +24,18 @@ const BudgetsPage = () => {
         .select("*")
         .order("category");
       if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: monthlyIncome, refetch: refetchIncome } = useQuery({
+    queryKey: ["monthly_income"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("monthly_income_estimates")
+        .select("*")
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
       return data;
     },
   });
@@ -77,14 +91,30 @@ const BudgetsPage = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-neutral">Budget Tracking</h1>
-          <Button
-            className="flex items-center gap-2"
-            onClick={() => setIsBudgetFormOpen(true)}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Set Budget Limit
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setIsIncomeFormOpen(true)}
+            >
+              <DollarSign className="h-4 w-4" />
+              Set Monthly Income
+            </Button>
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setIsBudgetFormOpen(true)}
+            >
+              <PlusCircle className="h-4 w-4" />
+              Set Budget Limit
+            </Button>
+          </div>
         </div>
+
+        {monthlyIncome && (
+          <Card className="p-4">
+            <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
+            <p className="text-2xl font-semibold">${monthlyIncome.amount.toFixed(2)}</p>
+          </Card>
+        )}
 
         {alerts.length > 0 && (
           <div className="space-y-2">
@@ -128,6 +158,12 @@ const BudgetsPage = () => {
           open={isBudgetFormOpen}
           onOpenChange={setIsBudgetFormOpen}
           onBudgetAdded={refetchBudgets}
+        />
+
+        <MonthlyIncomeForm
+          open={isIncomeFormOpen}
+          onOpenChange={setIsIncomeFormOpen}
+          onIncomeAdded={refetchIncome}
         />
       </div>
     </Layout>

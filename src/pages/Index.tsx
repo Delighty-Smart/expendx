@@ -24,25 +24,77 @@ import {
 import Layout from "@/components/Layout";
 import { TransactionForm } from "@/components/TransactionForm";
 import { useState } from "react";
-
-// Temporary data for demonstration
-const spendingData = [
-  { name: "Food", amount: 300 },
-  { name: "Transport", amount: 150 },
-  { name: "Bills", amount: 400 },
-  { name: "Shopping", amount: 200 },
-  { name: "Entertainment", amount: 100 },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const COLORS = ["#4A6741", "#6B8E4E", "#8CB25C", "#AAD66A", "#C8E87D"];
 
 const Dashboard = () => {
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
 
+  const { data: monthlyIncome } = useQuery({
+    queryKey: ["monthly_income"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("monthly_income_estimates")
+        .select("*")
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data?.amount || 0;
+    },
+  });
+
+  const { data: transactions } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: async () => {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .gte("date", firstDay.toISOString())
+        .lte("date", lastDay.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const calculateTotalIncome = () => {
+    return transactions
+      ?.filter((t) => t.type === "credit")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
+  const calculateTotalExpenses = () => {
+    return transactions
+      ?.filter((t) => t.type === "debit")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
+  const monthlyIncomeTotal = calculateTotalIncome();
+  const monthlyExpenses = calculateTotalExpenses();
+  const currentBalance = monthlyIncomeTotal - monthlyExpenses;
+
+  const spendingByCategory = transactions
+    ?.filter((t) => t.type === "debit")
+    .reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const spendingData = Object.entries(spendingByCategory || {}).map(
+    ([name, amount]) => ({
+      name,
+      amount,
+    })
+  );
+
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Quick Actions */}
         <div className="flex flex-wrap gap-4">
           <Button
             className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
@@ -65,7 +117,6 @@ const Dashboard = () => {
           onOpenChange={setIsTransactionFormOpen}
         />
 
-        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
@@ -74,7 +125,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Balance</p>
-                <p className="text-2xl font-semibold">$2,450.50</p>
+                <p className="text-2xl font-semibold">${currentBalance.toFixed(2)}</p>
               </div>
             </div>
           </Card>
@@ -86,7 +137,12 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Income</p>
-                <p className="text-2xl font-semibold text-primary">$3,550.00</p>
+                <p className="text-2xl font-semibold text-primary">${monthlyIncomeTotal.toFixed(2)}</p>
+                {monthlyIncome > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    (Est. ${monthlyIncome.toFixed(2)})
+                  </p>
+                )}
               </div>
             </div>
           </Card>
@@ -98,13 +154,12 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Expenses</p>
-                <p className="text-2xl font-semibold text-destructive">$1,099.50</p>
+                <p className="text-2xl font-semibold text-destructive">${monthlyExpenses.toFixed(2)}</p>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="glass-card p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -150,7 +205,7 @@ const Dashboard = () => {
                     {spendingData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={`hsl(${217.2 + index * 20} 91.2% 59.8%)`}
+                        fill={COLORS[index % COLORS.length]}
                       />
                     ))}
                   </Pie>
