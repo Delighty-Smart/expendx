@@ -38,8 +38,8 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
-        .single();
-      if (error && error.code !== "PGRST116") throw error;
+        .maybeSingle();
+      if (error) throw error;
       return data?.amount || 0;
     },
   });

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -34,8 +33,8 @@ const BudgetsPage = () => {
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
-        .single();
-      if (error && error.code !== "PGRST116") throw error;
+        .maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
@@ -109,12 +108,12 @@ const BudgetsPage = () => {
           </div>
         </div>
 
-        {monthlyIncome && (
-          <Card className="p-4">
-            <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
-            <p className="text-2xl font-semibold">${monthlyIncome.amount.toFixed(2)}</p>
-          </Card>
-        )}
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
+          <p className="text-2xl font-semibold">
+            ${monthlyIncome ? monthlyIncome.amount.toFixed(2) : "0.00"}
+          </p>
+        </Card>
 
         {alerts.length > 0 && (
           <div className="space-y-2">
