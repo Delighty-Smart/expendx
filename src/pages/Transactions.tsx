@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,27 +22,7 @@ import {
 import { TransactionForm } from "@/components/TransactionForm";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle } from "lucide-react";
-
-// Temporary transaction data for demonstration
-const transactionData = [
-  {
-    id: 1,
-    date: "2024-02-12",
-    description: "MTN Airtime",
-    amount: 608,
-    type: "debit",
-    category: "Airtime",
-  },
-  {
-    id: 2,
-    date: "2024-02-11",
-    description: "Monthly Salary",
-    amount: 5000,
-    type: "credit",
-    category: "Income",
-  },
-  // Add more sample transactions...
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const transactionCategories = [
   "All",
@@ -65,7 +46,20 @@ const TransactionsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedType, setSelectedType] = useState("all");
 
-  const filteredTransactions = transactionData.filter((transaction) => {
+  const { data: transactions, refetch: refetchTransactions } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredTransactions = transactions?.filter((transaction) => {
     const matchesSearch = transaction.description
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
@@ -149,9 +143,9 @@ const TransactionsPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
+                  {filteredTransactions?.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                       <TableCell>{transaction.description}</TableCell>
                       <TableCell>{transaction.category}</TableCell>
                       <TableCell>
@@ -185,6 +179,7 @@ const TransactionsPage = () => {
         <TransactionForm
           open={isTransactionFormOpen}
           onOpenChange={setIsTransactionFormOpen}
+          onTransactionAdded={refetchTransactions}
         />
       </div>
     </Layout>

@@ -25,9 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const transactionCategories = [
   "Food",
@@ -55,9 +57,15 @@ const transactionSchema = z.object({
 interface TransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onTransactionAdded?: () => void;
 }
 
-export function TransactionForm({ open, onOpenChange }: TransactionFormProps) {
+export function TransactionForm({ 
+  open, 
+  onOpenChange, 
+  onTransactionAdded 
+}: TransactionFormProps) {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -69,11 +77,34 @@ export function TransactionForm({ open, onOpenChange }: TransactionFormProps) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof transactionSchema>) {
-    console.log(values);
-    // Here we would typically save the transaction to a database
-    onOpenChange(false);
-    form.reset();
+  async function onSubmit(values: z.infer<typeof transactionSchema>) {
+    try {
+      const { error } = await supabase.from('transactions').insert({
+        date: values.date,
+        amount: parseFloat(values.amount),
+        type: values.type,
+        category: values.category,
+        description: values.description,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Transaction added successfully",
+      });
+
+      onTransactionAdded?.();
+      onOpenChange(false);
+      form.reset();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   }
 
   return (
