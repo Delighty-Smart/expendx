@@ -37,7 +37,7 @@ const Layout = ({
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-sidebar-background border-r border-border transform transition-transform duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
         <div className="h-16 flex items-center px-6 border-b border-border">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">BudgeX</h1>
+          <h1 className="text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-lime-900 font-bold">BudgeX</h1>
         </div>
         <nav className="p-4">
           {menuItems.map(item => <Link key={item.path} to={item.path} className={`block px-4 py-2 rounded-lg mb-2 transition-all duration-200 ${location.pathname === item.path ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "text-sidebar-foreground hover:bg-secondary"}`} onClick={() => setIsSidebarOpen(false)}>
