@@ -119,7 +119,7 @@ const TransactionsPage = () => {
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#f6f6f6]/[0.86]">
                     {allCategories.map(category => <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>)}
