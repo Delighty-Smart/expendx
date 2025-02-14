@@ -31,6 +31,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/transactions", label: "Transactions" },
     { path: "/budgets", label: "Budgets" },
     { path: "/reports", label: "Reports" },
+    { path: "/settings", label: "Settings" },
   ];
 
   return (

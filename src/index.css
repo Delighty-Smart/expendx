@@ -67,6 +67,13 @@
   }
 }
 
+/* Make dropdowns less transparent */
+.select-content,
+.popover-content,
+.dropdown-content {
+  @apply bg-background/95 backdrop-blur-sm border shadow-lg !important;
+}
+
 .glass-card {
   @apply backdrop-blur-lg border border-white/10 shadow-lg;
 }
