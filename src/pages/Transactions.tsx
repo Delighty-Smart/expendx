@@ -130,7 +130,7 @@ const TransactionsPage = () => {
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#ebebeb]/[0.78]">
+                  <SelectContent className="bg-[#f6f6f6]/[0.86]">
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="credit">Credit (Income)</SelectItem>
                     <SelectItem value="debit">Debit (Expense)</SelectItem>
