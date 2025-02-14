@@ -1,10 +1,11 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Currency } from "@/lib/currencies";
 
 interface Transaction {
   amount: number;
   category: string;
-  type: string;
+  type: "credit" | "debit";
 }
 
 interface BudgetCategory {
@@ -15,6 +16,7 @@ interface BudgetCategory {
 interface BudgetChartProps {
   budgets: BudgetCategory[];
   transactions: Transaction[];
+  currency: Currency;
 }
 
 const COLORS = [
@@ -32,7 +34,7 @@ const COLORS = [
   "#EC4899", // pink
 ];
 
-export function BudgetChart({ budgets, transactions }: BudgetChartProps) {
+export function BudgetChart({ budgets, transactions, currency }: BudgetChartProps) {
   const calculateSpending = (category: string) => {
     return transactions
       .filter((t) => t.category === category && t.type === "debit")
@@ -65,7 +67,7 @@ export function BudgetChart({ budgets, transactions }: BudgetChartProps) {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Spent"]}
+            formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Spent"]}
           />
           <Legend />
         </PieChart>

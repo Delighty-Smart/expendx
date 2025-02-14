@@ -11,8 +11,10 @@ import { BudgetChart } from "@/components/BudgetChart";
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const BudgetsPage = () => {
+  const { currency } = useSettings();
   const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
   const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
 
@@ -112,7 +114,7 @@ const BudgetsPage = () => {
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
           <p className="text-2xl font-semibold">
-            ${monthlyIncome?.amount?.toFixed(2) ?? "0.00"}
+            {currency.symbol}{monthlyIncome?.amount?.toFixed(2) ?? "0.00"}
           </p>
         </Card>
 
@@ -123,7 +125,7 @@ const BudgetsPage = () => {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Budget Alert</AlertTitle>
                 <AlertDescription>
-                  You've spent ${alert.spent.toFixed(2)} of your ${alert.limit.toFixed(2)} budget for {alert.category} ({alert.percentage.toFixed(1)}%)
+                  You've spent {currency.symbol}{alert.spent.toFixed(2)} of your {currency.symbol}{alert.limit.toFixed(2)} budget for {alert.category} ({alert.percentage.toFixed(1)}%)
                 </AlertDescription>
               </Alert>
             ))}
@@ -136,6 +138,7 @@ const BudgetsPage = () => {
             <BudgetChart
               budgets={budgetCategories || []}
               transactions={transactions || []}
+              currency={currency}
             />
           </Card>
 
@@ -148,6 +151,7 @@ const BudgetsPage = () => {
                   category={budget.category}
                   limit={budget.monthly_limit}
                   spent={calculateSpending(budget.category)}
+                  currency={currency}
                 />
               ))}
             </div>

@@ -26,10 +26,12 @@ import { TransactionForm } from "@/components/TransactionForm";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const COLORS = ["#4A6741", "#6B8E4E", "#8CB25C", "#AAD66A", "#C8E87D"];
 
 const Dashboard = () => {
+  const { currency } = useSettings();
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
 
   const { data: monthlyIncome } = useQuery({
@@ -125,7 +127,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Balance</p>
-                <p className="text-2xl font-semibold">${currentBalance.toFixed(2)}</p>
+                <p className="text-2xl font-semibold">{currency.symbol}{currentBalance.toFixed(2)}</p>
               </div>
             </div>
           </Card>
@@ -137,10 +139,10 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Income</p>
-                <p className="text-2xl font-semibold text-primary">${monthlyIncomeTotal.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-primary">{currency.symbol}{monthlyIncomeTotal.toFixed(2)}</p>
                 {monthlyIncome > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    (Est. ${monthlyIncome.toFixed(2)})
+                    (Est. {currency.symbol}{monthlyIncome.toFixed(2)})
                   </p>
                 )}
               </div>
@@ -154,7 +156,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Expenses</p>
-                <p className="text-2xl font-semibold text-destructive">${monthlyExpenses.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-destructive">{currency.symbol}{monthlyExpenses.toFixed(2)}</p>
               </div>
             </div>
           </Card>
@@ -171,8 +173,11 @@ const Dashboard = () => {
                 <BarChart data={spendingData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                   <XAxis dataKey="name" />
-                  <YAxis />
+                  <YAxis 
+                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                  />
                   <Tooltip 
+                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Amount"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.1)",
                       backdropFilter: "blur(8px)",
@@ -210,6 +215,7 @@ const Dashboard = () => {
                     ))}
                   </Pie>
                   <Tooltip 
+                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Amount"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.1)",
                       backdropFilter: "blur(8px)",
