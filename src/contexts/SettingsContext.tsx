@@ -26,9 +26,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         .from("user_settings")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      // If no settings exist, create default settings
+      if (!data) {
+        const { data: newSettings, error: insertError } = await supabase
+          .from("user_settings")
+          .insert([{ user_id: user.id }])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return newSettings;
+      }
+
       return data;
     },
   });
