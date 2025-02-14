@@ -27,7 +27,7 @@ const Layout = ({
   }];
   return <div className="min-h-screen bg-background transition-colors duration-300">
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar-background border-b border-border flex items-center justify-between px-4 z-50">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar-background border-b border-border flex items-center justify-between px-4 z-50 bg-[#efefef]/[0.87]">
         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-secondary rounded-lg transition-colors">
           <Menu className="h-6 w-6 text-sidebar-foreground" />
         </button>
