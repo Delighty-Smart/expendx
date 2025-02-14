@@ -49,15 +49,20 @@ export function MonthlyIncomeForm({
 
   async function onSubmit(values: z.infer<typeof monthlyIncomeSchema>) {
     try {
-      const { error } = await supabase.from("monthly_income_estimates").upsert(
-        {
-          amount: parseFloat(values.amount),
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-        },
-        {
-          onConflict: "user_id",
-        }
-      );
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("No user found");
+
+      const { error } = await supabase
+        .from("monthly_income_estimates")
+        .upsert(
+          {
+            amount: parseFloat(values.amount),
+            user_id: user.id,
+          },
+          {
+            onConflict: "user_id",
+          }
+        );
 
       if (error) throw error;
 
