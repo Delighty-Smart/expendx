@@ -183,7 +183,7 @@ const TransactionsPage = () => {
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="bg-[#f6f6f6]/[0.86]">
                               <DropdownMenuItem onClick={() => {
                           setEditingTransaction(transaction);
                           setIsTransactionFormOpen(true);
