@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -32,36 +31,14 @@ import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import { Transaction, transactionCategories } from "@/types/transactions";
 
-const transactionCategories = [
-  "All",
-  "Food",
-  "Internet",
-  "Airtime",
-  "Transportation",
-  "Gifts",
-  "Refreshments",
-  "Offerings",
-  "Toiletries",
-  "Electricity",
-  "Taxes",
-  "Entertainment",
-  "Other",
-] as const;
-
-type Transaction = {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  type: string;
-  amount: number;
-};
+const allCategories = ["All", ...transactionCategories] as const;
 
 const TransactionsPage = () => {
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState<typeof allCategories[number]>("All");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -186,7 +163,7 @@ const TransactionsPage = () => {
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {transactionCategories.map((category) => (
+                    {allCategories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>

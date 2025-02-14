@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,21 +30,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
-
-const transactionCategories = [
-  "Food",
-  "Internet",
-  "Airtime",
-  "Transportation",
-  "Gifts",
-  "Refreshments",
-  "Offerings",
-  "Toiletries",
-  "Electricity",
-  "Taxes",
-  "Entertainment",
-  "Other",
-] as const;
+import { Transaction, transactionCategories } from "@/types/transactions";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -54,15 +39,6 @@ const transactionSchema = z.object({
   category: z.enum(transactionCategories),
   description: z.string().min(1, "Description is required"),
 });
-
-interface Transaction {
-  id: string;
-  date: string;
-  amount: number;
-  type: "credit" | "debit";
-  category: typeof transactionCategories[number];
-  description: string;
-}
 
 interface TransactionFormProps {
   open: boolean;
