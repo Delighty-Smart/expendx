@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -111,7 +112,7 @@ const BudgetsPage = () => {
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
           <p className="text-2xl font-semibold">
-            ${monthlyIncome ? monthlyIncome.amount.toFixed(2) : "0.00"}
+            ${monthlyIncome?.amount?.toFixed(2) ?? "0.00"}
           </p>
         </Card>
 
