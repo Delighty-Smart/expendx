@@ -1,28 +1,8 @@
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,29 +11,28 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { Transaction, transactionCategories } from "@/types/transactions";
-
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
   amount: z.string().min(1, "Amount is required"),
   type: z.enum(["credit", "debit"]),
   category: z.enum(transactionCategories),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().min(1, "Description is required")
 });
-
 interface TransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTransactionAdded?: () => void;
   transaction?: Transaction | null;
 }
-
-export function TransactionForm({ 
-  open, 
-  onOpenChange, 
+export function TransactionForm({
+  open,
+  onOpenChange,
   onTransactionAdded,
-  transaction 
+  transaction
 }: TransactionFormProps) {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -61,10 +40,9 @@ export function TransactionForm({
       amount: "",
       type: "debit",
       category: "Food",
-      description: "",
-    },
+      description: ""
+    }
   });
-
   useEffect(() => {
     if (transaction) {
       form.reset({
@@ -72,7 +50,7 @@ export function TransactionForm({
         amount: transaction.amount.toString(),
         type: transaction.type,
         category: transaction.category,
-        description: transaction.description,
+        description: transaction.description
       });
     } else {
       form.reset({
@@ -80,45 +58,41 @@ export function TransactionForm({
         amount: "",
         type: "debit",
         category: "Food",
-        description: "",
+        description: ""
       });
     }
   }, [transaction, form]);
-
   async function onSubmit(values: z.infer<typeof transactionSchema>) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
         type: values.type,
         category: values.category,
         description: values.description,
-        user_id: user.id,
+        user_id: user.id
       };
-
       if (transaction) {
-        const { error } = await supabase
-          .from('transactions')
-          .update(transactionData)
-          .eq('id', transaction.id);
-        
+        const {
+          error
+        } = await supabase.from('transactions').update(transactionData).eq('id', transaction.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('transactions')
-          .insert([transactionData]);
-
+        const {
+          error
+        } = await supabase.from('transactions').insert([transactionData]);
         if (error) throw error;
       }
-
       toast({
         title: "Success",
-        description: `Transaction ${transaction ? 'updated' : 'added'} successfully`,
+        description: `Transaction ${transaction ? 'updated' : 'added'} successfully`
       });
-
       onTransactionAdded?.();
       onOpenChange(false);
       form.reset();
@@ -126,13 +100,11 @@ export function TransactionForm({
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
@@ -143,50 +115,32 @@ export function TransactionForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="date" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
+                  </FormItem>} />
+              <FormField control={form.control} name="amount" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        step="0.01"
-                        {...field}
-                      />
+                      <Input type="number" placeholder="0.00" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="type" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -198,62 +152,40 @@ export function TransactionForm({
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="category" render={({
+              field
+            }) => <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        {transactionCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
+                      <SelectContent className="bg-[#f6f6f6]/[0.86]">
+                        {transactionCategories.map(category => <SelectItem key={category} value={category}>
                             {category}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
             </div>
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="description" render={({
+            field
+          }) => <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Enter transaction details..."
-                      {...field}
-                    />
+                    <Textarea placeholder="Enter transaction details..." {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>} />
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit">
@@ -263,6 +195,5 @@ export function TransactionForm({
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
