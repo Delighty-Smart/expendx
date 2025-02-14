@@ -32,10 +32,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
 import { Transaction, transactionCategories } from "@/types/transactions";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const allCategories = ["All", ...transactionCategories] as const;
 
 const TransactionsPage = () => {
+  const { currency } = useSettings();
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<typeof allCategories[number]>("All");
@@ -243,7 +245,7 @@ const TransactionsPage = () => {
                               : "text-red-600"
                           }`}
                         >
-                          ${transaction.amount.toFixed(2)}
+                          {currency.symbol}{transaction.amount.toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>

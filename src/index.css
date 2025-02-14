@@ -74,6 +74,13 @@
   @apply bg-background/95 backdrop-blur-sm border shadow-lg !important;
 }
 
+/* Override dropdown background to be fully opaque */
+.select-content > *,
+.popover-content > *,
+.dropdown-content > * {
+  @apply bg-background !important;
+}
+
 .glass-card {
   @apply backdrop-blur-lg border border-white/10 shadow-lg;
 }

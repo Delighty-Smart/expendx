@@ -1,30 +1,12 @@
 
-import { Moon, Sun, Menu } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const location = useLocation();
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-      document.documentElement.classList.toggle("light", savedTheme === "light");
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-    document.documentElement.classList.toggle("light", newTheme === "light");
-  };
 
   const menuItems = [
     { path: "/", label: "Dashboard" },
@@ -45,13 +27,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <Menu className="h-6 w-6 text-sidebar-foreground" />
         </button>
         <h1 className="text-lg font-semibold text-sidebar-foreground">ExpenseEden</h1>
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          {theme === "dark" ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
-        </Button>
       </header>
 
       {/* Sidebar */}
@@ -60,22 +35,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
-        <div className="h-16 flex items-center justify-between px-6 border-b border-border">
+        <div className="h-16 flex items-center px-6 border-b border-border">
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             ExpenseEden
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="hidden lg:flex"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </Button>
         </div>
         <nav className="p-4">
           {menuItems.map((item) => (

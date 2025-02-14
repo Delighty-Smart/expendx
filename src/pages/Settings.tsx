@@ -14,12 +14,16 @@ import {
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/components/ui/use-toast";
-import { Search } from "lucide-react";
+import { Moon, Search, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Settings = () => {
   const { currency, updateCurrency } = useSettings();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "dark";
+  });
 
   const filteredCurrencies = currencies.filter(
     (c) =>
@@ -41,6 +45,17 @@ const Settings = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    document.documentElement.classList.toggle("light", newTheme === "light");
+    toast({
+      title: "Theme updated",
+      description: `Theme switched to ${newTheme} mode.`,
+    });
   };
 
   return (
@@ -65,7 +80,7 @@ const Settings = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent className="bg-background/95 backdrop-blur-sm border">
+                <SelectContent>
                   {filteredCurrencies.map((c) => (
                     <SelectItem
                       key={c.code}
@@ -77,6 +92,28 @@ const Settings = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Theme</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={theme === "light" ? "default" : "outline"}
+                className="flex items-center gap-2"
+                onClick={() => handleThemeChange("light")}
+              >
+                <Sun className="h-4 w-4" />
+                Light Mode
+              </Button>
+              <Button
+                variant={theme === "dark" ? "default" : "outline"}
+                className="flex items-center gap-2"
+                onClick={() => handleThemeChange("dark")}
+              >
+                <Moon className="h-4 w-4" />
+                Dark Mode
+              </Button>
             </div>
           </div>
         </Card>
