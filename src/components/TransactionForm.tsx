@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -39,17 +38,17 @@ export function TransactionForm({
   transaction
 }: TransactionFormProps) {
   const { toast } = useToast();
-  const [transactionType, setTransactionType] = useState<TransactionType>("debit");
+  const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categoryOpen, setCategoryOpen] = useState(false);
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      date: new Date().toISOString().split("T")[0],
-      amount: "",
-      type: "debit",
-      category: "",
-      description: ""
+      date: transaction?.date || new Date().toISOString().split("T")[0],
+      amount: transaction?.amount.toString() || "",
+      type: transaction?.type || "debit",
+      category: transaction?.category || "",
+      description: transaction?.description || ""
     }
   });
 
@@ -75,7 +74,7 @@ export function TransactionForm({
     }
   }, [transaction, form]);
 
-  const categories = getCategoriesForType(transactionType);
+  const categories = getCategoriesForType(transactionType) || [];
 
   const handleTypeChange = (type: TransactionType) => {
     setTransactionType(type);
@@ -158,12 +157,7 @@ export function TransactionForm({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="0.00" 
-                        step="0.01" 
-                        {...field} 
-                      />
+                      <Input type="number" placeholder="0.00" step="0.01" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -225,7 +219,7 @@ export function TransactionForm({
                         <CommandInput placeholder="Search category..." />
                         <CommandEmpty>No category found.</CommandEmpty>
                         <CommandGroup>
-                          {categories.map((category) => (
+                          {Array.isArray(categories) && categories.map((category) => (
                             <CommandItem
                               key={category}
                               value={category}
@@ -259,10 +253,7 @@ export function TransactionForm({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Enter transaction details..."
-                      {...field}
-                    />
+                    <Textarea placeholder="Enter transaction details..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -270,11 +261,7 @@ export function TransactionForm({
             />
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit">
