@@ -1,22 +1,61 @@
 
-export const transactionCategories = [
-  "Food",
-  "Internet",
-  "Airtime",
-  "Transportation",
+export type TransactionType = "credit" | "debit" | "savings";
+
+// Categories for each transaction type
+export const incomeCategories = [
+  "Salary/Wages",
+  "Business Income",
+  "Freelance/Consulting",
+  "Rental Income",
+  "Investment Income",
+  "Bonuses & Commissions",
   "Gifts",
-  "Refreshments",
-  "Offerings",
-  "Toiletries",
-  "Electricity",
-  "Taxes",
-  "Entertainment",
-  "Savings",
-  "Other",
+  "Royalties",
+  "Miscellaneous earnings",
+  "Others"
 ] as const;
 
-export type TransactionType = "credit" | "debit" | "savings";
-export type TransactionCategory = typeof transactionCategories[number];
+export const expenseCategories = [
+  "Housing",
+  "Electricity",
+  "Water",
+  "Gas",
+  "Internet",
+  "Airtime",
+  "Food & Groceries",
+  "Transportation",
+  "Health & Medical",
+  "Debt Repayment",
+  "Insurance",
+  "Clothing",
+  "Personal Care",
+  "Entertainment",
+  "hobbies",
+  "Tuition",
+  "Books",
+  "Courses",
+  "Gifts",
+  "Donations",
+  "Subscriptions",
+  "Others"
+] as const;
+
+export const savingsCategories = [
+  "Emergency Fund",
+  "Retirement Savings",
+  "Savings for vacations",
+  "Savings for a new car",
+  "Savings for House/land",
+  "Investment Savings",
+  "Education/College Savings",
+  "Goal-Based Savings",
+  "Others"
+] as const;
+
+export type IncomeCategory = typeof incomeCategories[number];
+export type ExpenseCategory = typeof expenseCategories[number];
+export type SavingsCategory = typeof savingsCategories[number];
+export type TransactionCategory = IncomeCategory | ExpenseCategory | SavingsCategory;
 
 export interface Transaction {
   id: string;
@@ -34,4 +73,16 @@ export interface Transaction {
 export type SupabaseResponse<T> = {
   data: T | null;
   error: any;
+};
+
+// Helper function to get categories based on transaction type
+export const getCategoriesForType = (type: TransactionType): readonly string[] => {
+  switch (type) {
+    case "credit":
+      return incomeCategories;
+    case "debit":
+      return expenseCategories;
+    case "savings":
+      return savingsCategories;
+  }
 };

@@ -1,7 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,14 +12,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { Transaction, transactionCategories } from "@/types/transactions";
+import { useEffect, useState } from "react";
+import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
   amount: z.string().min(1, "Amount is required"),
-  type: z.enum(["credit", "debit", "savings"]),
-  category: z.enum(transactionCategories),
+  type: z.enum(["credit", "debit", "savings"] as const),
+  category: z.string().min(1, "Category is required"),
   description: z.string().min(1, "Description is required")
 });
 
@@ -33,16 +38,17 @@ export function TransactionForm({
   onTransactionAdded,
   transaction
 }: TransactionFormProps) {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const [transactionType, setTransactionType] = useState<TransactionType>("debit");
+  const [categoryOpen, setCategoryOpen] = useState(false);
+
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
       amount: "",
       type: "debit",
-      category: "Food",
+      category: "",
       description: ""
     }
   });
@@ -56,25 +62,32 @@ export function TransactionForm({
         category: transaction.category,
         description: transaction.description
       });
+      setTransactionType(transaction.type);
     } else {
       form.reset({
         date: new Date().toISOString().split("T")[0],
         amount: "",
         type: "debit",
-        category: "Food",
+        category: "",
         description: ""
       });
+      setTransactionType("debit");
     }
   }, [transaction, form]);
 
+  const categories = getCategoriesForType(transactionType);
+
+  const handleTypeChange = (type: TransactionType) => {
+    setTransactionType(type);
+    form.setValue("type", type);
+    form.setValue("category", "");
+  };
+
   async function onSubmit(values: z.infer<typeof transactionSchema>) {
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
+      
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
@@ -83,17 +96,20 @@ export function TransactionForm({
         description: values.description,
         user_id: user.id
       };
+
       if (transaction) {
-        const {
-          error
-        } = await supabase.from('transactions').update(transactionData).eq('id', transaction.id);
+        const { error } = await supabase
+          .from('transactions')
+          .update(transactionData)
+          .eq('id', transaction.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from('transactions').insert([transactionData]);
+        const { error } = await supabase
+          .from('transactions')
+          .insert([transactionData]);
         if (error) throw error;
       }
+
       toast({
         title: "Success",
         description: `Transaction ${transaction ? 'updated' : 'added'} successfully`
@@ -110,7 +126,8 @@ export function TransactionForm({
     }
   }
 
-  return <Dialog open={open} onOpenChange={onOpenChange}>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
@@ -121,78 +138,143 @@ export function TransactionForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormField control={form.control} name="date" render={({
-              field
-            }) => <FormItem>
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>} />
-              <FormField control={form.control} name="amount" render={({
-              field
-            }) => <FormItem>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        step="0.01" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField control={form.control} name="type" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="credit">Credit (Income)</SelectItem>
-                        <SelectItem value="debit">Debit (Expense)</SelectItem>
-                        <SelectItem value="savings">Savings</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>} />
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select
+                    onValueChange={(value: TransactionType) => handleTypeChange(value)}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="credit">Credit (Income)</SelectItem>
+                      <SelectItem value="debit">Debit (Expense)</SelectItem>
+                      <SelectItem value="savings">Savings</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField control={form.control} name="category" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Category</FormLabel>
+                  <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
+                    <PopoverTrigger asChild>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={categoryOpen}
+                          className={cn(
+                            "w-full justify-between",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value || "Select category..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
                       </FormControl>
-                      <SelectContent className="bg-[#f6f6f6]/[0.86]">
-                        {transactionCategories.map(category => <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>} />
-            </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0">
+                      <Command>
+                        <CommandInput placeholder="Search category..." />
+                        <CommandEmpty>No category found.</CommandEmpty>
+                        <CommandGroup>
+                          {categories.map((category) => (
+                            <CommandItem
+                              key={category}
+                              value={category}
+                              onSelect={(value) => {
+                                form.setValue("category", value);
+                                setCategoryOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === category ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {category}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <FormField control={form.control} name="description" render={({
-            field
-          }) => <FormItem>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Enter transaction details..." {...field} />
+                    <Textarea
+                      placeholder="Enter transaction details..."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
-                </FormItem>} />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit">
@@ -202,5 +284,6 @@ export function TransactionForm({
           </form>
         </Form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
