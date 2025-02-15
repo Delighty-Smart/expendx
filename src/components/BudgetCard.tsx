@@ -1,6 +1,6 @@
 
 import { Card } from "@/components/ui/card";
-import { Phone, Zap, ShoppingCart, Wifi, Gift, Coffee, Church, Shower, Battery, Receipt2, Film, MoreHorizontal } from "lucide-react";
+import { Phone, Zap, ShoppingCart, Wifi, Gift, Coffee, Church, Droplets, Receipt, Film, MoreHorizontal } from "lucide-react";
 import { Currency } from "@/lib/currencies";
 import { BudgetForm } from "@/components/BudgetForm";
 import { useState } from "react";
@@ -21,8 +21,8 @@ const categoryIcons: Record<string, React.ReactNode> = {
   Gifts: <Gift className="w-6 h-6" />,
   Refreshments: <Coffee className="w-6 h-6" />,
   Offerings: <Church className="w-6 h-6" />,
-  Toiletries: <Shower className="w-6 h-6" />,
-  Taxes: <Receipt2 className="w-6 h-6" />,
+  Toiletries: <Droplets className="w-6 h-6" />, // Changed from Shower to Droplets
+  Taxes: <Receipt className="w-6 h-6" />, // Changed from Receipt2 to Receipt
   Entertainment: <Film className="w-6 h-6" />,
   Other: <MoreHorizontal className="w-6 h-6" />,
 };
