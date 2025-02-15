@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -40,7 +41,7 @@ export function TransactionForm({
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [categories, setCategories] = useState<readonly string[]>(getCategoriesForType(transactionType));
+  const categories = getCategoriesForType(transactionType);
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -63,7 +64,6 @@ export function TransactionForm({
         description: transaction.description
       });
       setTransactionType(transaction.type);
-      setCategories(getCategoriesForType(transaction.type));
     } else {
       form.reset({
         date: new Date().toISOString().split("T")[0],
@@ -73,7 +73,6 @@ export function TransactionForm({
         description: ""
       });
       setTransactionType("debit");
-      setCategories(getCategoriesForType("debit"));
     }
   }, [transaction, form]);
 
@@ -81,7 +80,6 @@ export function TransactionForm({
     setTransactionType(type);
     form.setValue("type", type);
     form.setValue("category", "");
-    setCategories(getCategoriesForType(type));
   };
 
   async function onSubmit(values: z.infer<typeof transactionSchema>) {
@@ -221,7 +219,7 @@ export function TransactionForm({
                         <CommandInput placeholder="Search category..." />
                         <CommandEmpty>No category found.</CommandEmpty>
                         <CommandGroup>
-                          {categories.map((category) => (
+                          {categories?.map((category) => (
                             <CommandItem
                               key={category}
                               value={category}
