@@ -29,21 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-
-const transactionCategories = [
-  "Food",
-  "Internet",
-  "Airtime",
-  "Transportation",
-  "Gifts",
-  "Refreshments",
-  "Offerings",
-  "Toiletries",
-  "Electricity",
-  "Taxes",
-  "Entertainment",
-  "Other",
-] as const;
+import { transactionCategories } from "@/types/transactions";
 
 const budgetSchema = z.object({
   category: z.enum(transactionCategories),
@@ -54,18 +40,20 @@ interface BudgetFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBudgetAdded?: () => void;
+  initialCategory?: string;
 }
 
 export function BudgetForm({
   open,
   onOpenChange,
   onBudgetAdded,
+  initialCategory,
 }: BudgetFormProps) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      category: "Food",
+      category: (initialCategory as any) || "Food",
       monthlyLimit: "",
     },
   });

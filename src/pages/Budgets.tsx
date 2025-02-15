@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BudgetForm } from "@/components/BudgetForm";
 import { BudgetChart } from "@/components/BudgetChart";
-import { BudgetProgress } from "@/components/BudgetProgress";
+import { BudgetCard } from "@/components/BudgetCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -144,14 +145,15 @@ const BudgetsPage = () => {
 
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Budget Progress</h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {budgetCategories?.map((budget) => (
-                <BudgetProgress
+                <BudgetCard
                   key={budget.id}
                   category={budget.category}
                   limit={budget.monthly_limit}
                   spent={calculateSpending(budget.category)}
                   currency={currency}
+                  onBudgetUpdate={refetchBudgets}
                 />
               ))}
             </div>
