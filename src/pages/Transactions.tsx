@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -13,18 +14,19 @@ import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { Transaction, TransactionCategory, transactionCategories } from "@/types/transactions";
+import { Transaction, TransactionCategory, expenseCategories, incomeCategories, savingsCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 
-type AllCategories = TransactionCategory | "All";
-const allCategories = ["All", ...transactionCategories] as const;
+// Combine all categories for filtering
+const allCategories = ["All", ...incomeCategories, ...expenseCategories, ...savingsCategories] as const;
+type AllCategories = (typeof allCategories)[number];
 
 const TransactionsPage = () => {
   const { currency } = useSettings();
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<AllCategories>("All");
-  const [selectedType, setSelectedType] = useState<"all" | "credit" | "debit">("all");
+  const [selectedType, setSelectedType] = useState<"all" | "credit" | "debit" | "savings">("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const { toast } = useToast();
@@ -86,20 +88,29 @@ const TransactionsPage = () => {
     }
   };
 
+  const formatAmount = (amount: number) => {
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-neutral">Transactions</h1>
           <div className="flex gap-2">
-            {selectedTransactions.length > 0 && <Button variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(selectedTransactions)}>
+            {selectedTransactions.length > 0 && (
+              <Button variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(selectedTransactions)}>
                 <Trash className="h-4 w-4" />
                 Delete Selected ({selectedTransactions.length})
-              </Button>}
+              </Button>
+            )}
             <Button className="flex items-center gap-2" onClick={() => {
-            setEditingTransaction(null);
-            setIsTransactionFormOpen(true);
-          }}>
+              setEditingTransaction(null);
+              setIsTransactionFormOpen(true);
+            }}>
               <PlusCircle className="h-4 w-4" />
               Add Transaction
             </Button>
@@ -133,7 +144,7 @@ const TransactionsPage = () => {
 
                 <Select
                   value={selectedType}
-                  onValueChange={(value: "all" | "credit" | "debit") => setSelectedType(value)}
+                  onValueChange={(value: "all" | "credit" | "debit" | "savings") => setSelectedType(value)}
                 >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Type" />
@@ -142,6 +153,7 @@ const TransactionsPage = () => {
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="credit">Credit (Income)</SelectItem>
                     <SelectItem value="debit">Debit (Expense)</SelectItem>
+                    <SelectItem value="savings">Savings</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -151,7 +163,10 @@ const TransactionsPage = () => {
               <div key={month} className="rounded-md border">
                 <div className="bg-muted px-4 py-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Checkbox checked={monthTransactions.every(t => selectedTransactions.includes(t.id))} onClick={() => handleSelectAll(monthTransactions)} />
+                    <Checkbox 
+                      checked={monthTransactions.every(t => selectedTransactions.includes(t.id))} 
+                      onCheckedChange={() => handleSelectAll(monthTransactions)} 
+                    />
                     <h3 className="font-semibold">{month}</h3>
                   </div>
                 </div>
@@ -171,20 +186,39 @@ const TransactionsPage = () => {
                     {monthTransactions.map(transaction => (
                       <TableRow key={transaction.id}>
                         <TableCell>
-                          <Checkbox checked={selectedTransactions.includes(transaction.id)} onCheckedChange={checked => {
-                            setSelectedTransactions(prev => checked ? [...prev, transaction.id] : prev.filter(id => id !== transaction.id));
-                          }} />
+                          <Checkbox 
+                            checked={selectedTransactions.includes(transaction.id)} 
+                            onCheckedChange={(checked) => {
+                              setSelectedTransactions(prev => 
+                                checked 
+                                  ? [...prev, transaction.id] 
+                                  : prev.filter(id => id !== transaction.id)
+                              );
+                            }} 
+                          />
                         </TableCell>
                         <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
                         <TableCell>{transaction.description}</TableCell>
                         <TableCell>{transaction.category}</TableCell>
                         <TableCell>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${transaction.type === "credit" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                            transaction.type === "credit" 
+                              ? "bg-green-100 text-green-800" 
+                              : transaction.type === "debit"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}>
                             {transaction.type}
                           </span>
                         </TableCell>
-                        <TableCell className={`text-right ${transaction.type === "credit" ? "text-green-600" : "text-red-600"}`}>
-                          {currency.symbol}{transaction.amount.toFixed(2)}
+                        <TableCell className={`text-right ${
+                          transaction.type === "credit" 
+                            ? "text-green-600" 
+                            : transaction.type === "debit"
+                            ? "text-red-600"
+                            : "text-blue-600"
+                        }`}>
+                          {currency.symbol}{formatAmount(transaction.amount)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -193,7 +227,7 @@ const TransactionsPage = () => {
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-[#f6f6f6]/[0.86]">
+                            <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => {
                                 setEditingTransaction(transaction);
                                 setIsTransactionFormOpen(true);
@@ -217,7 +251,12 @@ const TransactionsPage = () => {
           </div>
         </Card>
 
-        <TransactionForm open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen} onTransactionAdded={refetchTransactions} transaction={editingTransaction} />
+        <TransactionForm 
+          open={isTransactionFormOpen} 
+          onOpenChange={setIsTransactionFormOpen} 
+          onTransactionAdded={refetchTransactions} 
+          transaction={editingTransaction} 
+        />
       </div>
     </Layout>
   );

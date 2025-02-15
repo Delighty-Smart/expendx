@@ -29,10 +29,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { transactionCategories } from "@/types/transactions";
+import { expenseCategories } from "@/types/transactions";
 
 const budgetSchema = z.object({
-  category: z.enum(transactionCategories),
+  category: z.enum([...expenseCategories] as const),
   monthlyLimit: z.string().min(1, "Monthly limit is required"),
 });
 
@@ -53,23 +53,23 @@ export function BudgetForm({
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      category: (initialCategory as any) || "Food",
+      category: (initialCategory as any) || expenseCategories[0],
       monthlyLimit: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof budgetSchema>) {
     try {
-      const { error } = await supabase.from("budget_categories").upsert(
-        {
-          category: values.category,
-          monthly_limit: parseFloat(values.monthlyLimit),
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-        },
-        {
-          onConflict: "user_id,category",
-        }
-      );
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { error } = await supabase.from("budget_categories").upsert({
+        category: values.category,
+        monthly_limit: parseFloat(values.monthlyLimit),
+        user_id: user.id,
+      }, {
+        onConflict: 'user_id,category'
+      });
 
       if (error) throw error;
 
@@ -114,7 +114,7 @@ export function BudgetForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {transactionCategories.map((category) => (
+                      {expenseCategories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
