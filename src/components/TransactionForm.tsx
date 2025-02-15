@@ -41,7 +41,12 @@ export function TransactionForm({
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const categoryList = getCategoriesForType(transactionType) || [];
+
+  const filteredCategories = categoryList.filter((category) =>
+    category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -80,6 +85,7 @@ export function TransactionForm({
     setTransactionType(type);
     form.setValue("type", type);
     form.setValue("category", "");
+    setSearchQuery("");
   };
 
   async function onSubmit(values: z.infer<typeof transactionSchema>) {
@@ -216,16 +222,21 @@ export function TransactionForm({
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0">
                       <Command>
-                        <CommandInput placeholder="Search category..." />
+                        <CommandInput 
+                          placeholder="Search category..."
+                          value={searchQuery}
+                          onValueChange={setSearchQuery}
+                        />
                         <CommandEmpty>No category found.</CommandEmpty>
                         <CommandGroup>
-                          {categoryList.map((category) => (
+                          {filteredCategories.map((category) => (
                             <CommandItem
                               key={category}
                               value={category}
                               onSelect={(value) => {
                                 form.setValue("category", value);
                                 setCategoryOpen(false);
+                                setSearchQuery("");
                               }}
                             >
                               <Check
