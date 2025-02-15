@@ -14,12 +14,17 @@ export const transactionCategories = [
   "Other",
 ] as const;
 
+export type TransactionType = "credit" | "debit";
+export type TransactionCategory = typeof transactionCategories[number];
+
 export interface Transaction {
   id: string;
   date: string;
   amount: number;
-  type: "credit" | "debit";
-  category: typeof transactionCategories[number];
+  type: TransactionType;
+  category: TransactionCategory;
   description: string;
   user_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
