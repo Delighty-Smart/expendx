@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -12,6 +11,7 @@ import { BudgetProgress } from "@/components/BudgetProgress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
+import { Transaction } from "@/types/transactions";
 
 const BudgetsPage = () => {
   const { currency } = useSettings();
@@ -53,10 +53,10 @@ const BudgetsPage = () => {
         .from("transactions")
         .select("*")
         .gte("date", firstDay.toISOString())
-        .lte("date", lastDay.toISOString());
+        .lte("date", lastDay.toISOString()) as { data: Transaction[] | null; error: any };
 
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 

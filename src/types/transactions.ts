@@ -28,3 +28,9 @@ export interface Transaction {
   created_at?: string;
   updated_at?: string;
 }
+
+// Helper type for Supabase responses
+export type SupabaseResponse<T> = {
+  data: T | null;
+  error: any;
+};

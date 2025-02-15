@@ -13,43 +13,38 @@ import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { Transaction, transactionCategories } from "@/types/transactions";
+import { Transaction, TransactionCategory, transactionCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
+
+type AllCategories = TransactionCategory | "All";
 const allCategories = ["All", ...transactionCategories] as const;
+
 const TransactionsPage = () => {
-  const {
-    currency
-  } = useSettings();
+  const { currency } = useSettings();
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<typeof allCategories[number]>("All");
-  const [selectedType, setSelectedType] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<AllCategories>("All");
+  const [selectedType, setSelectedType] = useState<"all" | "credit" | "debit">("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const {
-    toast
-  } = useToast();
-  const {
-    data: transactions,
-    refetch: refetchTransactions
-  } = useQuery({
+  const { toast } = useToast();
+
+  const { data: transactions, refetch: refetchTransactions } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("transactions").select("*").order("date", {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("date", { ascending: false }) as { data: Transaction[] | null; error: any };
+      
       if (error) throw error;
-      return data;
-    }
+      return data || [];
+    },
   });
+
   const handleDelete = async (ids: string[]) => {
     try {
-      const {
-        error
-      } = await supabase.from("transactions").delete().in("id", ids);
+      const { error } = await supabase.from("transactions").delete().in("id", ids);
       if (error) throw error;
       toast({
         title: "Success",
@@ -65,12 +60,14 @@ const TransactionsPage = () => {
       });
     }
   };
+
   const filteredTransactions = transactions?.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || transaction.category === selectedCategory;
     const matchesType = selectedType === "all" || transaction.type === selectedType;
     return matchesSearch && matchesCategory && matchesType;
   });
+
   const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
     const month = format(new Date(transaction.date), "MMMM yyyy");
     if (!groups[month]) {
@@ -79,6 +76,7 @@ const TransactionsPage = () => {
     groups[month].push(transaction);
     return groups;
   }, {} as Record<string, Transaction[]>) || {};
+
   const handleSelectAll = (monthTransactions: Transaction[]) => {
     const monthTransactionIds = monthTransactions.map(t => t.id);
     if (monthTransactionIds.every(id => selectedTransactions.includes(id))) {
@@ -87,7 +85,9 @@ const TransactionsPage = () => {
       setSelectedTransactions(prev => [...prev, ...monthTransactionIds.filter(id => !prev.includes(id))]);
     }
   };
-  return <Layout>
+
+  return (
+    <Layout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-neutral">Transactions</h1>
@@ -115,22 +115,30 @@ const TransactionsPage = () => {
               </div>
 
               <div className="flex gap-4">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={(value: AllCategories) => setSelectedCategory(value)}
+                >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#f6f6f6]/[0.86]">
-                    {allCategories.map(category => <SelectItem key={category} value={category}>
+                  <SelectContent>
+                    {allCategories.map(category => (
+                      <SelectItem key={category} value={category}>
                         {category}
-                      </SelectItem>)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
-                <Select value={selectedType} onValueChange={setSelectedType}>
+                <Select
+                  value={selectedType}
+                  onValueChange={(value: "all" | "credit" | "debit") => setSelectedType(value)}
+                >
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#f6f6f6]/[0.86]">
+                  <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="credit">Credit (Income)</SelectItem>
                     <SelectItem value="debit">Debit (Expense)</SelectItem>
@@ -139,7 +147,8 @@ const TransactionsPage = () => {
               </div>
             </div>
 
-            {Object.entries(groupedTransactions).map(([month, monthTransactions]) => <div key={month} className="rounded-md border">
+            {Object.entries(groupedTransactions).map(([month, monthTransactions]) => (
+              <div key={month} className="rounded-md border">
                 <div className="bg-muted px-4 py-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Checkbox checked={monthTransactions.every(t => selectedTransactions.includes(t.id))} onClick={() => handleSelectAll(monthTransactions)} />
@@ -159,11 +168,12 @@ const TransactionsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {monthTransactions.map(transaction => <TableRow key={transaction.id}>
+                    {monthTransactions.map(transaction => (
+                      <TableRow key={transaction.id}>
                         <TableCell>
                           <Checkbox checked={selectedTransactions.includes(transaction.id)} onCheckedChange={checked => {
-                      setSelectedTransactions(prev => checked ? [...prev, transaction.id] : prev.filter(id => id !== transaction.id));
-                    }} />
+                            setSelectedTransactions(prev => checked ? [...prev, transaction.id] : prev.filter(id => id !== transaction.id));
+                          }} />
                         </TableCell>
                         <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
                         <TableCell>{transaction.description}</TableCell>
@@ -185,9 +195,9 @@ const TransactionsPage = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="bg-[#f6f6f6]/[0.86]">
                               <DropdownMenuItem onClick={() => {
-                          setEditingTransaction(transaction);
-                          setIsTransactionFormOpen(true);
-                        }}>
+                                setEditingTransaction(transaction);
+                                setIsTransactionFormOpen(true);
+                              }}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
@@ -198,15 +208,19 @@ const TransactionsPage = () => {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
-                      </TableRow>)}
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-              </div>)}
+              </div>
+            ))}
           </div>
         </Card>
 
         <TransactionForm open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen} onTransactionAdded={refetchTransactions} transaction={editingTransaction} />
       </div>
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default TransactionsPage;
