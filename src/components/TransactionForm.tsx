@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -12,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,12 +40,7 @@ export function TransactionForm({
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categoryOpen, setCategoryOpen] = useState(false);
-
-  // Use useMemo to ensure we always have a valid array of categories
-  const categories = useMemo(() => {
-    const cats = getCategoriesForType(transactionType);
-    return Array.isArray(cats) ? cats : [];
-  }, [transactionType]);
+  const [categories, setCategories] = useState<readonly string[]>(getCategoriesForType(transactionType));
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -69,6 +63,7 @@ export function TransactionForm({
         description: transaction.description
       });
       setTransactionType(transaction.type);
+      setCategories(getCategoriesForType(transaction.type));
     } else {
       form.reset({
         date: new Date().toISOString().split("T")[0],
@@ -78,6 +73,7 @@ export function TransactionForm({
         description: ""
       });
       setTransactionType("debit");
+      setCategories(getCategoriesForType("debit"));
     }
   }, [transaction, form]);
 
@@ -85,6 +81,7 @@ export function TransactionForm({
     setTransactionType(type);
     form.setValue("type", type);
     form.setValue("category", "");
+    setCategories(getCategoriesForType(type));
   };
 
   async function onSubmit(values: z.infer<typeof transactionSchema>) {

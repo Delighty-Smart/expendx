@@ -69,12 +69,6 @@ export interface Transaction {
   updated_at?: string;
 }
 
-// Helper type for Supabase responses
-export type SupabaseResponse<T> = {
-  data: T | null;
-  error: any;
-};
-
 // Helper function to get categories based on transaction type
 export const getCategoriesForType = (type: TransactionType): readonly string[] => {
   switch (type) {
@@ -84,5 +78,7 @@ export const getCategoriesForType = (type: TransactionType): readonly string[] =
       return expenseCategories;
     case "savings":
       return savingsCategories;
+    default:
+      return expenseCategories; // Default to expense categories as fallback
   }
 };
