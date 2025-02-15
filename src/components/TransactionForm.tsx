@@ -41,7 +41,7 @@ export function TransactionForm({
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const categories = getCategoriesForType(transactionType);
+  const categoryList = getCategoriesForType(transactionType) || [];
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -219,7 +219,7 @@ export function TransactionForm({
                         <CommandInput placeholder="Search category..." />
                         <CommandEmpty>No category found.</CommandEmpty>
                         <CommandGroup>
-                          {categories?.map((category) => (
+                          {categoryList.map((category) => (
                             <CommandItem
                               key={category}
                               value={category}
