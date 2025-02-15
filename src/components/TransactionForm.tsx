@@ -11,19 +11,22 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { Transaction, transactionCategories } from "@/types/transactions";
+
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
   amount: z.string().min(1, "Amount is required"),
-  type: z.enum(["credit", "debit"]),
+  type: z.enum(["credit", "debit", "savings"]),
   category: z.enum(transactionCategories),
   description: z.string().min(1, "Description is required")
 });
+
 interface TransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTransactionAdded?: () => void;
   transaction?: Transaction | null;
 }
+
 export function TransactionForm({
   open,
   onOpenChange,
@@ -43,6 +46,7 @@ export function TransactionForm({
       description: ""
     }
   });
+
   useEffect(() => {
     if (transaction) {
       form.reset({
@@ -62,6 +66,7 @@ export function TransactionForm({
       });
     }
   }, [transaction, form]);
+
   async function onSubmit(values: z.infer<typeof transactionSchema>) {
     try {
       const {
@@ -104,6 +109,7 @@ export function TransactionForm({
       });
     }
   }
+
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
@@ -149,6 +155,7 @@ export function TransactionForm({
                       <SelectContent>
                         <SelectItem value="credit">Credit (Income)</SelectItem>
                         <SelectItem value="debit">Debit (Expense)</SelectItem>
+                        <SelectItem value="savings">Savings</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -67,6 +67,23 @@ const BudgetsPage = () => {
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
+  const calculateSavings = () => {
+    return transactions
+      ?.filter((t) => t.type === "savings")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
+  const savingsLimit = budgetCategories?.find(b => b.category === "Savings")?.monthly_limit || 0;
+  const currentSavings = calculateSavings();
+  const savingsPercentage = savingsLimit > 0 ? (currentSavings / savingsLimit) * 100 : 0;
+
+  const formatAmount = (amount: number) => {
+    return amount.toLocaleString('en-US', { 
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   const getBudgetAlerts = () => {
     if (!budgetCategories || !transactions) return [];
     
@@ -115,7 +132,7 @@ const BudgetsPage = () => {
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
           <p className="text-2xl font-semibold">
-            {currency.symbol}{monthlyIncome?.amount?.toFixed(2) ?? "0.00"}
+            {currency.symbol}{formatAmount(monthlyIncome?.amount ?? 0)}
           </p>
         </Card>
 
@@ -126,12 +143,28 @@ const BudgetsPage = () => {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Budget Alert</AlertTitle>
                 <AlertDescription>
-                  You've spent {currency.symbol}{alert.spent.toFixed(2)} of your {currency.symbol}{alert.limit.toFixed(2)} budget for {alert.category} ({alert.percentage.toFixed(1)}%)
+                  You've spent {currency.symbol}{formatAmount(alert.spent)} of your {currency.symbol}{formatAmount(alert.limit)} budget for {alert.category} ({alert.percentage.toFixed(1)}%)
                 </AlertDescription>
               </Alert>
             ))}
           </div>
         )}
+
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Budget Progress</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {budgetCategories?.map((budget) => (
+              <BudgetCard
+                key={budget.id}
+                category={budget.category}
+                limit={budget.monthly_limit}
+                spent={calculateSpending(budget.category)}
+                currency={currency}
+                onBudgetUpdate={refetchBudgets}
+              />
+            ))}
+          </div>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="p-6">
@@ -144,18 +177,46 @@ const BudgetsPage = () => {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Budget Progress</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {budgetCategories?.map((budget) => (
-                <BudgetCard
-                  key={budget.id}
-                  category={budget.category}
-                  limit={budget.monthly_limit}
-                  spent={calculateSpending(budget.category)}
-                  currency={currency}
-                  onBudgetUpdate={refetchBudgets}
-                />
-              ))}
+            <h2 className="text-lg font-semibold mb-4">Savings Progress</h2>
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <div className="relative">
+                <svg width="200" height="200" className="-rotate-90">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    className="text-muted/20"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    strokeDasharray={`${2 * Math.PI * 90}`}
+                    strokeDashoffset={`${2 * Math.PI * 90 * (1 - savingsPercentage / 100)}`}
+                    className="text-green-500"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <p className="text-sm text-muted-foreground">Current Savings</p>
+                  <p className="text-2xl font-bold">{currency.symbol}{formatAmount(currentSavings)}</p>
+                  <p className="text-sm text-muted-foreground">of {currency.symbol}{formatAmount(savingsLimit)}</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  setIsBudgetFormOpen(true);
+                }}
+                variant="outline"
+              >
+                Set Savings Goal
+              </Button>
             </div>
           </Card>
         </div>

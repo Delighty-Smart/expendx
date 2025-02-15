@@ -11,10 +11,11 @@ export const transactionCategories = [
   "Electricity",
   "Taxes",
   "Entertainment",
+  "Savings",
   "Other",
 ] as const;
 
-export type TransactionType = "credit" | "debit";
+export type TransactionType = "credit" | "debit" | "savings";
 export type TransactionCategory = typeof transactionCategories[number];
 
 export interface Transaction {
