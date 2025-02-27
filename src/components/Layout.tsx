@@ -28,9 +28,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         >
           <Menu className="h-6 w-6 text-foreground" />
         </Button>
-        <h1 className="text-lg font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          ExpenseEden
-        </h1>
+        <div className="h-10">
+          <img 
+            src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
+            alt="expendX" 
+            className="h-full object-contain"
+          />
+        </div>
       </header>
 
       {/* Sidebar */}
@@ -40,9 +44,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         } lg:translate-x-0`}
       >
         <div className="h-16 flex items-center px-6 border-b border-border/50">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            ExpenseEden
-          </h1>
+          <div className="h-12">
+            <img 
+              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
+              alt="expendX" 
+              className="h-full object-contain"
+            />
+          </div>
         </div>
         <nav className="p-4">
           {menuItems.map((item) => (
