@@ -82,26 +82,37 @@ export function TransactionForm({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
+      // Ensure valid data
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
-        type: values.type,
+        type: values.type as TransactionType, // Ensure proper type casting
         category: values.category,
         description: values.description,
         user_id: user.id
       };
+
+      console.log("Saving transaction:", transactionData);
 
       if (transaction) {
         const { error } = await supabase
           .from('transactions')
           .update(transactionData)
           .eq('id', transaction.id);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
       } else {
         const { error } = await supabase
           .from('transactions')
           .insert([transactionData]);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
       }
 
       toast({
@@ -119,6 +130,9 @@ export function TransactionForm({
       });
     }
   }
+
+  // Make sure we have categories for the current transaction type
+  const categories = getCategoriesForType(transactionType);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,7 +182,7 @@ export function TransactionForm({
                   <FormLabel>Type</FormLabel>
                   <Select
                     onValueChange={(value: TransactionType) => handleTypeChange(value)}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -202,7 +216,7 @@ export function TransactionForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {getCategoriesForType(transactionType).map((category) => (
+                      {categories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
