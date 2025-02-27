@@ -11,19 +11,19 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 37% 33%;
+    --primary: 202 100% 50%; /* #00AAFF */
     --primary-foreground: 210 40% 98%;
-    --secondary: 14 45% 54%;
+    --secondary: 84 70% 47%; /* #A3CE22 */
     --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 44 49% 86%;
+    --accent: 84 70% 47%; /* #A3CE22 */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142 37% 33%;
+    --ring: 202 100% 50%; /* #00AAFF */
     --radius: 0.75rem;
   }
  
@@ -34,19 +34,19 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142 37% 43%;
+    --primary: 202 100% 50%; /* #00AAFF */
     --primary-foreground: 210 40% 98%;
-    --secondary: 14 45% 54%;
+    --secondary: 84 70% 47%; /* #A3CE22 */
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 44 49% 76%;
+    --accent: 84 70% 47%; /* #A3CE22 */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142 37% 43%;
+    --ring: 202 100% 50%; /* #00AAFF */
   }
 }
 
@@ -118,10 +118,47 @@
 
 /* Progress Bar Animation */
 @keyframes progress {
-  from { width: 0; }
-  to { width: var(--value); }
+  from { stroke-dashoffset: var(--circumference); }
+  to { stroke-dashoffset: var(--dash); }
 }
 
 .animate-progress {
-  animation: progress 1s ease-out forwards;
+  animation: progress 1.5s ease-out forwards;
+}
+
+/* Chart Colors */
+.chart-primary {
+  fill: #00AAFF;
+  color: #00AAFF;
+}
+
+.chart-accent {
+  fill: #A3CE22;
+  color: #A3CE22;
+}
+
+.chart-gray {
+  fill: #6B7280;
+  color: #6B7280;
+}
+
+/* Area Chart Gradient */
+.area-gradient-primary stop:first-child {
+  stop-color: #00AAFF;
+  stop-opacity: 0.7;
+}
+
+.area-gradient-primary stop:last-child {
+  stop-color: #00AAFF;
+  stop-opacity: 0.1;
+}
+
+.area-gradient-accent stop:first-child {
+  stop-color: #A3CE22;
+  stop-opacity: 0.7;
+}
+
+.area-gradient-accent stop:last-child {
+  stop-color: #A3CE22;
+  stop-opacity: 0.1;
 }

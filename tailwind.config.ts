@@ -55,13 +55,13 @@ export default {
         },
         // Logo-inspired colors
         expendx: {
-          green: {
-            dark: "#4A6741",
-            medium: "#6B8E4E",
-            light: "#8CB25C",
-          },
-          gold: "#E9B949",
-          orange: "#D58936",
+          blue: "#00AAFF",
+          green: "#A3CE22",
+          gray: {
+            light: "#F3F4F6",
+            medium: "#9CA3AF",
+            dark: "#4B5563"
+          }
         },
       },
       borderRadius: {
