@@ -53,6 +53,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Logo-inspired colors
+        expendx: {
+          green: {
+            dark: "#4A6741",
+            medium: "#6B8E4E",
+            light: "#8CB25C",
+          },
+          gold: "#E9B949",
+          orange: "#D58936",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -77,12 +87,22 @@ export default {
             transform: "translateX(100%)",
           },
         },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        bounce: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.5s ease-out",
         shimmer: "shimmer 2s infinite",
+        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        bounce: "bounce 1s ease-in-out infinite",
       },
     },
   },

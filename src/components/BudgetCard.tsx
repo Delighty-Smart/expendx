@@ -21,10 +21,11 @@ const categoryIcons: Record<string, React.ReactNode> = {
   Gifts: <Gift className="w-6 h-6" />,
   Refreshments: <Coffee className="w-6 h-6" />,
   Offerings: <Church className="w-6 h-6" />,
-  Toiletries: <Droplets className="w-6 h-6" />, // Changed from Shower to Droplets
-  Taxes: <Receipt className="w-6 h-6" />, // Changed from Receipt2 to Receipt
+  Toiletries: <Droplets className="w-6 h-6" />,
+  Taxes: <Receipt className="w-6 h-6" />,
   Entertainment: <Film className="w-6 h-6" />,
   Other: <MoreHorizontal className="w-6 h-6" />,
+  Savings: <MoreHorizontal className="w-6 h-6" />,
 };
 
 export function BudgetCard({ category, limit, spent, currency, onBudgetUpdate }: BudgetCardProps) {
@@ -47,11 +48,14 @@ export function BudgetCard({ category, limit, spent, currency, onBudgetUpdate }:
   return (
     <>
       <Card 
-        className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-card"
+        className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 bg-card relative overflow-hidden group"
         onClick={() => setIsFormOpen(true)}
       >
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
+        {/* Background decoration */}
+        <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-primary/5 group-hover:bg-primary/10 transition-colors duration-300" />
+        
+        <div className="flex flex-col items-center space-y-4 relative z-10">
+          <div className="relative animate-float" style={{ animationDelay: `${Math.random() * 1000}ms` }}>
             <svg width={size} height={size} className="-rotate-90">
               {/* Background circle */}
               <circle
@@ -75,19 +79,25 @@ export function BudgetCard({ category, limit, spent, currency, onBudgetUpdate }:
                 strokeDashoffset={circumference - dash}
                 className={getProgressColor(percentage)}
                 strokeLinecap="round"
+                className="animate-progress transition-all duration-700 ease-out"
+                style={{ '--value': `${dash}px` } as React.CSSProperties}
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              {categoryIcons[category]}
+              <div className="p-3 rounded-full bg-background/80 backdrop-blur-sm">
+                {categoryIcons[category] || categoryIcons.Other}
+              </div>
             </div>
           </div>
 
           <div className="text-center space-y-1">
             <h3 className="font-semibold">{category}</h3>
-            <p className="text-sm text-muted-foreground">
-              {currency.symbol}{spent.toFixed(2)} / {currency.symbol}{limit.toFixed(2)}
-            </p>
-            <p className="text-sm font-medium">
+            <div className="flex items-center justify-center gap-1 text-sm">
+              <span className="font-medium">{currency.symbol}{spent.toFixed(2)}</span>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-muted-foreground">{currency.symbol}{limit.toFixed(2)}</span>
+            </div>
+            <p className="text-sm font-medium bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent">
               {currency.symbol}{remaining.toFixed(2)} remaining
             </p>
           </div>
