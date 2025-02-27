@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
@@ -14,7 +12,6 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
-import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const transactionSchema = z.object({
@@ -40,17 +37,7 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   
-  // Make sure we always have an array, even if getCategoriesForType returns undefined
-  const categoryList = getCategoriesForType(transactionType);
-  
-  // Filter categories based on search query
-  const filteredCategories = categoryList.filter((category) =>
-    category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -88,7 +75,6 @@ export function TransactionForm({
     setTransactionType(type);
     form.setValue("type", type);
     form.setValue("category", "");
-    setSearchQuery("");
   };
 
   async function onSubmit(values: z.infer<typeof transactionSchema>) {
@@ -204,57 +190,25 @@ export function TransactionForm({
               control={form.control}
               name="category"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={categoryOpen}
-                          className={cn(
-                            "w-full justify-between",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value || "Select category..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0">
-                      <Command>
-                        <CommandInput 
-                          placeholder="Search category..."
-                          value={searchQuery}
-                          onValueChange={setSearchQuery}
-                        />
-                        <CommandEmpty>No category found.</CommandEmpty>
-                        <CommandGroup>
-                          {filteredCategories.map((category) => (
-                            <CommandItem
-                              key={category}
-                              value={category}
-                              onSelect={(value) => {
-                                form.setValue("category", value);
-                                setCategoryOpen(false);
-                                setSearchQuery("");
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  field.value === category ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {category}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getCategoriesForType(transactionType).map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
