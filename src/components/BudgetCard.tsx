@@ -77,9 +77,8 @@ export function BudgetCard({ category, limit, spent, currency, onBudgetUpdate }:
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={circumference - dash}
-                className={getProgressColor(percentage)}
                 strokeLinecap="round"
-                className="animate-progress transition-all duration-700 ease-out"
+                className={`${getProgressColor(percentage)} animate-progress transition-all duration-700 ease-out`}
                 style={{ '--value': `${dash}px` } as React.CSSProperties}
               />
             </svg>
