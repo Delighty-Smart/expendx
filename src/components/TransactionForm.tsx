@@ -42,8 +42,11 @@ export function TransactionForm({
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const categoryList = getCategoriesForType(transactionType) || [];
-
+  
+  // Make sure we always have an array, even if getCategoriesForType returns undefined
+  const categoryList = getCategoriesForType(transactionType);
+  
+  // Filter categories based on search query
   const filteredCategories = categoryList.filter((category) =>
     category.toLowerCase().includes(searchQuery.toLowerCase())
   );
