@@ -176,29 +176,14 @@ const Dashboard = () => {
   // Colors for charts
   const COLORS = ["#00AAFF", "#A3CE22", "#4B5563", "#9CA3AF", "#F59E0B"];
 
-  // Animation on scroll for charts
+  // Make charts visible immediately instead of relying on intersection observer
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-fadeIn');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
+    // Immediately show all charts when component mounts or transactions change
     const charts = document.querySelectorAll('.chart-container');
     charts.forEach(chart => {
-      observer.observe(chart);
+      chart.classList.remove('opacity-0');
+      chart.classList.add('opacity-100');
     });
-
-    return () => {
-      charts.forEach(chart => {
-        observer.unobserve(chart);
-      });
-    };
   }, [transactions]);
 
   // Handle pie chart interactive elements
@@ -359,7 +344,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="glass-card p-6 chart-container opacity-0">
+          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
               Spending by Category
@@ -419,7 +404,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          <Card className="glass-card p-6 chart-container opacity-0">
+          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <AreaChart className="h-5 w-5 text-primary" />
               Daily Income & Expenses
@@ -496,7 +481,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          <Card className="glass-card p-6 chart-container opacity-0">
+          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <LineChart className="h-5 w-5 text-primary" />
               Balance Trend
@@ -542,7 +527,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          <Card className="glass-card p-6 chart-container opacity-0">
+          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
               Expense Distribution

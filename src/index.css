@@ -60,11 +60,11 @@
 }
 
 /* Glassmorphism Effects */
-.glass-effect {
+.glass-card {
   @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg;
 }
 
-.dark .glass-effect {
+.dark .glass-card {
   @apply bg-background/90;
 }
 
@@ -126,6 +126,16 @@
   animation: progress 1.5s ease-out forwards;
 }
 
+/* Animation for charts */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
 /* Chart Colors */
 .chart-primary {
   fill: #00AAFF;
@@ -142,23 +152,7 @@
   color: #6B7280;
 }
 
-/* Area Chart Gradient */
-.area-gradient-primary stop:first-child {
-  stop-color: #00AAFF;
-  stop-opacity: 0.7;
-}
-
-.area-gradient-primary stop:last-child {
-  stop-color: #00AAFF;
-  stop-opacity: 0.1;
-}
-
-.area-gradient-accent stop:first-child {
-  stop-color: #A3CE22;
-  stop-opacity: 0.7;
-}
-
-.area-gradient-accent stop:last-child {
-  stop-color: #A3CE22;
-  stop-opacity: 0.1;
+/* Glass effect */
+.glass-effect {
+  @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg;
 }
