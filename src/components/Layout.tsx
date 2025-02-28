@@ -1,29 +1,12 @@
 
-import { Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
-
-  // Close sidebar when clicking outside on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Close sidebar when route changes (mobile)
-  useEffect(() => {
-    setIsSidebarOpen(false);
-  }, [location.pathname]);
 
   const menuItems = [
     { path: "/", label: "Dashboard" },
@@ -42,13 +25,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           size="icon"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="animated-button"
-          aria-label="Toggle menu"
         >
-          {isSidebarOpen ? (
-            <X className="h-6 w-6 text-foreground" />
-          ) : (
-            <Menu className="h-6 w-6 text-foreground" />
-          )}
+          <Menu className="h-6 w-6 text-foreground" />
         </Button>
         <div className="h-10">
           <img 
@@ -61,9 +39,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[75vw] max-w-xs glass-effect border-r border-border/50 transform transition-all duration-300 ease-in-out z-40 ${
+        className={`fixed top-0 left-0 h-full w-64 glass-effect border-r border-border/50 transform transition-all duration-300 ease-in-out z-40 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:w-64 overflow-y-auto`}
+        } lg:translate-x-0`}
       >
         <div className="h-16 flex items-center px-6 border-b border-border/50">
           <div className="h-12">
@@ -79,7 +57,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <Link
               key={item.path}
               to={item.path}
-              className={`block px-4 py-3 rounded-lg mb-2 transition-all duration-200 animated-button ${
+              className={`block px-4 py-2 rounded-lg mb-2 transition-all duration-200 animated-button ${
                 location.pathname === item.path
                   ? "bg-primary text-primary-foreground shadow-lg"
                   : "text-foreground hover:bg-accent hover:text-accent-foreground"
@@ -94,12 +72,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content */}
       <main
-        className={`pt-20 pb-8 lg:pt-8 lg:pl-64 min-h-screen transition-all duration-300 ${
+        className={`pt-16 lg:pl-64 min-h-screen transition-all duration-300 ${
           isSidebarOpen ? "brightness-50 lg:brightness-100" : ""
         }`}
-        onClick={() => isSidebarOpen && setIsSidebarOpen(false)}
+        onClick={() => setIsSidebarOpen(false)}
       >
-        <div className="container mx-auto px-4 py-2 lg:p-8 animate-fadeIn max-w-7xl">
+        <div className="container mx-auto p-4 lg:p-8 animate-fadeIn">
           {children}
         </div>
       </main>
@@ -109,7 +87,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
-          aria-hidden="true"
         />
       )}
     </div>
