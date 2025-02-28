@@ -36,6 +36,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from "date-fns";
+import { TransactionType } from "@/types/transactions";
+
+interface TransactionData {
+  id: string;
+  amount: number;
+  type: string;
+  category: string;
+  date: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
 
 const Dashboard = () => {
   const { currency } = useSettings();
@@ -43,6 +56,11 @@ const Dashboard = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  
+  // Get the current month's date range for consistent filtering
+  const today = new Date();
+  const firstDayOfMonth = startOfMonth(today).toISOString();
+  const lastDayOfMonth = endOfMonth(today).toISOString();
 
   const { data: monthlyIncome } = useQuery({
     queryKey: ["monthly_income"],
@@ -56,23 +74,58 @@ const Dashboard = () => {
     },
   });
 
-  const { data: transactions, refetch: refetchTransactions } = useQuery({
-    queryKey: ["transactions"],
+  const { data: transactionsData, refetch: refetchTransactions } = useQuery({
+    queryKey: ["transactions", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
-      const today = new Date();
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
+      console.log("Dashboard: Fetching transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
+      
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .gte("date", firstDay.toISOString())
-        .lte("date", lastDay.toISOString());
+        .gte("date", firstDayOfMonth)
+        .lte("date", lastDayOfMonth);
 
       if (error) throw error;
-      return data || [];
+      console.log(`Dashboard: Found ${data?.length || 0} transactions in the current month`);
+      return data as TransactionData[] || [];
     },
   });
+
+  // Convert data to the correct transaction type
+  const transactions = (transactionsData || []).map(transaction => ({
+    ...transaction,
+    type: transaction.type as TransactionType
+  }));
+
+  // Setup a real-time subscription to transactions table changes
+  useEffect(() => {
+    console.log("Setting up real-time subscription to transactions table");
+    
+    const channel = supabase
+      .channel('dashboard-transactions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'transactions'
+        },
+        (payload) => {
+          // When changes are detected, refresh all data
+          console.log('Transaction changes detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ["transactions"] });
+          queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+          queryClient.invalidateQueries({ queryKey: ["budgets"] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      console.log("Cleaning up real-time subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Handle transaction operations with consistent cache invalidation
   const handleTransactionAdded = () => {

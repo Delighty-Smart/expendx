@@ -12,8 +12,20 @@ import { BudgetCard } from "@/components/BudgetCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Transaction } from "@/types/transactions";
+import { Transaction, TransactionType } from "@/types/transactions";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+
+interface TransactionData {
+  id: string;
+  amount: number;
+  type: string;
+  category: string;
+  date: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
 
 const BudgetsPage = () => {
   const { currency } = useSettings();
@@ -50,7 +62,7 @@ const BudgetsPage = () => {
     },
   });
 
-  const { data: transactions } = useQuery({
+  const { data: transactionsData } = useQuery({
     queryKey: ["transactions", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
       console.log("Fetching transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
@@ -67,9 +79,42 @@ const BudgetsPage = () => {
       }
       
       console.log(`Found ${data?.length || 0} transactions in the current month`);
-      return data || [];
+      return data as TransactionData[] || [];
     },
   });
+
+  // Convert data to the correct Transaction type
+  const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
+    ...transaction,
+    type: transaction.type as TransactionType
+  }));
+
+  // Setup a real-time subscription to transactions table changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'transactions'
+        },
+        () => {
+          // When changes are detected, refetch data
+          console.log('Transaction data changed, refreshing...');
+          queryClient.invalidateQueries({ queryKey: ["transactions"] });
+          queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+          queryClient.invalidateQueries({ queryKey: ["budgets"] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Ensure budget updates invalidate transaction queries to refresh all components
   const handleBudgetUpdate = () => {

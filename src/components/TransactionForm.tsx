@@ -71,7 +71,7 @@ export function TransactionForm({
       });
       setTransactionType("debit");
     }
-  }, [transaction, form]);
+  }, [transaction, form, open]);
 
   const handleTypeChange = (type: TransactionType) => {
     setTransactionType(type);
@@ -106,6 +106,11 @@ export function TransactionForm({
           console.error("Update error:", error);
           throw error;
         }
+        
+        toast({
+          title: "Success",
+          description: "Transaction updated successfully"
+        });
       } else {
         const { error } = await supabase
           .from('transactions')
@@ -115,22 +120,25 @@ export function TransactionForm({
           console.error("Insert error:", error);
           throw error;
         }
+        
+        toast({
+          title: "Success",
+          description: "Transaction added successfully"
+        });
       }
 
       // Invalidate all relevant queries to ensure all pages update
       // This will cause refetches where needed
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      // Add any other query keys that might be relevant
-
-      toast({
-        title: "Success",
-        description: `Transaction ${transaction ? 'updated' : 'added'} successfully`
-      });
-      onTransactionAdded?.();
+      
+      // Close the form and reset it
       onOpenChange(false);
       form.reset();
+      
+      // Notify parent component if needed
+      if (onTransactionAdded) {
+        onTransactionAdded();
+      }
     } catch (error: any) {
       toast({
         title: "Error",

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -14,12 +14,24 @@ import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { Transaction, TransactionCategory, expenseCategories, incomeCategories, savingsCategories } from "@/types/transactions";
+import { Transaction, TransactionType, TransactionCategory, expenseCategories, incomeCategories, savingsCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 
 // Combine all categories for filtering
 const allCategories = ["All", ...incomeCategories, ...expenseCategories, ...savingsCategories] as const;
 type AllCategories = (typeof allCategories)[number];
+
+interface TransactionData {
+  id: string;
+  amount: number;
+  type: string;
+  category: string;
+  date: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
 
 const TransactionsPage = () => {
   const { currency } = useSettings();
@@ -32,35 +44,92 @@ const TransactionsPage = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: transactions, refetch: refetchTransactions } = useQuery({
+  const { data: transactionsData, refetch: refetchTransactions } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
+      console.log("TransactionsPage: Fetching all transactions");
+      
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .order("date", { ascending: false }) as { data: Transaction[] | null; error: any };
+        .order("date", { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      console.log(`TransactionsPage: Retrieved ${data?.length || 0} transactions`);
+      return data as TransactionData[] || [];
     },
   });
+
+  // Convert data to the correct Transaction type
+  const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
+    ...transaction,
+    type: transaction.type as TransactionType
+  }));
+
+  // Setup a real-time subscription to transactions table changes
+  useEffect(() => {
+    console.log("Setting up real-time subscription in Transactions page");
+    
+    const channel = supabase
+      .channel('transactions-page-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'transactions'
+        },
+        (payload) => {
+          console.log('Transaction change detected:', payload);
+          // When changes are detected, refetch data
+          queryClient.invalidateQueries({ queryKey: ["transactions"] });
+          queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+          queryClient.invalidateQueries({ queryKey: ["budgets"] });
+          
+          // Clear any selected transactions when data changes
+          setSelectedTransactions([]);
+          
+          // Show a toast to notify user of data changes
+          const eventType = payload.eventType;
+          if (eventType === 'INSERT') {
+            toast({
+              title: "New Transaction",
+              description: "A new transaction has been added"
+            });
+          } else if (eventType === 'UPDATE') {
+            toast({
+              title: "Transaction Updated",
+              description: "A transaction has been updated"
+            });
+          } else if (eventType === 'DELETE') {
+            toast({
+              title: "Transaction Deleted",
+              description: "A transaction has been removed"
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      console.log("Cleaning up real-time subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, toast]);
 
   const handleDelete = async (ids: string[]) => {
     try {
       const { error } = await supabase.from("transactions").delete().in("id", ids);
       if (error) throw error;
 
-      // Invalidate all relevant queries to refresh data across the app
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      // Clear selected transactions
+      setSelectedTransactions([]);
       
       toast({
         title: "Success",
-        description: "Transaction(s) deleted successfully"
+        description: `${ids.length} transaction(s) deleted successfully`
       });
-      setSelectedTransactions([]);
-      refetchTransactions();
     } catch (error: any) {
       toast({
         title: "Error",
