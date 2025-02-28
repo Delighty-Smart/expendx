@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { PlusCircle, AlertCircle, DollarSign } from "lucide-react";
@@ -18,6 +18,7 @@ const BudgetsPage = () => {
   const { currency } = useSettings();
   const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
   const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: budgetCategories, refetch: refetchBudgets } = useQuery({
     queryKey: ["budgets"],
@@ -60,6 +61,20 @@ const BudgetsPage = () => {
       return data || [];
     },
   });
+
+  // Ensure budget updates invalidate transaction queries to refresh all components
+  const handleBudgetUpdate = () => {
+    refetchBudgets();
+    // Ensure all dependent queries are refreshed as well
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+  };
+
+  // Same for income updates
+  const handleIncomeUpdate = () => {
+    refetchIncome();
+    // Ensure all dependent queries are refreshed
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+  };
 
   const calculateSpending = (category: string) => {
     return transactions
@@ -160,7 +175,7 @@ const BudgetsPage = () => {
                 limit={budget.monthly_limit}
                 spent={calculateSpending(budget.category)}
                 currency={currency}
-                onBudgetUpdate={refetchBudgets}
+                onBudgetUpdate={handleBudgetUpdate}
               />
             ))}
           </div>
@@ -224,13 +239,13 @@ const BudgetsPage = () => {
         <BudgetForm
           open={isBudgetFormOpen}
           onOpenChange={setIsBudgetFormOpen}
-          onBudgetAdded={refetchBudgets}
+          onBudgetAdded={handleBudgetUpdate}
         />
 
         <MonthlyIncomeForm
           open={isIncomeFormOpen}
           onOpenChange={setIsIncomeFormOpen}
-          onIncomeAdded={refetchIncome}
+          onIncomeAdded={handleIncomeUpdate}
         />
       </div>
     </Layout>

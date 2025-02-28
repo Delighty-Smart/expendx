@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -37,6 +38,7 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
+  const queryClient = useQueryClient(); // Get the query client to invalidate queries
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -114,6 +116,13 @@ export function TransactionForm({
           throw error;
         }
       }
+
+      // Invalidate all relevant queries to ensure all pages update
+      // This will cause refetches where needed
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      // Add any other query keys that might be relevant
 
       toast({
         title: "Success",

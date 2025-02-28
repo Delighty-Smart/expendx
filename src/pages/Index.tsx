@@ -32,7 +32,7 @@ import {
 import Layout from "@/components/Layout";
 import { TransactionForm } from "@/components/TransactionForm";
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from "date-fns";
@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const { data: monthlyIncome } = useQuery({
     queryKey: ["monthly_income"],
@@ -55,7 +56,7 @@ const Dashboard = () => {
     },
   });
 
-  const { data: transactions } = useQuery({
+  const { data: transactions, refetch: refetchTransactions } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
       const today = new Date();
@@ -72,6 +73,14 @@ const Dashboard = () => {
       return data || [];
     },
   });
+
+  // Handle transaction operations with consistent cache invalidation
+  const handleTransactionAdded = () => {
+    // Refetch all relevant data
+    refetchTransactions();
+    queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+    queryClient.invalidateQueries({ queryKey: ["budgets"] });
+  };
 
   const calculateTotalIncome = () => {
     return transactions
@@ -251,6 +260,7 @@ const Dashboard = () => {
         <TransactionForm
           open={isTransactionFormOpen}
           onOpenChange={setIsTransactionFormOpen}
+          onTransactionAdded={handleTransactionAdded}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

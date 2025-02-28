@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ const TransactionsPage = () => {
   const [selectedType, setSelectedType] = useState<"all" | "credit" | "debit" | "savings">("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: transactions, refetch: refetchTransactions } = useQuery({
@@ -48,6 +49,12 @@ const TransactionsPage = () => {
     try {
       const { error } = await supabase.from("transactions").delete().in("id", ids);
       if (error) throw error;
+
+      // Invalidate all relevant queries to refresh data across the app
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      
       toast({
         title: "Success",
         description: "Transaction(s) deleted successfully"
