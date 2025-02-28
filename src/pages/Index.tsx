@@ -10,6 +10,8 @@ import {
   TrendingUp,
   AreaChart,
   LineChart,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import {
   BarChart,
@@ -54,6 +56,7 @@ const Dashboard = () => {
   const { currency } = useSettings();
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showAmounts, setShowAmounts] = useState(true);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   
@@ -262,7 +265,7 @@ const Dashboard = () => {
           {payload.name}
         </text>
         <text x={cx} y={cy + 5} dy={8} textAnchor="middle" fill={fill} fontSize={18} fontWeight="bold">
-          {currency.symbol}{value.toFixed(2)}
+          {showAmounts ? `${currency.symbol}${value.toFixed(2)}` : "***"}
         </text>
         <text x={cx} y={cy + 25} dy={8} textAnchor="middle" fill="#888888" fontSize={12}>
           {`${(percent * 100).toFixed(0)}%`}
@@ -290,23 +293,58 @@ const Dashboard = () => {
     );
   };
 
+  const formatAmount = (amount: number) => {
+    if (!showAmounts) return "******";
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // For Recharts tooltips when amounts are hidden
+  const formatTooltipAmount = (value: number) => {
+    if (!showAmounts) return ["******", ""];
+    return [`${currency.symbol}${value.toFixed(2)}`, ""];
+  };
+
+  // Toggle visibility of monetary amounts
+  const toggleAmountsVisibility = () => {
+    setShowAmounts(!showAmounts);
+  };
+
   return (
     <Layout>
       <div className="space-y-8">
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-4">
+            <Button
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
+              onClick={() => setIsTransactionFormOpen(true)}
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Transaction
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+            >
+              <Download className="h-4 w-4" />
+              Export Report
+            </Button>
+          </div>
+          
           <Button
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
-            onClick={() => setIsTransactionFormOpen(true)}
+            variant="ghost"
+            size="icon"
+            onClick={toggleAmountsVisibility}
+            className="ml-auto transition-all duration-200 hover:bg-muted"
+            aria-label={showAmounts ? "Hide money amounts" : "Show money amounts"}
           >
-            <PlusCircle className="h-4 w-4" />
-            Add Transaction
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-          >
-            <Download className="h-4 w-4" />
-            Export Report
+            {showAmounts ? (
+              <EyeOff className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <Eye className="h-5 w-5 text-muted-foreground" />
+            )}
           </Button>
         </div>
 
@@ -331,7 +369,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Balance</p>
-                <p className="text-2xl font-semibold">{currency.symbol}{currentBalance.toFixed(2)}</p>
+                <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
                 <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
@@ -355,7 +393,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Income</p>
-                <p className="text-2xl font-semibold text-secondary">{currency.symbol}{monthlyIncomeTotal.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
                 {monthlyIncome > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
@@ -365,7 +403,7 @@ const Dashboard = () => {
                       ></div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {progressPercentage.toFixed(0)}% of est. {currency.symbol}{monthlyIncome.toFixed(2)}
+                      {progressPercentage.toFixed(0)}% of est. {showAmounts ? `${currency.symbol}${monthlyIncome.toFixed(2)}` : "******"}
                     </p>
                   </div>
                 )}
@@ -386,7 +424,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Expenses</p>
-                <p className="text-2xl font-semibold text-destructive">{currency.symbol}{monthlyExpenses.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
                     <div 
@@ -431,13 +469,13 @@ const Dashboard = () => {
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                    tickFormatter={(value) => showAmounts ? `${currency.symbol}${value}` : "***"}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: number) => showAmounts ? [`${currency.symbol}${value.toFixed(2)}`, "Amount"] : ["******", "Amount"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
@@ -493,13 +531,13 @@ const Dashboard = () => {
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                    tickFormatter={(value) => showAmounts ? `${currency.symbol}${value}` : "***"}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, ""]}
+                    formatter={(value: number) => showAmounts ? [`${currency.symbol}${value.toFixed(2)}`, ""] : ["******", ""]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
@@ -560,13 +598,13 @@ const Dashboard = () => {
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                    tickFormatter={(value) => showAmounts ? `${currency.symbol}${value}` : "***"}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Balance"]}
+                    formatter={(value: number) => showAmounts ? [`${currency.symbol}${value.toFixed(2)}`, "Balance"] : ["******", "Balance"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
@@ -630,7 +668,7 @@ const Dashboard = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: number) => showAmounts ? [`${currency.symbol}${value.toFixed(2)}`, "Amount"] : ["******", "Amount"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
