@@ -60,10 +60,11 @@ const TransactionsPage = () => {
     },
   });
 
-  // Convert data to the correct Transaction type
+  // Convert data to the correct Transaction type with proper category type casting
   const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
     ...transaction,
-    type: transaction.type as TransactionType
+    type: transaction.type as TransactionType,
+    category: transaction.category as TransactionCategory
   }));
 
   // Setup a real-time subscription to transactions table changes

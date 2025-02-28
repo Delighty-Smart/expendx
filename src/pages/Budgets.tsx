@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { BudgetCard } from "@/components/BudgetCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Transaction, TransactionType } from "@/types/transactions";
+import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
 interface TransactionData {
@@ -83,10 +83,11 @@ const BudgetsPage = () => {
     },
   });
 
-  // Convert data to the correct Transaction type
+  // Convert data to the correct Transaction type with an explicit cast for the category
   const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
     ...transaction,
-    type: transaction.type as TransactionType
+    type: transaction.type as TransactionType,
+    category: transaction.category as TransactionCategory
   }));
 
   // Setup a real-time subscription to transactions table changes
