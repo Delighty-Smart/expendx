@@ -27,6 +27,7 @@ import {
   AreaChart as RechartAreaChart,
   Area,
   Legend,
+  Sector,
 } from "recharts";
 import Layout from "@/components/Layout";
 import { TransactionForm } from "@/components/TransactionForm";
