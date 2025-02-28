@@ -13,12 +13,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Transaction } from "@/types/transactions";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 
 const BudgetsPage = () => {
   const { currency } = useSettings();
   const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
   const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Get the current month's date range
+  const today = new Date();
+  const firstDayOfMonth = startOfMonth(today).toISOString();
+  const lastDayOfMonth = endOfMonth(today).toISOString();
 
   const { data: budgetCategories, refetch: refetchBudgets } = useQuery({
     queryKey: ["budgets"],
@@ -28,7 +34,7 @@ const BudgetsPage = () => {
         .select("*")
         .order("category");
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -45,19 +51,22 @@ const BudgetsPage = () => {
   });
 
   const { data: transactions } = useQuery({
-    queryKey: ["transactions"],
+    queryKey: ["transactions", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
-      const today = new Date();
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
+      console.log("Fetching transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
+      
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .gte("date", firstDay.toISOString())
-        .lte("date", lastDay.toISOString()) as { data: Transaction[] | null; error: any };
+        .gte("date", firstDayOfMonth)
+        .lte("date", lastDayOfMonth);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching transactions:", error);
+        throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} transactions in the current month`);
       return data || [];
     },
   });
@@ -77,15 +86,23 @@ const BudgetsPage = () => {
   };
 
   const calculateSpending = (category: string) => {
-    return transactions
-      ?.filter((t) => t.category === category && t.type === "debit")
-      .reduce((sum, t) => sum + t.amount, 0) || 0;
+    if (!transactions) return 0;
+    
+    const spending = transactions
+      .filter((t) => t.category === category && t.type === "debit")
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    return spending;
   };
 
   const calculateSavings = () => {
-    return transactions
-      ?.filter((t) => t.type === "savings")
-      .reduce((sum, t) => sum + t.amount, 0) || 0;
+    if (!transactions) return 0;
+    
+    const savings = transactions
+      .filter((t) => t.type === "savings")
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    return savings;
   };
 
   const savingsLimit = budgetCategories?.find(b => b.category === "Savings")?.monthly_limit || 0;
@@ -105,7 +122,8 @@ const BudgetsPage = () => {
     return budgetCategories
       .map((budget) => {
         const spent = calculateSpending(budget.category);
-        const percentage = (spent / budget.monthly_limit) * 100;
+        // Avoid division by zero
+        const percentage = budget.monthly_limit > 0 ? (spent / budget.monthly_limit) * 100 : 0;
         if (percentage >= 90) {
           return {
             category: budget.category,
@@ -120,6 +138,16 @@ const BudgetsPage = () => {
   };
 
   const alerts = getBudgetAlerts();
+
+  // Debug logging to help verify transactions are being calculated correctly
+  console.log("Current transactions count:", transactions?.length);
+  
+  // Calculate total monthly spending for all expense categories
+  const totalMonthlySpending = transactions
+    ?.filter(t => t.type === "debit")
+    .reduce((sum, t) => sum + t.amount, 0) || 0;
+  
+  console.log("Total monthly spending:", totalMonthlySpending);
 
   return (
     <Layout>

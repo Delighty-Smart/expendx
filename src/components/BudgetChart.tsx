@@ -30,18 +30,30 @@ interface BudgetChartProps {
 export function BudgetChart({ budgets, transactions, currency }: BudgetChartProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   
+  // Only use debit transactions for spending chart
   const expenseTransactions = transactions.filter(t => t.type === "debit");
+  
+  console.log(`BudgetChart: Found ${expenseTransactions.length} expense transactions`);
 
-  const data = budgets.map(budget => {
-    const spent = expenseTransactions
-      .filter(t => t.category === budget.category)
-      .reduce((sum, t) => sum + t.amount, 0);
-    
-    return {
-      name: budget.category,
-      value: spent,
-    };
-  }).filter(item => item.value > 0);
+  // Prepare pie chart data from spending
+  const data = budgets
+    .map(budget => {
+      // Calculate spending for this budget category
+      const spent = expenseTransactions
+        .filter(t => t.category === budget.category)
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      // Log each category and its spending for debugging
+      console.log(`Category ${budget.category}: spent ${spent}`);
+      
+      return {
+        name: budget.category,
+        value: spent,
+      };
+    })
+    .filter(item => item.value > 0); // Remove zero-spending categories
+
+  console.log(`BudgetChart: Generated ${data.length} data points for chart`);
 
   // Sort data by value in descending order for better visualization
   data.sort((a, b) => b.value - a.value);
@@ -105,6 +117,9 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
     );
   };
 
+  // Calculate total amount for percentage calculations
+  const totalAmount = data.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <div className="w-full h-[350px]">
       {data.length > 0 ? (
@@ -143,7 +158,7 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number) => `${currency.symbol}${formatAmount(value)}`}
+              formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, `${((value / totalAmount) * 100).toFixed(1)}%`]}
               contentStyle={{
                 backgroundColor: "rgba(255, 255, 255, 0.95)",
                 borderRadius: "0.5rem",
@@ -162,6 +177,13 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
               }}
               iconType="circle"
               iconSize={10}
+              formatter={(value, entry, index) => {
+                // Calculate percentage for each entry
+                const item = data[index];
+                if (!item) return value;
+                const percentage = totalAmount > 0 ? ((item.value / totalAmount) * 100).toFixed(0) : '0';
+                return `${value} (${percentage}%)`;
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
