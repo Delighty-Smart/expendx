@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   BarChart3,
   DollarSign,
-  Download,
   PlusCircle,
   TrendingDown,
   TrendingUp,
@@ -11,6 +10,8 @@ import {
   LineChart,
   Eye,
   EyeOff,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   BarChart,
@@ -318,22 +319,13 @@ const Dashboard = () => {
     <Layout>
       <div className="space-y-8">
         <div className="flex flex-wrap gap-4 justify-between">
-          <div className="flex gap-4">
-            <Button
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
-              onClick={() => setIsTransactionFormOpen(true)}
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add Transaction
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-            >
-              <Download className="h-4 w-4" />
-              Export Report
-            </Button>
-          </div>
+          <Button
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
+            onClick={() => setIsTransactionFormOpen(true)}
+          >
+            <PlusCircle className="h-4 w-4" />
+            Add Transaction
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -517,14 +509,26 @@ const Dashboard = () => {
             </h3>
             <div className="h-[300px] relative">
               <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
-                <Button size="sm" variant="outline" onClick={scrollToPreviousWeek} className="h-8 px-2 py-1">
-                  Previous Week
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={scrollToPreviousWeek} 
+                  className="h-8 w-8 p-0"
+                  aria-label="Previous Week"
+                >
+                  <ChevronLeft className="h-5 w-5" />
                 </Button>
-                <Button size="sm" variant="outline" onClick={scrollToNextWeek} className="h-8 px-2 py-1">
-                  Next Week
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={scrollToNextWeek} 
+                  className="h-8 w-8 p-0"
+                  aria-label="Next Week"
+                >
+                  <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>
-              <div className="text-center text-sm text-muted-foreground mt-8">
+              <div className="text-center text-sm text-muted-foreground mt-2">
                 Week of {format(currentWeekStart, 'MMMM d, yyyy')}
               </div>
               <ResponsiveContainer width="100%" height="100%">

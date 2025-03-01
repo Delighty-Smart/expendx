@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Moon, Search, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 const Settings = () => {
   const {
     currency,
@@ -18,10 +20,23 @@ const Settings = () => {
     toast
   } = useToast();
   const [search, setSearch] = useState("");
+  
+  // Load theme from localStorage on component mount
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("theme") || "dark";
+    // Get theme from localStorage or default to system preference
+    return localStorage.getItem("theme") || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? "dark" : "light");
   });
+  
+  // Apply theme when component mounts and when theme changes
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+  
   const filteredCurrencies = currencies.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase()));
+  
   const handleCurrencyChange = async (code: string) => {
     try {
       await updateCurrency(code);
@@ -37,17 +52,17 @@ const Settings = () => {
       });
     }
   };
+  
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-    document.documentElement.classList.toggle("light", newTheme === "light");
     toast({
       title: "Theme updated",
       description: `Theme switched to ${newTheme} mode.`
     });
   };
-  return <Layout>
+  
+  return (
+    <Layout>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-neutral">Settings</h1>
 
@@ -87,6 +102,8 @@ const Settings = () => {
           </div>
         </Card>
       </div>
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default Settings;

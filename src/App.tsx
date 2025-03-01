@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,20 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
+
+const initializeTheme = () => {
+  const theme = localStorage.getItem("theme");
+  if (theme) {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
+  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  } else {
+    document.documentElement.classList.add("light");
+    localStorage.setItem("theme", "light");
+  }
+};
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<null | boolean>(null);
@@ -42,61 +55,67 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SettingsProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/transactions"
-              element={
-                <ProtectedRoute>
-                  <TransactionsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/budgets"
-              element={
-                <ProtectedRoute>
-                  <BudgetsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </SettingsProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SettingsProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/transactions"
+                element={
+                  <ProtectedRoute>
+                    <TransactionsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/budgets"
+                element={
+                  <ProtectedRoute>
+                    <BudgetsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SettingsProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
