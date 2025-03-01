@@ -41,6 +41,7 @@ interface BudgetFormProps {
   onOpenChange: (open: boolean) => void;
   onBudgetAdded?: () => void;
   initialCategory?: string;
+  budgetId?: string;
 }
 
 export function BudgetForm({
@@ -48,6 +49,7 @@ export function BudgetForm({
   onOpenChange,
   onBudgetAdded,
   initialCategory,
+  budgetId,
 }: BudgetFormProps) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof budgetSchema>>({
@@ -64,6 +66,7 @@ export function BudgetForm({
       if (!user) throw new Error("No user found");
 
       const { error } = await supabase.from("budget_categories").upsert({
+        id: budgetId,
         category: values.category,
         monthly_limit: parseFloat(values.monthlyLimit),
         user_id: user.id,

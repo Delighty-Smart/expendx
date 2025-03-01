@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -39,7 +38,6 @@ const BudgetsPage = () => {
   const [newSavingsGoal, setNewSavingsGoal] = useState("");
   const queryClient = useQueryClient();
 
-  // Get the current month's date range
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
@@ -89,14 +87,12 @@ const BudgetsPage = () => {
     },
   });
 
-  // Convert data to the correct Transaction type with an explicit cast for the category
   const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
     ...transaction,
     type: transaction.type as TransactionType,
     category: transaction.category as TransactionCategory
   }));
 
-  // Set up real-time subscription to transactions table changes
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -108,7 +104,6 @@ const BudgetsPage = () => {
           table: 'transactions'
         },
         () => {
-          // When changes are detected, refetch data
           console.log('Transaction data changed, refreshing...');
           queryClient.invalidateQueries({ queryKey: ["transactions"] });
           queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
@@ -117,13 +112,11 @@ const BudgetsPage = () => {
       )
       .subscribe();
 
-    // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
 
-  // Fetch the savings goal from the budget categories
   useEffect(() => {
     if (budgetCategories) {
       const savingsBudget = budgetCategories.find(b => b.category === "Savings");
@@ -133,17 +126,13 @@ const BudgetsPage = () => {
     }
   }, [budgetCategories]);
 
-  // Ensure budget updates invalidate transaction queries to refresh all components
   const handleBudgetUpdate = () => {
     refetchBudgets();
-    // Ensure all dependent queries are refreshed as well
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
   };
 
-  // Same for income updates
   const handleIncomeUpdate = () => {
     refetchIncome();
-    // Ensure all dependent queries are refreshed
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
   };
 
@@ -157,20 +146,24 @@ const BudgetsPage = () => {
     const savingsBudget = budgetCategories?.find(b => b.category === "Savings");
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+      
       if (savingsBudget) {
-        // Update existing savings budget
         await supabase
           .from("budget_categories")
           .update({ monthly_limit: goalAmount })
           .eq("id", savingsBudget.id);
       } else {
-        // Create new savings budget
         await supabase
           .from("budget_categories")
-          .insert({ category: "Savings", monthly_limit: goalAmount });
+          .insert({ 
+            category: "Savings", 
+            monthly_limit: goalAmount,
+            user_id: user.id
+          });
       }
       
-      // Refresh the budgets
       handleBudgetUpdate();
       setIsSavingsDialogOpen(false);
       setNewSavingsGoal("");
@@ -216,7 +209,6 @@ const BudgetsPage = () => {
     return budgetCategories
       .map((budget) => {
         const spent = calculateSpending(budget.category);
-        // Avoid division by zero
         const percentage = budget.monthly_limit > 0 ? (spent / budget.monthly_limit) * 100 : 0;
         if (percentage >= 90) {
           return {
@@ -233,7 +225,6 @@ const BudgetsPage = () => {
 
   const alerts = getBudgetAlerts();
 
-  // Calculate total monthly spending for all expense categories
   const totalMonthlySpending = transactions
     ?.filter(t => t.type === "debit")
     .reduce((sum, t) => sum + t.amount, 0) || 0;
@@ -314,7 +305,6 @@ const BudgetsPage = () => {
             <div className="flex flex-col items-center justify-center h-full space-y-4">
               <div className="relative w-48 h-48">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" className="transform -rotate-90">
-                  {/* Background circle */}
                   <circle
                     cx="50"
                     cy="50"
@@ -324,7 +314,6 @@ const BudgetsPage = () => {
                     strokeWidth="10"
                     className="text-muted/20"
                   />
-                  {/* Progress circle */}
                   <circle
                     cx="50"
                     cy="50"
