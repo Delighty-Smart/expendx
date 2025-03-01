@@ -127,9 +127,11 @@ export function TransactionForm({
         });
       }
 
-      // Invalidate all relevant queries to ensure all pages update
-      // This will cause refetches where needed
+      // Immediately invalidate all relevant queries to ensure all pages update
+      // This triggers refetches immediately for real-time updates
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
       
       // Close the form and reset it
       onOpenChange(false);
