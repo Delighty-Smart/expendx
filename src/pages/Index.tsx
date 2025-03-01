@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +9,8 @@ import {
   TrendingUp,
   AreaChart,
   LineChart,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   BarChart,
@@ -35,7 +36,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, subWeeks, addWeeks } from "date-fns";
 import { TransactionType } from "@/types/transactions";
 
 interface TransactionData {
@@ -56,6 +57,8 @@ const Dashboard = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const [hideAmounts, setHideAmounts] = useState(false);
+  const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   
   // Get the current month's date range for consistent filtering
   const today = new Date();
@@ -170,13 +173,13 @@ const Dashboard = () => {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 5); // Get top 5 categories
 
-  // Prepare data for daily spending chart
+  // Update daily spending data to be week-based and scrollable
   const getDailySpendingData = () => {
     if (!transactions?.length) return [];
 
-    const today = new Date();
-    const startDate = startOfMonth(today);
-    const endDate = endOfMonth(today);
+    // Get the week range (current week by default)
+    const startDate = currentWeekStart;
+    const endDate = addWeeks(startDate, 1);
     
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     
@@ -193,10 +196,23 @@ const Dashboard = () => {
       
       return {
         date: format(day, 'dd'),
+        fullDate: format(day, 'MMM dd'),
         income: dayIncomes,
         expense: dayExpenses
       };
     });
+  };
+
+  const scrollToPreviousWeek = () => {
+    setCurrentWeekStart(prevDate => subWeeks(prevDate, 1));
+  };
+
+  const scrollToNextWeek = () => {
+    const nextWeek = addWeeks(currentWeekStart, 1);
+    // Don't allow scrolling beyond current date
+    if (nextWeek <= new Date()) {
+      setCurrentWeekStart(nextWeek);
+    }
   };
 
   const dailyData = getDailySpendingData();
@@ -290,23 +306,42 @@ const Dashboard = () => {
     );
   };
 
+  // Format amount that respects the hideAmounts state
+  const formatAmount = (amount: number) => {
+    if (hideAmounts) {
+      return "***";
+    }
+    return amount.toFixed(2);
+  };
+
   return (
     <Layout>
       <div className="space-y-8">
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 justify-between">
+          <div className="flex gap-4">
+            <Button
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
+              onClick={() => setIsTransactionFormOpen(true)}
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Transaction
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+            >
+              <Download className="h-4 w-4" />
+              Export Report
+            </Button>
+          </div>
           <Button
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
-            onClick={() => setIsTransactionFormOpen(true)}
+            variant="ghost"
+            size="icon"
+            onClick={() => setHideAmounts(!hideAmounts)}
+            className="text-muted-foreground hover:text-foreground"
+            title={hideAmounts ? "Show amounts" : "Hide amounts"}
           >
-            <PlusCircle className="h-4 w-4" />
-            Add Transaction
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-          >
-            <Download className="h-4 w-4" />
-            Export Report
+            {hideAmounts ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
           </Button>
         </div>
 
@@ -331,7 +366,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Balance</p>
-                <p className="text-2xl font-semibold">{currency.symbol}{currentBalance.toFixed(2)}</p>
+                <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
                 <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
@@ -355,7 +390,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Income</p>
-                <p className="text-2xl font-semibold text-secondary">{currency.symbol}{monthlyIncomeTotal.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
                 {monthlyIncome > 0 && (
                   <div className="flex items-center gap-1 mt-1">
                     <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
@@ -365,7 +400,7 @@ const Dashboard = () => {
                       ></div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {progressPercentage.toFixed(0)}% of est. {currency.symbol}{monthlyIncome.toFixed(2)}
+                      {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : monthlyIncome.toFixed(2)}
                     </p>
                   </div>
                 )}
@@ -386,7 +421,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Expenses</p>
-                <p className="text-2xl font-semibold text-destructive">{currency.symbol}{monthlyExpenses.toFixed(2)}</p>
+                <p className="text-2xl font-semibold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
                     <div 
@@ -414,30 +449,38 @@ const Dashboard = () => {
             </h3>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={spendingData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart 
+                  data={spendingData} 
+                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                  barSize={50}
+                  layout="vertical"
+                >
                   <defs>
                     {COLORS.map((color, index) => (
-                      <linearGradient key={`bar-gradient-${index}`} id={`bar-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient key={`bar-gradient-${index}`} id={`bar-gradient-${index}`} x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor={color} stopOpacity={0.8} />
                         <stop offset="100%" stopColor={color} stopOpacity={0.4} />
                       </linearGradient>
                     ))}
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                  <XAxis 
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
+                  <YAxis 
                     dataKey="name" 
+                    type="category"
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    width={120}
                   />
-                  <YAxis 
-                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                  <XAxis 
+                    type="number"
+                    tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
@@ -451,7 +494,7 @@ const Dashboard = () => {
                     dataKey="amount" 
                     animationDuration={1500}
                     animationEasing="ease-out"
-                    radius={[4, 4, 0, 0]}
+                    radius={[0, 4, 4, 0]}
                   >
                     {spendingData.map((entry, index) => (
                       <Cell 
@@ -472,9 +515,20 @@ const Dashboard = () => {
               <AreaChart className="h-5 w-5 text-primary" />
               Daily Income & Expenses
             </h3>
-            <div className="h-[300px]">
+            <div className="h-[300px] relative">
+              <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
+                <Button size="sm" variant="outline" onClick={scrollToPreviousWeek} className="h-8 px-2 py-1">
+                  Previous Week
+                </Button>
+                <Button size="sm" variant="outline" onClick={scrollToNextWeek} className="h-8 px-2 py-1">
+                  Next Week
+                </Button>
+              </div>
+              <div className="text-center text-sm text-muted-foreground mt-8">
+                Week of {format(currentWeekStart, 'MMMM d, yyyy')}
+              </div>
               <ResponsiveContainer width="100%" height="100%">
-                <RechartAreaChart data={dailyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <RechartAreaChart data={dailyData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#A3CE22" stopOpacity={0.8}/>
@@ -487,19 +541,19 @@ const Dashboard = () => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                   <XAxis 
-                    dataKey="date" 
+                    dataKey="fullDate" 
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                    tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, ""]}
+                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, ""]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
@@ -560,13 +614,13 @@ const Dashboard = () => {
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <YAxis 
-                    tickFormatter={(value) => `${currency.symbol}${value}`}
+                    tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
                     tick={{ fontSize: 12 }}
                     tickLine={false}
                     axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Balance"]}
+                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Balance"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
@@ -580,7 +634,8 @@ const Dashboard = () => {
                     dataKey="balance" 
                     stroke="#00AAFF" 
                     strokeWidth={3}
-                    dot={{ stroke: '#00AAFF', strokeWidth: 2, r: 4, fill: 'white' }}
+                    connectNulls={true}
+                    dot={false}
                     activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
                     animationDuration={2000}
                     animationEasing="ease-out"
@@ -608,7 +663,7 @@ const Dashboard = () => {
                   </defs>
                   <Pie
                     activeIndex={activeIndex}
-                    activeShape={renderActiveShape}
+                    activeShape={props => renderActiveShape({...props, value: hideAmounts ? 0 : props.value})}
                     data={spendingData}
                     cx="50%"
                     cy="50%"
@@ -619,6 +674,8 @@ const Dashboard = () => {
                     animationBegin={0}
                     animationDuration={1200}
                     animationEasing="ease-out"
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    labelLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                   >
                     {spendingData.map((entry, index) => (
                       <Cell 
@@ -630,7 +687,7 @@ const Dashboard = () => {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => [`${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
                     contentStyle={{
                       backgroundColor: "rgba(255, 255, 255, 0.95)",
                       backdropFilter: "blur(8px)",
