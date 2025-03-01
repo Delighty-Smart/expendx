@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 import { Transaction, TransactionType, TransactionCategory, expenseCategories, incomeCategories, savingsCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -147,21 +147,37 @@ const TransactionsPage = () => {
     return matchesSearch && matchesCategory && matchesType;
   });
 
+  // Group transactions by month, then by day
   const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
     const month = format(new Date(transaction.date), "MMMM yyyy");
     if (!groups[month]) {
-      groups[month] = [];
+      groups[month] = {};
     }
-    groups[month].push(transaction);
+    
+    const day = format(new Date(transaction.date), "yyyy-MM-dd");
+    if (!groups[month][day]) {
+      groups[month][day] = [];
+    }
+    
+    groups[month][day].push(transaction);
     return groups;
-  }, {} as Record<string, Transaction[]>) || {};
+  }, {} as Record<string, Record<string, Transaction[]>>) || {};
 
-  const handleSelectAll = (monthTransactions: Transaction[]) => {
-    const monthTransactionIds = monthTransactions.map(t => t.id);
-    if (monthTransactionIds.every(id => selectedTransactions.includes(id))) {
-      setSelectedTransactions(prev => prev.filter(id => !monthTransactionIds.includes(id)));
+  // Sort daily transactions by date (latest first)
+  Object.keys(groupedTransactions).forEach(month => {
+    Object.keys(groupedTransactions[month]).forEach(day => {
+      groupedTransactions[month][day].sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+    });
+  });
+
+  const handleSelectAll = (transactions: Transaction[]) => {
+    const transactionIds = transactions.map(t => t.id);
+    if (transactionIds.every(id => selectedTransactions.includes(id))) {
+      setSelectedTransactions(prev => prev.filter(id => !transactionIds.includes(id)));
     } else {
-      setSelectedTransactions(prev => [...prev, ...monthTransactionIds.filter(id => !prev.includes(id))]);
+      setSelectedTransactions(prev => [...prev, ...transactionIds.filter(id => !prev.includes(id))]);
     }
   };
 
@@ -170,6 +186,13 @@ const TransactionsPage = () => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
+  };
+
+  // Get sorted days for a month (latest first)
+  const getSortedDays = (month: string) => {
+    return Object.keys(groupedTransactions[month]).sort((a, b) => 
+      new Date(b).getTime() - new Date(a).getTime()
+    );
   };
 
   return (
@@ -236,93 +259,111 @@ const TransactionsPage = () => {
               </div>
             </div>
 
-            {Object.entries(groupedTransactions).map(([month, monthTransactions]) => (
+            {Object.entries(groupedTransactions).map(([month, daysInMonth]) => (
               <div key={month} className="rounded-md border">
                 <div className="bg-muted px-4 py-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Checkbox 
-                      checked={monthTransactions.every(t => selectedTransactions.includes(t.id))} 
-                      onCheckedChange={() => handleSelectAll(monthTransactions)} 
+                      checked={Object.values(daysInMonth).flat().every(t => selectedTransactions.includes(t.id))} 
+                      onCheckedChange={() => handleSelectAll(Object.values(daysInMonth).flat())} 
                     />
                     <h3 className="font-semibold">{month}</h3>
                   </div>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[30px]"></TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {monthTransactions.map(transaction => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
+                
+                {getSortedDays(month).map(day => {
+                  const dayTransactions = daysInMonth[day];
+                  const formattedDay = format(parseISO(day), "EEEE, MMMM d");
+                  
+                  return (
+                    <div key={day}>
+                      <div className="px-4 py-2 bg-muted/30 border-t border-b">
+                        <div className="flex items-center gap-2">
                           <Checkbox 
-                            checked={selectedTransactions.includes(transaction.id)} 
-                            onCheckedChange={(checked) => {
-                              setSelectedTransactions(prev => 
-                                checked 
-                                  ? [...prev, transaction.id] 
-                                  : prev.filter(id => id !== transaction.id)
-                              );
-                            }} 
+                            checked={dayTransactions.every(t => selectedTransactions.includes(t.id))} 
+                            onCheckedChange={() => handleSelectAll(dayTransactions)} 
                           />
-                        </TableCell>
-                        <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
-                        <TableCell>{transaction.description}</TableCell>
-                        <TableCell>{transaction.category}</TableCell>
-                        <TableCell>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.type === "credit" 
-                              ? "bg-green-100 text-green-800" 
-                              : transaction.type === "debit"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}>
-                            {transaction.type}
-                          </span>
-                        </TableCell>
-                        <TableCell className={`text-right ${
-                          transaction.type === "credit" 
-                            ? "text-green-600" 
-                            : transaction.type === "debit"
-                            ? "text-red-600"
-                            : "text-blue-600"
-                        }`}>
-                          {currency.symbol}{formatAmount(transaction.amount)}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setEditingTransaction(transaction);
-                                setIsTransactionFormOpen(true);
-                              }}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete([transaction.id])}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          <h4 className="text-sm font-medium text-muted-foreground">{formattedDay}</h4>
+                        </div>
+                      </div>
+                      
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[30px]"></TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Category</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead className="w-[50px]"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {dayTransactions.map(transaction => (
+                            <TableRow key={transaction.id}>
+                              <TableCell>
+                                <Checkbox 
+                                  checked={selectedTransactions.includes(transaction.id)} 
+                                  onCheckedChange={(checked) => {
+                                    setSelectedTransactions(prev => 
+                                      checked 
+                                        ? [...prev, transaction.id] 
+                                        : prev.filter(id => id !== transaction.id)
+                                    );
+                                  }} 
+                                />
+                              </TableCell>
+                              <TableCell>{transaction.description}</TableCell>
+                              <TableCell>{transaction.category}</TableCell>
+                              <TableCell>
+                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                  transaction.type === "credit" 
+                                    ? "bg-green-100 text-green-800" 
+                                    : transaction.type === "debit"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-blue-100 text-blue-800"
+                                }`}>
+                                  {transaction.type}
+                                </span>
+                              </TableCell>
+                              <TableCell className={`text-right ${
+                                transaction.type === "credit" 
+                                  ? "text-green-600" 
+                                  : transaction.type === "debit"
+                                  ? "text-red-600"
+                                  : "text-blue-600"
+                              }`}>
+                                {currency.symbol}{formatAmount(transaction.amount)}
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => {
+                                      setEditingTransaction(transaction);
+                                      setIsTransactionFormOpen(true);
+                                    }}>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDelete([transaction.id])}>
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
