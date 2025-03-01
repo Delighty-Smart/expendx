@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, AlertCircle, DollarSign } from "lucide-react";
+import { PlusCircle, AlertCircle, DollarSign, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { BudgetForm } from "@/components/BudgetForm";
@@ -14,6 +14,9 @@ import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
 import { format, startOfMonth, endOfMonth } from "date-fns";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface TransactionData {
   id: string;
@@ -31,6 +34,9 @@ const BudgetsPage = () => {
   const { currency } = useSettings();
   const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
   const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
+  const [isSavingsDialogOpen, setIsSavingsDialogOpen] = useState(false);
+  const [savingsGoal, setSavingsGoal] = useState(0);
+  const [newSavingsGoal, setNewSavingsGoal] = useState("");
   const queryClient = useQueryClient();
 
   // Get the current month's date range
@@ -90,7 +96,7 @@ const BudgetsPage = () => {
     category: transaction.category as TransactionCategory
   }));
 
-  // Setup a real-time subscription to transactions table changes
+  // Set up real-time subscription to transactions table changes
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -117,6 +123,16 @@ const BudgetsPage = () => {
     };
   }, [queryClient]);
 
+  // Fetch the savings goal from the budget categories
+  useEffect(() => {
+    if (budgetCategories) {
+      const savingsBudget = budgetCategories.find(b => b.category === "Savings");
+      if (savingsBudget) {
+        setSavingsGoal(savingsBudget.monthly_limit);
+      }
+    }
+  }, [budgetCategories]);
+
   // Ensure budget updates invalidate transaction queries to refresh all components
   const handleBudgetUpdate = () => {
     refetchBudgets();
@@ -129,6 +145,38 @@ const BudgetsPage = () => {
     refetchIncome();
     // Ensure all dependent queries are refreshed
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
+  };
+
+  const handleSavingsGoalSubmit = async () => {
+    const goalAmount = parseFloat(newSavingsGoal);
+    
+    if (isNaN(goalAmount) || goalAmount <= 0) {
+      return;
+    }
+    
+    const savingsBudget = budgetCategories?.find(b => b.category === "Savings");
+    
+    try {
+      if (savingsBudget) {
+        // Update existing savings budget
+        await supabase
+          .from("budget_categories")
+          .update({ monthly_limit: goalAmount })
+          .eq("id", savingsBudget.id);
+      } else {
+        // Create new savings budget
+        await supabase
+          .from("budget_categories")
+          .insert({ category: "Savings", monthly_limit: goalAmount });
+      }
+      
+      // Refresh the budgets
+      handleBudgetUpdate();
+      setIsSavingsDialogOpen(false);
+      setNewSavingsGoal("");
+    } catch (error) {
+      console.error("Error updating savings goal:", error);
+    }
   };
 
   const calculateSpending = (category: string) => {
@@ -185,15 +233,10 @@ const BudgetsPage = () => {
 
   const alerts = getBudgetAlerts();
 
-  // Debug logging to help verify transactions are being calculated correctly
-  console.log("Current transactions count:", transactions?.length);
-  
   // Calculate total monthly spending for all expense categories
   const totalMonthlySpending = transactions
     ?.filter(t => t.type === "debit")
     .reduce((sum, t) => sum + t.amount, 0) || 0;
-  
-  console.log("Total monthly spending:", totalMonthlySpending);
 
   return (
     <Layout>
@@ -241,10 +284,11 @@ const BudgetsPage = () => {
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Budget Progress</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {budgetCategories?.map((budget) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {budgetCategories?.filter(budget => budget.category !== "Savings").map((budget) => (
               <BudgetCard
                 key={budget.id}
+                id={budget.id}
                 category={budget.category}
                 limit={budget.monthly_limit}
                 spent={calculateSpending(budget.category)}
@@ -268,44 +312,81 @@ const BudgetsPage = () => {
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Savings Progress</h2>
             <div className="flex flex-col items-center justify-center h-full space-y-4">
-              <div className="relative">
-                <svg width="200" height="200" className="-rotate-90">
+              <div className="relative w-48 h-48">
+                <svg width="100%" height="100%" viewBox="0 0 100 100" className="transform -rotate-90">
+                  {/* Background circle */}
                   <circle
-                    cx="100"
-                    cy="100"
-                    r="90"
+                    cx="50"
+                    cy="50"
+                    r="45"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="12"
+                    strokeWidth="10"
                     className="text-muted/20"
                   />
+                  {/* Progress circle */}
                   <circle
-                    cx="100"
-                    cy="100"
-                    r="90"
+                    cx="50"
+                    cy="50"
+                    r="45"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="12"
-                    strokeDasharray={`${2 * Math.PI * 90}`}
-                    strokeDashoffset={`${2 * Math.PI * 90 * (1 - savingsPercentage / 100)}`}
-                    className="text-green-500"
+                    strokeWidth="10"
+                    strokeDasharray={`${2 * Math.PI * 45}`}
+                    strokeDashoffset={`${2 * Math.PI * 45 * (1 - savingsPercentage / 100)}`}
+                    className="text-green-500 transition-all duration-700 ease-out"
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   <p className="text-sm text-muted-foreground">Current Savings</p>
                   <p className="text-2xl font-bold">{currency.symbol}{formatAmount(currentSavings)}</p>
-                  <p className="text-sm text-muted-foreground">of {currency.symbol}{formatAmount(savingsLimit)}</p>
+                  {savingsLimit > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      of {currency.symbol}{formatAmount(savingsLimit)} ({Math.round(savingsPercentage)}%)
+                    </p>
+                  )}
                 </div>
               </div>
-              <Button
-                onClick={() => {
-                  setIsBudgetFormOpen(true);
-                }}
-                variant="outline"
-              >
-                Set Savings Goal
-              </Button>
+              
+              <Dialog open={isSavingsDialogOpen} onOpenChange={setIsSavingsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">Set Savings Goal</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Set Savings Goal</DialogTitle>
+                    <DialogDescription>
+                      Enter your monthly savings target. This will help track your progress.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="savingsGoal" className="text-right col-span-1">
+                        Amount
+                      </Label>
+                      <div className="col-span-3 flex items-center gap-2">
+                        <span>{currency.symbol}</span>
+                        <Input
+                          id="savingsGoal"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newSavingsGoal}
+                          onChange={(e) => setNewSavingsGoal(e.target.value)}
+                          className="col-span-3"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button onClick={handleSavingsGoalSubmit}>Save</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </Card>
         </div>
