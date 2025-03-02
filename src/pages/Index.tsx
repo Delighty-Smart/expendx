@@ -677,7 +677,7 @@ const Dashboard = () => {
                     animationEasing="ease-out"
                     label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                     labelLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                    labelProps={{ fontSize: 10 }}
+                    fontSize={9}
                   >
                     {spendingData.map((entry, index) => (
                       <Cell 
@@ -699,9 +699,9 @@ const Dashboard = () => {
                     }}
                   />
                   <Legend 
-                    formatter={(value, entry) => <span style={{ fontSize: '10px' }}>{value}</span>}
+                    formatter={(value, entry) => <span style={{ fontSize: '9px' }}>{value}</span>}
                     iconSize={8}
-                    wrapperStyle={{ fontSize: '10px' }}
+                    wrapperStyle={{ fontSize: '9px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
