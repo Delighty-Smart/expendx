@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,7 +61,6 @@ const Dashboard = () => {
   const [hideAmounts, setHideAmounts] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   
-  // Get the current month's date range for consistent filtering
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
@@ -96,13 +94,11 @@ const Dashboard = () => {
     },
   });
 
-  // Convert data to the correct transaction type
   const transactions = (transactionsData || []).map(transaction => ({
     ...transaction,
     type: transaction.type as TransactionType
   }));
 
-  // Setup a real-time subscription to transactions table changes
   useEffect(() => {
     console.log("Setting up real-time subscription to transactions table");
     
@@ -116,7 +112,6 @@ const Dashboard = () => {
           table: 'transactions'
         },
         (payload) => {
-          // When changes are detected, refresh all data
           console.log('Transaction changes detected:', payload);
           queryClient.invalidateQueries({ queryKey: ["transactions"] });
           queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
@@ -125,16 +120,13 @@ const Dashboard = () => {
       )
       .subscribe();
 
-    // Cleanup subscription on unmount
     return () => {
       console.log("Cleaning up real-time subscription");
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
 
-  // Handle transaction operations with consistent cache invalidation
   const handleTransactionAdded = () => {
-    // Refetch all relevant data
     refetchTransactions();
     queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
     queryClient.invalidateQueries({ queryKey: ["budgets"] });
@@ -162,14 +154,12 @@ const Dashboard = () => {
   const monthlyExpenses = calculateTotalExpenses();
   const monthlySavings = calculateTotalSavings();
   
-  // Subtract savings from the balance calculation
   const currentBalance = monthlyIncomeTotal - monthlyExpenses - monthlySavings;
   
   const progressPercentage = monthlyIncome > 0 
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100) 
     : 0;
 
-  // Prepare data for category spending chart
   const spendingByCategory = transactions
     ?.filter((t) => t.type === "debit")
     .reduce((acc, t) => {
@@ -183,13 +173,11 @@ const Dashboard = () => {
       amount,
     }))
     .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5); // Get top 5 categories
+    .slice(0, 5);
 
-  // Update daily spending data to be week-based and scrollable
   const getDailySpendingData = () => {
     if (!transactions?.length) return [];
 
-    // Get the week range (current week by default)
     const startDate = currentWeekStart;
     const endDate = addWeeks(startDate, 1);
     
@@ -221,7 +209,6 @@ const Dashboard = () => {
 
   const scrollToNextWeek = () => {
     const nextWeek = addWeeks(currentWeekStart, 1);
-    // Don't allow scrolling beyond current date
     if (nextWeek <= new Date()) {
       setCurrentWeekStart(nextWeek);
     }
@@ -229,7 +216,6 @@ const Dashboard = () => {
 
   const dailyData = getDailySpendingData();
 
-  // Prepare data for trend line chart - Updated to incorporate savings transactions
   const getTrendData = () => {
     if (!transactions?.length) return [];
 
@@ -257,7 +243,6 @@ const Dashboard = () => {
         .filter(t => t.type === 'savings')
         .reduce((sum, t) => sum + t.amount, 0);
       
-      // Update running balance calculation to include savings
       runningBalance += dayIncome - dayExpense - daySavings;
       
       return {
@@ -269,12 +254,9 @@ const Dashboard = () => {
 
   const trendData = getTrendData();
 
-  // Colors for charts
   const COLORS = ["#00AAFF", "#A3CE22", "#4B5563", "#9CA3AF", "#F59E0B"];
 
-  // Make charts visible immediately instead of relying on intersection observer
   useEffect(() => {
-    // Immediately show all charts when component mounts or transactions change
     const charts = document.querySelectorAll('.chart-container');
     charts.forEach(chart => {
       chart.classList.remove('opacity-0');
@@ -282,7 +264,6 @@ const Dashboard = () => {
     });
   }, [transactions]);
 
-  // Handle pie chart interactive elements
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index);
   };
@@ -324,7 +305,6 @@ const Dashboard = () => {
     );
   };
 
-  // Format amount that respects the hideAmounts state
   const formatAmount = (amount: number) => {
     if (hideAmounts) {
       return "***";
@@ -697,6 +677,7 @@ const Dashboard = () => {
                     animationEasing="ease-out"
                     label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                     labelLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    labelProps={{ fontSize: 10 }}
                   >
                     {spendingData.map((entry, index) => (
                       <Cell 
@@ -716,6 +697,11 @@ const Dashboard = () => {
                       borderRadius: "0.5rem",
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                     }}
+                  />
+                  <Legend 
+                    formatter={(value, entry) => <span style={{ fontSize: '10px' }}>{value}</span>}
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: '10px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
