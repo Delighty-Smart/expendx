@@ -163,12 +163,19 @@ const TransactionsPage = () => {
     return groups;
   }, {} as Record<string, Record<string, Transaction[]>>) || {};
 
-  // Sort daily transactions by date (latest first)
+  // Sort daily transactions by creation time (latest first)
   Object.keys(groupedTransactions).forEach(month => {
     Object.keys(groupedTransactions[month]).forEach(day => {
-      groupedTransactions[month][day].sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+      groupedTransactions[month][day].sort((a, b) => {
+        // First sort by date if available
+        if (a.date !== b.date) {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        }
+        // Then sort by created_at timestamp for same-day transactions
+        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bTime - aTime;
+      });
     });
   });
 
