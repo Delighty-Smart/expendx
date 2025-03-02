@@ -17,6 +17,13 @@ export const supabase = createClient<Database>(
       params: {
         eventsPerSecond: 10
       }
+    },
+    db: {
+      schema: 'public'
+    },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true
     }
   }
 );

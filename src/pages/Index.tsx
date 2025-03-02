@@ -12,6 +12,7 @@ import {
   EyeOff,
   ChevronLeft,
   ChevronRight,
+  Flame
 } from "lucide-react";
 import {
   BarChart,
@@ -39,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, subWeeks, addWeeks } from "date-fns";
 import { TransactionType } from "@/types/transactions";
+import { updateUserStreak, getStreakText } from "@/lib/streak";
 
 interface TransactionData {
   id: string;
@@ -64,6 +66,25 @@ const Dashboard = () => {
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
+
+  const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
+    queryKey: ["user_streak"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      await updateUserStreak();
+
+      const { data, error } = await supabase
+        .from("user_streaks")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: monthlyIncome } = useQuery({
     queryKey: ["monthly_income"],
@@ -323,15 +344,26 @@ const Dashboard = () => {
             <PlusCircle className="h-4 w-4" />
             Add Transaction
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setHideAmounts(!hideAmounts)}
-            className="text-muted-foreground hover:text-foreground"
-            title={hideAmounts ? "Show amounts" : "Hide amounts"}
-          >
-            {hideAmounts ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-          </Button>
+          <div className="flex items-center gap-4">
+            {streakData && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg">
+                <Flame className="h-5 w-5 animate-pulse text-yellow-200" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold">{streakData.current_title}</span>
+                  <span className="text-xs">Streak: {getStreakText(streakData.current_streak)}</span>
+                </div>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHideAmounts(!hideAmounts)}
+              className="text-muted-foreground hover:text-foreground"
+              title={hideAmounts ? "Show amounts" : "Hide amounts"}
+            >
+              {hideAmounts ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
 
         <TransactionForm

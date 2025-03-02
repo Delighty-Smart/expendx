@@ -1,12 +1,24 @@
-
 import { Menu } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { updateUserStreak } from "@/lib/streak";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    const updateStreak = async () => {
+      try {
+        await updateUserStreak();
+      } catch (error) {
+        console.error("Error updating streak:", error);
+      }
+    };
+
+    updateStreak();
+  }, []);
 
   const menuItems = [
     { path: "/", label: "Dashboard" },
