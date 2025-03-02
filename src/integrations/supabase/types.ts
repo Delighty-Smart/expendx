@@ -557,6 +557,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number
+          current_title: string
+          freeze_count: number
+          highest_streak: number
+          id: string
+          last_login: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number
+          current_title?: string
+          freeze_count?: number
+          highest_streak?: number
+          id?: string
+          last_login?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number
+          current_title?: string
+          freeze_count?: number
+          highest_streak?: number
+          id?: string
+          last_login?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null
