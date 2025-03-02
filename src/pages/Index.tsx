@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -151,9 +152,19 @@ const Dashboard = () => {
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
+  const calculateTotalSavings = () => {
+    return transactions
+      ?.filter((t) => t.type === "savings")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
   const monthlyIncomeTotal = calculateTotalIncome();
   const monthlyExpenses = calculateTotalExpenses();
-  const currentBalance = monthlyIncomeTotal - monthlyExpenses;
+  const monthlySavings = calculateTotalSavings();
+  
+  // Subtract savings from the balance calculation
+  const currentBalance = monthlyIncomeTotal - monthlyExpenses - monthlySavings;
+  
   const progressPercentage = monthlyIncome > 0 
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100) 
     : 0;
@@ -218,7 +229,7 @@ const Dashboard = () => {
 
   const dailyData = getDailySpendingData();
 
-  // Prepare data for trend line chart
+  // Prepare data for trend line chart - Updated to incorporate savings transactions
   const getTrendData = () => {
     if (!transactions?.length) return [];
 
@@ -233,6 +244,7 @@ const Dashboard = () => {
       const dayStr = format(day, 'yyyy-MM-dd');
       
       const dayTransactions = transactions.filter(t => t.date.startsWith(dayStr));
+      
       const dayIncome = dayTransactions
         .filter(t => t.type === 'credit')
         .reduce((sum, t) => sum + t.amount, 0);
@@ -241,7 +253,12 @@ const Dashboard = () => {
         .filter(t => t.type === 'debit')
         .reduce((sum, t) => sum + t.amount, 0);
       
-      runningBalance += dayIncome - dayExpense;
+      const daySavings = dayTransactions
+        .filter(t => t.type === 'savings')
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      // Update running balance calculation to include savings
+      runningBalance += dayIncome - dayExpense - daySavings;
       
       return {
         date: format(day, 'dd'),
