@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -189,18 +190,7 @@ const UserProfileTab = () => {
           <div className="grid gap-6">
             <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
               <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
-                {isEditing ? (
-                  <AvatarSelector 
-                    currentAvatar={avatarUrl} 
-                    onSelect={(avatar) => setAvatarUrl(avatar)} 
-                  />
-                ) : (
-                  <img 
-                    src={getAvatarImageUrl(avatarUrl)} 
-                    alt="Profile avatar" 
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                {renderAvatarSection()}
               </div>
               
               <div className="flex-1 space-y-4">
