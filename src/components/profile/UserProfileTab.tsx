@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Flame, Trophy, Calendar } from "lucide-react";
-import AvatarSelector from "./AvatarSelector";
+import AvatarSelector, { getAvatarImageUrl } from "./AvatarSelector";
 import { UserProfile } from "@/types/alerts";
 
 const UserProfileTab = () => {
@@ -40,7 +40,6 @@ const UserProfileTab = () => {
     'Under 18', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'
   ];
 
-  // Fetch user profile and streak data
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
@@ -52,7 +51,6 @@ const UserProfileTab = () => {
           return;
         }
         
-        // Fetch profile data
         const { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
           .select("*")
@@ -65,7 +63,6 @@ const UserProfileTab = () => {
           return;
         }
         
-        // Fetch streak data
         const { data: streakData, error: streakError } = await supabase
           .from("user_streaks")
           .select("*")
@@ -76,7 +73,6 @@ const UserProfileTab = () => {
           console.error("Error fetching streak:", streakError);
         }
         
-        // Update state with fetched data
         setProfile(profileData);
         setUsername(profileData.username || "");
         setAvatarUrl(profileData.avatar_url || "avatar-1.png");
@@ -132,7 +128,6 @@ const UserProfileTab = () => {
       toast.success("Profile updated successfully");
       setIsEditing(false);
       
-      // Update the profile state
       setProfile(prev => {
         if (!prev) return null;
         return {
@@ -155,7 +150,6 @@ const UserProfileTab = () => {
     return <div className="flex justify-center p-8">Loading profile data...</div>;
   }
 
-  // Update the AvatarSelector section in the component body
   const renderAvatarSection = () => {
     if (isEditing) {
       return (
@@ -175,8 +169,6 @@ const UserProfileTab = () => {
     }
   };
 
-  // Import the getAvatarImageUrl function directly
-  import { getAvatarImageUrl } from "./AvatarSelector";
   return (
     <div className="space-y-6">
       <Card>
@@ -200,11 +192,11 @@ const UserProfileTab = () => {
                 {isEditing ? (
                   <AvatarSelector 
                     selectedAvatar={avatarUrl} 
-                    onSelectAvatar={(avatar) => setAvatarUrl(avatar)} 
+                    onSelect={(avatar) => setAvatarUrl(avatar)} 
                   />
                 ) : (
                   <img 
-                    src={AvatarSelector.getAvatarImageUrl(avatarUrl)} 
+                    src={getAvatarImageUrl(avatarUrl)} 
                     alt="Profile avatar" 
                     className="w-full h-full object-cover"
                   />

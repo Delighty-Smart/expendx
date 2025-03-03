@@ -51,9 +51,9 @@ export const getAvatarImageUrl = (key: string): string => {
 
 interface AvatarSelectorProps {
   currentAvatar?: string;
-  selectedAvatar?: string; // Added to match prop in UserProfileTab
-  onSelect: (avatarUrl: string) => void;
-  onSelectAvatar?: (avatarUrl: string) => void; // Added to match prop in UserProfileTab
+  selectedAvatar?: string;
+  onSelect?: (avatarUrl: string) => void;
+  onSelectAvatar?: (avatarUrl: string) => void;
 }
 
 const AvatarSelector: React.FC<AvatarSelectorProps> = ({
