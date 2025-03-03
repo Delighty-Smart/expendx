@@ -14,6 +14,21 @@ export interface UserStreak {
   updated_at: string;
 }
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  country?: string;
+  continent?: string;
+  age_bracket?: string;
+  bio?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 export const STREAK_MILESTONES = [
   { days: 1, title: "Budget Beginner" },
   { days: 7, title: "Penny Pioneer" },
@@ -150,7 +165,7 @@ export function getStreakText(streak: number): string {
 }
 
 // Get user profile data including email
-export async function getUserProfile() {
+export async function getUserProfile(): Promise<UserProfile | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -170,5 +185,24 @@ export async function getUserProfile() {
   } catch (error) {
     console.error("Error in getUserProfile:", error);
     return null;
+  }
+}
+
+// Create alert for streak freeze warning
+export async function createStreakFreezeAlert(userId: string, freezeCount: number): Promise<void> {
+  try {
+    const { error } = await supabase.from("alerts").insert([{
+      user_id: userId,
+      title: "Streak Freeze Warning",
+      message: `You have ${freezeCount} streak freeze days left. Log in daily to maintain your streak!`,
+      type: "streak_freeze",
+      read: false
+    }]);
+    
+    if (error) {
+      console.error("Error creating streak freeze alert:", error);
+    }
+  } catch (error) {
+    console.error("Error in createStreakFreezeAlert:", error);
   }
 }
