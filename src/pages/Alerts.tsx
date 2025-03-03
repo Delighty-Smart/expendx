@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -9,9 +8,20 @@ import { Bell, User, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase, getTable } from "@/integrations/supabase/client";
 import { Alert, AlertType } from "@/types/alerts";
+import { getAvatarImageUrl } from "@/components/profile/AvatarSelector";
+
+interface SenderInfo {
+  id: string;
+  username: string;
+  avatar_url: string;
+}
+
+interface AlertWithSender extends Alert {
+  sender?: SenderInfo;
+}
 
 const AlertsPage = () => {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<AlertWithSender[]>([]);
   const [loading, setLoading] = useState(true);
   const [alertFilter, setAlertFilter] = useState<AlertType | "all">("all");
   const queryClient = useQueryClient();
@@ -24,7 +34,8 @@ const AlertsPage = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await getTable("alerts")
+        const { data, error } = await supabase
+          .from("alerts")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
@@ -35,20 +46,21 @@ const AlertsPage = () => {
         }
 
         // Add sender information for connection requests
-        const alertsWithSender = await Promise.all(data.map(async (alert: Alert) => {
+        const alertsWithSender = await Promise.all(data.map(async (alert: Alert): Promise<AlertWithSender> => {
           if (alert.type === "connection_request" && alert.related_id) {
-            // Get the connection request to find the sender
-            const { data: requestData, error: requestError } = await getTable("connection_requests")
-              .select("*")
-              .eq("id", alert.related_id)
-              .single();
+            try {
+              // Get the connection request to find the sender
+              const { data: requestData, error: requestError } = await supabase
+                .from("connection_requests")
+                .select("sender_id")
+                .eq("id", alert.related_id)
+                .single();
 
-            if (requestError) {
-              console.error("Error fetching connection request:", requestError);
-              return alert;
-            }
+              if (requestError || !requestData) {
+                console.error("Error fetching connection request:", requestError);
+                return alert;
+              }
 
-            if (requestData.sender_id) {
               // Get the sender's profile
               const { data: senderData, error: senderError } = await supabase
                 .from("user_profiles")
@@ -56,15 +68,22 @@ const AlertsPage = () => {
                 .eq("id", requestData.sender_id)
                 .single();
 
-              if (senderError) {
+              if (senderError || !senderData) {
                 console.error("Error fetching sender:", senderError);
                 return alert;
               }
 
               return {
                 ...alert,
-                sender: senderData
+                sender: {
+                  id: senderData.id,
+                  username: senderData.username || 'Anonymous',
+                  avatar_url: senderData.avatar_url || 'avatar-1.png'
+                }
               };
+            } catch (error) {
+              console.error("Error processing alert:", error);
+              return alert;
             }
           }
           return alert;
@@ -106,7 +125,8 @@ const AlertsPage = () => {
 
     try {
       // Update the connection request
-      const { error: updateError } = await getTable("connection_requests")
+      const { error: updateError } = await supabase
+        .from("connection_requests")
         .update({ status: 'accepted' })
         .eq("id", relatedId);
 
@@ -117,7 +137,8 @@ const AlertsPage = () => {
       }
 
       // Mark the alert as read
-      const { error: alertError } = await getTable("alerts")
+      const { error: alertError } = await supabase
+        .from("alerts")
         .update({ read: true })
         .eq("id", alertId);
 
@@ -149,7 +170,8 @@ const AlertsPage = () => {
 
     try {
       // Update the connection request
-      const { error: updateError } = await getTable("connection_requests")
+      const { error: updateError } = await supabase
+        .from("connection_requests")
         .update({ status: 'declined' })
         .eq("id", relatedId);
 
@@ -160,7 +182,8 @@ const AlertsPage = () => {
       }
 
       // Mark the alert as read
-      const { error: alertError } = await getTable("alerts")
+      const { error: alertError } = await supabase
+        .from("alerts")
         .update({ read: true })
         .eq("id", alertId);
 
@@ -186,7 +209,8 @@ const AlertsPage = () => {
 
   const handleMarkAsRead = async (alertId: string) => {
     try {
-      const { error } = await getTable("alerts")
+      const { error } = await supabase
+        .from("alerts")
         .update({ read: true })
         .eq("id", alertId);
 
@@ -214,7 +238,7 @@ const AlertsPage = () => {
     ? alerts 
     : alerts.filter(alert => alert.type === alertFilter);
 
-  const renderAlertContent = (alert: Alert) => {
+  const renderAlertContent = (alert: AlertWithSender) => {
     switch (alert.type) {
       case "connection_request":
         return (
@@ -223,7 +247,7 @@ const AlertsPage = () => {
               {alert.sender && (
                 <div className="flex items-center gap-3 my-2">
                   <img 
-                    src={AvatarSelector.getAvatarImageUrl(alert.sender.avatar_url)}
+                    src={getAvatarImageUrl(alert.sender.avatar_url)}
                     alt={alert.sender.username} 
                     className="w-10 h-10 rounded-full" 
                   />

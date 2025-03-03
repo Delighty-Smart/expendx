@@ -1,9 +1,8 @@
-
 import { Menu, LogOut, Flame, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { updateUserStreak, getUserProfile } from "@/lib/streak";
+import { checkAndUpdateStreak, getUserProfile } from "@/lib/streak";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,7 +17,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const updateStreak = async () => {
       try {
-        const streak = await updateUserStreak();
+        const streak = await checkAndUpdateStreak();
         setUserStreak(streak);
         
         const profile = await getUserProfile();

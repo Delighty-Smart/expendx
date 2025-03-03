@@ -33,20 +33,41 @@ const avatars = [
   { id: "v5", src: "/placeholder.svg", alt: "Avatar variation 5" },
 ];
 
+// Helper to get avatar image URL - making it static
+export const getAvatarImageUrl = (key: string): string => {
+  // This should match the logic in UserSearch and other components
+  const avatarImages: Record<string, string> = {
+    "avatar-1.png": "/lovable-uploads/c2a2d26c-0523-4fb9-9813-51aac4bc3987.png",
+    "avatar-2.png": "/lovable-uploads/23786936-39a8-4e94-9eb3-3464ed7ffc82.png",
+    "avatar-3.png": "/lovable-uploads/2bcde0f4-1483-4e84-a8e4-0227c5bdc9e8.png",
+    "avatar-4.png": "/lovable-uploads/167baf60-e95c-4360-a687-d246ef45f33e.png",
+    "avatar-5.png": "/lovable-uploads/115fca3f-2e5d-4860-a624-20f8a47ba447.png",
+    "avatar-6.png": "/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png",
+  };
+  
+  return avatarImages[key] || 
+    `https://api.dicebear.com/7.x/personas/svg?seed=${key}&backgroundColor=ffdfbf,ffd5dc,d1d4f9,c0aede,b6e3f4`;
+};
+
 interface AvatarSelectorProps {
   currentAvatar?: string;
+  selectedAvatar?: string; // Added to match prop in UserProfileTab
   onSelect: (avatarUrl: string) => void;
+  onSelectAvatar?: (avatarUrl: string) => void; // Added to match prop in UserProfileTab
 }
 
 const AvatarSelector: React.FC<AvatarSelectorProps> = ({
   currentAvatar = "/placeholder.svg",
+  selectedAvatar,
   onSelect,
+  onSelectAvatar,
 }) => {
-  const [selected, setSelected] = useState<string>(currentAvatar);
+  const [selected, setSelected] = useState<string>(selectedAvatar || currentAvatar);
 
   const handleSelect = (avatarSrc: string) => {
     setSelected(avatarSrc);
-    onSelect(avatarSrc);
+    if (onSelect) onSelect(avatarSrc);
+    if (onSelectAvatar) onSelectAvatar(avatarSrc);
   };
 
   return (
@@ -87,5 +108,8 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
     </div>
   );
 };
+
+// Add the static method to the component
+AvatarSelector.getAvatarImageUrl = getAvatarImageUrl;
 
 export default AvatarSelector;

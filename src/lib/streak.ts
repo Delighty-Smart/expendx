@@ -1,4 +1,3 @@
-
 import { startOfDay, differenceInCalendarDays } from "date-fns";
 import { supabase, getTable } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,6 +27,18 @@ interface UserStreak {
   last_login: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserProfileData {
+  id: string;
+  email: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  continent?: string;
+  country?: string;
+  bio?: string;
 }
 
 /**
@@ -205,4 +216,56 @@ export const getUserStreakData = async () => {
     console.error("Error in getUserStreakData:", error);
     return null;
   }
+};
+
+/**
+ * Update user streak data (renamed from checkAndUpdateStreak)
+ * @returns Updated streak data or null if error
+ */
+export const updateUserStreak = async () => {
+  try {
+    const result = await checkAndUpdateStreak();
+    return result;
+  } catch (error) {
+    console.error("Error updating user streak:", error);
+    return null;
+  }
+};
+
+/**
+ * Get the user profile data
+ * @returns User profile data or null if error
+ */
+export const getUserProfile = async (): Promise<UserProfileData | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+      
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+    
+    return data as UserProfileData;
+  } catch (error) {
+    console.error("Error in getUserProfile:", error);
+    return null;
+  }
+};
+
+/**
+ * Get streak progress text (used in Index.tsx)
+ */
+export const getStreakText = (streak: number): string => {
+  if (streak <= 0) return "Start your streak today!";
+  if (streak === 1) return "First day! Keep going!";
+  if (streak < 7) return `${streak} day streak! Great start!`;
+  if (streak < 30) return `${streak} day streak! Impressive consistency!`;
+  return `${streak} day streak! You're a financial master!`;
 };

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Search, UserPlus, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { UserProfile } from "@/types/alerts";
+import { getAvatarImageUrl } from "./AvatarSelector";
 
 interface User {
   id: string;
@@ -31,32 +32,42 @@ const UserSearch = () => {
       if (user) {
         setCurrentUserId(user.id);
         
-        // Fetch existing connection requests
-        const { data: sentRequests, error: requestsError } = await getTable("connection_requests")
-          .select("receiver_id, status")
-          .eq("sender_id", user.id);
-          
-        if (sentRequests && !requestsError) {
-          const pending = new Set(
-            sentRequests
-              .filter(r => r.status === 'pending')
-              .map(r => r.receiver_id)
-          );
-          setPendingRequests(pending);
+        // Fetch existing connection requests with type checking
+        try {
+          const { data: sentRequests, error: requestsError } = await supabase
+            .from("connection_requests")
+            .select("receiver_id, status")
+            .eq("sender_id", user.id);
+            
+          if (sentRequests && !requestsError) {
+            const pending = new Set(
+              sentRequests
+                .filter(r => r.status === 'pending')
+                .map(r => r.receiver_id)
+            );
+            setPendingRequests(pending);
+          }
+        } catch (error) {
+          console.error("Error fetching connection requests:", error);
         }
         
-        // Fetch existing connections
-        const { data: userConnections, error: connectionsError } = await getTable("connections")
-          .select("user_id_1, user_id_2")
-          .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`);
-          
-        if (userConnections && !connectionsError) {
-          const connected = new Set(
-            userConnections.map(c => 
-              c.user_id_1 === user.id ? c.user_id_2 : c.user_id_1
-            )
-          );
-          setConnections(connected);
+        // Fetch existing connections with type checking
+        try {
+          const { data: userConnections, error: connectionsError } = await supabase
+            .from("connections")
+            .select("user_id_1, user_id_2")
+            .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`);
+            
+          if (userConnections && !connectionsError) {
+            const connected = new Set(
+              userConnections.map(c => 
+                c.user_id_1 === user.id ? c.user_id_2 : c.user_id_1
+              )
+            );
+            setConnections(connected);
+          }
+        } catch (error) {
+          console.error("Error fetching connections:", error);
         }
       }
     };
@@ -124,10 +135,12 @@ const UserSearch = () => {
     }
     
     try {
-      const { error } = await getTable("connection_requests")
+      const { error } = await supabase
+        .from("connection_requests")
         .insert({
           sender_id: currentUserId,
           receiver_id: userId,
+          status: 'pending'
         });
         
       if (error) {
@@ -159,21 +172,6 @@ const UserSearch = () => {
     }
   };
 
-  // Helper to get avatar image URL
-  const getAvatarUrl = (key: string): string => {
-    // This should match the logic in AvatarSelector component
-    const avatarImages: Record<string, string> = {
-      "avatar-1.png": "/lovable-uploads/c2a2d26c-0523-4fb9-9813-51aac4bc3987.png",
-      "avatar-2.png": "/lovable-uploads/23786936-39a8-4e94-9eb3-3464ed7ffc82.png",
-      "avatar-3.png": "/lovable-uploads/2bcde0f4-1483-4e84-a8e4-0227c5bdc9e8.png",
-      "avatar-4.png": "/lovable-uploads/167baf60-e95c-4360-a687-d246ef45f33e.png",
-      // Add remaining mappings as in AvatarSelector
-    };
-    
-    return avatarImages[key] || 
-      `https://api.dicebear.com/7.x/personas/svg?seed=${key}&backgroundColor=ffdfbf,ffd5dc,d1d4f9,c0aede,b6e3f4`;
-  };
-
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -198,7 +196,7 @@ const UserSearch = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={getAvatarUrl(user.avatar_url)}
+                      src={getAvatarImageUrl(user.avatar_url)}
                       alt={user.username}
                       className="w-10 h-10 rounded-full"
                     />

@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame } from "lucide-react";
+import { getAvatarImageUrl } from "./AvatarSelector";
 
 type UserStreak = {
   id: string;
@@ -40,90 +40,103 @@ const Leaderboard = () => {
     const fetchLeaderboards = async () => {
       setLoading(true);
       try {
-        // Simulated data for now until we have more users
-        // Global leaderboard
-        let query = supabase
+        // Global leaderboard - modified to use join correctly
+        const { data: streakData, error: streakError } = await supabase
           .from('user_streaks')
           .select(`
             id,
             current_streak,
             highest_streak,
-            user_profiles:user_id (
-              id,
-              username,
-              avatar_url,
-              continent,
-              country
-            )
+            user_id
           `)
           .order('current_streak', { ascending: false })
           .limit(10);
         
-        const { data: globalData, error: globalError } = await query;
-        
-        if (globalError) {
-          console.error("Error fetching global leaderboard:", globalError);
-        } else {
-          // Process the data
-          const processedGlobalData = (globalData || [])
-            .filter(item => item.user_profiles)
-            .map(item => ({
-              id: item.user_profiles.id,
-              username: item.user_profiles.username || 'Anonymous User',
-              avatar_url: item.user_profiles.avatar_url || 'avatar-1.png',
-              continent: item.user_profiles.continent,
-              country: item.user_profiles.country,
-              current_streak: item.current_streak,
-              highest_streak: item.highest_streak
-            }));
+        if (streakError) {
+          console.error("Error fetching streak data:", streakError);
+          setGlobalLeaders([]);
+        } else if (streakData) {
+          // Get user profiles for the streaks
+          const userIds = streakData.map(item => item.user_id);
+          
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('user_profiles')
+            .select('id, username, avatar_url, continent, country')
+            .in('id', userIds);
+          
+          if (profilesError) {
+            console.error("Error fetching user profiles:", profilesError);
+          } else if (profilesData) {
+            // Combine the data
+            const leaderboardData = streakData.map(streak => {
+              const userProfile = profilesData.find(profile => profile.id === streak.user_id);
+              return {
+                id: streak.user_id,
+                username: userProfile?.username || 'Anonymous User',
+                avatar_url: userProfile?.avatar_url || 'avatar-1.png',
+                continent: userProfile?.continent,
+                country: userProfile?.country,
+                current_streak: streak.current_streak,
+                highest_streak: streak.highest_streak
+              };
+            });
             
-          setGlobalLeaders(processedGlobalData);
+            setGlobalLeaders(leaderboardData);
+          }
         }
         
-        // Regional leaderboard
+        // Regional leaderboard with similar approach
         const regionKey = regionFilter === 'continent' ? 'continent' : 'country';
         const regionValue = regionFilter === 'continent' ? selectedContinent : selectedCountry;
         
-        query = supabase
-          .from('user_streaks')
-          .select(`
-            id,
-            current_streak,
-            highest_streak,
-            user_profiles:user_id (
-              id,
-              username,
-              avatar_url,
-              continent,
-              country
-            )
-          `)
-          .eq(`user_profiles.${regionKey}`, regionValue)
-          .order('current_streak', { ascending: false })
-          .limit(10);
-          
-        const { data: regionalData, error: regionalError } = await query;
+        // First get profiles that match the region
+        const { data: regionProfiles, error: regionProfilesError } = await supabase
+          .from('user_profiles')
+          .select('id, username, avatar_url, continent, country')
+          .eq(regionKey, regionValue);
         
-        if (regionalError) {
-          console.error("Error fetching regional leaderboard:", regionalError);
-        } else {
-          // Process the data
-          const processedRegionalData = (regionalData || [])
-            .filter(item => item.user_profiles)
-            .map(item => ({
-              id: item.user_profiles.id,
-              username: item.user_profiles.username || 'Anonymous User',
-              avatar_url: item.user_profiles.avatar_url || 'avatar-1.png',
-              continent: item.user_profiles.continent,
-              country: item.user_profiles.country,
-              current_streak: item.current_streak,
-              highest_streak: item.highest_streak
-            }));
+        if (regionProfilesError) {
+          console.error("Error fetching regional profiles:", regionProfilesError);
+          setRegionalLeaders([]);
+        } else if (regionProfiles) {
+          const regionUserIds = regionProfiles.map(profile => profile.id);
+          
+          if (regionUserIds.length > 0) {
+            // Get streaks for these users
+            const { data: regionStreaks, error: regionStreaksError } = await supabase
+              .from('user_streaks')
+              .select('user_id, current_streak, highest_streak')
+              .in('user_id', regionUserIds)
+              .order('current_streak', { ascending: false })
+              .limit(10);
             
-          setRegionalLeaders(processedRegionalData);
+            if (regionStreaksError) {
+              console.error("Error fetching regional streaks:", regionStreaksError);
+            } else if (regionStreaks) {
+              // Combine the data
+              const regionalData = regionStreaks.map(streak => {
+                const userProfile = regionProfiles.find(profile => profile.id === streak.user_id);
+                return {
+                  id: streak.user_id,
+                  username: userProfile?.username || 'Anonymous User',
+                  avatar_url: userProfile?.avatar_url || 'avatar-1.png',
+                  continent: userProfile?.continent,
+                  country: userProfile?.country,
+                  current_streak: streak.current_streak,
+                  highest_streak: streak.highest_streak
+                };
+              });
+              
+              setRegionalLeaders(regionalData);
+            }
+          } else {
+            setRegionalLeaders([]);
+          }
         }
       } catch (error) {
         console.error("Error:", error);
+        setGlobalLeaders([]);
+        setRegionalLeaders([]);
       } finally {
         setLoading(false);
       }
@@ -131,20 +144,6 @@ const Leaderboard = () => {
     
     fetchLeaderboards();
   }, [leaderboardType, regionFilter, selectedContinent, selectedCountry]);
-
-  // Helper to get avatar image URL
-  const getAvatarUrl = (key: string): string => {
-    const avatarImages: Record<string, string> = {
-      "avatar-1.png": "/lovable-uploads/c2a2d26c-0523-4fb9-9813-51aac4bc3987.png",
-      "avatar-2.png": "/lovable-uploads/23786936-39a8-4e94-9eb3-3464ed7ffc82.png",
-      "avatar-3.png": "/lovable-uploads/2bcde0f4-1483-4e84-a8e4-0227c5bdc9e8.png",
-      "avatar-4.png": "/lovable-uploads/167baf60-e95c-4360-a687-d246ef45f33e.png",
-      // Add remaining mappings as needed
-    };
-    
-    return avatarImages[key] || 
-      `https://api.dicebear.com/7.x/personas/svg?seed=${key}&backgroundColor=ffdfbf,ffd5dc,d1d4f9,c0aede,b6e3f4`;
-  };
 
   const renderLeaderboardItems = (leaders: UserStreak[]) => {
     if (loading) {
@@ -160,7 +159,7 @@ const Leaderboard = () => {
         <div className="font-bold text-lg w-8">{index + 1}</div>
         <div className="flex items-center flex-1">
           <img
-            src={getAvatarUrl(user.avatar_url)}
+            src={getAvatarImageUrl(user.avatar_url)}
             alt={user.username}
             className="w-10 h-10 rounded-full mr-3"
           />

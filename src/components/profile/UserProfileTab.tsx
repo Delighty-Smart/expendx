@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,6 +155,28 @@ const UserProfileTab = () => {
     return <div className="flex justify-center p-8">Loading profile data...</div>;
   }
 
+  // Update the AvatarSelector section in the component body
+  const renderAvatarSection = () => {
+    if (isEditing) {
+      return (
+        <AvatarSelector 
+          currentAvatar={avatarUrl}
+          onSelect={(avatar) => setAvatarUrl(avatar)}
+        />
+      );
+    } else {
+      return (
+        <img 
+          src={getAvatarImageUrl(avatarUrl)} 
+          alt="Profile avatar" 
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+  };
+
+  // Import the getAvatarImageUrl function directly
+  import { getAvatarImageUrl } from "./AvatarSelector";
   return (
     <div className="space-y-6">
       <Card>
