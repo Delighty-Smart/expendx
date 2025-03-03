@@ -1,5 +1,5 @@
 
-import { addDays, differenceInDays, isSameDay } from "date-fns";
+import { addDays, differenceInDays, isSameDay, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface UserStreak {
@@ -53,7 +53,8 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
           current_streak: 1, 
           highest_streak: 1,
           current_title: "Budget Beginner", 
-          freeze_count: MAX_FREEZE_DAYS
+          freeze_count: MAX_FREEZE_DAYS,
+          last_login: startOfDay(new Date()).toISOString()
         }])
         .select()
         .single();
@@ -66,9 +67,9 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       return newStreak;
     }
 
-    // Calculate days since last login
-    const lastLogin = new Date(streakData.last_login);
-    const today = new Date();
+    // Calculate days since last login - use local time (start of day)
+    const lastLogin = startOfDay(new Date(streakData.last_login));
+    const today = startOfDay(new Date());
     const daysSinceLastLogin = differenceInDays(today, lastLogin);
 
     // If same day, don't update streak
@@ -107,7 +108,7 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       .update({
         current_streak: newStreak,
         highest_streak: Math.max(streakData.highest_streak, newStreak),
-        last_login: new Date().toISOString(),
+        last_login: today.toISOString(), // Save as start of day in local time
         freeze_count: freezeCount,
         current_title: currentTitle
       })
@@ -146,4 +147,28 @@ function getMilestoneRank(title: string): number {
 // Get formatted streak text
 export function getStreakText(streak: number): string {
   return streak === 1 ? "1 day" : `${streak} days`;
+}
+
+// Get user profile data including email
+export async function getUserProfile() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data: profile, error } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+    
+    return profile;
+  } catch (error) {
+    console.error("Error in getUserProfile:", error);
+    return null;
+  }
 }

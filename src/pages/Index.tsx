@@ -346,12 +346,9 @@ const Dashboard = () => {
           </Button>
           <div className="flex items-center gap-4">
             {streakData && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg">
                 <Flame className="h-5 w-5 animate-pulse text-yellow-200" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold">{streakData.current_title}</span>
-                  <span className="text-xs">Streak: {getStreakText(streakData.current_streak)}</span>
-                </div>
+                <span className="text-sm font-bold">{streakData.current_streak}</span>
               </div>
             )}
             <Button
