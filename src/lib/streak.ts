@@ -1,208 +1,208 @@
 
-import { addDays, differenceInDays, isSameDay, startOfDay } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { startOfDay, differenceInCalendarDays } from "date-fns";
+import { supabase, getTable } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export interface UserStreak {
+// Define milestone titles
+export const streakTitles = {
+  1: "Budget Beginner",
+  3: "Finance Fledgling",
+  7: "Money Manager",
+  14: "Budget Boss",
+  30: "Finance Veteran",
+  60: "Money Master",
+  90: "Budget Guru",
+  180: "Finance Wizard",
+  365: "Money Mogul"
+};
+
+export type StreakTitle = typeof streakTitles[keyof typeof streakTitles];
+
+interface UserStreak {
   id: string;
   user_id: string;
   current_streak: number;
+  current_title: StreakTitle;
   highest_streak: number;
-  last_login: string;
   freeze_count: number;
-  current_title: string;
+  last_login: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  username?: string;
-  first_name?: string;
-  last_name?: string;
-  avatar_url?: string;
-  country?: string;
-  continent?: string;
-  age_bracket?: string;
-  bio?: string;
-  created_at: string;
-  updated_at?: string;
-}
+/**
+ * Get the highest title milestone that the user has reached
+ * @param {number} currentStreak - User's current streak count
+ * @returns {string} The title earned based on streak milestones
+ */
+export const getTitleForStreak = (currentStreak: number): StreakTitle => {
+  const milestones = Object.keys(streakTitles)
+    .map(Number)
+    .sort((a, b) => b - a); // Sort in descending order
 
-export const STREAK_MILESTONES = [
-  { days: 1, title: "Budget Beginner" },
-  { days: 7, title: "Penny Pioneer" },
-  { days: 30, title: "Savings Strategist" },
-  { days: 90, title: "Cashflow Commander" },
-  { days: 180, title: "Wealth Warrior" },
-  { days: 365, title: "Money Maestro" },
-  { days: 730, title: "Fiscal Legend" },
-];
+  for (const milestone of milestones) {
+    if (currentStreak >= milestone) {
+      return streakTitles[milestone as keyof typeof streakTitles];
+    }
+  }
 
-export const MAX_FREEZE_DAYS = 3;
+  return "Budget Beginner"; // Default title
+};
 
-export async function updateUserStreak(): Promise<UserStreak | null> {
+/**
+ * Check and update the user's streak based on last login time
+ * @returns {Promise<{streak: number, title: string} | null>} Updated streak data or null if error
+ */
+export const checkAndUpdateStreak = async (): Promise<{
+  currentStreak: number;
+  highestStreak: number;
+  title: string;
+  freezeCount: number;
+} | null> => {
   try {
-    // Check if user is authenticated
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // Get current user streak or create if not exists
-    const { data: streakData, error: streakError } = await supabase
+    // Get user's streak data
+    const { data: streakData, error } = await supabase
       .from("user_streaks")
       .select("*")
       .eq("user_id", user.id)
-      .maybeSingle();
+      .single();
 
-    if (streakError) {
-      console.error("Error fetching streak:", streakError);
+    if (error) {
+      console.error("Error fetching streak data:", error);
       return null;
     }
 
-    // If no streak data exists yet, create new streak record
-    if (!streakData) {
-      const { data: newStreak, error: insertError } = await supabase
-        .from("user_streaks")
-        .insert([{ 
-          user_id: user.id, 
-          current_streak: 1, 
-          highest_streak: 1,
-          current_title: "Budget Beginner", 
-          freeze_count: MAX_FREEZE_DAYS,
-          last_login: startOfDay(new Date()).toISOString()
-        }])
-        .select()
-        .single();
-        
-      if (insertError) {
-        console.error("Error creating streak:", insertError);
-        return null;
+    const streak = streakData as UserStreak;
+    const today = startOfDay(new Date()).toISOString();
+    const lastLogin = startOfDay(new Date(streak.last_login)).toISOString();
+
+    // If already logged in today, don't update streak
+    if (today === lastLogin) {
+      return {
+        currentStreak: streak.current_streak,
+        highestStreak: streak.highest_streak,
+        title: streak.current_title,
+        freezeCount: streak.freeze_count
+      };
+    }
+
+    // Calculate days since last login
+    const daysSinceLastLogin = differenceInCalendarDays(
+      new Date(),
+      new Date(streak.last_login)
+    );
+
+    let updatedStreak = { ...streak };
+
+    // If 1 day since last login, increment streak
+    if (daysSinceLastLogin === 1) {
+      updatedStreak.current_streak += 1;
+      
+      // Update highest streak if current is higher
+      if (updatedStreak.current_streak > updatedStreak.highest_streak) {
+        updatedStreak.highest_streak = updatedStreak.current_streak;
       }
       
-      return newStreak;
+      // Update title if milestone reached
+      updatedStreak.current_title = getTitleForStreak(updatedStreak.current_streak);
+    } 
+    // If more than 1 day since last login but have freeze available
+    else if (daysSinceLastLogin > 1 && streak.freeze_count > 0) {
+      // Use a streak freeze
+      updatedStreak.freeze_count -= 1;
+      
+      // Create an alert about using streak freeze
+      await getTable("alerts").insert({
+        user_id: user.id,
+        title: "Streak Freeze Used",
+        message: `You missed a day, but we used a streak freeze to maintain your ${streak.current_streak}-day streak. You have ${updatedStreak.freeze_count} freezes remaining.`,
+        type: "streak_freeze"
+      });
+      
+      toast.info("Streak freeze used to maintain your streak!");
+    } 
+    // If more than 1 day and no freezes available, reset streak
+    else if (daysSinceLastLogin > 1) {
+      updatedStreak.current_streak = 1;
+      updatedStreak.current_title = getTitleForStreak(1);
+      
+      // Create an alert about losing streak
+      await getTable("alerts").insert({
+        user_id: user.id,
+        title: "Streak Lost",
+        message: `You missed logging in for ${daysSinceLastLogin} days and your streak has been reset. Your highest streak was ${streak.highest_streak} days.`,
+        type: "streak_freeze"
+      });
+      
+      toast.warning("Your streak has been reset due to inactivity");
     }
 
-    // Calculate days since last login - use local time (start of day)
-    const lastLogin = startOfDay(new Date(streakData.last_login));
-    const today = startOfDay(new Date());
-    const daysSinceLastLogin = differenceInDays(today, lastLogin);
+    // Update the last login time to today
+    updatedStreak.last_login = new Date().toISOString();
 
-    // If same day, don't update streak
-    if (isSameDay(today, lastLogin)) {
-      return streakData;
-    }
-
-    let newStreak = streakData.current_streak;
-    let freezeCount = streakData.freeze_count;
-    let currentTitle = streakData.current_title;
-    
-    // Update streak based on last login time
-    if (daysSinceLastLogin === 1) {
-      // Consecutive day login, increment streak
-      newStreak += 1;
-      freezeCount = MAX_FREEZE_DAYS; // Reset freeze count when logging in consecutive days
-    } else if (daysSinceLastLogin > 1 && daysSinceLastLogin <= MAX_FREEZE_DAYS) {
-      // Within freeze window, decrement freeze count but maintain streak
-      freezeCount = Math.max(0, freezeCount - (daysSinceLastLogin - 1));
-      newStreak += 1; // Still increment streak since they logged in within freeze period
-    } else if (daysSinceLastLogin > MAX_FREEZE_DAYS) {
-      // Beyond freeze window, reset streak
-      newStreak = 1;
-      freezeCount = MAX_FREEZE_DAYS;
-    }
-
-    // Check if new streak has reached a new milestone
-    const newMilestone = determineUserTitle(newStreak);
-    if (getMilestoneRank(newMilestone) > getMilestoneRank(currentTitle)) {
-      currentTitle = newMilestone;
-    }
-
-    // Update streak in database
-    const { data: updatedStreak, error: updateError } = await supabase
+    // Update the streak in the database
+    const { error: updateError } = await supabase
       .from("user_streaks")
       .update({
-        current_streak: newStreak,
-        highest_streak: Math.max(streakData.highest_streak, newStreak),
-        last_login: today.toISOString(), // Save as start of day in local time
-        freeze_count: freezeCount,
-        current_title: currentTitle
+        current_streak: updatedStreak.current_streak,
+        highest_streak: updatedStreak.highest_streak,
+        current_title: updatedStreak.current_title,
+        freeze_count: updatedStreak.freeze_count,
+        last_login: updatedStreak.last_login
       })
-      .eq("user_id", user.id)
-      .select()
-      .single();
+      .eq("id", streak.id);
 
     if (updateError) {
       console.error("Error updating streak:", updateError);
       return null;
     }
 
-    return updatedStreak;
+    return {
+      currentStreak: updatedStreak.current_streak,
+      highestStreak: updatedStreak.highest_streak,
+      title: updatedStreak.current_title,
+      freezeCount: updatedStreak.freeze_count
+    };
   } catch (error) {
-    console.error("Error in updateUserStreak:", error);
+    console.error("Error in checkAndUpdateStreak:", error);
     return null;
   }
-}
+};
 
-// Helper to determine user title based on current streak
-export function determineUserTitle(dayCount: number): string {
-  // Find the highest milestone that the user has achieved
-  const milestone = [...STREAK_MILESTONES]
-    .reverse()
-    .find(m => dayCount >= m.days);
-  
-  return milestone ? milestone.title : "Budget Beginner";
-}
-
-// Helper to get the rank of a milestone title
-function getMilestoneRank(title: string): number {
-  const index = STREAK_MILESTONES.findIndex(m => m.title === title);
-  return index === -1 ? 0 : index;
-}
-
-// Get formatted streak text
-export function getStreakText(streak: number): string {
-  return streak === 1 ? "1 day" : `${streak} days`;
-}
-
-// Get user profile data including email
-export async function getUserProfile(): Promise<UserProfile | null> {
+/**
+ * Fetch the user's streak data without updating it
+ * @returns {Promise<{streak: number, title: string} | null>} User's streak data or null if error
+ */
+export const getUserStreakData = async () => {
   try {
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     
-    const { data: profile, error } = await supabase
-      .from("user_profiles")
+    // Get user's streak data
+    const { data, error } = await supabase
+      .from("user_streaks")
       .select("*")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single();
-    
+      
     if (error) {
-      console.error("Error fetching user profile:", error);
+      console.error("Error fetching streak data:", error);
       return null;
     }
     
-    return profile;
+    return {
+      currentStreak: data.current_streak,
+      highestStreak: data.highest_streak,
+      title: data.current_title,
+      freezeCount: data.freeze_count
+    };
   } catch (error) {
-    console.error("Error in getUserProfile:", error);
+    console.error("Error in getUserStreakData:", error);
     return null;
   }
-}
-
-// Create alert for streak freeze warning
-export async function createStreakFreezeAlert(userId: string, freezeCount: number): Promise<void> {
-  try {
-    const { error } = await supabase.from("alerts").insert([{
-      user_id: userId,
-      title: "Streak Freeze Warning",
-      message: `You have ${freezeCount} streak freeze days left. Log in daily to maintain your streak!`,
-      type: "streak_freeze",
-      read: false
-    }]);
-    
-    if (error) {
-      console.error("Error creating streak freeze alert:", error);
-    }
-  } catch (error) {
-    console.error("Error in createStreakFreezeAlert:", error);
-  }
-}
+};

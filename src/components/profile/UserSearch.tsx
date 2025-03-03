@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTable } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, UserPlus, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { UserProfile } from "@/types/alerts";
 
 interface User {
   id: string;
@@ -31,12 +32,11 @@ const UserSearch = () => {
         setCurrentUserId(user.id);
         
         // Fetch existing connection requests
-        const { data: sentRequests } = await supabase
-          .from("connection_requests")
+        const { data: sentRequests, error: requestsError } = await getTable("connection_requests")
           .select("receiver_id, status")
           .eq("sender_id", user.id);
           
-        if (sentRequests) {
+        if (sentRequests && !requestsError) {
           const pending = new Set(
             sentRequests
               .filter(r => r.status === 'pending')
@@ -46,12 +46,11 @@ const UserSearch = () => {
         }
         
         // Fetch existing connections
-        const { data: userConnections } = await supabase
-          .from("connections")
+        const { data: userConnections, error: connectionsError } = await getTable("connections")
           .select("user_id_1, user_id_2")
           .or(`user_id_1.eq.${user.id},user_id_2.eq.${user.id}`);
           
-        if (userConnections) {
+        if (userConnections && !connectionsError) {
           const connected = new Set(
             userConnections.map(c => 
               c.user_id_1 === user.id ? c.user_id_2 : c.user_id_1
@@ -125,8 +124,7 @@ const UserSearch = () => {
     }
     
     try {
-      const { error } = await supabase
-        .from("connection_requests")
+      const { error } = await getTable("connection_requests")
         .insert({
           sender_id: currentUserId,
           receiver_id: userId,

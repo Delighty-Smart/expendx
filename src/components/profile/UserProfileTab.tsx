@@ -1,124 +1,97 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Flame, Trophy } from "lucide-react";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Flame, Trophy, Calendar } from "lucide-react";
 import AvatarSelector from "./AvatarSelector";
-import { STREAK_MILESTONES } from "@/lib/streak";
-import { getStreakText } from "@/lib/streak";
-
-// Define continents and age brackets
-const CONTINENTS = [
-  "Africa",
-  "Antarctica",
-  "Asia",
-  "Europe",
-  "North America",
-  "Oceania",
-  "South America",
-];
-
-const AGE_BRACKETS = [
-  "Under 18",
-  "18-24",
-  "25-34",
-  "35-44",
-  "45-54",
-  "55-64",
-  "65+"
-];
-
-// A list of countries
-const COUNTRIES = [
-  "United States",
-  "Canada",
-  "United Kingdom",
-  "Australia",
-  "Germany",
-  "France",
-  "Japan",
-  "China",
-  "India",
-  "Brazil",
-  "Nigeria",
-  "South Africa",
-  "Mexico",
-  "Russia",
-  "Italy",
-  // Add more countries as needed
-];
+import { UserProfile } from "@/types/alerts";
 
 const UserProfileTab = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [streak, setStreak] = useState<any>(null);
-  const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("avatar-1.png");
-  const [continent, setContinent] = useState("");
-  const [country, setCountry] = useState("");
-  const [ageBracket, setAgeBracket] = useState("");
-  const [bio, setBio] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState("avatar-1.png");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [continent, setContinent] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
+  const [ageBracket, setAgeBracket] = useState<string>("");
+  const [streak, setStreak] = useState({
+    current: 0,
+    highest: 0,
+    title: ""
+  });
+
+  const continents = [
+    'Africa', 'Antarctica', 'Asia', 'Europe', 'North America', 
+    'Australia/Oceania', 'South America'
+  ];
+  
+  const countries = [
+    'Nigeria', 'United States', 'United Kingdom', 'Canada', 'Australia',
+    'Germany', 'France', 'Japan', 'China', 'India', 'Brazil', 'Mexico'
+  ];
+  
+  const ageBrackets = [
+    'Under 18', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'
+  ];
 
   // Fetch user profile and streak data
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUserData = async () => {
       setLoading(true);
+      
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          toast.error("You must be logged in to view your profile");
+          toast.error("You need to be logged in to view your profile");
           return;
         }
-
-        // Get user profile
+        
+        // Fetch profile data
         const { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
           .select("*")
           .eq("id", user.id)
-          .maybeSingle();
-
+          .single();
+          
         if (profileError) {
           console.error("Error fetching profile:", profileError);
-          toast.error("Failed to load profile data");
+          toast.error("Could not load profile data");
           return;
         }
-
-        // Get user streak
+        
+        // Fetch streak data
         const { data: streakData, error: streakError } = await supabase
           .from("user_streaks")
           .select("*")
           .eq("user_id", user.id)
-          .maybeSingle();
-
+          .single();
+          
         if (streakError) {
           console.error("Error fetching streak:", streakError);
-          toast.error("Failed to load streak data");
-          return;
         }
-
+        
+        // Update state with fetched data
         setProfile(profileData);
-        setStreak(streakData);
-
-        // Set form state with profile data
-        if (profileData) {
-          setUsername(profileData.username || "");
-          setAvatarUrl(profileData.avatar_url || "avatar-1.png");
-          setContinent(profileData.continent || "");
-          setCountry(profileData.country || "");
-          setAgeBracket(profileData.age_bracket || "");
-          setBio(profileData.bio || "");
+        setUsername(profileData.username || "");
+        setAvatarUrl(profileData.avatar_url || "avatar-1.png");
+        setContinent(profileData.continent || "");
+        setCountry(profileData.country || "");
+        setAgeBracket(profileData.age_bracket || "");
+        setBio(profileData.bio || "");
+        
+        if (streakData) {
+          setStreak({
+            current: streakData.current_streak || 0,
+            highest: streakData.highest_streak || 0,
+            title: streakData.current_title || ""
+          });
         }
       } catch (error) {
         console.error("Error:", error);
@@ -127,19 +100,18 @@ const UserProfileTab = () => {
         setLoading(false);
       }
     };
-
-    fetchData();
+    
+    fetchUserData();
   }, []);
 
   const handleSaveProfile = async () => {
-    setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("You must be logged in to update your profile");
+        toast.error("You need to be logged in to update your profile");
         return;
       }
-
+      
       const { error } = await supabase
         .from("user_profiles")
         .update({
@@ -148,23 +120,35 @@ const UserProfileTab = () => {
           continent,
           country,
           age_bracket: ageBracket,
-          bio,
-          updated_at: new Date().toISOString()
+          bio
         })
         .eq("id", user.id);
-
+        
       if (error) {
         console.error("Error updating profile:", error);
         toast.error("Failed to update profile");
         return;
       }
-
+      
       toast.success("Profile updated successfully");
+      setIsEditing(false);
+      
+      // Update the profile state
+      setProfile(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          username,
+          avatar_url: avatarUrl,
+          continent,
+          country,
+          age_bracket: ageBracket,
+          bio
+        };
+      });
     } catch (error) {
       console.error("Error:", error);
       toast.error("An unexpected error occurred");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -172,187 +156,184 @@ const UserProfileTab = () => {
     return <div className="flex justify-center p-8">Loading profile data...</div>;
   }
 
-  // Find the next milestone
-  const currentStreak = streak?.current_streak || 0;
-  const nextMilestone = STREAK_MILESTONES.find(m => m.days > currentStreak);
-
-  // Calculate progress to next milestone
-  const prevMilestoneDays = nextMilestone 
-    ? STREAK_MILESTONES[STREAK_MILESTONES.indexOf(nextMilestone) - 1]?.days || 0
-    : STREAK_MILESTONES[STREAK_MILESTONES.length - 2]?.days || 0;
-    
-  const nextMilestoneDays = nextMilestone?.days || STREAK_MILESTONES[STREAK_MILESTONES.length - 1].days;
-  const progressPercent = Math.round(((currentStreak - prevMilestoneDays) / (nextMilestoneDays - prevMilestoneDays)) * 100);
-
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="p-6 space-y-4">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <div className="mb-4">
-                <Label htmlFor="username" className="text-base">Username</Label>
-                <Input
-                  id="username"
-                  placeholder="Enter a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="mt-1"
-                />
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Profile Information</CardTitle>
+            {!isEditing ? (
+              <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+            ) : (
+              <div className="space-x-2">
+                <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                <Button onClick={handleSaveProfile}>Save Changes</Button>
               </div>
-
-              <div className="mb-4">
-                <Label htmlFor="continent" className="text-base">Continent</Label>
-                <Select value={continent} onValueChange={setContinent}>
-                  <SelectTrigger id="continent" className="mt-1">
-                    <SelectValue placeholder="Select continent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONTINENTS.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="mb-4">
-                <Label htmlFor="country" className="text-base">Country</Label>
-                <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger id="country" className="mt-1">
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="mb-4">
-                <Label htmlFor="ageBracket" className="text-base">Age Range</Label>
-                <Select value={ageBracket} onValueChange={setAgeBracket}>
-                  <SelectTrigger id="ageBracket" className="mt-1">
-                    <SelectValue placeholder="Select age range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AGE_BRACKETS.map((bracket) => (
-                      <SelectItem key={bracket} value={bracket}>{bracket}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="mb-4">
-                <Label htmlFor="bio" className="text-base">About me</Label>
-                <Input
-                  id="bio"
-                  placeholder="Tell us a bit about yourself"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-base block mb-2">Select Avatar</Label>
-              <AvatarSelector 
-                selectedAvatar={avatarUrl} 
-                onChange={setAvatarUrl} 
-              />
-            </div>
+            )}
           </div>
-
-          <Button 
-            onClick={handleSaveProfile} 
-            disabled={saving}
-            className="w-full md:w-auto"
-          >
-            {saving ? "Saving..." : "Save Profile"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-xl font-bold mb-4">Streak Information</h2>
-          
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Flame className="h-6 w-6 text-orange-500" />
-                <span className="text-lg font-medium">Current Streak: {getStreakText(streak?.current_streak || 0)}</span>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6">
+            <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+              <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
+                {isEditing ? (
+                  <AvatarSelector 
+                    selectedAvatar={avatarUrl} 
+                    onSelectAvatar={(avatar) => setAvatarUrl(avatar)} 
+                  />
+                ) : (
+                  <img 
+                    src={AvatarSelector.getAvatarImageUrl(avatarUrl)} 
+                    alt="Profile avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
               
-              <div className="flex items-center space-x-2">
-                <Trophy className="h-6 w-6 text-yellow-500" />
-                <span className="text-lg font-medium">Highest Streak: {getStreakText(streak?.highest_streak || 0)}</span>
-              </div>
-              
-              <div className="mt-2">
-                <h3 className="text-lg font-medium">Current Title:</h3>
-                <div className="p-2 bg-primary/10 rounded-md mt-1">
-                  <p className="text-xl font-bold text-primary">{streak?.current_title || "Budget Beginner"}</p>
+              <div className="flex-1 space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Username</label>
+                  {isEditing ? (
+                    <Input
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter your username"
+                    />
+                  ) : (
+                    <p className="text-lg font-semibold">{profile?.username || "Anonymous User"}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <p className="text-muted-foreground">{profile?.email}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Bio</label>
+                  {isEditing ? (
+                    <Textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell us a bit about yourself"
+                      className="h-24"
+                    />
+                  ) : (
+                    <p className="text-muted-foreground">{profile?.bio || "No bio provided"}</p>
+                  )}
                 </div>
               </div>
             </div>
             
-            <div>
-              <h3 className="text-lg font-medium mb-2">Streak Progress</h3>
-              {nextMilestone ? (
-                <>
-                  <div className="mb-2">
-                    <p>Progress to {nextMilestone.title}</p>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-1">
-                      <div 
-                        className="bg-primary h-2.5 rounded-full" 
-                        style={{ width: `${progressPercent}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {currentStreak} / {nextMilestone.days} days ({progressPercent}%)
-                    </p>
-                  </div>
-                  <p className="text-sm">
-                    You need {nextMilestone.days - currentStreak} more days to reach {nextMilestone.title}
-                  </p>
-                </>
-              ) : (
-                <p>Congratulations! You've reached the highest milestone: {STREAK_MILESTONES[STREAK_MILESTONES.length - 1].title}</p>
-              )}
-              
-              <div className="mt-4">
-                <h3 className="text-lg font-medium mb-2">All Milestones</h3>
-                <div className="space-y-2">
-                  {STREAK_MILESTONES.map((milestone) => {
-                    const isCompleted = currentStreak >= milestone.days;
-                    const isCurrent = streak?.current_title === milestone.title;
-                    
-                    return (
-                      <div 
-                        key={milestone.title} 
-                        className={`p-2 rounded-md border ${
-                          isCurrent 
-                            ? 'border-primary bg-primary/10' 
-                            : isCompleted 
-                              ? 'border-green-500 bg-green-500/10' 
-                              : 'border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <p className={`font-medium ${isCurrent ? 'text-primary' : isCompleted ? 'text-green-500' : ''}`}>
-                            {milestone.title}
-                          </p>
-                          <span className="text-sm text-muted-foreground">
-                            {getStreakText(milestone.days)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+            {isEditing && (
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="text-sm font-medium">Continent</label>
+                  <Select
+                    value={continent}
+                    onValueChange={setContinent}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select continent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {continents.map(c => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Country</label>
+                  <Select
+                    value={country}
+                    onValueChange={setCountry}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map(c => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Age Bracket</label>
+                  <Select
+                    value={ageBracket}
+                    onValueChange={setAgeBracket}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select age range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ageBrackets.map(age => (
+                        <SelectItem key={age} value={age}>
+                          {age}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+            )}
+            
+            {!isEditing && (
+              <div className="grid gap-2 sm:grid-cols-3 mt-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Continent:</span>
+                  <span className="text-muted-foreground">{profile?.continent || "Not specified"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Country:</span>
+                  <span className="text-muted-foreground">{profile?.country || "Not specified"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Age Group:</span>
+                  <span className="text-muted-foreground">{profile?.age_bracket || "Not specified"}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Streak Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="border rounded-md p-4 flex flex-col items-center">
+              <div className="flex items-center mb-2 text-orange-500">
+                <Flame className="h-6 w-6 mr-1" />
+                <span className="text-xl font-bold">{streak.current}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Current Streak</p>
+            </div>
+            
+            <div className="border rounded-md p-4 flex flex-col items-center">
+              <div className="flex items-center mb-2 text-yellow-500">
+                <Trophy className="h-6 w-6 mr-1" />
+                <span className="text-xl font-bold">{streak.highest}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Highest Streak</p>
+            </div>
+            
+            <div className="border rounded-md p-4 flex flex-col items-center">
+              <div className="flex items-center mb-2">
+                <Calendar className="h-6 w-6 mr-1" />
+                <span className="text-xl font-bold">{streak.title}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Current Title</p>
             </div>
           </div>
         </CardContent>

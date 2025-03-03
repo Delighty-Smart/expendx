@@ -1,140 +1,37 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { SettingsProvider } from "@/contexts/SettingsContext";
-import Index from "./pages/Index";
+import { Routes, Route } from "react-router-dom";
+import IndexPage from "./pages/Index";
+import AuthPage from "./pages/Auth";
 import TransactionsPage from "./pages/Transactions";
 import BudgetsPage from "./pages/Budgets";
 import SettingsPage from "./pages/Settings";
+import NotFoundPage from "./pages/NotFound";
 import ProfilePage from "./pages/Profile";
 import AlertsPage from "./pages/Alerts";
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
+import { Toaster } from "./components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 
-const queryClient = new QueryClient();
-
-const initializeTheme = () => {
-  const theme = localStorage.getItem("theme");
-  if (theme) {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.classList.toggle("light", theme === "light");
-  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-  } else {
-    document.documentElement.classList.add("light");
-    localStorage.setItem("theme", "light");
-  }
-};
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<null | boolean>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(!!session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (session === null) {
-    return null; // Loading state
-  }
-
-  if (!session) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const App = () => {
-  useEffect(() => {
-    initializeTheme();
-  }, []);
-
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ThemeProvider>
       <SettingsProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/transactions"
-                element={
-                  <ProtectedRoute>
-                    <TransactionsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/budgets"
-                element={
-                  <ProtectedRoute>
-                    <BudgetsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <SettingsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/alerts"
-                element={
-                  <ProtectedRoute>
-                    <AlertsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <Routes>
+          <Route path="/" element={<IndexPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/budgets" element={<BudgetsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+        <Toaster />
+        <SonnerToaster position="top-right" expand={true} richColors />
       </SettingsProvider>
-    </QueryClientProvider>
+    </ThemeProvider>
   );
-};
+}
 
 export default App;
