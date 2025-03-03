@@ -191,7 +191,7 @@ const UserProfileTab = () => {
               <div className="w-32 h-32 rounded-full overflow-hidden flex-shrink-0">
                 {isEditing ? (
                   <AvatarSelector 
-                    selectedAvatar={avatarUrl} 
+                    currentAvatar={avatarUrl} 
                     onSelect={(avatar) => setAvatarUrl(avatar)} 
                   />
                 ) : (
