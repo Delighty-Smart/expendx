@@ -56,6 +56,11 @@ interface AvatarSelectorProps {
   onSelectAvatar?: (avatarUrl: string) => void;
 }
 
+// Create an interface that extends React.FC with our static method
+interface AvatarSelectorComponent extends React.FC<AvatarSelectorProps> {
+  getAvatarImageUrl: (key: string) => string;
+}
+
 const AvatarSelector: React.FC<AvatarSelectorProps> = ({
   currentAvatar = "/placeholder.svg",
   selectedAvatar,
@@ -109,7 +114,8 @@ const AvatarSelector: React.FC<AvatarSelectorProps> = ({
   );
 };
 
-// Add the static method to the component
-AvatarSelector.getAvatarImageUrl = getAvatarImageUrl;
+// Cast the component to our extended interface type and add the static method
+const AvatarSelectorWithStatic = AvatarSelector as AvatarSelectorComponent;
+AvatarSelectorWithStatic.getAvatarImageUrl = getAvatarImageUrl;
 
-export default AvatarSelector;
+export default AvatarSelectorWithStatic;
