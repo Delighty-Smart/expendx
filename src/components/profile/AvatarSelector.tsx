@@ -1,126 +1,90 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Check } from "lucide-react";
 
-// Define our avatar options
-const avatarOptions = [
-  "avatar-1.png",
-  "avatar-2.png",
-  "avatar-3.png",
-  "avatar-4.png",
-  // Add more options as needed
+const avatars = [
+  // Male avatars
+  { id: "m1", src: "/lovable-uploads/167baf60-e95c-4360-a687-d246ef45f33e.png", alt: "Male avatar 1" },
+  { id: "m2", src: "/lovable-uploads/2bcde0f4-1483-4e84-a8e4-0227c5bdc9e8.png", alt: "Male avatar 2" },
+  { id: "m3", src: "/lovable-uploads/115fca3f-2e5d-4860-a624-20f8a47ba447.png", alt: "Male avatar 3" },
+  { id: "m4", src: "/lovable-uploads/23786936-39a8-4e94-9eb3-3464ed7ffc82.png", alt: "Male avatar 4" },
+  { id: "m5", src: "/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png", alt: "Male avatar 5" },
+  // Female avatars
+  { id: "f1", src: "/lovable-uploads/c2a2d26c-0523-4fb9-9813-51aac4bc3987.png", alt: "Female avatar 1" },
+  // Add placeholder images for the rest of the avatars
+  { id: "f2", src: "/placeholder.svg", alt: "Female avatar 2" },
+  { id: "f3", src: "/placeholder.svg", alt: "Female avatar 3" },
+  { id: "f4", src: "/placeholder.svg", alt: "Female avatar 4" },
+  { id: "f5", src: "/placeholder.svg", alt: "Female avatar 5" },
+  // Animal avatars
+  { id: "a1", src: "/placeholder.svg", alt: "Animal avatar 1" },
+  { id: "a2", src: "/placeholder.svg", alt: "Animal avatar 2" },
+  { id: "a3", src: "/placeholder.svg", alt: "Animal avatar 3" },
+  { id: "a4", src: "/placeholder.svg", alt: "Animal avatar 4" },
+  { id: "a5", src: "/placeholder.svg", alt: "Animal avatar 5" },
+  // Additional avatar variations
+  { id: "v1", src: "/placeholder.svg", alt: "Avatar variation 1" },
+  { id: "v2", src: "/placeholder.svg", alt: "Avatar variation 2" },
+  { id: "v3", src: "/placeholder.svg", alt: "Avatar variation 3" },
+  { id: "v4", src: "/placeholder.svg", alt: "Avatar variation 4" },
+  { id: "v5", src: "/placeholder.svg", alt: "Avatar variation 5" },
 ];
 
 interface AvatarSelectorProps {
-  selectedAvatar: string;
-  onSelectAvatar: (avatarUrl: string) => void;
+  currentAvatar?: string;
+  onSelect: (avatarUrl: string) => void;
 }
 
-const AvatarSelector = ({ selectedAvatar, onSelectAvatar }: AvatarSelectorProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [tempAvatar, setTempAvatar] = useState(selectedAvatar);
-  
-  // Helper function to map the avatar key to its image URL
-  static getAvatarImageUrl(key: string): string {
-    const avatarImages: Record<string, string> = {
-      "avatar-1.png": "/lovable-uploads/c2a2d26c-0523-4fb9-9813-51aac4bc3987.png",
-      "avatar-2.png": "/lovable-uploads/23786936-39a8-4e94-9eb3-3464ed7ffc82.png",
-      "avatar-3.png": "/lovable-uploads/2bcde0f4-1483-4e84-a8e4-0227c5bdc9e8.png",
-      "avatar-4.png": "/lovable-uploads/167baf60-e95c-4360-a687-d246ef45f33e.png",
-      // Add more mappings as needed
-    };
-    
-    return avatarImages[key] || 
-      `https://api.dicebear.com/7.x/personas/svg?seed=${key}&backgroundColor=ffdfbf,ffd5dc,d1d4f9,c0aede,b6e3f4`;
-  }
-  
-  const handleSelectAvatar = (avatarKey: string) => {
-    setTempAvatar(avatarKey);
+const AvatarSelector: React.FC<AvatarSelectorProps> = ({
+  currentAvatar = "/placeholder.svg",
+  onSelect,
+}) => {
+  const [selected, setSelected] = useState<string>(currentAvatar);
+
+  const handleSelect = (avatarSrc: string) => {
+    setSelected(avatarSrc);
+    onSelect(avatarSrc);
   };
-  
-  const handleConfirm = () => {
-    onSelectAvatar(tempAvatar);
-    setIsOpen(false);
-  };
-  
+
   return (
-    <>
-      <img 
-        src={AvatarSelector.getAvatarImageUrl(selectedAvatar)} 
-        alt="Profile avatar" 
-        className="w-full h-full object-cover cursor-pointer"
-        onClick={() => setIsOpen(true)}
-      />
-      
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Choose an Avatar</DialogTitle>
-          </DialogHeader>
-          
-          <ScrollArea className="max-h-[60vh]">
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-4">
-              {avatarOptions.map((avatar) => (
-                <div 
-                  key={avatar}
-                  className={`
-                    relative cursor-pointer rounded-full overflow-hidden
-                    border-2 hover:border-primary
-                    ${tempAvatar === avatar ? 'border-primary ring-2 ring-primary' : 'border-transparent'}
-                  `}
-                  onClick={() => handleSelectAvatar(avatar)}
-                >
-                  <img 
-                    src={AvatarSelector.getAvatarImageUrl(avatar)} 
-                    alt={`Avatar ${avatar}`}
-                    className="w-full h-full object-cover aspect-square"
-                  />
+    <div className="space-y-4">
+      <div className="flex flex-col items-center gap-2">
+        <Avatar className="h-24 w-24">
+          <AvatarImage src={selected} alt="Selected avatar" />
+          <AvatarFallback>?</AvatarFallback>
+        </Avatar>
+        <p className="text-sm text-muted-foreground">Selected Avatar</p>
+      </div>
+
+      <ScrollArea className="h-[220px] rounded-md border p-4">
+        <div className="grid grid-cols-4 gap-4">
+          {avatars.map((avatar) => (
+            <button
+              key={avatar.id}
+              className={`relative rounded-md p-1 ${
+                selected === avatar.src
+                  ? "ring-2 ring-primary"
+                  : "hover:bg-accent"
+              }`}
+              onClick={() => handleSelect(avatar.src)}
+            >
+              <Avatar className="h-14 w-14">
+                <AvatarImage src={avatar.src} alt={avatar.alt} />
+                <AvatarFallback>?</AvatarFallback>
+              </Avatar>
+              {selected === avatar.src && (
+                <div className="absolute -right-1 -top-1 rounded-full bg-primary p-1">
+                  <Check className="h-3 w-3 text-primary-foreground" />
                 </div>
-              ))}
-              
-              {/* Placeholder for more avatars */}
-              {Array.from({ length: 16 }).map((_, i) => {
-                const seed = `user-avatar-${i + 1}`;
-                return (
-                  <div 
-                    key={seed}
-                    className={`
-                      relative cursor-pointer rounded-full overflow-hidden
-                      border-2 hover:border-primary
-                      ${tempAvatar === seed ? 'border-primary ring-2 ring-primary' : 'border-transparent'}
-                    `}
-                    onClick={() => handleSelectAvatar(seed)}
-                  >
-                    <img 
-                      src={`https://api.dicebear.com/7.x/personas/svg?seed=${seed}&backgroundColor=ffdfbf,ffd5dc,d1d4f9,c0aede,b6e3f4`} 
-                      alt={`Generated Avatar ${i+1}`}
-                      className="w-full h-full object-cover aspect-square"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirm}>
-              Confirm
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+              )}
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
 
