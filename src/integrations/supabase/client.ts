@@ -24,18 +24,7 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storageKey: 'budget-app-auth-token'
-    },
-    // @ts-ignore - Ignore TypeScript errors for tables not yet in types
-    global: {
-      headers: { 'x-my-custom-header': 'budget-app' }
+      detectSessionInUrl: true
     }
   }
 );
-
-// Helper function to safely get a table reference, even if it's not in the types yet
-export function getTable(tableName: string) {
-  // @ts-ignore - Ignore TypeScript errors for tables not yet in types
-  return supabase.from(tableName);
-}

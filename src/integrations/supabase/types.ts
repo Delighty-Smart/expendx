@@ -33,39 +33,6 @@ export type Database = {
         }
         Relationships: []
       }
-      alerts: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          read: boolean | null
-          related_id: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          read?: boolean | null
-          related_id?: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          read?: boolean | null
-          related_id?: string | null
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       blog_post_comments: {
         Row: {
           author_name: string
@@ -193,54 +160,6 @@ export type Database = {
           monthly_limit?: number
           updated_at?: string | null
           user_id?: string
-        }
-        Relationships: []
-      }
-      connection_requests: {
-        Row: {
-          created_at: string | null
-          id: string
-          receiver_id: string
-          sender_id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          receiver_id: string
-          sender_id: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          receiver_id?: string
-          sender_id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      connections: {
-        Row: {
-          created_at: string | null
-          id: string
-          user_id_1: string
-          user_id_2: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          user_id_1: string
-          user_id_2: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          user_id_1?: string
-          user_id_2?: string
         }
         Relationships: []
       }
@@ -589,46 +508,28 @@ export type Database = {
       }
       user_profiles: {
         Row: {
-          age_bracket: string | null
-          avatar_url: string | null
-          bio: string | null
-          continent: string | null
-          country: string | null
           created_at: string | null
           email: string
           first_name: string | null
           id: string
           last_name: string | null
           updated_at: string | null
-          username: string | null
         }
         Insert: {
-          age_bracket?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          continent?: string | null
-          country?: string | null
           created_at?: string | null
           email: string
           first_name?: string | null
           id: string
           last_name?: string | null
           updated_at?: string | null
-          username?: string | null
         }
         Update: {
-          age_bracket?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          continent?: string | null
-          country?: string | null
           created_at?: string | null
           email?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
           updated_at?: string | null
-          username?: string | null
         }
         Relationships: []
       }
