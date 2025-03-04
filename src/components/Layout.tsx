@@ -3,14 +3,16 @@ import { Menu, LogOut, Flame, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { updateUserStreak, getUserProfile } from "@/lib/streak";
+import { updateUserStreak, getUserProfile, getStreakText } from "@/lib/streak";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import StreakModal from "./StreakModal";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userStreak, setUserStreak] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showStreakModal, setShowStreakModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -31,6 +33,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     updateStreak();
   }, []);
 
+  // Show streak modal after 90 seconds (only once per session)
+  useEffect(() => {
+    if (userStreak) {
+      const timer = setTimeout(() => {
+        const hasSeenStreakModal = sessionStorage.getItem('hasSeenStreakModal');
+        if (!hasSeenStreakModal) {
+          setShowStreakModal(true);
+          sessionStorage.setItem('hasSeenStreakModal', 'true');
+        }
+      }, 90000); // 90 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [userStreak]);
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -49,6 +66,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleStreakClick = () => {
+    setShowStreakModal(true);
+  };
+
   const menuItems = [
     { path: "/", label: "Dashboard" },
     { path: "/transactions", label: "Transactions" },
@@ -59,6 +80,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
+      {/* Streak Modal */}
+      <StreakModal 
+        open={showStreakModal} 
+        onOpenChange={setShowStreakModal} 
+        streak={userStreak}
+      />
+
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 glass-effect border-b border-border/50 flex items-center justify-between px-4 z-50">
         <Button
@@ -112,6 +140,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </div>
+        
+        {/* Streak Info (clickable) */}
+        {userStreak && (
+          <div 
+            className="p-4 border-b border-border/50 flex items-center gap-2 cursor-pointer hover:bg-accent/30 transition-colors"
+            onClick={handleStreakClick}
+          >
+            <div className="p-2 rounded-full bg-primary/20 flex items-center justify-center">
+              <Flame className="h-4 w-4 text-pink-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">{getStreakText(userStreak.current_streak)}</p>
+              <p className="text-xs text-muted-foreground">
+                Click to see your progress!
+              </p>
+            </div>
+          </div>
+        )}
         
         {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
