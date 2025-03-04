@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Flame, Check, Calendar } from "lucide-react";
+import { Flame, Check, Calendar, Trophy, Award } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getStreakText, STREAK_MILESTONES } from "@/lib/streak";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,12 @@ const StreakModal = ({ open, onOpenChange, streak }: StreakModalProps) => {
   const daysToNextMilestone = nextMilestone 
     ? nextMilestone.days - streak.current_streak 
     : null;
+  
+  // Calculate progress percentage to next milestone
+  const progressPercentage = nextMilestone 
+    ? ((streak.current_streak - STREAK_MILESTONES[currentMilestoneIndex].days) / 
+       (nextMilestone.days - STREAK_MILESTONES[currentMilestoneIndex].days)) * 100
+    : 100;
 
   // Generate a motivational message based on streak
   const getMessage = () => {
@@ -93,17 +99,63 @@ const StreakModal = ({ open, onOpenChange, streak }: StreakModalProps) => {
           </div>
         </div>
         
+        {/* Achievement Level Progress */}
+        <div className="bg-black/30 p-4 rounded-xl mb-4">
+          <div className="flex justify-between items-center mb-1">
+            <div className="flex items-center gap-1">
+              <Award className="h-4 w-4 text-pink-500" />
+              <span className="text-sm font-medium">{streak.current_title}</span>
+            </div>
+            {nextMilestone && (
+              <div className="text-xs text-muted-foreground">
+                {daysToNextMilestone} days to {nextMilestone.title}
+              </div>
+            )}
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="h-2 bg-gray-700/50 rounded-full overflow-hidden mb-4">
+            <div 
+              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
+              style={{ width: `${Math.min(100, Math.max(5, progressPercentage))}%` }}
+            ></div>
+          </div>
+          
+          {/* Level Progression Map */}
+          <div className="grid grid-cols-7 gap-1">
+            {STREAK_MILESTONES.map((milestone, index) => {
+              const isActive = index <= currentMilestoneIndex;
+              const isCurrent = index === currentMilestoneIndex;
+              
+              return (
+                <div key={index} className="flex flex-col items-center">
+                  <div 
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center mb-1",
+                      isActive 
+                        ? "bg-gradient-to-r from-pink-500 to-purple-500" 
+                        : "bg-gray-700/30",
+                      isCurrent && "ring-2 ring-white"
+                    )}
+                  >
+                    <Trophy className={cn("h-4 w-4", isActive ? "text-white" : "text-gray-500")} />
+                  </div>
+                  <span className={cn(
+                    "text-[8px] text-center",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {milestone.days}d
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
         <div className="bg-black/30 p-4 rounded-xl text-center mb-4">
           <p className="text-sm">
             {getMessage()}
           </p>
-          
-          {daysToNextMilestone && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {daysToNextMilestone} more {daysToNextMilestone === 1 ? 'day' : 'days'} until you reach 
-              <span className="font-semibold text-primary"> {nextMilestone.title}</span>
-            </p>
-          )}
         </div>
         
         <div className="flex justify-between items-center text-xs text-muted-foreground">

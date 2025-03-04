@@ -133,7 +133,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 {userProfile?.first_name || userProfile?.email || "User"}
               </p>
               {userStreak && (
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                  <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500"></span>
                   {userStreak.current_title}
                 </p>
               )}
@@ -150,7 +151,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="p-2 rounded-full bg-primary/20 flex items-center justify-center">
               <Flame className="h-4 w-4 text-pink-500" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium">{getStreakText(userStreak.current_streak)}</p>
               <p className="text-xs text-muted-foreground">
                 Click to see your progress!
