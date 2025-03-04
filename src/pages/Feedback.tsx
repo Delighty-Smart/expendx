@@ -82,6 +82,7 @@ const FeedbackPage = () => {
           description: "You must be logged in to submit feedback",
           variant: "destructive"
         });
+        setIsSubmitting(false);
         return;
       }
       
@@ -89,25 +90,35 @@ const FeedbackPage = () => {
       
       // Upload screenshot if there is one
       if (screenshot) {
-        const formData = new FormData();
-        formData.append('file', screenshot);
-        formData.append('userId', user.id);
-        
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-feedback-image`, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        try {
+          const formData = new FormData();
+          formData.append('file', screenshot);
+          formData.append('userId', user.id);
+          
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-feedback-image`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+            }
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Upload response error:", errorData);
+            throw new Error(errorData.error || 'Failed to upload screenshot');
           }
-        });
-        
-        if (!res.ok) {
-          const error = await res.json();
-          throw new Error(error.error || 'Failed to upload screenshot');
+          
+          const data = await response.json();
+          screenshotUrl = data.url;
+        } catch (uploadError) {
+          console.error("Screenshot upload error:", uploadError);
+          toast({
+            title: "Upload failed",
+            description: "There was an error uploading your screenshot, but your feedback will still be submitted.",
+            variant: "destructive"
+          });
         }
-        
-        const data = await res.json();
-        screenshotUrl = data.url;
       }
       
       // Save feedback to database
@@ -121,7 +132,10 @@ const FeedbackPage = () => {
           screenshot_url: screenshotUrl
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Database insert error:", error);
+        throw error;
+      }
       
       // Show success state
       setIsSuccess(true);

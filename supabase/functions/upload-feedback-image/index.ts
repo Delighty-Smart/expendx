@@ -8,6 +8,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -42,6 +43,7 @@ serve(async (req) => {
       })
 
     if (uploadError) {
+      console.error("Upload error:", JSON.stringify(uploadError))
       return new Response(
         JSON.stringify({ error: 'Failed to upload file', details: uploadError }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -53,6 +55,7 @@ serve(async (req) => {
       .createSignedUrl(filePath, 60 * 60 * 24 * 7) // 7 days expiry
 
     if (urlError) {
+      console.error("URL creation error:", JSON.stringify(urlError))
       return new Response(
         JSON.stringify({ error: 'Failed to create signed URL', details: urlError }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -68,6 +71,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
+    console.error("Unexpected error:", error.message)
     return new Response(
       JSON.stringify({ error: 'An unexpected error occurred', details: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
