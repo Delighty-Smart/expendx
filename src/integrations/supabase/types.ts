@@ -587,6 +587,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feedback: {
+        Row: {
+          comments: string | null
+          contact_permission: boolean | null
+          created_at: string
+          id: string
+          rating: string
+          screenshot_url: string | null
+          user_id: string
+        }
+        Insert: {
+          comments?: string | null
+          contact_permission?: boolean | null
+          created_at?: string
+          id?: string
+          rating: string
+          screenshot_url?: string | null
+          user_id: string
+        }
+        Update: {
+          comments?: string | null
+          contact_permission?: boolean | null
+          created_at?: string
+          id?: string
+          rating?: string
+          screenshot_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           age_bracket: string | null

@@ -1,5 +1,5 @@
 
-import { Menu, LogOut, Flame, User } from "lucide-react";
+import { Menu, LogOut, Flame, User, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/transactions", label: "Transactions" },
     { path: "/budgets", label: "Budgets" },
     { path: "/reports", label: "Reports" },
+    { path: "/feedback", label: "Feedback" },
     { path: "/settings", label: "Settings" },
   ];
 
