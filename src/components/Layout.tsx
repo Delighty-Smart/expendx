@@ -1,5 +1,5 @@
 
-import { Menu, LogOut, Flame, User, MessageSquare, Bell } from "lucide-react";
+import { Menu, LogOut, Flame, User, MessageSquare, Bell, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const [darkMode, setDarkMode] = useState(() => {
+    // Check if user has a preference stored
+    return localStorage.getItem('darkMode') === 'true' ||
+      (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Apply dark mode class to html element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
 
   useEffect(() => {
     const updateStreak = async () => {
@@ -122,12 +137,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setIsSidebarOpen(false);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
+
   const menuItems = [
     { path: "/", label: "Dashboard" },
     { path: "/transactions", label: "Transactions" },
     { path: "/budgets", label: "Budgets" },
     { path: "/reports", label: "Reports" },
-    { path: "/alerts", label: "Alerts", icon: <Bell className="h-4 w-4" />, badge: unreadAlerts },
+    { path: "/alerts", label: "Alerts", badge: unreadAlerts },
     { path: "/feedback", label: "Feedback" },
     { path: "/settings", label: "Settings" },
   ];
@@ -230,10 +249,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               } ${item.badge ? 'flex justify-between items-center' : ''}`}
               onClick={() => setIsSidebarOpen(false)}
             >
-              <div className="flex items-center gap-2">
-                {item.icon}
-                <span>{item.label}</span>
-              </div>
+              <span>{item.label}</span>
               {item.badge && item.badge > 0 && (
                 <Badge variant="secondary" className="ml-2">{item.badge}</Badge>
               )}
@@ -241,8 +257,30 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           ))}
         </nav>
         
+        {/* Dark/Light Mode Toggle */}
+        <div className="p-2 border-t border-border/50">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full justify-between items-center"
+            onClick={toggleDarkMode}
+          >
+            {darkMode ? (
+              <>
+                <Sun className="h-4 w-4 mr-2" />
+                <span>Light Mode</span>
+              </>
+            ) : (
+              <>
+                <Moon className="h-4 w-4 mr-2" />
+                <span>Dark Mode</span>
+              </>
+            )}
+          </Button>
+        </div>
+        
         {/* Logout Button */}
-        <div className="p-4 border-t border-border/50">
+        <div className="p-2">
           <Button 
             variant="outline" 
             className="w-full justify-start gap-2"
@@ -251,6 +289,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <LogOut className="h-4 w-4" />
             Log Out
           </Button>
+        </div>
+        
+        {/* Credits */}
+        <div className="p-4 text-center text-xs text-muted-foreground border-t border-border/50">
+          Powered by Delighty Smart Solutions
         </div>
       </aside>
 

@@ -171,10 +171,6 @@ const Profile = () => {
             </TabsList>
 
             <TabsContent value="you" className="space-y-6">
-              {userStreak && (
-                <StreakProgress streak={userStreak} />
-              )}
-
               <Card>
                 <CardHeader>
                   <CardTitle>Profile Information</CardTitle>
@@ -186,6 +182,10 @@ const Profile = () => {
                   />
                 </CardContent>
               </Card>
+
+              {userStreak && (
+                <StreakProgress streak={userStreak} />
+              )}
             </TabsContent>
 
             <TabsContent value="community">
