@@ -102,7 +102,9 @@ const LeaderboardSection = ({
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
-        let query = supabase
+        
+        // First, get user profiles based on location filters
+        let profilesQuery = supabase
           .from("user_profiles")
           .select(`
             id,
@@ -112,40 +114,69 @@ const LeaderboardSection = ({
             email,
             avatar_url,
             continent,
-            country,
-            user_streaks!inner(current_streak, highest_streak, current_title)
-          `)
-          .order(filter === "current" ? "user_streaks.current_streak" : "user_streaks.highest_streak", { ascending: false })
-          .limit(10);
+            country
+          `);
 
         // Apply location filters for local leaderboard
         if (type === "local") {
           if (selectedContinent) {
-            query = query.eq("continent", selectedContinent);
+            profilesQuery = profilesQuery.eq("continent", selectedContinent);
             
             if (selectedCountry) {
-              query = query.eq("country", selectedCountry);
+              profilesQuery = profilesQuery.eq("country", selectedCountry);
             }
           }
         }
 
-        const { data, error } = await query;
+        const { data: profiles, error: profilesError } = await profilesQuery;
 
-        if (error) throw error;
+        if (profilesError) throw profilesError;
         
-        // Format the data for display
-        const formattedData = data.map(user => ({
-          id: user.id,
-          username: user.username || user.email.split('@')[0],
-          name: user.first_name ? `${user.first_name} ${user.last_name || ''}` : null,
-          email: user.email,
-          avatar_url: user.avatar_url,
-          current_streak: user.user_streaks.current_streak,
-          highest_streak: user.user_streaks.highest_streak,
-          current_title: user.user_streaks.current_title,
-        }));
-
-        setLeaderboardData(formattedData);
+        if (!profiles || profiles.length === 0) {
+          setLeaderboardData([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Extract user IDs to get their streak data
+        const userIds = profiles.map(profile => profile.id);
+        
+        // Get streak data for these users
+        const { data: streakData, error: streakError } = await supabase
+          .from("user_streaks")
+          .select("*")
+          .in("user_id", userIds)
+          .order(filter === "current" ? "current_streak" : "highest_streak", { ascending: false });
+        
+        if (streakError) throw streakError;
+        
+        // Combine profile and streak data
+        const combinedData = profiles.map(profile => {
+          const streak = streakData?.find(s => s.user_id === profile.id) || {
+            current_streak: 0,
+            highest_streak: 0,
+            current_title: "New User"
+          };
+          
+          return {
+            id: profile.id,
+            username: profile.username || profile.email.split('@')[0],
+            name: profile.first_name ? `${profile.first_name} ${profile.last_name || ''}` : null,
+            email: profile.email,
+            avatar_url: profile.avatar_url,
+            current_streak: streak.current_streak,
+            highest_streak: streak.highest_streak,
+            current_title: streak.current_title,
+          };
+        });
+        
+        // Sort by streak
+        const sortedData = combinedData.sort((a, b) => {
+          const field = filter === "current" ? "current_streak" : "highest_streak";
+          return b[field] - a[field];
+        });
+        
+        setLeaderboardData(sortedData.slice(0, 10));
       } catch (error) {
         console.error("Error fetching leaderboard:", error);
       } finally {
