@@ -29,22 +29,57 @@ const Profile = () => {
         }
 
         // Get user profile
-        const { data: profileData, error: profileError } = await supabase
+        let { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
           .select("*")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError) throw profileError;
+        // If profile doesn't exist, create one
+        if (!profileData && (profileError?.code === 'PGRST116' || profileError?.message.includes("no rows"))) {
+          const { data: newProfile, error: createError } = await supabase
+            .from("user_profiles")
+            .insert({
+              id: user.id,
+              email: user.email,
+              username: user.email?.split('@')[0] || 'user'
+            })
+            .select()
+            .single();
+            
+          if (createError) throw createError;
+          profileData = newProfile;
+        } else if (profileError) {
+          throw profileError;
+        }
         
         // Get user streak
-        const { data: streakData, error: streakError } = await supabase
+        let { data: streakData, error: streakError } = await supabase
           .from("user_streaks")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
           
-        if (streakError) throw streakError;
+        // If streak doesn't exist, create one
+        if (!streakData && (streakError?.code === 'PGRST116' || streakError?.message.includes("no rows"))) {
+          const { data: newStreak, error: createStreakError } = await supabase
+            .from("user_streaks")
+            .insert({
+              user_id: user.id,
+              current_streak: 1,
+              highest_streak: 1,
+              current_title: "Budget Beginner",
+              freeze_count: 3,
+              last_login: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+          if (createStreakError) throw createStreakError;
+          streakData = newStreak;
+        } else if (streakError) {
+          throw streakError;
+        }
 
         setUserProfile(profileData);
         setUserStreak(streakData);

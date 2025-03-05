@@ -39,7 +39,7 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (streakError) {
+    if (streakError && !streakError.message.includes("no rows")) {
       console.error("Error fetching streak:", streakError);
       return null;
     }
@@ -159,11 +159,31 @@ export async function getUserProfile() {
       .from("user_profiles")
       .select("*")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
     
-    if (error) {
+    if (error && !error.message.includes("no rows")) {
       console.error("Error fetching user profile:", error);
       return null;
+    }
+    
+    // If profile doesn't exist, create one
+    if (!profile) {
+      const { data: newProfile, error: createError } = await supabase
+        .from("user_profiles")
+        .insert({
+          id: user.id,
+          email: user.email,
+          username: user.email?.split('@')[0] || 'user'
+        })
+        .select()
+        .single();
+        
+      if (createError) {
+        console.error("Error creating user profile:", createError);
+        return null;
+      }
+      
+      return newProfile;
     }
     
     return profile;
