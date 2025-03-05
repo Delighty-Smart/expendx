@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const AuthForm = () => {
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, mode: 'login' | 'signup') => {
@@ -38,8 +36,8 @@ export const AuthForm = () => {
         });
         if (error) throw error;
         toast({
-          title: "Success!",
-          description: "Please check your email to verify your account.",
+          title: "Account created successfully!",
+          description: "Welcome to ExpendX. Let's get you started.",
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -47,7 +45,10 @@ export const AuthForm = () => {
           password,
         });
         if (error) throw error;
-        navigate('/');
+        toast({
+          title: "Logged in successfully",
+          description: "Welcome back to ExpendX",
+        });
       }
     } catch (error: any) {
       toast({
@@ -61,9 +62,9 @@ export const AuthForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-md p-6">
+    <Card className="w-full max-w-md p-6 shadow-lg">
       <Tabs defaultValue="login" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
@@ -78,7 +79,7 @@ export const AuthForm = () => {
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-expendx-blue to-expendx-green text-white" disabled={loading}>
               {loading ? "Loading..." : "Login"}
             </Button>
           </form>
@@ -102,7 +103,7 @@ export const AuthForm = () => {
               <Label htmlFor="lastName">Last Name</Label>
               <Input id="lastName" name="lastName" type="text" required />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-expendx-blue to-expendx-green text-white" disabled={loading}>
               {loading ? "Loading..." : "Sign Up"}
             </Button>
           </form>
