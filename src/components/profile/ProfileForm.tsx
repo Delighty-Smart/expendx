@@ -1,45 +1,45 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Camera, Save, PencilLine } from "lucide-react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AvatarUploader from "./AvatarUploader";
+import { Loader2, PencilIcon, SaveIcon } from "lucide-react";
 
-const AGE_BRACKETS = [
-  "18-24", "25-34", "35-44", "45-54", "55-64", "65+"
-];
+const CONTINENTS = ["Africa", "Antarctica", "Asia", "Europe", "North America", "Oceania", "South America"];
+const AGE_BRACKETS = ["Under 18", "18-24", "25-34", "35-44", "45-54", "55-64", "65+", "Prefer not to say"];
 
-const CONTINENTS = [
-  "Africa", "Asia", "Europe", "North America", "South America", "Oceania", "Antarctica"
-];
+const profileSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters").optional(),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().optional(),
+  bio: z.string().max(500, "Bio must be under 500 characters").optional(),
+  age_bracket: z.string().optional(),
+  continent: z.string().optional(),
+  country: z.string().optional(),
+});
 
-// Common countries for each continent
-const COUNTRIES_BY_CONTINENT: Record<string, string[]> = {
-  "Africa": ["Nigeria", "South Africa", "Kenya", "Egypt", "Ghana", "Ethiopia"],
-  "Asia": ["China", "India", "Japan", "South Korea", "Singapore", "Indonesia"],
-  "Europe": ["United Kingdom", "Germany", "France", "Italy", "Spain", "Netherlands"],
-  "North America": ["United States", "Canada", "Mexico"],
-  "South America": ["Brazil", "Argentina", "Colombia", "Chile", "Peru"],
-  "Oceania": ["Australia", "New Zealand", "Fiji"],
-  "Antarctica": ["Research Stations"]
-};
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const AVATARS = Array.from({ length: 8 }, (_, i) => `avatar-${i + 1}.png`);
+interface ProfileFormProps {
+  profile: any;
+  setProfile: (profile: any) => void;
+}
 
-const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profile: any) => void }) => {
+const ProfileForm = ({ profile, setProfile }: ProfileFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const [selectedContinent, setSelectedContinent] = useState(profile?.continent || "");
   const { toast } = useToast();
-  
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
     defaultValues: {
       username: profile?.username || "",
       first_name: profile?.first_name || "",
@@ -48,91 +48,57 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       age_bracket: profile?.age_bracket || "",
       continent: profile?.continent || "",
       country: profile?.country || "",
-    }
+    },
   });
 
-  const watchContinent = watch("continent");
-  
-  if (watchContinent !== selectedContinent) {
-    setSelectedContinent(watchContinent);
-    setValue("country", "");
-  }
-
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (values: ProfileFormValues) => {
     try {
       setIsSubmitting(true);
       
       const { error } = await supabase
         .from("user_profiles")
-        .update({
-          username: data.username,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          bio: data.bio,
-          age_bracket: data.age_bracket,
-          continent: data.continent,
-          country: data.country,
-        })
+        .update(values)
         .eq("id", profile.id);
-      
+
       if (error) throw error;
-      
+
       // Update local state
-      setProfile({
-        ...profile,
-        username: data.username,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        bio: data.bio,
-        age_bracket: data.age_bracket,
-        continent: data.continent,
-        country: data.country,
+      setProfile({ ...profile, ...values });
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been updated successfully",
       });
       
       setIsEditing(false);
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating profile:", error);
       toast({
         title: "Update failed",
-        description: error.message || "There was an error updating your profile. Please try again.",
+        description: "Failed to update profile information",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
-  const handleSelectAvatar = async (avatar: string) => {
+
+  const handleAvatarUpdate = async (url: string) => {
     try {
       const { error } = await supabase
         .from("user_profiles")
-        .update({
-          avatar_url: avatar
-        })
+        .update({ avatar_url: url })
         .eq("id", profile.id);
-      
+
       if (error) throw error;
-      
+
       // Update local state
-      setProfile({
-        ...profile,
-        avatar_url: avatar
-      });
-      
-      setShowAvatarSelector(false);
-      toast({
-        title: "Avatar updated",
-        description: "Your avatar has been updated successfully.",
-      });
-    } catch (error: any) {
+      setProfile({ ...profile, avatar_url: url });
+    } catch (error) {
       console.error("Error updating avatar:", error);
       toast({
-        title: "Update failed",
-        description: error.message || "There was an error updating your avatar. Please try again.",
+        title: "Avatar update failed",
+        description: "Failed to update avatar in database",
         variant: "destructive",
       });
     }
@@ -141,215 +107,238 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
   if (!profile) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-        <div className="relative">
-          <Avatar className="h-24 w-24 cursor-pointer border-2 border-primary/20" onClick={() => setShowAvatarSelector(true)}>
-            <AvatarImage src={`/lovable-uploads/${profile.avatar_url || 'avatar-1.png'}`} alt="Avatar" />
-            <AvatarFallback className="text-xl">
-              {profile.first_name?.[0]}{profile.last_name?.[0] || ''}
-            </AvatarFallback>
-          </Avatar>
-          <Button 
-            size="icon"
-            variant="secondary" 
-            className="absolute bottom-0 right-0 rounded-full h-8 w-8"
-            onClick={() => setShowAvatarSelector(true)}
-          >
-            <Camera className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div>
-          <h2 className="text-xl font-semibold">
-            {profile.first_name ? `${profile.first_name} ${profile.last_name || ''}` : profile.username || profile.email}
-          </h2>
-          <p className="text-muted-foreground">{profile.email}</p>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-2"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            <PencilLine className="h-4 w-4 mr-1" />
-            {isEditing ? "Cancel Editing" : "Edit Profile"}
-          </Button>
-        </div>
-      </div>
-      
-      {showAvatarSelector && (
-        <div className="bg-background border rounded-lg p-4 shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Select Avatar</h3>
+    <div className="space-y-6 animate-fadeIn">
+      {!isEditing ? (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Your Profile</h3>
             <Button 
-              size="sm" 
               variant="ghost" 
-              onClick={() => setShowAvatarSelector(false)}
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1 hover:bg-primary/10 hover:text-primary transition-all duration-300"
             >
-              Close
+              <PencilIcon className="h-4 w-4" />
+              Edit Profile
             </Button>
           </div>
-          <div className="grid grid-cols-4 gap-3">
-            {AVATARS.map((avatar) => (
-              <Avatar 
-                key={avatar} 
-                className={`cursor-pointer h-16 w-16 transition-all ${
-                  profile.avatar_url === avatar ? 'ring-2 ring-primary ring-offset-2' : 'hover:scale-105'
-                }`}
-                onClick={() => handleSelectAvatar(avatar)}
-              >
-                <AvatarImage src={`/lovable-uploads/${avatar}`} alt="Avatar option" />
-              </Avatar>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {isEditing ? (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input 
-                id="username"
-                {...register("username")} 
-                placeholder="Your username"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="age_bracket">Age Bracket</Label>
-              <Select 
-                defaultValue={profile.age_bracket} 
-                onValueChange={value => setValue("age_bracket", value)}
-              >
-                <SelectTrigger id="age_bracket">
-                  <SelectValue placeholder="Select age bracket" />
-                </SelectTrigger>
-                <SelectContent>
-                  {AGE_BRACKETS.map(bracket => (
-                    <SelectItem key={bracket} value={bracket}>{bracket}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name</Label>
-              <Input 
-                id="first_name"
-                {...register("first_name")} 
-                placeholder="Your first name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input 
-                id="last_name"
-                {...register("last_name")} 
-                placeholder="Your last name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="continent">Continent</Label>
-              <Select 
-                defaultValue={profile.continent} 
-                onValueChange={value => setValue("continent", value)}
-              >
-                <SelectTrigger id="continent">
-                  <SelectValue placeholder="Select continent" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONTINENTS.map(continent => (
-                    <SelectItem key={continent} value={continent}>{continent}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Select 
-                defaultValue={profile.country} 
-                onValueChange={value => setValue("country", value)}
-                disabled={!selectedContinent}
-              >
-                <SelectTrigger id="country">
-                  <SelectValue placeholder={selectedContinent ? "Select country" : "Select continent first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedContinent && 
-                    COUNTRIES_BY_CONTINENT[selectedContinent]?.map(country => (
-                      <SelectItem key={country} value={country}>{country}</SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea 
-              id="bio"
-              {...register("bio")} 
-              placeholder="Tell us about yourself"
-              rows={3}
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <AvatarUploader 
+              currentAvatarUrl={profile.avatar_url} 
+              userId={profile.id}
+              onAvatarUpdate={handleAvatarUpdate}
             />
-          </div>
-          
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Changes"}
-              {!isSubmitting && <Save className="ml-2 h-4 w-4" />}
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {profile.username && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Username</h4>
-                <p>{profile.username}</p>
-              </div>
-            )}
             
-            {profile.age_bracket && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Age Bracket</h4>
-                <p>{profile.age_bracket}</p>
+            <div className="grid w-full gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Username</p>
+                  <p className="text-foreground">{profile.username || "Not set"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Name</p>
+                  <p className="text-foreground">
+                    {profile.first_name ? `${profile.first_name} ${profile.last_name || ""}` : "Not set"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Email</p>
+                  <p className="text-foreground">{profile.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Age</p>
+                  <p className="text-foreground">{profile.age_bracket || "Not set"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Location</p>
+                  <p className="text-foreground">
+                    {profile.continent ? `${profile.continent}${profile.country ? `, ${profile.country}` : ""}` : "Not set"}
+                  </p>
+                </div>
               </div>
-            )}
-            
-            {(profile.first_name || profile.last_name) && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Name</h4>
-                <p>{`${profile.first_name || ''} ${profile.last_name || ''}`}</p>
-              </div>
-            )}
-            
-            {(profile.continent || profile.country) && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Location</h4>
-                <p>{[profile.country, profile.continent].filter(Boolean).join(', ')}</p>
-              </div>
-            )}
-          </div>
-          
-          {profile.bio && (
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">Bio</h4>
-              <p className="whitespace-pre-line">{profile.bio}</p>
+              
+              {profile.bio && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Bio</p>
+                  <p className="text-foreground whitespace-pre-wrap">{profile.bio}</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
+      ) : (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Edit Profile</h3>
+              <Button 
+                type="button"
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsEditing(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </Button>
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-6">
+              <AvatarUploader 
+                currentAvatarUrl={profile.avatar_url} 
+                userId={profile.id}
+                onAvatarUpdate={handleAvatarUpdate}
+              />
+              
+              <div className="grid w-full gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Username" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="First Name" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Last Name" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="age_bracket"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age Bracket</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an age bracket" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {AGE_BRACKETS.map((age) => (
+                              <SelectItem key={age} value={age}>
+                                {age}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="continent"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Continent</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a continent" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {CONTINENTS.map((continent) => (
+                              <SelectItem key={continent} value={continent}>
+                                {continent}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Country" {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bio</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Tell us about yourself..." 
+                          className="min-h-[100px]" 
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 transition-all shadow-lg hover:shadow-primary/20"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                <SaveIcon className="h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </Form>
       )}
     </div>
   );

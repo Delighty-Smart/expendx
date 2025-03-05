@@ -1,95 +1,142 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
-import { Flame, Trophy, Calendar } from "lucide-react";
+import { Flame, Trophy, Award, Star } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { STREAK_MILESTONES } from "@/lib/streak";
+import { Badge } from "@/components/ui/badge";
 
-const StreakProgress = ({ streak }: { streak: any }) => {
-  // Calculate progress to next title
-  const streakMilestones = [
-    { threshold: 1, title: "Budget Beginner" },
-    { threshold: 5, title: "Finance Explorer" },
-    { threshold: 10, title: "Money Master" },
-    { threshold: 15, title: "Savings Sensation" },
-    { threshold: 30, title: "Finance Virtuoso" },
-    { threshold: 60, title: "Budget Legend" },
-    { threshold: 100, title: "Finance Guru" },
-    { threshold: 180, title: "Money Maestro" },
-    { threshold: 365, title: "Financial Wizard" },
-  ];
+interface StreakProgressProps {
+  streak: any;
+}
+
+const StreakProgress = ({ streak }: StreakProgressProps) => {
+  const [progress, setProgress] = useState(0);
   
-  const currentIndex = streakMilestones.findIndex(
-    milestone => milestone.title === streak.current_title
-  );
+  // Find current milestone and next milestone
+  const currentMilestoneIndex = STREAK_MILESTONES.findIndex(m => m.title === streak.current_title);
+  const currentMilestone = STREAK_MILESTONES[currentMilestoneIndex];
+  const nextMilestone = STREAK_MILESTONES[currentMilestoneIndex + 1];
   
-  const nextMilestone = streakMilestones[currentIndex + 1];
-  const currentMilestone = streakMilestones[currentIndex];
+  // Calculate progress percentage to next milestone
+  useEffect(() => {
+    if (!currentMilestone || !nextMilestone) {
+      setProgress(100);
+      return;
+    }
+    
+    const currentDays = currentMilestone.days;
+    const nextDays = nextMilestone.days;
+    const daysRange = nextDays - currentDays;
+    const daysProgress = streak.current_streak - currentDays;
+    const progressPercentage = Math.min(100, Math.floor((daysProgress / daysRange) * 100));
+    
+    // Animate progress bar
+    const timer = setTimeout(() => {
+      setProgress(progressPercentage);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [streak, currentMilestone, nextMilestone]);
   
-  const progress = nextMilestone 
-    ? Math.min(100, Math.round((streak.current_streak - currentMilestone.threshold) / 
-      (nextMilestone.threshold - currentMilestone.threshold) * 100))
-    : 100;
-  
-  const nextTitle = nextMilestone ? nextMilestone.title : "Ultimate Master";
-  const daysToNext = nextMilestone ? nextMilestone.threshold - streak.current_streak : 0;
+  if (!streak) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="md:col-span-3">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-pink-500" />
-            Your Streak Journey
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="flex flex-wrap gap-4 items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Current Title</p>
-                <p className="text-2xl font-bold">{streak.current_title}</p>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center px-4 py-2 bg-primary/10 rounded-lg">
-                <div className="flex items-center gap-1">
-                  <Flame className="h-5 w-5 text-pink-500" />
-                  <span className="text-2xl font-bold">{streak.current_streak}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Current Streak</p>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center px-4 py-2 bg-primary/10 rounded-lg">
-                <div className="flex items-center gap-1">
-                  <Trophy className="h-5 w-5 text-yellow-500" />
-                  <span className="text-2xl font-bold">{streak.highest_streak}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Highest Streak</p>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center px-4 py-2 bg-primary/10 rounded-lg">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-5 w-5 text-blue-500" />
-                  <span className="text-2xl font-bold">{streak.freeze_count}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">Streak Freezes</p>
-              </div>
+    <Card className="border-primary/20 shadow-lg hover:shadow-primary/10 transition-all duration-300 overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-50" />
+      
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <Flame className="h-5 w-5 text-pink-500" />
+          <span>Your Streak Journey</span>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg border border-primary/10 hover:bg-primary/10 transition-all duration-300">
+            <div className="text-3xl font-bold text-primary mb-1 flex items-center gap-1">
+              <Flame className="h-6 w-6 text-pink-500 animate-pulse" /> 
+              {streak.current_streak}
             </div>
-            
-            {nextMilestone && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span>Progress to {nextTitle}</span>
-                  <span>{progress}%</span>
-                </div>
-                <Progress value={progress} className="h-2" />
-                <p className="text-xs text-muted-foreground text-right">
-                  {daysToNext} days to reach next level
-                </p>
-              </div>
-            )}
+            <div className="text-sm text-muted-foreground">Current Streak</div>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          
+          <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg border border-primary/10 hover:bg-primary/10 transition-all duration-300">
+            <div className="text-3xl font-bold text-primary mb-1 flex items-center gap-1">
+              <Trophy className="h-6 w-6 text-amber-500" /> 
+              {streak.highest_streak}
+            </div>
+            <div className="text-sm text-muted-foreground">Highest Streak</div>
+          </div>
+          
+          <div className="flex flex-col items-center justify-center p-4 bg-primary/5 rounded-lg border border-primary/10 hover:bg-primary/10 transition-all duration-300">
+            <div className="text-3xl font-bold text-primary mb-1 flex items-center gap-1">
+              <Award className="h-6 w-6 text-purple-500" /> 
+              {streak.freeze_count}
+            </div>
+            <div className="text-sm text-muted-foreground">Freeze Days Left</div>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-amber-500" />
+              <span className="font-medium">Current Title:</span>
+            </div>
+            <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
+              {streak.current_title}
+            </Badge>
+          </div>
+          
+          {nextMilestone && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {streak.current_streak} days
+                </span>
+                <span className="text-muted-foreground">
+                  {nextMilestone.days} days (Next: {nextMilestone.title})
+                </span>
+              </div>
+              <Progress 
+                value={progress} 
+                className="h-2 animate-glow" 
+              />
+              <p className="text-sm text-muted-foreground text-center">
+                {nextMilestone.days - streak.current_streak} more days to reach next title
+              </p>
+            </div>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs">
+          {STREAK_MILESTONES.map((milestone, index) => {
+            const isUnlocked = streak.current_streak >= milestone.days;
+            const isCurrent = milestone.title === streak.current_title;
+            
+            return (
+              <div 
+                key={milestone.title}
+                className={`p-2 rounded-md text-center border ${
+                  isCurrent 
+                    ? 'border-primary bg-primary/10 animate-glow' 
+                    : isUnlocked 
+                      ? 'border-green-500/30 bg-green-500/5' 
+                      : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800'
+                }`}
+              >
+                <div className="font-medium mb-1">{milestone.title}</div>
+                <div className={`text-xs ${isUnlocked ? 'text-green-500' : 'text-muted-foreground'}`}>
+                  {milestone.days} days
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

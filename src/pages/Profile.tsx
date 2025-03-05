@@ -9,6 +9,7 @@ import CommunityTab from "@/components/profile/CommunityTab";
 import StreakProgress from "@/components/profile/StreakProgress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Sparkles } from "lucide-react";
 
 const Profile = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -65,8 +66,13 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
+            Your Profile
+            <Sparkles className="h-5 w-5 text-amber-400" />
+          </h1>
+        </div>
 
         {loading ? (
           <div className="h-64 flex items-center justify-center">
@@ -75,20 +81,17 @@ const Profile = () => {
         ) : (
           <Tabs defaultValue="you" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="you">You</TabsTrigger>
-              <TabsTrigger value="community">Community</TabsTrigger>
+              <TabsTrigger value="you" className="animated-button">You</TabsTrigger>
+              <TabsTrigger value="community" className="animated-button">Community</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="you" className="space-y-6">
+            <TabsContent value="you" className="space-y-8 animate-fadeIn">
               {userStreak && (
                 <StreakProgress streak={userStreak} />
               )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <Card className="border-primary/20 shadow-lg hover:shadow-primary/10 transition-all duration-300">
+                <CardContent className="pt-6">
                   <ProfileForm 
                     profile={userProfile} 
                     setProfile={setUserProfile} 
@@ -97,7 +100,7 @@ const Profile = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="community">
+            <TabsContent value="community" className="animate-fadeIn">
               <CommunityTab profile={userProfile} />
             </TabsContent>
           </Tabs>
