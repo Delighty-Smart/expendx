@@ -14,6 +14,8 @@ import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import FeedbackPage from "./pages/Feedback";
+import ProfilePage from "./pages/Profile";
+import AlertsPage from "./pages/Alerts";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +118,22 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <FeedbackPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/alerts"
+                element={
+                  <ProtectedRoute>
+                    <AlertsPage />
                   </ProtectedRoute>
                 }
               />

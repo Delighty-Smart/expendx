@@ -1,5 +1,5 @@
 
-import { Menu, LogOut, Flame, User, MessageSquare } from "lucide-react";
+import { Menu, LogOut, Flame, User, MessageSquare, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,14 @@ import { updateUserStreak, getUserProfile, getStreakText } from "@/lib/streak";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import StreakModal from "./StreakModal";
+import { Badge } from "@/components/ui/badge";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userStreak, setUserStreak] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -31,6 +33,51 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     };
 
     updateStreak();
+  }, []);
+
+  // Fetch unread alerts count
+  useEffect(() => {
+    const fetchUnreadAlerts = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) return;
+
+        const { count, error } = await supabase
+          .from("alerts")
+          .select("*", { count: 'exact', head: true })
+          .eq("user_id", user.id)
+          .eq("read", false);
+
+        if (error) throw error;
+        
+        setUnreadAlerts(count || 0);
+      } catch (error) {
+        console.error("Error fetching unread alerts:", error);
+      }
+    };
+
+    fetchUnreadAlerts();
+    
+    // Set up realtime subscription for alerts
+    const alertsChannel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public', 
+          table: 'alerts'
+        },
+        (payload) => {
+          fetchUnreadAlerts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(alertsChannel);
+    };
   }, []);
 
   // Show streak modal after 90 seconds (only once per session)
@@ -70,11 +117,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setShowStreakModal(true);
   };
 
+  const handleProfileClick = () => {
+    navigate("/profile");
+    setIsSidebarOpen(false);
+  };
+
   const menuItems = [
     { path: "/", label: "Dashboard" },
     { path: "/transactions", label: "Transactions" },
     { path: "/budgets", label: "Budgets" },
     { path: "/reports", label: "Reports" },
+    { path: "/alerts", label: "Alerts", icon: <Bell className="h-4 w-4" />, badge: unreadAlerts },
     { path: "/feedback", label: "Feedback" },
     { path: "/settings", label: "Settings" },
   ];
@@ -124,7 +177,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
         
         {/* User Profile Section */}
-        <div className="p-4 border-b border-border/50">
+        <div 
+          className="p-4 border-b border-border/50 cursor-pointer hover:bg-accent/30 transition-colors"
+          onClick={handleProfileClick}
+        >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <User className="h-5 w-5 text-primary" />
@@ -171,10 +227,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 location.pathname === item.path
                   ? "bg-primary text-primary-foreground shadow-lg"
                   : "text-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
+              } ${item.badge ? 'flex justify-between items-center' : ''}`}
               onClick={() => setIsSidebarOpen(false)}
             >
-              {item.label}
+              <div className="flex items-center gap-2">
+                {item.icon}
+                <span>{item.label}</span>
+              </div>
+              {item.badge && item.badge > 0 && (
+                <Badge variant="secondary" className="ml-2">{item.badge}</Badge>
+              )}
             </Link>
           ))}
         </nav>
