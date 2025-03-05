@@ -9,6 +9,7 @@ import CommunityTab from "@/components/profile/CommunityTab";
 import StreakProgress from "@/components/profile/StreakProgress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { updateUserStreak } from "@/lib/streak";
 
 const Profile = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -28,6 +29,8 @@ const Profile = () => {
           return;
         }
 
+        console.log("Current user:", user);
+
         // Get user profile
         let { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
@@ -35,8 +38,11 @@ const Profile = () => {
           .eq("id", user.id)
           .maybeSingle();
 
+        console.log("Profile data response:", { data: profileData, error: profileError });
+
         // If profile doesn't exist, create one
-        if (!profileData && (profileError?.code === 'PGRST116' || profileError?.message.includes("no rows"))) {
+        if (!profileData && (profileError?.code === 'PGRST116' || profileError?.message?.includes("no rows"))) {
+          console.log("Creating new profile for user");
           const { data: newProfile, error: createError } = await supabase
             .from("user_profiles")
             .insert({
@@ -47,42 +53,71 @@ const Profile = () => {
             .select()
             .single();
             
-          if (createError) throw createError;
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            throw createError;
+          }
+          console.log("New profile created:", newProfile);
           profileData = newProfile;
-        } else if (profileError) {
+        } else if (profileError && !profileError.message?.includes("no rows")) {
+          console.error("Profile error:", profileError);
           throw profileError;
         }
         
-        // Get user streak
-        let { data: streakData, error: streakError } = await supabase
-          .from("user_streaks")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-          
-        // If streak doesn't exist, create one
-        if (!streakData && (streakError?.code === 'PGRST116' || streakError?.message.includes("no rows"))) {
-          const { data: newStreak, error: createStreakError } = await supabase
+        // Update user streak (also creates if it doesn't exist)
+        const updatedStreak = await updateUserStreak();
+        console.log("Updated streak:", updatedStreak);
+        
+        if (updatedStreak) {
+          setUserStreak(updatedStreak);
+        } else {
+          // Fallback to fetching streak directly
+          let { data: streakData, error: streakError } = await supabase
             .from("user_streaks")
-            .insert({
-              user_id: user.id,
-              current_streak: 1,
-              highest_streak: 1,
-              current_title: "Budget Beginner",
-              freeze_count: 3,
-              last_login: new Date().toISOString()
-            })
-            .select()
-            .single();
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
             
-          if (createStreakError) throw createStreakError;
-          streakData = newStreak;
-        } else if (streakError) {
-          throw streakError;
+          console.log("Streak data response:", { data: streakData, error: streakError });
+          
+          // If streak doesn't exist, create one
+          if (!streakData && (streakError?.code === 'PGRST116' || streakError?.message?.includes("no rows"))) {
+            console.log("Creating new streak for user");
+            const today = new Date();
+            const { data: newStreak, error: createStreakError } = await supabase
+              .from("user_streaks")
+              .insert({
+                user_id: user.id,
+                current_streak: 1,
+                highest_streak: 1,
+                current_title: "Budget Beginner",
+                freeze_count: 3,
+                last_login: today.toISOString()
+              })
+              .select()
+              .single();
+              
+            if (createStreakError) {
+              console.error("Error creating streak:", createStreakError);
+              throw createStreakError;
+            }
+            console.log("New streak created:", newStreak);
+            streakData = newStreak;
+          } else if (streakError && !streakError.message?.includes("no rows")) {
+            console.error("Streak error:", streakError);
+            throw streakError;
+          }
+          
+          setUserStreak(streakData);
         }
 
         setUserProfile(profileData);
-        setUserStreak(streakData);
+        
+        // Success notification
+        toast({
+          title: "Profile loaded",
+          description: `Welcome back, ${profileData?.username || 'user'}!`,
+        });
       } catch (error: any) {
         console.error("Error fetching user data:", error);
         toast({
@@ -97,6 +132,27 @@ const Profile = () => {
 
     fetchUserData();
   }, [navigate, toast]);
+
+  // Render empty profile as fallback if data fetch failed but we're not in loading state
+  if (!loading && (!userProfile || !userStreak)) {
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
+          <Card>
+            <CardHeader>
+              <CardTitle>Error Loading Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                There was an error loading your profile information. Please try refreshing the page.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
