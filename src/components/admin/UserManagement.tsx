@@ -21,6 +21,9 @@ import { Search, Filter, Send, UserPlus, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the user role type to match the database enum
+type UserRoleType = 'free' | 'pro' | 'premium' | 'admin';
+
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +45,7 @@ const UserManagement = () => {
     password: "",
     firstName: "",
     lastName: "",
-    role: "free" as "free" | "pro" | "premium" | "admin"
+    role: "free" as UserRoleType // Fix: Use the UserRoleType to constrain this value
   });
   const [selectAll, setSelectAll] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
