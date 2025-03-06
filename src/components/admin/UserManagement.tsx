@@ -44,7 +44,7 @@ const UserManagement = () => {
     password: "",
     firstName: "",
     lastName: "",
-    role: "free" as UserRoleType // Fix: Use the UserRoleType to constrain this value
+    role: "free" as UserRoleType
   });
   const [selectAll, setSelectAll] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -64,7 +64,6 @@ const UserManagement = () => {
       if (data) {
         setUsers(data);
         
-        // Extract unique countries and continents
         const uniqueCountries = [...new Set(data.map(user => user.country).filter(Boolean))];
         const uniqueContinents = [...new Set(data.map(user => user.continent).filter(Boolean))];
         
@@ -101,11 +100,9 @@ const UserManagement = () => {
         description: "User role has been updated successfully",
       });
 
-      // Update local state
       setUsers(users.map(user => 
         user.id === userId ? { ...user, role: newRole } : user
       ));
-
     } catch (error) {
       console.error('Error updating role:', error);
       toast({
@@ -129,7 +126,6 @@ const UserManagement = () => {
 
       const recipientIds = selectedUsers.length > 0 ? selectedUsers : users.map(user => user.id);
 
-      // Create alerts for each selected user
       const alertPromises = recipientIds.map(userId => 
         supabase.from('alerts').insert({
           user_id: userId,
@@ -154,7 +150,6 @@ const UserManagement = () => {
       });
       setSelectedUsers([]);
       setSelectAll(false);
-
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -176,7 +171,6 @@ const UserManagement = () => {
         return;
       }
 
-      // Create the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: newUserDetails.email,
         password: newUserDetails.password,
@@ -189,7 +183,6 @@ const UserManagement = () => {
 
       if (authError) throw authError;
 
-      // Update the user's role in user_profiles
       if (authData?.user) {
         const { error: profileError } = await supabase
           .from('user_profiles')
@@ -217,9 +210,7 @@ const UserManagement = () => {
         role: "free"
       });
 
-      // Refresh the user list
       fetchUsers();
-
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -244,7 +235,6 @@ const UserManagement = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    // Search filter
     const matchesSearch = 
       searchQuery === "" || 
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -252,14 +242,11 @@ const UserManagement = () => {
       user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.last_name?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Role filter
     const matchesRole = selectedRoles.length === 0 || selectedRoles.includes(user.role);
     
-    // Country filter
     const matchesCountry = selectedCountries.length === 0 || 
       (user.country && selectedCountries.includes(user.country));
     
-    // Continent filter
     const matchesContinent = selectedContinents.length === 0 || 
       (user.continent && selectedContinents.includes(user.continent));
     
@@ -339,7 +326,7 @@ const UserManagement = () => {
                   <Label htmlFor="role" className="col-span-1">Role</Label>
                   <Select
                     value={newUserDetails.role}
-                    onValueChange={(value: UserRoleType) => setNewUserDetails({...newUserDetails, role: value})}
+                    onValueChange={(value) => setNewUserDetails({...newUserDetails, role: value as UserRoleType})}
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select role" />
