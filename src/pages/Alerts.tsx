@@ -13,27 +13,50 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const Alerts = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [budgets, setBudgets] = useState<any[]>([]);
   const { toast } = useToast();
 
-  // Fetch alerts
+  // Fetch alerts, transactions, and budgets
   useEffect(() => {
-    const fetchAlerts = async () => {
+    const fetchData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) return;
 
-        const { data, error } = await supabase
+        // Fetch alerts
+        const { data: alertsData, error: alertsError } = await supabase
           .from("alerts")
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (alertsError) throw alertsError;
 
-        // For connection requests, we need to get the sender's profile
+        // Fetch transactions
+        const { data: transactionsData, error: transactionsError } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+          .limit(20);
+
+        if (transactionsError) throw transactionsError;
+        setTransactions(transactionsData || []);
+
+        // Fetch budgets
+        const { data: budgetsData, error: budgetsError } = await supabase
+          .from("budget_categories")
+          .select("*")
+          .eq("user_id", user.id);
+
+        if (budgetsError) throw budgetsError;
+        setBudgets(budgetsData || []);
+
+        // Process connection request alerts
         const alertsWithSenderInfo = await Promise.all(
-          data.map(async (alert) => {
+          (alertsData || []).map(async (alert) => {
             if (alert.type === "connection_request") {
               // Get connection request to find sender
               const { data: requestData } = await supabase
@@ -59,54 +82,152 @@ const Alerts = () => {
           })
         );
 
-        // Add some example budget alerts if none exist
-        if (alertsWithSenderInfo.length === 0 || !alertsWithSenderInfo.some(a => a.type === "budget_alert")) {
-          const exampleAlerts = [
-            {
-              id: "example-1",
-              title: "Budget Alert",
-              message: "You've spent 90% of your 'Dining' budget for this month.",
-              type: "budget_alert",
-              read: false,
-              created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-            },
-            {
-              id: "example-2",
-              title: "Low Balance Warning",
-              message: "Your total balance is below your set threshold of $500.",
-              type: "balance_warning",
-              read: false,
-              created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
-            },
-            {
-              id: "example-3",
-              title: "Daily Reminder",
-              message: "Don't forget to record today's expenses to maintain your streak!",
-              type: "streak_reminder",
-              read: true,
-              created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-            }
-          ];
-          
-          setAlerts([...alertsWithSenderInfo, ...exampleAlerts]);
-        } else {
-          setAlerts(alertsWithSenderInfo);
-        }
+        // Generate real-time financial insights based on transactions and budgets
+        const generatedAlerts = generateFinancialInsights(transactionsData || [], budgetsData || [], user.id);
+        
+        setAlerts([...alertsWithSenderInfo, ...generatedAlerts]);
       } catch (error) {
-        console.error("Error fetching alerts:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAlerts();
+    fetchData();
+    
+    // Set up realtime subscription for alerts
+    const alertsChannel = supabase
+      .channel('alerts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public', 
+          table: 'alerts'
+        },
+        (payload) => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(alertsChannel);
+    };
   }, []);
+
+  // Generate real financial insights based on user data
+  const generateFinancialInsights = (transactions: any[], budgets: any[], userId: string) => {
+    const insights: any[] = [];
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    // Filter transactions for current month
+    const currentMonthTransactions = transactions.filter(t => {
+      const transDate = new Date(t.date);
+      return transDate.getMonth() === currentMonth && transDate.getFullYear() === currentYear;
+    });
+    
+    // Check budget utilization
+    budgets.forEach(budget => {
+      const categoryTransactions = currentMonthTransactions.filter(t => t.category === budget.category && t.type === 'expense');
+      const categoryTotal = categoryTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      const budgetLimit = Number(budget.monthly_limit);
+      
+      const utilization = (categoryTotal / budgetLimit) * 100;
+      
+      // Alert if budget is at 80% or 100%
+      if (utilization >= 100) {
+        insights.push({
+          id: `budget-exceeded-${budget.category}`,
+          title: "Budget Exceeded!",
+          message: `You've spent ${Math.round(utilization)}% of your '${budget.category}' budget for this month.`,
+          type: "budget_alert",
+          read: false,
+          created_at: new Date().toISOString(),
+          user_id: userId
+        });
+      } else if (utilization >= 80) {
+        insights.push({
+          id: `budget-warning-${budget.category}`,
+          title: "Budget Alert",
+          message: `You've spent ${Math.round(utilization)}% of your '${budget.category}' budget for this month.`,
+          type: "budget_alert",
+          read: false,
+          created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+          user_id: userId
+        });
+      }
+    });
+    
+    // Calculate total income and expenses for the month
+    const totalIncome = currentMonthTransactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+      
+    const totalExpenses = currentMonthTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    
+    // Balance warning if expenses are over 90% of income
+    if (totalIncome > 0 && totalExpenses > 0) {
+      const expenseRatio = totalExpenses / totalIncome;
+      if (expenseRatio > 0.9) {
+        insights.push({
+          id: "balance-warning",
+          title: "Low Balance Warning",
+          message: `Your expenses are ${Math.round(expenseRatio * 100)}% of your income this month. Consider reducing spending.`,
+          type: "balance_warning",
+          read: false,
+          created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+          user_id: userId
+        });
+      }
+    }
+    
+    // Daily streak reminder (if it's been a few days since last transaction)
+    if (transactions.length > 0) {
+      const lastTransactionDate = new Date(transactions[0].date);
+      const daysSinceLastTransaction = Math.floor((today.getTime() - lastTransactionDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceLastTransaction >= 2) {
+        insights.push({
+          id: "streak-reminder",
+          title: "Daily Reminder",
+          message: `It's been ${daysSinceLastTransaction} days since you recorded an expense. Keep your streak going!`,
+          type: "streak_reminder",
+          read: false,
+          created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+          user_id: userId
+        });
+      }
+    }
+    
+    // Savings highlights if the user is saving over 20% of income
+    if (totalIncome > 0 && totalExpenses > 0) {
+      const savingsRate = 1 - (totalExpenses / totalIncome);
+      if (savingsRate > 0.2) {
+        insights.push({
+          id: "savings-highlight",
+          title: "Savings Milestone",
+          message: `Congratulations! You're saving ${Math.round(savingsRate * 100)}% of your income this month.`,
+          type: "savings_highlight",
+          read: true,
+          created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+          user_id: userId
+        });
+      }
+    }
+    
+    return insights;
+  };
 
   // Mark alert as read
   const markAsRead = async (alertId: string) => {
     try {
-      // For example alerts, just update the local state
-      if (alertId.startsWith("example-")) {
+      // For generated alerts, just update the local state
+      if (alertId.includes('-')) {
         setAlerts(alerts.map(alert => 
           alert.id === alertId ? { ...alert, read: true } : alert
         ));
@@ -125,8 +246,18 @@ const Alerts = () => {
       setAlerts(alerts.map(alert => 
         alert.id === alertId ? { ...alert, read: true } : alert
       ));
+      
+      toast({
+        title: "Alert marked as read",
+        description: "The notification has been marked as read",
+      });
     } catch (error) {
       console.error("Error marking alert as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark the alert as read",
+        variant: "destructive",
+      });
     }
   };
 
@@ -176,6 +307,8 @@ const Alerts = () => {
         return <PiggyBank className="h-5 w-5 text-red-500" />;
       case "balance_warning":
         return <TrendingDown className="h-5 w-5 text-red-500" />;
+      case "savings_highlight":
+        return <PiggyBank className="h-5 w-5 text-green-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }

@@ -1,4 +1,3 @@
-
 import { Menu, LogOut, Flame, User, MessageSquare, Bell, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -16,7 +15,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
   const [darkMode, setDarkMode] = useState(() => {
-    // Check if user has a preference stored
     return localStorage.getItem('darkMode') === 'true' ||
       (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
@@ -24,7 +22,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Apply dark mode class to html element
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -50,7 +47,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     updateStreak();
   }, []);
 
-  // Fetch unread alerts count
   useEffect(() => {
     const fetchUnreadAlerts = async () => {
       try {
@@ -74,7 +70,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
     fetchUnreadAlerts();
     
-    // Set up realtime subscription for alerts
     const alertsChannel = supabase
       .channel('schema-db-changes')
       .on(
@@ -95,7 +90,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Show streak modal after 90 seconds (only once per session)
   useEffect(() => {
     if (userStreak) {
       const timer = setTimeout(() => {
@@ -104,7 +98,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           setShowStreakModal(true);
           sessionStorage.setItem('hasSeenStreakModal', 'true');
         }
-      }, 90000); // 90 seconds
+      }, 90000);
       
       return () => clearTimeout(timer);
     }
@@ -153,14 +147,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
-      {/* Streak Modal */}
       <StreakModal 
         open={showStreakModal} 
         onOpenChange={setShowStreakModal} 
         streak={userStreak}
       />
 
-      {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 glass-effect border-b border-border/50 flex items-center justify-between px-4 z-50">
         <Button
           variant="ghost"
@@ -179,7 +171,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 glass-effect border-r border-border/50 transform transition-all duration-300 ease-in-out z-40 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -195,7 +186,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
         
-        {/* User Profile Section - Changed to display username instead of first_name */}
         <div 
           className="p-4 border-b border-border/50 cursor-pointer hover:bg-accent/30 transition-colors"
           onClick={handleProfileClick}
@@ -218,7 +208,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
         
-        {/* Streak Info (clickable) */}
         {userStreak && (
           <div 
             className="p-4 border-b border-border/50 flex items-center gap-2 cursor-pointer hover:bg-accent/30 transition-colors"
@@ -236,7 +225,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         )}
         
-        {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
@@ -251,7 +239,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             >
               <span>{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center">
+                <Badge variant="alert" className="ml-2 px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center">
                   {item.badge}
                 </Badge>
               )}
@@ -259,29 +247,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           ))}
         </nav>
         
-        {/* Dark/Light Mode Toggle - Fixed alignment */}
         <div className="p-2 border-t border-border/50">
           <Button 
             variant="outline" 
             size="sm"
-            className="w-full flex items-center"
+            className="w-full justify-start gap-2"
             onClick={toggleDarkMode}
           >
             {darkMode ? (
               <>
-                <Sun className="h-4 w-4 mr-2" />
+                <Sun className="h-4 w-4" />
                 <span>Light Mode</span>
               </>
             ) : (
               <>
-                <Moon className="h-4 w-4 mr-2" />
+                <Moon className="h-4 w-4" />
                 <span>Dark Mode</span>
               </>
             )}
           </Button>
         </div>
         
-        {/* Logout Button */}
         <div className="p-2">
           <Button 
             variant="outline" 
@@ -293,13 +279,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </Button>
         </div>
         
-        {/* Credits - Added bold formatting */}
         <div className="p-4 text-center text-xs text-muted-foreground border-t border-border/50">
           Powered by <span className="font-bold">Delighty Smart Solutions</span>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main
         className={`pt-16 lg:pl-64 min-h-screen transition-all duration-300 ${
           isSidebarOpen ? "brightness-50 lg:brightness-100" : ""
@@ -311,7 +295,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </main>
 
-      {/* Mobile Backdrop */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
