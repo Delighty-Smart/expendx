@@ -20,6 +20,7 @@ const Auth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
+        // Use string comparison here since AuthChangeEvent is a union type
         if (event === 'SIGNED_UP') {
           setShowOnboarding(true);
         } else {

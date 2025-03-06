@@ -195,7 +195,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
         
-        {/* User Profile Section */}
+        {/* User Profile Section - Changed to display username instead of first_name */}
         <div 
           className="p-4 border-b border-border/50 cursor-pointer hover:bg-accent/30 transition-colors"
           onClick={handleProfileClick}
@@ -206,7 +206,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
             <div className="overflow-hidden">
               <p className="font-medium text-foreground truncate">
-                {userProfile?.first_name || userProfile?.email || "User"}
+                {userProfile?.username || userProfile?.email || "User"}
               </p>
               {userStreak && (
                 <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
@@ -246,23 +246,25 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 location.pathname === item.path
                   ? "bg-primary text-primary-foreground shadow-lg"
                   : "text-foreground hover:bg-accent hover:text-accent-foreground"
-              } ${item.badge ? 'flex justify-between items-center' : ''}`}
+              } flex justify-between items-center`}
               onClick={() => setIsSidebarOpen(false)}
             >
               <span>{item.label}</span>
               {item.badge && item.badge > 0 && (
-                <Badge variant="secondary" className="ml-2">{item.badge}</Badge>
+                <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center">
+                  {item.badge}
+                </Badge>
               )}
             </Link>
           ))}
         </nav>
         
-        {/* Dark/Light Mode Toggle */}
+        {/* Dark/Light Mode Toggle - Fixed alignment */}
         <div className="p-2 border-t border-border/50">
           <Button 
             variant="outline" 
             size="sm"
-            className="w-full justify-between items-center"
+            className="w-full flex items-center"
             onClick={toggleDarkMode}
           >
             {darkMode ? (
@@ -291,9 +293,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </Button>
         </div>
         
-        {/* Credits */}
+        {/* Credits - Added bold formatting */}
         <div className="p-4 text-center text-xs text-muted-foreground border-t border-border/50">
-          Powered by Delighty Smart Solutions
+          Powered by <span className="font-bold">Delighty Smart Solutions</span>
         </div>
       </aside>
 

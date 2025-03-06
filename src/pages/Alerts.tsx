@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Bell, Check, X, FileText, Users, Flame } from "lucide-react";
+import { Bell, Check, X, FileText, Users, Flame, AlertTriangle, TrendingDown, PiggyBank } from "lucide-react";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -58,7 +59,39 @@ const Alerts = () => {
           })
         );
 
-        setAlerts(alertsWithSenderInfo);
+        // Add some example budget alerts if none exist
+        if (alertsWithSenderInfo.length === 0 || !alertsWithSenderInfo.some(a => a.type === "budget_alert")) {
+          const exampleAlerts = [
+            {
+              id: "example-1",
+              title: "Budget Alert",
+              message: "You've spent 90% of your 'Dining' budget for this month.",
+              type: "budget_alert",
+              read: false,
+              created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+            },
+            {
+              id: "example-2",
+              title: "Low Balance Warning",
+              message: "Your total balance is below your set threshold of $500.",
+              type: "balance_warning",
+              read: false,
+              created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // 12 hours ago
+            },
+            {
+              id: "example-3",
+              title: "Daily Reminder",
+              message: "Don't forget to record today's expenses to maintain your streak!",
+              type: "streak_reminder",
+              read: true,
+              created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+            }
+          ];
+          
+          setAlerts([...alertsWithSenderInfo, ...exampleAlerts]);
+        } else {
+          setAlerts(alertsWithSenderInfo);
+        }
       } catch (error) {
         console.error("Error fetching alerts:", error);
       } finally {
@@ -72,6 +105,15 @@ const Alerts = () => {
   // Mark alert as read
   const markAsRead = async (alertId: string) => {
     try {
+      // For example alerts, just update the local state
+      if (alertId.startsWith("example-")) {
+        setAlerts(alerts.map(alert => 
+          alert.id === alertId ? { ...alert, read: true } : alert
+        ));
+        return;
+      }
+
+      // For real alerts, update in the database
       const { error } = await supabase
         .from("alerts")
         .update({ read: true })
@@ -128,9 +170,12 @@ const Alerts = () => {
       case "connection_accepted":
         return <Users className="h-5 w-5 text-blue-500" />;
       case "streak_warning":
+      case "streak_reminder":
         return <Flame className="h-5 w-5 text-orange-500" />;
       case "budget_alert":
-        return <FileText className="h-5 w-5 text-red-500" />;
+        return <PiggyBank className="h-5 w-5 text-red-500" />;
+      case "balance_warning":
+        return <TrendingDown className="h-5 w-5 text-red-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }
@@ -155,6 +200,14 @@ const Alerts = () => {
           Alerts
         </h1>
 
+        <Alert className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Stay on top of your finances</AlertTitle>
+          <AlertDescription>
+            We'll notify you about budget alerts, low balances, and daily reminders to help you maintain your financial goals.
+          </AlertDescription>
+        </Alert>
+
         {loading ? (
           <div className="h-64 flex items-center justify-center">
             <div className="animate-pulse text-muted-foreground">Loading alerts...</div>
@@ -173,7 +226,7 @@ const Alerts = () => {
                 {alerts.map((alert) => (
                   <div 
                     key={alert.id} 
-                    className={`p-4 flex items-start gap-3 ${alert.read ? 'opacity-75' : ''}`}
+                    className={`p-4 flex items-start gap-3 ${alert.read ? '' : 'bg-accent/10'}`}
                   >
                     <div className="mt-1">
                       {renderAlertIcon(alert.type)}
@@ -243,7 +296,7 @@ const Alerts = () => {
                       )}
                       
                       {/* Mark as read button for other alerts */}
-                      {alert.type !== "connection_request" && !alert.read && (
+                      {!alert.read && (
                         <Button 
                           size="sm" 
                           variant="secondary" 
