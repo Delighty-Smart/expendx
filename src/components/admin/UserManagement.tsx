@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Table, TableBody, TableCell, TableHead, 
@@ -340,7 +339,7 @@ const UserManagement = () => {
                   <Label htmlFor="role" className="col-span-1">Role</Label>
                   <Select
                     value={newUserDetails.role}
-                    onValueChange={(value: any) => setNewUserDetails({...newUserDetails, role: value})}
+                    onValueChange={(value: UserRoleType) => setNewUserDetails({...newUserDetails, role: value})}
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select role" />

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
+import type { AuthChangeEvent } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const Auth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        // Fix: Compare the event with the correct type
-        if (event === 'SIGNED_UP') {
+        // Fix: Compare the event with the correct AuthChangeEvent type
+        if (event === 'SIGNED_UP' as AuthChangeEvent) {
           setShowOnboarding(true);
         } else {
           navigate('/');
