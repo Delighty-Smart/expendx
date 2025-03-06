@@ -3,35 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Flame, Trophy, Calendar, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { STREAK_MILESTONES } from "@/lib/streak";
 
 const StreakProgress = ({ streak }: { streak: any }) => {
-  // Calculate progress to next title
-  const streakMilestones = [
-    { threshold: 1, title: "Budget Beginner" },
-    { threshold: 5, title: "Finance Explorer" },
-    { threshold: 10, title: "Money Master" },
-    { threshold: 15, title: "Savings Sensation" },
-    { threshold: 30, title: "Finance Virtuoso" },
-    { threshold: 60, title: "Budget Legend" },
-    { threshold: 100, title: "Finance Guru" },
-    { threshold: 180, title: "Money Maestro" },
-    { threshold: 365, title: "Financial Wizard" },
-  ];
-  
-  const currentIndex = streakMilestones.findIndex(
+  // Find the current milestone and the next milestone
+  const currentMilestoneIndex = STREAK_MILESTONES.findIndex(
     milestone => milestone.title === streak.current_title
   );
   
-  const nextMilestone = streakMilestones[currentIndex + 1];
-  const currentMilestone = streakMilestones[currentIndex];
+  const nextMilestone = STREAK_MILESTONES[currentMilestoneIndex + 1];
+  const currentMilestone = STREAK_MILESTONES[currentMilestoneIndex];
   
   const progress = nextMilestone 
-    ? Math.min(100, Math.round((streak.current_streak - currentMilestone.threshold) / 
-      (nextMilestone.threshold - currentMilestone.threshold) * 100))
+    ? Math.min(100, Math.round((streak.current_streak - currentMilestone.days) / 
+      (nextMilestone.days - currentMilestone.days) * 100))
     : 100;
   
   const nextTitle = nextMilestone ? nextMilestone.title : "Ultimate Master";
-  const daysToNext = nextMilestone ? nextMilestone.threshold - streak.current_streak : 0;
+  const daysToNext = nextMilestone ? nextMilestone.days - streak.current_streak : 0;
 
   // Create an array of days representing the current week
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -62,7 +51,7 @@ const StreakProgress = ({ streak }: { streak: any }) => {
           <div className="md:col-span-2 bg-black/60 rounded-xl p-4 flex flex-col justify-center">
             <div className="flex justify-between items-center mb-2">
               <span className="text-lg font-semibold">{streak.current_streak}</span>
-              <span className="text-muted-foreground">/ {nextMilestone ? nextMilestone.threshold : streak.current_streak}</span>
+              <span className="text-muted-foreground">/ {nextMilestone ? nextMilestone.days : streak.current_streak}</span>
             </div>
             <Progress value={progress} className="h-2 mb-4" />
             

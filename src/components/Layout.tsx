@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, MessageSquare, Bell, Sun, Moon } from "lucide-react";
+import { Menu, LogOut, Flame, User, Bell, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
