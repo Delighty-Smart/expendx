@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import FeedbackPage from "./pages/Feedback";
 import ProfilePage from "./pages/Profile";
 import AlertsPage from "./pages/Alerts";
+import AdminPage from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +135,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AlertsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminPage />
                   </ProtectedRoute>
                 }
               />

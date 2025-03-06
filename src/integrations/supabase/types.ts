@@ -268,6 +268,38 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_responses: {
+        Row: {
+          admin_id: string
+          created_at: string
+          feedback_id: string
+          id: string
+          response_text: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          response_text: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          response_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_responses_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "user_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_submissions: {
         Row: {
           created_at: string | null
@@ -551,6 +583,48 @@ export type Database = {
         }
         Relationships: []
       }
+      slideshow_banners: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          display_order: number
+          id: string
+          image_url: string
+          link_url: string | null
+          title: string
+          updated_at: string | null
+          visible_to: Database["public"]["Enums"]["user_role_type"][]
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          image_url: string
+          link_url?: string | null
+          title: string
+          updated_at?: string | null
+          visible_to?: Database["public"]["Enums"]["user_role_type"][]
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string
+          link_url?: string | null
+          title?: string
+          updated_at?: string | null
+          visible_to?: Database["public"]["Enums"]["user_role_type"][]
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -629,6 +703,7 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          role: Database["public"]["Enums"]["user_role_type"]
           updated_at: string | null
           username: string | null
         }
@@ -643,6 +718,7 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"]
           updated_at?: string | null
           username?: string | null
         }
@@ -657,6 +733,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role_type"]
           updated_at?: string | null
           username?: string | null
         }
@@ -753,6 +830,7 @@ export type Database = {
     Enums: {
       notification_type: "blog_post" | "form_submission" | "system"
       user_role: "admin" | "editor"
+      user_role_type: "admin" | "free" | "pro" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
