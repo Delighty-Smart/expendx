@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
-import type { AuthChangeEvent } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -18,10 +18,9 @@ const Auth = () => {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       if (session) {
-        // Fix: Compare the event with the correct AuthChangeEvent type
-        if (event === 'SIGNED_UP' as AuthChangeEvent) {
+        if (event === 'SIGNED_UP') {
           setShowOnboarding(true);
         } else {
           navigate('/');
