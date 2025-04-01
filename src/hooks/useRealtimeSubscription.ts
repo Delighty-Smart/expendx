@@ -22,11 +22,11 @@ export const useRealtimeSubscription = (
   useEffect(() => {
     const channelId = `${tableName}-${event}-${Math.random().toString(36).substring(2, 11)}`;
     
-    // Create channel
-    const channel = supabase.channel(channelId);
+    console.log(`Setting up subscription to ${tableName} table for ${event} events`);
     
-    // Fix the API usage for channel.on() method
-    channel
+    // Create and subscribe to channel with proper configuration
+    const channel = supabase
+      .channel(channelId)
       .on(
         'postgres_changes',
         {
@@ -39,9 +39,9 @@ export const useRealtimeSubscription = (
           stableCallback(payload);
         }
       )
-      .subscribe();
-
-    console.log(`Setting up subscription to ${tableName} table for ${event} events`);
+      .subscribe((status) => {
+        console.log(`Subscription to ${tableName} status:`, status);
+      });
 
     return () => {
       console.log(`Cleaning up subscription to ${tableName}`);
