@@ -86,7 +86,7 @@ const UserManagement = () => {
     fetchUsers();
   }, [toast]);
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const handleRoleChange = async (userId: string, newRole: UserRoleType) => {
     try {
       const { error } = await supabase
         .from('user_profiles')
