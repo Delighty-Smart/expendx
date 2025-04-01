@@ -26,16 +26,21 @@ export const useRealtimeSubscription = (
     // Create the channel
     const channel = supabase.channel(channelId);
     
-    // Subscribe to changes
+    // Subscribe to changes using the correct method signature
+    // The 'postgres_changes' is an event filter, not a direct event
     channel
-      .on('postgres_changes', { 
-        event: event,
-        schema: 'public',
-        table: tableName
-      }, (payload) => {
-        console.log(`${tableName} change detected:`, payload);
-        stableCallback(payload);
-      })
+      .on(
+        'postgres_changes', 
+        { 
+          event: event,
+          schema: 'public',
+          table: tableName
+        }, 
+        (payload) => {
+          console.log(`${tableName} change detected:`, payload);
+          stableCallback(payload);
+        }
+      )
       .subscribe((status) => {
         console.log(`Subscription to ${tableName} status:`, status);
       });
