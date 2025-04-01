@@ -26,7 +26,7 @@ export const useRealtimeSubscription = (
     const channel = supabase.channel(channelId);
     
     // Add subscription to channel
-    const subscription = channel
+    channel
       .on(
         'postgres_changes',
         {
