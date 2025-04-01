@@ -25,11 +25,13 @@ export const useRealtimeSubscription = (
     console.log(`Setting up subscription to ${tableName} table for ${event} events`);
     
     // Create the channel
-    const channel: RealtimeChannel = supabase.channel(channelId);
+    const channel = supabase.channel(channelId);
     
     // Configure the channel with postgres changes
     channel
-      .on('postgres_changes', {
+      .on(
+        'postgres_changes', 
+        { 
           event: event,
           schema: 'public',
           table: tableName
