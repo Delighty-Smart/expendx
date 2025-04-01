@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DatePickerWithRangeProps {
   dateRange: DateRange;
@@ -23,6 +24,8 @@ export function DatePickerWithRange({
   setDateRange,
   className,
 }: DatePickerWithRangeProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -31,7 +34,7 @@ export function DatePickerWithRange({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-auto justify-start text-left font-normal",
+              "w-full sm:w-auto justify-start text-left font-normal",
               !dateRange && "text-muted-foreground"
             )}
           >
@@ -39,11 +42,11 @@ export function DatePickerWithRange({
             {dateRange?.from ? (
               dateRange.to ? (
                 <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
+                  {format(dateRange.from, "MMM dd, y")} -{" "}
+                  {format(dateRange.to, "MMM dd, y")}
                 </>
               ) : (
-                format(dateRange.from, "LLL dd, y")
+                format(dateRange.from, "MMM dd, y")
               )
             ) : (
               <span>Pick a date range</span>
@@ -57,7 +60,7 @@ export function DatePickerWithRange({
             defaultMonth={dateRange?.from}
             selected={dateRange}
             onSelect={setDateRange}
-            numberOfMonths={2}
+            numberOfMonths={isMobile ? 1 : 2}
             className="pointer-events-auto"
           />
         </PopoverContent>

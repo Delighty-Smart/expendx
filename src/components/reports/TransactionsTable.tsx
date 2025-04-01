@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Card } from "@/components/ui/card";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -16,6 +18,7 @@ interface TransactionsTableProps {
 const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
+  const isMobile = useIsMobile();
   
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -59,24 +62,33 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
         </Select>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      {isMobile ? (
+        // Mobile view: Cards for transactions
+        <div className="space-y-3">
           {filteredTransactions.length > 0 ? (
             filteredTransactions.map((transaction) => (
-              <TableRow key={transaction.id}>
-                <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
-                <TableCell>{transaction.description}</TableCell>
-                <TableCell>{transaction.category}</TableCell>
-                <TableCell>
+              <Card key={transaction.id} className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div className="font-medium">{transaction.description}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {format(new Date(transaction.date), "MMM d, yyyy")}
+                    </div>
+                  </div>
+                  <div className={`font-semibold ${
+                    transaction.type === "credit" 
+                      ? "text-green-600" 
+                      : transaction.type === "debit"
+                      ? "text-red-600"
+                      : "text-blue-600"
+                  }`}>
+                    {currency.symbol}{formatAmount(transaction.amount)}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">
+                    {transaction.category}
+                  </div>
                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                     transaction.type === "credit" 
                       ? "bg-green-100 text-green-800" 
@@ -86,27 +98,66 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
                   }`}>
                     {transaction.type}
                   </span>
-                </TableCell>
-                <TableCell className={`text-right ${
-                  transaction.type === "credit" 
-                    ? "text-green-600" 
-                    : transaction.type === "debit"
-                    ? "text-red-600"
-                    : "text-blue-600"
-                }`}>
-                  {currency.symbol}{formatAmount(transaction.amount)}
-                </TableCell>
-              </TableRow>
+                </div>
+              </Card>
             ))
           ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                No transactions found for the selected filters
-              </TableCell>
-            </TableRow>
+            <div className="text-center py-10 text-muted-foreground">
+              No transactions found for the selected filters
+            </div>
           )}
-        </TableBody>
-      </Table>
+        </div>
+      ) : (
+        // Desktop view: Table for transactions
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredTransactions.length > 0 ? (
+              filteredTransactions.map((transaction) => (
+                <TableRow key={transaction.id}>
+                  <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>{transaction.category}</TableCell>
+                  <TableCell>
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                      transaction.type === "credit" 
+                        ? "bg-green-100 text-green-800" 
+                        : transaction.type === "debit"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}>
+                      {transaction.type}
+                    </span>
+                  </TableCell>
+                  <TableCell className={`text-right ${
+                    transaction.type === "credit" 
+                      ? "text-green-600" 
+                      : transaction.type === "debit"
+                      ? "text-red-600"
+                      : "text-blue-600"
+                  }`}>
+                    {currency.symbol}{formatAmount(transaction.amount)}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                  No transactions found for the selected filters
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 };

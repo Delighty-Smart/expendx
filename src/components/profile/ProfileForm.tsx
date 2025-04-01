@@ -321,13 +321,6 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
               </div>
             )}
             
-            {profile.age_bracket && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Age Bracket</h4>
-                <p>{profile.age_bracket}</p>
-              </div>
-            )}
-            
             {(profile.first_name || profile.last_name) && (
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground">Name</h4>

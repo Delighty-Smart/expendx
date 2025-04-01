@@ -8,11 +8,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Onboarding } from "@/components/Onboarding";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
+interface OnboardingProps {
+  onComplete: () => void;
+}
+
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -21,9 +26,10 @@ const Auth = () => {
           console.log("User signed in:", session.user?.id);
           setIsAuthenticated(true);
 
-          // Check if the user is new (just signed up) to show onboarding
-          if (event === "SIGNED_UP") {
+          // Check if the user is new (just signed up) using the state
+          if (isNewUser) {
             setShowOnboarding(true);
+            setIsNewUser(false); // Reset after handling
           } else {
             navigate('/');
           }
@@ -44,7 +50,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isNewUser]);
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -66,6 +72,9 @@ const Auth = () => {
 
   const handleSignup = async (email: string, password: string) => {
     try {
+      // Set flag that this is a new user before signup
+      setIsNewUser(true);
+      
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -75,6 +84,7 @@ const Auth = () => {
       });
 
       if (error) {
+        setIsNewUser(false); // Reset flag if error
         throw error;
       }
 

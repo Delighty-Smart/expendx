@@ -1,6 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Hook to safely manage Supabase Realtime subscriptions
@@ -21,8 +22,11 @@ export const useRealtimeSubscription = (
   useEffect(() => {
     const channelId = `${tableName}-${event}-${Math.random().toString(36).substring(2, 11)}`;
     
-    const channel = supabase
-      .channel(channelId)
+    // Create channel
+    const channel = supabase.channel(channelId);
+    
+    // Add subscription to channel
+    const subscription = channel
       .on(
         'postgres_changes',
         {

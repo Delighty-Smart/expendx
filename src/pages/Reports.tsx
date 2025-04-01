@@ -8,14 +8,7 @@ import { DatePickerWithRange } from "@/components/DateRangePicker";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
-import { format, isWithinInterval } from "date-fns";
-import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent
-} from "@/components/ui/chart";
+import { format, isWithinInterval, subDays } from "date-fns";
 import { 
   BarChart, 
   Bar, 
@@ -32,7 +25,9 @@ import {
 import TransactionsTable from "@/components/reports/TransactionsTable";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Calendar, FileDown } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 interface DateRange {
   from: Date | undefined;
@@ -41,10 +36,12 @@ interface DateRange {
 
 const Reports = () => {
   const { currency } = useSettings();
+  const isMobile = useIsMobile();
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    from: subDays(new Date(), 30), // Default: Last 30 days
     to: new Date()
   });
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fetch transactions data
   const { data: transactions } = useQuery({
@@ -195,8 +192,97 @@ const Reports = () => {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#5DADE2', '#48C9B0', '#F4D03F'];
 
   const handleExportData = () => {
-    // Export functionality could be implemented here
-    alert("Export functionality would generate a report PDF or CSV");
+    setIsExporting(true);
+
+    try {
+      // Create CSV header
+      const csvHeader = ["Date", "Description", "Category", "Type", "Amount"].join(",") + "\n";
+
+      // Create CSV rows
+      const csvRows = filteredTransactions.map(t => {
+        const date = format(new Date(t.date), "yyyy-MM-dd");
+        const description = `"${t.description.replace(/"/g, '""')}"`;
+        const category = t.category;
+        const type = t.type;
+        const amount = t.amount.toString();
+        
+        return [date, description, category, type, amount].join(",");
+      }).join("\n");
+
+      // Combine header and rows
+      const csvContent = csvHeader + csvRows;
+      
+      // Create date range string for filename
+      const fromDate = dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : "start";
+      const toDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : "end";
+
+      // Create CSV file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link and trigger download
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `financial-report_${fromDate}_to_${toDate}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Report downloaded successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to download report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const getPresetDateRanges = () => {
+    const today = new Date();
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setDateRange({
+            from: subDays(today, 7),
+            to: today
+          })}
+        >
+          Last 7 days
+        </Button>
+        <Button 
+          variant="outline"
+          size="sm"
+          onClick={() => setDateRange({
+            from: subDays(today, 30),
+            to: today
+          })}
+        >
+          Last 30 days
+        </Button>
+        <Button 
+          variant="outline"
+          size="sm"
+          onClick={() => setDateRange({
+            from: new Date(today.getFullYear(), today.getMonth(), 1),
+            to: today
+          })}
+        >
+          This month
+        </Button>
+        <Button 
+          variant="outline"
+          size="sm"
+          onClick={() => setDateRange({
+            from: new Date(today.getFullYear(), 0, 1),
+            to: today
+          })}
+        >
+          This year
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -204,41 +290,61 @@ const Reports = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold">Financial Reports</h1>
-          <Button variant="outline" className="flex items-center gap-2" onClick={handleExportData}>
-            <Download className="h-4 w-4" />
-            Export Report
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2" 
+            onClick={handleExportData}
+            disabled={isExporting || filteredTransactions.length === 0}
+          >
+            {isExporting ? "Exporting..." : "Export Report"}
+            <FileDown className="h-4 w-4" />
           </Button>
         </div>
 
-        <Card className="p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <Card className="p-4 sm:p-6">
+          <div className="flex flex-col space-y-4">
             <h2 className="text-xl font-semibold">Select Date Range</h2>
-            <DatePickerWithRange 
-              dateRange={dateRange} 
-              setDateRange={setDateRange} 
-              className="w-full md:w-auto"
-            />
+            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <DatePickerWithRange 
+                dateRange={dateRange} 
+                setDateRange={setDateRange} 
+                className="w-full md:w-auto"
+              />
+              
+              {!isMobile && (
+                <div className="hidden md:block">
+                  {getPresetDateRanges()}
+                </div>
+              )}
+            </div>
+
+            {isMobile && (
+              <div className="mt-2">
+                {getPresetDateRanges()}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
             <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
               <h3 className="text-sm text-muted-foreground mb-1">Total Income</h3>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{currency.symbol}{summaryStats.totalIncome.toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{currency.symbol}{summaryStats.totalIncome.toFixed(2)}</p>
             </Card>
             
             <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
               <h3 className="text-sm text-muted-foreground mb-1">Total Expenses</h3>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{currency.symbol}{summaryStats.totalExpenses.toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{currency.symbol}{summaryStats.totalExpenses.toFixed(2)}</p>
             </Card>
             
             <Card className="p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
               <h3 className="text-sm text-muted-foreground mb-1">Total Savings</h3>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{currency.symbol}{summaryStats.totalSavings.toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{currency.symbol}{summaryStats.totalSavings.toFixed(2)}</p>
             </Card>
             
             <Card className="p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
               <h3 className="text-sm text-muted-foreground mb-1">Net Cashflow</h3>
-              <p className={`text-2xl font-bold ${
+              <p className={`text-xl sm:text-2xl font-bold ${
                 summaryStats.netCashflow >= 0 
                   ? "text-green-600 dark:text-green-400" 
                   : "text-red-600 dark:text-red-400"
@@ -249,8 +355,8 @@ const Reports = () => {
             </Card>
           </div>
 
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid grid-cols-1 sm:grid-cols-4 w-full mb-4">
+          <Tabs defaultValue="overview" className="w-full mt-6">
+            <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="expenses">Expenses</TabsTrigger>
               <TabsTrigger value="budgets">Budgets</TabsTrigger>
@@ -260,17 +366,22 @@ const Reports = () => {
             <TabsContent value="overview" className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium mb-4">Income vs Expenses Over Time</h3>
-                <div className="h-[400px] w-full">
+                <div className="h-[300px] sm:h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={timeSeriesData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      margin={{ 
+                        top: 20, 
+                        right: isMobile ? 10 : 30, 
+                        left: isMobile ? 0 : 20, 
+                        bottom: 5 
+                      }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
+                      <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                      <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                       <Tooltip />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                       <Bar dataKey="income" name="Income" fill="#3B82F6" />
                       <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
                       <Bar dataKey="savings" name="Savings" fill="#10B981" />
@@ -284,16 +395,16 @@ const Reports = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-medium mb-4">Expenses by Category</h3>
-                  <div className="h-[300px] w-full">
+                  <div className="h-[250px] sm:h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={expensesByCategory}
                           cx="50%"
                           cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
+                          labelLine={!isMobile}
+                          label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={isMobile ? 60 : 80}
                           fill="#8884d8"
                           dataKey="amount"
                           nameKey="category"
@@ -303,6 +414,7 @@ const Reports = () => {
                           ))}
                         </Pie>
                         <Tooltip formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`} />
+                        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -310,7 +422,7 @@ const Reports = () => {
                 
                 <div>
                   <h3 className="text-lg font-medium mb-4">Transaction Distribution</h3>
-                  <div className="h-[300px] w-full">
+                  <div className="h-[250px] sm:h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -321,9 +433,9 @@ const Reports = () => {
                           ]}
                           cx="50%"
                           cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={80}
+                          labelLine={!isMobile}
+                          label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          outerRadius={isMobile ? 60 : 80}
                           fill="#8884d8"
                           dataKey="value"
                         >
@@ -332,6 +444,7 @@ const Reports = () => {
                           <Cell fill="#10B981" /> {/* Savings */}
                         </Pie>
                         <Tooltip formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`} />
+                        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -342,18 +455,28 @@ const Reports = () => {
             <TabsContent value="expenses">
               <h3 className="text-lg font-medium mb-4">Expense Analysis</h3>
               
-              <div className="h-[400px] w-full mb-6">
+              <div className="h-[300px] sm:h-[400px] w-full mb-6">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart 
                     data={expensesByCategory}
                     layout="vertical"
-                    margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    margin={{ 
+                      top: 5, 
+                      right: isMobile ? 10 : 30, 
+                      left: isMobile ? 70 : 100, 
+                      bottom: 5 
+                    }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis type="category" dataKey="category" />
+                    <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                    <YAxis 
+                      type="category" 
+                      dataKey="category" 
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      width={isMobile ? 70 : 100} 
+                    />
                     <Tooltip formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="amount" name="Amount" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -388,17 +511,22 @@ const Reports = () => {
             <TabsContent value="budgets">
               <h3 className="text-lg font-medium mb-4">Budget Analysis</h3>
               
-              <div className="h-[400px] w-full mb-6">
+              <div className="h-[300px] sm:h-[400px] w-full mb-6">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={budgetVsActual}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    margin={{ 
+                      top: 20, 
+                      right: isMobile ? 10 : 30, 
+                      left: isMobile ? 0 : 20, 
+                      bottom: 5 
+                    }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" />
-                    <YAxis />
+                    <XAxis dataKey="category" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                    <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
                     <Bar dataKey="budget" name="Budget" fill="#8884d8" />
                     <Bar dataKey="spent" name="Actual Spending" fill="#82ca9d" />
                   </BarChart>
