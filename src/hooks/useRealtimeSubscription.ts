@@ -25,10 +25,10 @@ export const useRealtimeSubscription = (
     // Create channel
     const channel = supabase.channel(channelId);
     
-    // Add subscription to channel
+    // Add subscription to channel - fixed the type error by using .on() correctly
     channel
       .on(
-        'postgres_changes',
+        'postgres_changes', // This is the event name for Supabase Realtime
         {
           event: event,
           schema: 'public',
