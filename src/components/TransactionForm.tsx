@@ -1,18 +1,16 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
-import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
 const transactionSchema = z.object({
@@ -38,7 +36,7 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
-  const queryClient = useQueryClient(); // Get the query client to invalidate queries
+  const queryClient = useQueryClient();
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -52,24 +50,26 @@ export function TransactionForm({
   });
 
   useEffect(() => {
-    if (transaction) {
-      form.reset({
-        date: transaction.date,
-        amount: transaction.amount.toString(),
-        type: transaction.type,
-        category: transaction.category,
-        description: transaction.description
-      });
-      setTransactionType(transaction.type);
-    } else {
-      form.reset({
-        date: new Date().toISOString().split("T")[0],
-        amount: "",
-        type: "debit",
-        category: "",
-        description: ""
-      });
-      setTransactionType("debit");
+    if (open) {
+      if (transaction) {
+        form.reset({
+          date: transaction.date,
+          amount: transaction.amount.toString(),
+          type: transaction.type,
+          category: transaction.category,
+          description: transaction.description
+        });
+        setTransactionType(transaction.type);
+      } else {
+        form.reset({
+          date: new Date().toISOString().split("T")[0],
+          amount: "",
+          type: "debit",
+          category: "",
+          description: ""
+        });
+        setTransactionType("debit");
+      }
     }
   }, [transaction, form, open]);
 
@@ -79,16 +79,15 @@ export function TransactionForm({
     form.setValue("category", "");
   };
 
-  async function onSubmit(values: z.infer<typeof transactionSchema>) {
+  const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
-      // Ensure valid data
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
-        type: values.type as TransactionType, // Ensure proper type casting
+        type: values.type as TransactionType,
         category: values.category,
         description: values.description,
         user_id: user.id
@@ -127,17 +126,12 @@ export function TransactionForm({
         });
       }
 
-      // Immediately invalidate all relevant queries to ensure all pages update
-      // This triggers refetches immediately for real-time updates
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
       
-      // Close the form and reset it
       onOpenChange(false);
-      form.reset();
       
-      // Notify parent component if needed
       if (onTransactionAdded) {
         onTransactionAdded();
       }
@@ -148,13 +142,17 @@ export function TransactionForm({
         variant: "destructive"
       });
     }
-  }
+  }, [toast, transaction, onOpenChange, onTransactionAdded, queryClient]);
 
-  // Make sure we have categories for the current transaction type
   const categories = getCategoriesForType(transactionType);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(open) => {
+      if (!open) {
+        form.reset();
+      }
+      onOpenChange(open);
+    }}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
@@ -262,7 +260,10 @@ export function TransactionForm({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                form.reset();
+                onOpenChange(false);
+              }}>
                 Cancel
               </Button>
               <Button type="submit">

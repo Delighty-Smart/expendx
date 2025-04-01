@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,8 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getBudgetAlerts, syncBudgetAlertsToNotifications } from "@/services/budgetAlerts";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface TransactionData {
   id: string;
@@ -93,29 +95,22 @@ const BudgetsPage = () => {
     category: transaction.category as TransactionCategory
   }));
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'transactions'
-        },
-        () => {
-          console.log('Transaction data changed, refreshing...');
-          queryClient.invalidateQueries({ queryKey: ["transactions"] });
-          queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-          queryClient.invalidateQueries({ queryKey: ["budgets"] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+  const handleRealTimeUpdates = useCallback(() => {
+    console.log('Transaction data changed, refreshing...');
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+    queryClient.invalidateQueries({ queryKey: ["budgets"] });
   }, [queryClient]);
+
+  useRealtimeSubscription('transactions', '*', handleRealTimeUpdates);
+  useRealtimeSubscription('budget_categories', '*', handleRealTimeUpdates);
+  useRealtimeSubscription('monthly_income_estimates', '*', handleRealTimeUpdates);
+
+  useEffect(() => {
+    if (budgetCategories && transactions) {
+      syncBudgetAlertsToNotifications(budgetCategories, transactions);
+    }
+  }, [budgetCategories, transactions]);
 
   useEffect(() => {
     if (budgetCategories) {
@@ -126,15 +121,15 @@ const BudgetsPage = () => {
     }
   }, [budgetCategories]);
 
-  const handleBudgetUpdate = () => {
+  const handleBudgetUpdate = useCallback(() => {
     refetchBudgets();
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
-  };
+  }, [refetchBudgets, queryClient]);
 
-  const handleIncomeUpdate = () => {
+  const handleIncomeUpdate = useCallback(() => {
     refetchIncome();
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
-  };
+  }, [refetchIncome, queryClient]);
 
   const handleSavingsGoalSubmit = async () => {
     const goalAmount = parseFloat(newSavingsGoal);
@@ -172,7 +167,7 @@ const BudgetsPage = () => {
     }
   };
 
-  const calculateSpending = (category: string) => {
+  const calculateSpending = useCallback((category: string) => {
     if (!transactions) return 0;
     
     const spending = transactions
@@ -180,9 +175,9 @@ const BudgetsPage = () => {
       .reduce((sum, t) => sum + t.amount, 0);
       
     return spending;
-  };
+  }, [transactions]);
 
-  const calculateSavings = () => {
+  const calculateSavings = useCallback(() => {
     if (!transactions) return 0;
     
     const savings = transactions
@@ -190,7 +185,7 @@ const BudgetsPage = () => {
       .reduce((sum, t) => sum + t.amount, 0);
       
     return savings;
-  };
+  }, [transactions]);
 
   const savingsLimit = budgetCategories?.find(b => b.category === "Savings")?.monthly_limit || 0;
   const currentSavings = calculateSavings();
@@ -203,27 +198,7 @@ const BudgetsPage = () => {
     });
   };
 
-  const getBudgetAlerts = () => {
-    if (!budgetCategories || !transactions) return [];
-    
-    return budgetCategories
-      .map((budget) => {
-        const spent = calculateSpending(budget.category);
-        const percentage = budget.monthly_limit > 0 ? (spent / budget.monthly_limit) * 100 : 0;
-        if (percentage >= 90) {
-          return {
-            category: budget.category,
-            spent,
-            limit: budget.monthly_limit,
-            percentage,
-          };
-        }
-        return null;
-      })
-      .filter((alert): alert is NonNullable<typeof alert> => alert !== null);
-  };
-
-  const alerts = getBudgetAlerts();
+  const alerts = getBudgetAlerts(budgetCategories || [], transactions || []);
 
   const totalMonthlySpending = transactions
     ?.filter(t => t.type === "debit")

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -12,10 +11,11 @@ import { TransactionForm } from "@/components/TransactionForm";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { format, isSameDay, parseISO } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
 import { Transaction, TransactionType, TransactionCategory, expenseCategories, incomeCategories, savingsCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 // Combine all categories for filtering
 const allCategories = ["All", ...incomeCategories, ...expenseCategories, ...savingsCategories] as const;
@@ -67,57 +67,39 @@ const TransactionsPage = () => {
     category: transaction.category as TransactionCategory
   }));
 
-  // Setup a real-time subscription to transactions table changes
-  useEffect(() => {
-    console.log("Setting up real-time subscription in Transactions page");
+  // Use our custom realtime subscription hook
+  const handleRealTimeUpdates = useCallback((payload: any) => {
+    console.log('Transaction change detected:', payload);
     
-    const channel = supabase
-      .channel('transactions-page-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'transactions'
-        },
-        (payload) => {
-          console.log('Transaction change detected:', payload);
-          // When changes are detected, refetch data
-          queryClient.invalidateQueries({ queryKey: ["transactions"] });
-          queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-          queryClient.invalidateQueries({ queryKey: ["budgets"] });
-          
-          // Clear any selected transactions when data changes
-          setSelectedTransactions([]);
-          
-          // Show a toast to notify user of data changes
-          const eventType = payload.eventType;
-          if (eventType === 'INSERT') {
-            toast({
-              title: "New Transaction",
-              description: "A new transaction has been added"
-            });
-          } else if (eventType === 'UPDATE') {
-            toast({
-              title: "Transaction Updated",
-              description: "A transaction has been updated"
-            });
-          } else if (eventType === 'DELETE') {
-            toast({
-              title: "Transaction Deleted",
-              description: "A transaction has been removed"
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      console.log("Cleaning up real-time subscription");
-      supabase.removeChannel(channel);
-    };
+    // When changes are detected, refetch data
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+    queryClient.invalidateQueries({ queryKey: ["budgets"] });
+    
+    // Clear any selected transactions when data changes
+    setSelectedTransactions([]);
+    
+    // Show a toast to notify user of data changes
+    const eventType = payload.eventType;
+    if (eventType === 'INSERT') {
+      toast({
+        title: "New Transaction",
+        description: "A new transaction has been added"
+      });
+    } else if (eventType === 'UPDATE') {
+      toast({
+        title: "Transaction Updated",
+        description: "A transaction has been updated"
+      });
+    } else if (eventType === 'DELETE') {
+      toast({
+        title: "Transaction Deleted",
+        description: "A transaction has been removed"
+      });
+    }
   }, [queryClient, toast]);
+
+  useRealtimeSubscription('transactions', '*', handleRealTimeUpdates);
 
   const handleDelete = async (ids: string[]) => {
     try {
