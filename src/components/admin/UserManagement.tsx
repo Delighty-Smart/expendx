@@ -187,7 +187,7 @@ const UserManagement = () => {
         const { error: profileError } = await supabase
           .from('user_profiles')
           .update({ 
-            role: newUserDetails.role,
+            role: newUserDetails.role as UserRoleType,
             first_name: newUserDetails.firstName,
             last_name: newUserDetails.lastName
           })

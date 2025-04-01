@@ -1,109 +1,81 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
-interface OnboardingSlide {
-  title: string;
-  description: string;
-  imageSrc: string;
+interface OnboardingProps {
+  onComplete: () => void;
 }
 
-const slides: OnboardingSlide[] = [
-  {
-    title: "Budget Smarter",
-    description: "Create personalized budgets and track your spending to achieve your financial goals.",
-    imageSrc: "/lovable-uploads/ad58f423-0e4b-47c1-92f7-06748b137f97.png",
-  },
-  {
-    title: "Track Expenses Easily",
-    description: "Monitor all your expenses in one place and gain insights into your spending habits.",
-    imageSrc: "/lovable-uploads/18a687fd-20c0-49bf-846b-d50f69fd7676.png",
-  },
-  {
-    title: "Path to Financial Freedom",
-    description: "Follow your financial journey and build habits that lead to long-term financial success.",
-    imageSrc: "/lovable-uploads/ad58f423-0e4b-47c1-92f7-06748b137f97.png",
-  },
-];
-
-export const Onboarding = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
-
+export const Onboarding = ({ onComplete }: OnboardingProps) => {
+  const { toast } = useToast();
+  const [activeStep, setActiveStep] = useState(0);
+  
+  const steps = [
+    {
+      title: "Welcome to ExpendX!",
+      description: "Let's set up your profile to get started with budgeting and expense tracking."
+    },
+    {
+      title: "Add your first budget",
+      description: "Set up your first budget category to start tracking your expenses."
+    },
+    {
+      title: "Connect your accounts",
+      description: "Connect your bank accounts to automatically track transactions."
+    }
+  ];
+  
   const handleNext = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+    if (activeStep < steps.length - 1) {
+      setActiveStep(activeStep + 1);
     } else {
-      navigate("/");
+      toast({
+        title: "Setup complete!",
+        description: "You're all set to start your financial journey."
+      });
+      onComplete();
     }
   };
-
-  const handleSkip = () => {
-    navigate("/");
-  };
-
-  const handleBack = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1);
-    }
-  };
-
+  
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-      <Card className="max-w-md w-full overflow-hidden rounded-xl shadow-lg">
-        <div className="p-6 flex flex-col items-center">
-          {/* Image */}
-          <div className="mb-8 h-48 flex items-center justify-center">
-            <img
-              src={slides[currentSlide].imageSrc}
-              alt={slides[currentSlide].title}
-              className="max-h-full object-contain"
-            />
-          </div>
-
-          {/* Content */}
-          <h2 className="text-2xl font-bold text-center mb-2">{slides[currentSlide].title}</h2>
-          <p className="text-center text-gray-600 mb-8">{slides[currentSlide].description}</p>
-
-          {/* Progress Indicators */}
-          <div className="flex justify-center space-x-2 mb-8">
-            {slides.map((_, index) => (
+    <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">
+            {steps[activeStep].title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex justify-between mb-6">
+            {steps.map((_, index) => (
               <div
                 key={index}
-                className={`h-2 w-2 rounded-full ${
-                  index === currentSlide
-                    ? "bg-primary w-6 transition-all duration-300"
-                    : "bg-gray-300"
+                className={`h-2 flex-1 mx-1 rounded-full ${
+                  index <= activeStep ? "bg-primary" : "bg-muted"
                 }`}
               />
             ))}
           </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between w-full">
-            {currentSlide > 0 ? (
-              <Button variant="outline" onClick={handleBack}>
-                Back
-              </Button>
-            ) : (
-              <Button variant="ghost" onClick={handleSkip}>
-                Skip
-              </Button>
-            )}
-
-            <Button 
-              className="px-8 bg-gradient-to-r from-expendx-blue to-expendx-green text-white"
-              onClick={handleNext}
+          
+          <p className="text-center text-muted-foreground">
+            {steps[activeStep].description}
+          </p>
+          
+          <div className="flex justify-between pt-6">
+            <Button
+              variant="outline"
+              onClick={onComplete}
             >
-              {currentSlide === slides.length - 1 ? "Get Started" : "Next"}
+              Skip
+            </Button>
+            <Button onClick={handleNext}>
+              {activeStep < steps.length - 1 ? "Next" : "Get Started"}
             </Button>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );
 };
-
-export default Onboarding;

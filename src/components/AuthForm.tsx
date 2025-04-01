@@ -6,9 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
-export const AuthForm = () => {
+interface AuthFormProps {
+  onLogin: (email: string, password: string) => Promise<void>;
+  onSignup: (email: string, password: string) => Promise<void>;
+}
+
+export const AuthForm = ({ onLogin, onSignup }: AuthFormProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -24,31 +28,9 @@ export const AuthForm = () => {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              first_name: firstName,
-              last_name: lastName,
-            },
-          },
-        });
-        if (error) throw error;
-        toast({
-          title: "Account created successfully!",
-          description: "Welcome to ExpendX. Let's get you started.",
-        });
+        await onSignup(email, password);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome back to ExpendX",
-        });
+        await onLogin(email, password);
       }
     } catch (error: any) {
       toast({
