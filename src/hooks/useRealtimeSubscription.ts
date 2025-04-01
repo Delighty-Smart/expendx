@@ -26,20 +26,16 @@ export const useRealtimeSubscription = (
     // Create the channel
     const channel = supabase.channel(channelId);
     
-    // Configure the channel with postgres changes using the correct API structure
+    // Subscribe to changes
     channel
-      .on(
-        'postgres_changes', 
-        { 
-          event: event,
-          schema: 'public',
-          table: tableName
-        }, 
-        (payload) => {
-          console.log(`${tableName} change detected:`, payload);
-          stableCallback(payload);
-        }
-      )
+      .on('postgres_changes', { 
+        event: event,
+        schema: 'public',
+        table: tableName
+      }, (payload) => {
+        console.log(`${tableName} change detected:`, payload);
+        stableCallback(payload);
+      })
       .subscribe((status) => {
         console.log(`Subscription to ${tableName} status:`, status);
       });
