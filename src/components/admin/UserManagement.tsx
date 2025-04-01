@@ -326,7 +326,7 @@ const UserManagement = () => {
                   <Label htmlFor="role" className="col-span-1">Role</Label>
                   <Select
                     value={newUserDetails.role}
-                    onValueChange={(value) => setNewUserDetails({...newUserDetails, role: value as UserRoleType})}
+                    onValueChange={(value: UserRoleType) => setNewUserDetails({...newUserDetails, role: value})}
                   >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select role" />
@@ -553,7 +553,7 @@ const UserManagement = () => {
                   <TableCell>
                     <Select
                       defaultValue={user.role}
-                      onValueChange={(value) => handleRoleChange(user.id, value)}
+                      onValueChange={(value: UserRoleType) => handleRoleChange(user.id, value)}
                     >
                       <SelectTrigger className="w-28">
                         <SelectValue>

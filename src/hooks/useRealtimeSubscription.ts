@@ -25,10 +25,10 @@ export const useRealtimeSubscription = (
     // Create channel
     const channel = supabase.channel(channelId);
     
-    // Add subscription to channel with the correct API usage
+    // Fix the API usage for channel.on() method
     channel
       .on(
-        'postgres_changes', // This event type is valid in the latest Supabase JS client
+        'postgres_changes',
         {
           event: event,
           schema: 'public',
