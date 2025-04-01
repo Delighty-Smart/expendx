@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -13,6 +13,11 @@ export const useRealtimeSubscription = (
   event: 'INSERT' | 'UPDATE' | 'DELETE' | '*',
   callback: (payload: any) => void
 ) => {
+  // Create a stable callback reference that doesn't cause rerenders
+  const stableCallback = useCallback((payload: any) => {
+    callback(payload);
+  }, [callback]);
+
   useEffect(() => {
     const channelId = `${tableName}-${event}-${Math.random().toString(36).substring(2, 11)}`;
     
@@ -27,7 +32,7 @@ export const useRealtimeSubscription = (
         },
         (payload) => {
           console.log(`${tableName} change detected:`, payload);
-          callback(payload);
+          stableCallback(payload);
         }
       )
       .subscribe();
@@ -38,5 +43,5 @@ export const useRealtimeSubscription = (
       console.log(`Cleaning up subscription to ${tableName}`);
       supabase.removeChannel(channel);
     };
-  }, [tableName, event, callback]);
+  }, [tableName, event, stableCallback]); // Only depend on the stable callback
 };

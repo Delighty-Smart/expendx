@@ -17,6 +17,7 @@ import FeedbackPage from "./pages/Feedback";
 import ProfilePage from "./pages/Profile";
 import AlertsPage from "./pages/Alerts";
 import AdminPage from "./pages/Admin";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -110,7 +111,7 @@ const App = () => {
                 path="/reports"
                 element={
                   <ProtectedRoute>
-                    <Index />
+                    <Reports />
                   </ProtectedRoute>
                 }
               />
