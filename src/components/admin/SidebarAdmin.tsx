@@ -8,20 +8,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { cn } from '@/lib/utils';
 
-interface FeedbackCount {
-  count: number | null;
-}
-
 const SidebarAdmin = () => {
   const [unreadFeedback, setUnreadFeedback] = useState(0);
   
   // Function to fetch unread feedback count
   const fetchUnreadFeedbacks = async () => {
     try {
+      // For now, we'll just count all feedback entries since we don't have an is_read column
       const { count, error } = await supabase
         .from('user_feedback')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_read', false);
+        .select('id', { count: 'exact', head: true });
 
       if (error) throw error;
       setUnreadFeedback(count || 0);

@@ -1,7 +1,6 @@
 
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
@@ -26,13 +25,13 @@ export const useRealtimeSubscription = (
     
     console.log(`Setting up subscription to ${tableName} table for ${event} events`);
     
-    // Create the channel
+    // Create the channel with a unique ID
     const channel = supabase.channel(channelId);
     
-    // Convert the event type to match Supabase's expected format
+    // Convert the event type to match what Supabase expects
     const eventType = event === '*' ? '*' : event;
     
-    // Subscribe to the channel with the correct signature
+    // Subscribe to changes with the correct format
     channel
       .on(
         'postgres_changes', 
@@ -54,5 +53,5 @@ export const useRealtimeSubscription = (
       console.log(`Cleaning up subscription to ${tableName}`);
       supabase.removeChannel(channel);
     };
-  }, [tableName, event, stableCallback]); // Only depend on the stable callback
+  }, [tableName, event, stableCallback]);
 };
