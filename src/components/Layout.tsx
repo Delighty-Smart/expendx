@@ -1,4 +1,3 @@
-
 import { Menu, LogOut, Flame, User, Bell, Moon, Sun, Laptop } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -16,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import SidebarAdmin from "./admin/SidebarAdmin";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -23,6 +23,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { theme, updateTheme } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +38,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         
         const profile = await getUserProfile();
         setUserProfile(profile);
+        
+        setIsAdmin(profile?.role === 'admin');
       } catch (error) {
         console.error("Error updating streak:", error);
       }
@@ -147,6 +150,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/settings", label: "Settings", icon: "Settings" },
   ];
 
+  if (isAdmin) {
+    menuItems.push({ path: "/admin", label: "Admin Panel", icon: "Shield" });
+    menuItems.push({ path: "/admin/feedback", label: "Feedback Management", icon: "MessageSquare" });
+  }
+
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
       <StreakModal 
@@ -250,6 +258,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         )}
         
         <nav className="flex-1 p-2 md:p-3 overflow-y-auto">
+          {isAdmin && (
+            <div className="mb-4">
+              <SidebarAdmin />
+              <div className="border-t border-border/50 my-2"></div>
+            </div>
+          )}
+          
           {menuItems.map((item) => (
             <Link
               key={item.path}

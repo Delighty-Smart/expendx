@@ -25,10 +25,20 @@ serve(async (req) => {
       )
     }
 
+    // Create a Supabase client with the Admin key
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Ensure the feedback_screenshots bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets()
+    if (!buckets?.find(bucket => bucket.name === 'feedback_screenshots')) {
+      await supabase.storage.createBucket('feedback_screenshots', {
+        public: false,
+        fileSizeLimit: 10485760, // 10MB
+      })
+    }
 
     // Sanitize filename
     const fileName = file.name.replace(/[^\x00-\x7F]/g, '')

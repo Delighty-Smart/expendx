@@ -30,7 +30,7 @@ export const useRealtimeSubscription = (
     const channel: RealtimeChannel = supabase.channel(channelId);
     
     // Subscribe to the channel with the correct signature for Supabase v2
-    const subscription = channel
+    channel
       .on(
         'postgres_changes', 
         { 
