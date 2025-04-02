@@ -9,7 +9,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { cn } from '@/lib/utils';
 
 interface FeedbackCount {
-  count: number;
+  count: number | null;
 }
 
 const SidebarAdmin = () => {
