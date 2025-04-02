@@ -29,12 +29,15 @@ export const useRealtimeSubscription = (
     // Create the channel
     const channel: RealtimeChannel = supabase.channel(channelId);
     
+    // Properly type the event for Supabase's postgres_changes
+    const eventType = event === '*' ? undefined : event;
+    
     // Subscribe to the channel with the correct signature for Supabase v2
     channel
       .on(
         'postgres_changes', 
         { 
-          event: event === '*' ? '*' : event,
+          event: eventType,
           schema: 'public',
           table: tableName
         },

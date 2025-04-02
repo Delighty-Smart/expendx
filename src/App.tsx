@@ -17,8 +17,15 @@ import AdminFeedback from '@/pages/AdminFeedback'
 import Feedback from '@/pages/Feedback'
 import NotFound from '@/pages/NotFound'
 
-// Create a new QueryClient instance
-const queryClient = new QueryClient()
+// Create a new QueryClient instance with proper configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+})
 
 function App() {
   return (

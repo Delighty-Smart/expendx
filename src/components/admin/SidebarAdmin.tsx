@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, MessageSquare, Users, Settings, Gauge } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -28,9 +27,13 @@ const SidebarAdmin = () => {
 
     fetchUnreadFeedbacks();
 
-    const feedbackChannel = supabase
-      .channel('feedback-changes')
-      .on('postgres_changes', 
+    // Create a channel for feedback changes
+    const feedbackChannel = supabase.channel('feedback-changes');
+    
+    // Add a specific event listener to the channel with the correct type signature
+    feedbackChannel
+      .on(
+        'postgres_changes', 
         { event: '*', schema: 'public', table: 'user_feedback' },
         () => fetchUnreadFeedbacks()
       )
@@ -77,7 +80,7 @@ const SidebarAdmin = () => {
               <span>Feedback</span>
             </div>
             {unreadFeedback > 0 && (
-              <Badge variant="alert" className="ml-auto">
+              <Badge variant="outline" className="ml-auto bg-red-500 text-white border-red-500">
                 {unreadFeedback}
               </Badge>
             )}
