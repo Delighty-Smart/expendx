@@ -1,6 +1,9 @@
 
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { RealtimeChannel } from '@supabase/supabase-js';
+
+type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 /**
  * Hook to safely manage Supabase Realtime subscriptions
@@ -10,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const useRealtimeSubscription = (
   tableName: string,
-  event: 'INSERT' | 'UPDATE' | 'DELETE' | '*',
+  event: RealtimeEvent,
   callback: (payload: any) => void
 ) => {
   // Create a stable callback reference that doesn't cause rerenders
@@ -24,23 +27,25 @@ export const useRealtimeSubscription = (
     console.log(`Setting up subscription to ${tableName} table for ${event} events`);
     
     // Create the channel
-    const channel = supabase.channel(channelId);
+    const channel: RealtimeChannel = supabase.channel(channelId);
     
-    // Subscribe to the channel with the correct signature
-    channel.on(
-      'postgres_changes', 
-      {
-        event: event,
-        schema: 'public',
-        table: tableName
-      }, 
-      (payload) => {
-        console.log(`${tableName} change detected:`, payload);
-        stableCallback(payload);
-      }
-    ).subscribe((status) => {
-      console.log(`Subscription to ${tableName} status:`, status);
-    });
+    // Subscribe to the channel with the correct signature for Supabase v2
+    const subscription = channel
+      .on(
+        'postgres_changes', 
+        { 
+          event: event,
+          schema: 'public',
+          table: tableName
+        },
+        (payload) => {
+          console.log(`${tableName} change detected:`, payload);
+          stableCallback(payload);
+        }
+      )
+      .subscribe((status) => {
+        console.log(`Subscription to ${tableName} status:`, status);
+      });
 
     return () => {
       console.log(`Cleaning up subscription to ${tableName}`);

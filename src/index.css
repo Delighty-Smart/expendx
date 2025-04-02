@@ -25,6 +25,14 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 202 100% 50%; /* #00AAFF */
     --radius: 0.75rem;
+    
+    /* Modal overlay background */
+    --modal-overlay: 0 0% 0% / 0.5;
+    
+    /* Glass effect variables */
+    --glass-background: 255 255 255 / 0.8;
+    --glass-border: 255 255 255 / 0.3;
+    --glass-blur: 12px;
   }
  
   .dark {
@@ -47,6 +55,14 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 202 100% 50%; /* #00AAFF */
+    
+    /* Modal overlay background */
+    --modal-overlay: 0 0% 0% / 0.7;
+    
+    /* Glass effect variables */
+    --glass-background: 0 0 0 / 0.4;
+    --glass-border: 255 255 255 / 0.1;
+    --glass-blur: 16px;
   }
 }
 
@@ -64,8 +80,13 @@
   @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg;
 }
 
-.dark .glass-card {
-  @apply bg-background/90;
+.glass-effect {
+  @apply backdrop-blur-lg bg-background/80 border border-border/50 shadow-lg;
+}
+
+.dark .glass-card,
+.dark .glass-effect {
+  @apply bg-background/40 border-white/10;
 }
 
 /* Enhanced Dropdowns */
@@ -97,7 +118,19 @@
 /* Mobile Optimizations */
 @media (max-width: 640px) {
   .container {
-    @apply px-4;
+    @apply px-3;
+  }
+  
+  h1, h2 {
+    @apply text-base;
+  }
+  
+  .p-4 {
+    @apply p-3;
+  }
+  
+  .text-sm {
+    @apply text-xs;
   }
 }
 
@@ -152,7 +185,19 @@
   color: #6B7280;
 }
 
-/* Glass effect */
-.glass-effect {
-  @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg;
+/* Toast notification styles */
+.toast-success {
+  @apply bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800;
+}
+
+.toast-error {
+  @apply bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800;
+}
+
+.toast-warning {
+  @apply bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800;
+}
+
+.toast-info {
+  @apply bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800;
 }
