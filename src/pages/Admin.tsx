@@ -8,12 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import UserManagement from "@/components/admin/UserManagement";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
-import SlideshowManagement from "@/components/admin/SlideshowManagement";
+import SidebarAdmin from "@/components/admin/SidebarAdmin";
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check URL params to set active tab
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab && ['overview', 'users', 'feedback'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -58,6 +68,12 @@ const AdminDashboard = () => {
     checkAdminStatus();
   }, [navigate, toast]);
 
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    navigate(`/admin?tab=${value}`, { replace: true });
+  };
+
   if (isAdmin === null) {
     return (
       <Layout>
@@ -73,12 +89,21 @@ const AdminDashboard = () => {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         
-        <Tabs defaultValue="users" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
-            <TabsTrigger value="slideshow">Slideshow Banners</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="overview" className="mt-4">
+            <Card className="p-6">
+              <h2 className="text-2xl font-semibold mb-4">System Overview</h2>
+              <p className="text-muted-foreground">
+                Welcome to the admin panel. Use the tabs above to navigate between different sections.
+              </p>
+            </Card>
+          </TabsContent>
           
           <TabsContent value="users" className="mt-4">
             <Card className="p-6">
@@ -89,12 +114,6 @@ const AdminDashboard = () => {
           <TabsContent value="feedback" className="mt-4">
             <Card className="p-6">
               <FeedbackManagement />
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="slideshow" className="mt-4">
-            <Card className="p-6">
-              <SlideshowManagement />
             </Card>
           </TabsContent>
         </Tabs>

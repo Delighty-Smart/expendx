@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Map, Globe, Flag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 const LeaderboardSection = ({ 
   type, 
@@ -28,62 +29,43 @@ const LeaderboardSection = ({
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        // Get distinct continents
-        const { data: continentData } = await supabase
+        // Get all available continents for selection
+        const { data: allContinents } = await supabase
           .from("user_profiles")
           .select("continent")
           .not("continent", "is", null)
-          .eq("continent", continent)
-          .limit(1);
-          
-        if (continentData && continentData.length > 0) {
-          setContinents([continent as string]);
-          setSelectedContinent(continent as string);
-        } else {
-          const { data: allContinents } = await supabase
-            .from("user_profiles")
-            .select("continent")
-            .not("continent", "is", null)
-            .order("continent")
-            .limit(10);
+          .order("continent");
             
-          if (allContinents) {
-            const distinctContinents = [...new Set(allContinents.map(c => c.continent))];
-            setContinents(distinctContinents.filter(Boolean) as string[]);
-            if (distinctContinents.length > 0 && !continent) {
-              setSelectedContinent(distinctContinents[0] as string);
-            }
+        if (allContinents) {
+          const distinctContinents = [...new Set(allContinents.map(c => c.continent))];
+          setContinents(distinctContinents.filter(Boolean) as string[]);
+          
+          // If a continent was passed as prop, use it
+          if (continent) {
+            setSelectedContinent(continent);
+          } else if (distinctContinents.length > 0) {
+            setSelectedContinent(distinctContinents[0] as string);
           }
         }
 
         // Get countries for selected continent
         if (selectedContinent) {
-          const { data: countryData } = await supabase
+          const { data: allCountries } = await supabase
             .from("user_profiles")
             .select("country")
             .eq("continent", selectedContinent)
             .not("country", "is", null)
-            .eq("country", country)
-            .limit(1);
-            
-          if (countryData && countryData.length > 0) {
-            setCountries([country as string]);
-            setSelectedCountry(country as string);
-          } else {
-            const { data: allCountries } = await supabase
-              .from("user_profiles")
-              .select("country")
-              .eq("continent", selectedContinent)
-              .not("country", "is", null)
-              .order("country")
-              .limit(20);
+            .order("country");
               
-            if (allCountries) {
-              const distinctCountries = [...new Set(allCountries.map(c => c.country))];
-              setCountries(distinctCountries.filter(Boolean) as string[]);
-              if (distinctCountries.length > 0 && !country) {
-                setSelectedCountry(distinctCountries[0] as string);
-              }
+          if (allCountries) {
+            const distinctCountries = [...new Set(allCountries.map(c => c.country))];
+            setCountries(distinctCountries.filter(Boolean) as string[]);
+            
+            // If a country was passed as prop, use it
+            if (country) {
+              setSelectedCountry(country);
+            } else if (distinctCountries.length > 0) {
+              setSelectedCountry(distinctCountries[0] as string);
             }
           }
         }
@@ -92,102 +74,105 @@ const LeaderboardSection = ({
       }
     };
 
-    if (type === "local") {
-      fetchLocations();
-    }
+    fetchLocations();
   }, [type, continent, country, selectedContinent]);
 
-  // Fetch leaderboard data
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setLoading(true);
-        
-        // First, get user profiles based on location filters
-        let profilesQuery = supabase
-          .from("user_profiles")
-          .select(`
-            id,
-            username,
-            first_name,
-            last_name,
-            email,
-            avatar_url,
-            continent,
-            country
-          `);
+  // Use real-time subscription to update leaderboard
+  useRealtimeSubscription('user_streaks', '*', () => {
+    fetchLeaderboard();
+  });
 
-        // Apply location filters for local leaderboard
-        if (type === "local") {
-          if (selectedContinent) {
-            profilesQuery = profilesQuery.eq("continent", selectedContinent);
-            
-            if (selectedCountry) {
-              profilesQuery = profilesQuery.eq("country", selectedCountry);
-            }
+  // Fetch leaderboard data
+  const fetchLeaderboard = async () => {
+    try {
+      setLoading(true);
+      
+      // First, get user profiles based on location filters
+      let profilesQuery = supabase
+        .from("user_profiles")
+        .select(`
+          id,
+          username,
+          first_name,
+          last_name,
+          email,
+          avatar_url,
+          continent,
+          country
+        `);
+
+      // Apply location filters for local leaderboard
+      if (type === "local") {
+        if (selectedContinent) {
+          profilesQuery = profilesQuery.eq("continent", selectedContinent);
+          
+          if (selectedCountry) {
+            profilesQuery = profilesQuery.eq("country", selectedCountry);
           }
         }
-
-        const { data: profiles, error: profilesError } = await profilesQuery;
-
-        if (profilesError) throw profilesError;
-        
-        if (!profiles || profiles.length === 0) {
-          setLeaderboardData([]);
-          setLoading(false);
-          return;
-        }
-        
-        // Extract user IDs to get their streak data
-        const userIds = profiles.map(profile => profile.id);
-        
-        // Get streak data for these users
-        const { data: streakData, error: streakError } = await supabase
-          .from("user_streaks")
-          .select("*")
-          .in("user_id", userIds)
-          .order(filter === "current" ? "current_streak" : "highest_streak", { ascending: false });
-        
-        if (streakError) throw streakError;
-        
-        // Combine profile and streak data
-        const combinedData = profiles.map(profile => {
-          const streak = streakData?.find(s => s.user_id === profile.id) || {
-            current_streak: 0,
-            highest_streak: 0,
-            current_title: "New User"
-          };
-          
-          return {
-            id: profile.id,
-            username: profile.username || profile.email.split('@')[0],
-            name: profile.first_name ? `${profile.first_name} ${profile.last_name || ''}` : null,
-            email: profile.email,
-            avatar_url: profile.avatar_url,
-            current_streak: streak.current_streak,
-            highest_streak: streak.highest_streak,
-            current_title: streak.current_title,
-          };
-        });
-        
-        // Sort by streak
-        const sortedData = combinedData.sort((a, b) => {
-          const field = filter === "current" ? "current_streak" : "highest_streak";
-          return b[field] - a[field];
-        });
-        
-        setLeaderboardData(sortedData.slice(0, 10));
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-      } finally {
-        setLoading(false);
       }
-    };
 
-    // Only fetch if we have location data for local leaderboard
-    if (type === "global" || (type === "local" && (selectedContinent || selectedCountry))) {
-      fetchLeaderboard();
+      const { data: profiles, error: profilesError } = await profilesQuery;
+
+      if (profilesError) throw profilesError;
+      
+      if (!profiles || profiles.length === 0) {
+        setLeaderboardData([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Extract user IDs to get their streak data
+      const userIds = profiles.map(profile => profile.id);
+      
+      // Get streak data for these users
+      const { data: streakData, error: streakError } = await supabase
+        .from("user_streaks")
+        .select("*")
+        .in("user_id", userIds)
+        .order(filter === "current" ? "current_streak" : "highest_streak", { ascending: false });
+      
+      if (streakError) throw streakError;
+      
+      // Combine profile and streak data
+      const combinedData = profiles.map(profile => {
+        const streak = streakData?.find(s => s.user_id === profile.id) || {
+          current_streak: 0,
+          highest_streak: 0,
+          current_title: "New User"
+        };
+        
+        return {
+          id: profile.id,
+          username: profile.username || profile.email.split('@')[0],
+          name: profile.first_name ? `${profile.first_name} ${profile.last_name || ''}` : null,
+          email: profile.email,
+          avatar_url: profile.avatar_url,
+          current_streak: streak.current_streak,
+          highest_streak: streak.highest_streak,
+          current_title: streak.current_title,
+          continent: profile.continent,
+          country: profile.country,
+        };
+      });
+      
+      // Sort by streak
+      const sortedData = combinedData.sort((a, b) => {
+        const field = filter === "current" ? "current_streak" : "highest_streak";
+        return b[field] - a[field];
+      });
+      
+      setLeaderboardData(sortedData.slice(0, 10));
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Initial data fetch and when filters change
+  useEffect(() => {
+    fetchLeaderboard();
   }, [type, selectedContinent, selectedCountry, filter]);
 
   return (
