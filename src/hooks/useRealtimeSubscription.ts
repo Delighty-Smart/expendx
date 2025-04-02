@@ -30,7 +30,7 @@ export const useRealtimeSubscription = (
     const channel = supabase.channel(channelId);
     
     // Convert the event type to match Supabase's expected format
-    const eventType = event === '*' ? undefined : event;
+    const eventType = event === '*' ? '*' : event;
     
     // Subscribe to the channel with the correct signature
     channel
