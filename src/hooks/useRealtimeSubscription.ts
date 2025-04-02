@@ -34,7 +34,7 @@ export const useRealtimeSubscription = (
       .on(
         'postgres_changes', 
         { 
-          event: event,
+          event: event === '*' ? '*' : event,
           schema: 'public',
           table: tableName
         },

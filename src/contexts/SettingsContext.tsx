@@ -19,6 +19,7 @@ const SettingsContext = createContext<SettingsContextType | null>(null);
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>(currencies[0]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
     // First check localStorage
     const storedTheme = localStorage.getItem("theme");
@@ -28,6 +29,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     // Default to system preference
     return "system";
   });
+
+  // Fetch the current user ID on mount
+  useEffect(() => {
+    async function fetchUser() {
+      const { data } = await supabase.auth.getUser();
+      setUserId(data?.user?.id || null);
+    }
+    fetchUser();
+  }, []);
 
   // Apply theme when it changes
   useEffect(() => {
@@ -58,16 +68,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
+  // Only fetch settings if we have a user ID
   const { data: settings } = useQuery({
-    queryKey: ["user_settings"],
+    queryKey: ["user_settings", userId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      if (!userId) return null;
 
       const { data, error } = await supabase
         .from("user_settings")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (error) throw error;
@@ -76,7 +86,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       if (!data) {
         const { data: newSettings, error: insertError } = await supabase
           .from("user_settings")
-          .insert([{ user_id: user.id }])
+          .insert([{ user_id: userId }])
           .select()
           .single();
 
@@ -86,12 +96,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
       return data;
     },
+    // Only run this query when we have a userId
+    enabled: !!userId
   });
 
   // Subscribe to user settings changes
   useRealtimeSubscription("user_settings", "*", (payload) => {
-    const { data: { user } } = supabase.auth.getUser();
-    if (!user || payload.new.user_id !== user.id) return;
+    if (!userId || payload.new.user_id !== userId) return;
     
     // Update currency when settings change
     if (payload.new.currency_code) {
@@ -110,13 +121,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const updateCurrency = async (code: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!userId) return;
 
       const { error } = await supabase
         .from("user_settings")
         .update({ currency_code: code })
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
       if (error) throw error;
 
