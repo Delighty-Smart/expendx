@@ -15,6 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { format } from "date-fns";
+import { Eye, EyeOff } from "lucide-react";
+
+interface UserProfile {
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+}
 
 interface Feedback {
   id: string;
@@ -24,11 +31,7 @@ interface Feedback {
   contact_permission: boolean;
   screenshot_url: string | null;
   created_at: string;
-  user_profiles?: {
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-  };
+  user_profiles?: UserProfile | null;
 }
 
 interface ResponseDialogState {
@@ -41,6 +44,7 @@ interface ResponseDialogState {
 const FeedbackManagement = () => {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showComments, setShowComments] = useState(false);
   const [responseDialog, setResponseDialog] = useState<ResponseDialogState>({
     isOpen: false,
     feedbackId: null,
@@ -58,7 +62,7 @@ const FeedbackManagement = () => {
         .from('user_feedback')
         .select(`
           *,
-          user_profiles:user_id (
+          user_profiles:user_id(
             email, 
             first_name,
             last_name
@@ -69,7 +73,21 @@ const FeedbackManagement = () => {
       if (error) throw error;
       
       console.log('Fetched feedbacks:', data);
-      setFeedbacks(data || []);
+      
+      // Process the data to ensure it matches our Feedback type
+      const processedData = data?.map(item => {
+        // If there's an error in the user_profiles relation, provide a fallback
+        const userProfile = typeof item.user_profiles === 'object' && item.user_profiles !== null
+          ? item.user_profiles
+          : { email: 'Unknown user', first_name: null, last_name: null };
+          
+        return {
+          ...item,
+          user_profiles: userProfile
+        } as Feedback;
+      }) || [];
+      
+      setFeedbacks(processedData);
     } catch (error) {
       console.error('Error fetching feedback:', error);
       toast({
@@ -177,9 +195,33 @@ const FeedbackManagement = () => {
     }
   };
 
+  const toggleCommentsVisibility = () => {
+    setShowComments(!showComments);
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-semibold">User Feedback</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">User Feedback</h2>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={toggleCommentsVisibility}
+          className="flex items-center gap-2"
+        >
+          {showComments ? (
+            <>
+              <EyeOff className="w-4 h-4" />
+              <span>Hide Comments</span>
+            </>
+          ) : (
+            <>
+              <Eye className="w-4 h-4" />
+              <span>Show Comments</span>
+            </>
+          )}
+        </Button>
+      </div>
       
       {loading ? (
         <div className="flex justify-center py-8">
@@ -216,8 +258,16 @@ const FeedbackManagement = () => {
                   <TableCell>
                     {getRatingBadge(feedback.rating)}
                   </TableCell>
-                  <TableCell className="max-w-md truncate">
-                    {feedback.comments || 'No comments provided'}
+                  <TableCell className="max-w-md">
+                    {showComments ? (
+                      <div className="break-words">
+                        {feedback.comments || 'No comments provided'}
+                      </div>
+                    ) : (
+                      <div className="blur-sm select-none hover:blur-none transition-all">
+                        {feedback.comments || 'No comments provided'}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button 

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Send, UserPlus, Edit } from "lucide-react";
+import { Search, Filter, Send, UserPlus, Edit, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +26,7 @@ type UserRoleType = 'free' | 'pro' | 'premium' | 'admin';
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
@@ -171,46 +172,49 @@ const UserManagement = () => {
         return;
       }
 
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Use the auth.signUp method instead which is accessible to admin users
+      const { data, error } = await supabase.auth.signUp({
         email: newUserDetails.email,
         password: newUserDetails.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: newUserDetails.firstName,
-          last_name: newUserDetails.lastName
+        options: {
+          data: {
+            first_name: newUserDetails.firstName,
+            last_name: newUserDetails.lastName
+          }
         }
       });
 
-      if (authError) throw authError;
+      if (error) throw error;
 
-      if (authData?.user) {
+      if (data?.user) {
+        // Update the user profile with the role
         const { error: profileError } = await supabase
           .from('user_profiles')
           .update({ 
-            role: newUserDetails.role as UserRoleType,
+            role: newUserDetails.role,
             first_name: newUserDetails.firstName,
             last_name: newUserDetails.lastName
           })
-          .eq('id', authData.user.id);
+          .eq('id', data.user.id);
 
         if (profileError) throw profileError;
+        
+        toast({
+          title: "User created",
+          description: "The user has been created successfully",
+        });
+
+        setCreateUserModalOpen(false);
+        setNewUserDetails({
+          email: "",
+          password: "",
+          firstName: "",
+          lastName: "",
+          role: "free"
+        });
+
+        fetchUsers();
       }
-
-      toast({
-        title: "User created",
-        description: "The user has been created successfully",
-      });
-
-      setCreateUserModalOpen(false);
-      setNewUserDetails({
-        email: "",
-        password: "",
-        firstName: "",
-        lastName: "",
-        role: "free"
-      });
-
-      fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -232,6 +236,10 @@ const UserManagement = () => {
   const handleSelectAllChange = () => {
     setSelectAll(!selectAll);
     setSelectedUsers(selectAll ? [] : users.map(user => user.id));
+  };
+  
+  const toggleInfoVisibility = () => {
+    setShowInfo(!showInfo);
   };
 
   const filteredUsers = users.filter(user => {
@@ -267,6 +275,24 @@ const UserManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">User Management</h2>
         <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={toggleInfoVisibility}
+            className="flex items-center gap-2"
+          >
+            {showInfo ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                <span>Hide Info</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                <span>Show Info</span>
+              </>
+            )}
+          </Button>
+          
           <Dialog open={createUserModalOpen} onOpenChange={setCreateUserModalOpen}>
             <DialogTrigger asChild>
               <Button variant="default">
@@ -532,10 +558,22 @@ const UserManagement = () => {
                       </div>
                       <div>
                         <div className="font-medium">
-                          {user.username || user.email}
+                          {showInfo ? (
+                            user.username || user.email
+                          ) : (
+                            <span className="blur-sm hover:blur-none transition-all select-none">
+                              {user.username || user.email}
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {user.email}
+                          {showInfo ? (
+                            user.email
+                          ) : (
+                            <span className="blur-sm hover:blur-none transition-all select-none">
+                              {user.email}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -543,8 +581,17 @@ const UserManagement = () => {
                   <TableCell>
                     {user.country ? (
                       <div>
-                        <div>{user.country}</div>
-                        <div className="text-sm text-muted-foreground">{user.continent}</div>
+                        {showInfo ? (
+                          <>
+                            <div>{user.country}</div>
+                            <div className="text-sm text-muted-foreground">{user.continent}</div>
+                          </>
+                        ) : (
+                          <span className="blur-sm hover:blur-none transition-all select-none">
+                            <div>{user.country}</div>
+                            <div className="text-sm text-muted-foreground">{user.continent}</div>
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <span className="text-muted-foreground">Not specified</span>
@@ -598,6 +645,7 @@ const UserManagement = () => {
           </Table>
         </div>
       )}
+      
     </div>
   );
 };
