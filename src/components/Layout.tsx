@@ -15,7 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import SidebarAdmin from "./admin/SidebarAdmin";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -132,10 +131,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setIsSidebarOpen(false);
   };
 
-  const toggleTheme = () => {
-    updateTheme(theme === "dark" ? "light" : "dark");
-  };
-  
   const setThemeOption = (option: "light" | "dark" | "system") => {
     updateTheme(option);
   };
@@ -152,7 +147,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   if (isAdmin) {
     menuItems.push({ path: "/admin", label: "Admin Panel", icon: "Shield" });
-    menuItems.push({ path: "/admin/feedback", label: "Feedback Management", icon: "MessageSquare" });
   }
 
   return (
@@ -258,13 +252,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         )}
         
         <nav className="flex-1 p-2 md:p-3 overflow-y-auto">
-          {isAdmin && (
-            <div className="mb-4">
-              <SidebarAdmin />
-              <div className="border-t border-border/50 my-2"></div>
-            </div>
-          )}
-          
           {menuItems.map((item) => (
             <Link
               key={item.path}

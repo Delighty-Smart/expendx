@@ -32,7 +32,7 @@ export const useRealtimeSubscription = (
     const eventType = event === '*' ? '*' : event;
     
     // Set up realtime subscription with proper types
-    channel
+    const subscription = channel
       .on(
         'postgres_changes', 
         { 
