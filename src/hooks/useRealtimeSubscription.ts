@@ -31,7 +31,7 @@ export const useRealtimeSubscription = (
     // Convert the event type to match what Supabase expects
     const eventType = event === '*' ? '*' : event;
     
-    // Subscribe to changes with the correct format - fixing the type error
+    // Set up realtime subscription with proper types
     channel
       .on(
         'postgres_changes', 

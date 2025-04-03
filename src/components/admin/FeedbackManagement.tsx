@@ -58,34 +58,55 @@ const FeedbackManagement = () => {
     try {
       setLoading(true);
       
+      // Fetch user feedback without trying to join with user_profiles
       const { data, error } = await supabase
         .from('user_feedback')
-        .select(`
-          *,
-          user_profiles:user_id(
-            email, 
-            first_name,
-            last_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
       console.log('Fetched feedbacks:', data);
-      
-      // Process the data to ensure it matches our Feedback type
-      const processedData = data?.map(item => {
-        // If there's an error in the user_profiles relation, provide a fallback
-        const userProfile = typeof item.user_profiles === 'object' && item.user_profiles !== null
-          ? item.user_profiles
-          : { email: 'Unknown user', first_name: null, last_name: null };
-          
-        return {
-          ...item,
-          user_profiles: userProfile
-        } as Feedback;
-      }) || [];
+
+      // Now fetch user details separately for each feedback
+      const processedData = await Promise.all(
+        data.map(async (feedback) => {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('user_profiles')
+              .select('email, first_name, last_name')
+              .eq('id', feedback.user_id)
+              .single();
+
+            if (userError) {
+              console.warn(`Error fetching user data for feedback ${feedback.id}:`, userError);
+              return {
+                ...feedback,
+                user_profiles: {
+                  email: 'Unknown user',
+                  first_name: null,
+                  last_name: null
+                }
+              };
+            }
+
+            return {
+              ...feedback,
+              user_profiles: userData
+            };
+          } catch (error) {
+            console.error(`Error processing feedback ${feedback.id}:`, error);
+            return {
+              ...feedback,
+              user_profiles: {
+                email: 'Unknown user',
+                first_name: null,
+                last_name: null
+              }
+            };
+          }
+        })
+      );
       
       setFeedbacks(processedData);
     } catch (error) {
