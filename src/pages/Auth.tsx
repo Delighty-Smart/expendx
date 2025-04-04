@@ -59,6 +59,14 @@ const Auth = () => {
         last_name: lastName
       });
       
+      // After signup, try to login automatically
+      try {
+        await signIn(email, password);
+      } catch (loginError) {
+        console.error("Auto-login after signup failed:", loginError);
+        // This is acceptable, user can manually login
+      }
+      
       // Onboarding will be shown via the useEffect when auth state changes
     } catch (error) {
       setIsNewUser(false); // Reset flag if error

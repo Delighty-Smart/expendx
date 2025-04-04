@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error.message,
+        description: error.message || "Invalid email or password",
       });
       throw error;
     } finally {
@@ -94,10 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
-        options: {
-          data: metadata,
-          emailRedirectTo: `${window.location.origin}/auth`
-        }
+        options: { data: metadata }
       });
 
       if (error) {
@@ -110,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Success toast
       toast({
         title: "Account created",
-        description: "Please check your email to confirm your account",
+        description: "You can now sign in with your credentials",
       });
       
     } catch (error: any) {
@@ -118,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: error.message,
+        description: error.message || "An error occurred during signup",
       });
       throw error;
     } finally {
@@ -145,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         variant: "destructive",
         title: "Error signing out",
-        description: error.message,
+        description: error.message || "An error occurred while signing out",
       });
     } finally {
       setIsLoading(false);

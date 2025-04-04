@@ -1,7 +1,7 @@
 
 // Service Worker for ExpendX PWA
 
-const CACHE_NAME = 'expendx-cache-v1';
+const CACHE_NAME = 'expendx-cache-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Files to cache
@@ -45,12 +45,14 @@ self.addEventListener('activate', (event) => {
 const isAuthRequest = (url) => {
   return url.includes('/auth/') || 
          url.includes('/token') || 
-         url.includes('/supabase.co/') || 
+         url.includes('/supabase.co/auth/') || 
+         url.includes('/supabase.co/rest/') ||
+         url.includes('/.netlify/functions/') ||
          url.includes('/signup') ||
          url.includes('/signin');
 };
 
-// Fetch event - network first, then cache
+// Fetch event - never cache auth requests
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests and browser extensions
   if (event.request.method !== 'GET' || 
@@ -59,11 +61,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip caching for auth requests
+  // Skip caching for auth requests - pass through to network
   if (isAuthRequest(event.request.url)) {
-    return fetch(event.request).catch(() => {
-      return caches.match(OFFLINE_URL);
-    });
+    return;
   }
 
   event.respondWith(
