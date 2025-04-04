@@ -26,8 +26,13 @@ const Auth = () => {
   }, [user, isLoading, isNewUser, navigate]);
 
   const handleLogin = async (email: string, password: string) => {
-    await signIn(email, password);
-    // Navigation happens in the useEffect when auth state changes
+    try {
+      await signIn(email, password);
+      // Navigation happens in the useEffect when auth state changes
+    } catch (error) {
+      // Error is handled in the signIn function
+      console.error("Login error:", error);
+    }
   };
 
   const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
@@ -44,7 +49,7 @@ const Auth = () => {
       // Onboarding will be shown via the useEffect when auth state changes
     } catch (error) {
       setIsNewUser(false); // Reset flag if error
-      throw error;
+      console.error("Signup error:", error);
     }
   };
 

@@ -1,218 +1,250 @@
 
+// Handle offline storage for the application
 import { supabase } from '@/integrations/supabase/client';
 
-type Transaction = {
-  id?: string;
-  user_id?: string;
-  date: string;
-  amount: number;
-  description: string;
-  type: string;
-  category: string;
-  created_at?: string;
-  updated_at?: string;
-  _offline_id?: string;
-  _synced?: boolean;
-};
+// Database names and object stores
+const DB_NAME = 'expendx_offline';
+const TRANSACTIONS_STORE = 'transactions';
+const PENDING_TRANSACTIONS_STORE = 'pending_transactions';
 
-let db: IDBDatabase;
+// IndexedDB setup
+let db: IDBDatabase | null = null;
 
-export const initializeDB = (): Promise<boolean> => {
+// Initialize the database
+export const initializeDB = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (!window.indexedDB) {
-      console.error("Your browser doesn't support IndexedDB");
-      resolve(false);
+    if (!('indexedDB' in window)) {
+      console.error('IndexedDB not supported in this browser');
+      reject(new Error('IndexedDB not supported'));
       return;
     }
 
-    const request = window.indexedDB.open("expendxOfflineDB", 1);
+    const request = indexedDB.open(DB_NAME, 1);
 
     request.onerror = (event) => {
-      console.error("IndexedDB error:", event);
-      reject(new Error("Error opening IndexedDB"));
+      console.error('IndexedDB error:', event);
+      reject(new Error('Failed to open database'));
     };
 
     request.onsuccess = (event) => {
       db = (event.target as IDBOpenDBRequest).result;
-      console.log("IndexedDB initialized successfully");
-      resolve(true);
+      console.info('IndexedDB initialized successfully');
+      resolve();
     };
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      
-      // Create transactions store for offline transactions
-      if (!db.objectStoreNames.contains("transactions")) {
-        const objectStore = db.createObjectStore("transactions", { keyPath: "_offline_id" });
-        objectStore.createIndex("user_id", "user_id", { unique: false });
-        objectStore.createIndex("_synced", "_synced", { unique: false });
+
+      // Create transactions store
+      if (!db.objectStoreNames.contains(TRANSACTIONS_STORE)) {
+        db.createObjectStore(TRANSACTIONS_STORE, { keyPath: 'id' });
+      }
+
+      // Create pending transactions store (for offline changes)
+      if (!db.objectStoreNames.contains(PENDING_TRANSACTIONS_STORE)) {
+        db.createObjectStore(PENDING_TRANSACTIONS_STORE, { keyPath: 'id' });
       }
     };
   });
 };
 
-export const saveTransactionOffline = (transaction: Transaction): Promise<string> => {
+// Add a transaction to the offline store
+export const addTransaction = (transaction: any): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (!db) {
-      reject(new Error("Database not initialized"));
+      reject(new Error('Database not initialized'));
       return;
     }
 
-    const offlineId = crypto.randomUUID();
-    const offlineTransaction = {
-      ...transaction,
-      _offline_id: offlineId,
-      _synced: false
-    };
+    const tx = db.transaction(TRANSACTIONS_STORE, 'readwrite');
+    const store = tx.objectStore(TRANSACTIONS_STORE);
 
-    const transaction_request = db.transaction(["transactions"], "readwrite");
-    const objectStore = transaction_request.objectStore("transactions");
-    const request = objectStore.add(offlineTransaction);
+    // Generate a temporary ID if not present
+    if (!transaction.id) {
+      transaction.id = crypto.randomUUID();
+    }
+
+    const request = store.add(transaction);
 
     request.onsuccess = () => {
-      console.log("Transaction saved offline");
-      
-      // Attempt to register a sync if the browser supports it
-      if ('serviceWorker' in navigator && 'SyncManager' in window) {
-        navigator.serviceWorker.ready.then(registration => {
-          try {
-            // Use try-catch here specifically as some browsers don't support background sync
-            registration.sync.register('sync-transactions').then(() => {
-              console.log('Background sync registered!');
-            }).catch(err => {
-              console.log('Background sync registration failed:', err);
-            });
-          } catch (error) {
-            console.log('SyncManager error:', error);
-          }
-        }).catch(err => {
-          console.error('Service worker not ready:', err);
-        });
-      }
-      
-      resolve(offlineId);
+      resolve(transaction.id);
     };
 
     request.onerror = (event) => {
-      console.error("Error saving transaction offline:", event);
-      reject(new Error("Error saving transaction"));
+      console.error('Error adding transaction to offline store:', event);
+      reject(new Error('Failed to store transaction offline'));
     };
   });
 };
 
-export const getOfflineTransactions = (): Promise<Transaction[]> => {
+// Queue a transaction for synchronization when online
+export const queueTransactionForSync = (transaction: any): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (!db) {
-      reject(new Error("Database not initialized"));
+      reject(new Error('Database not initialized'));
       return;
     }
 
-    const transaction = db.transaction(["transactions"], "readonly");
-    const objectStore = transaction.objectStore("transactions");
-    const request = objectStore.getAll();
+    const tx = db.transaction(PENDING_TRANSACTIONS_STORE, 'readwrite');
+    const store = tx.objectStore(PENDING_TRANSACTIONS_STORE);
+
+    // Ensure we have an ID
+    if (!transaction.id) {
+      transaction.id = crypto.randomUUID();
+    }
+
+    const request = store.put(transaction);
+
+    request.onsuccess = () => {
+      // Try to sync immediately if we're online
+      if (navigator.onLine) {
+        trySync().then(() => resolve()).catch(() => resolve());
+      } else {
+        resolve();
+      }
+    };
+
+    request.onerror = (event) => {
+      console.error('Error queuing transaction for sync:', event);
+      reject(new Error('Failed to queue transaction for sync'));
+    };
+  });
+};
+
+// Attempt to synchronize pending transactions
+export const trySync = async (): Promise<void> => {
+  if (!db || !navigator.onLine) {
+    return;
+  }
+
+  const pendingTransactions = await getPendingTransactions();
+  if (pendingTransactions.length === 0) {
+    return;
+  }
+
+  // Get user session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) {
+    console.log('Not logged in, can\'t sync transactions');
+    return;
+  }
+
+  const userId = session.user.id;
+
+  // Process each pending transaction
+  for (const transaction of pendingTransactions) {
+    try {
+      // Ensure we have the user ID
+      if (!transaction.user_id) {
+        transaction.user_id = userId;
+      }
+
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          ...transaction,
+          user_id: userId,  // Ensure user_id is set properly
+        });
+
+      if (error) {
+        console.error('Error syncing transaction:', error);
+      } else {
+        // Remove from pending store if successful
+        await removePendingTransaction(transaction.id);
+      }
+    } catch (err) {
+      console.error('Error during sync:', err);
+    }
+  }
+};
+
+// Get all pending transactions
+const getPendingTransactions = (): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'));
+      return;
+    }
+
+    const tx = db.transaction(PENDING_TRANSACTIONS_STORE, 'readonly');
+    const store = tx.objectStore(PENDING_TRANSACTIONS_STORE);
+    const request = store.getAll();
 
     request.onsuccess = () => {
       resolve(request.result);
     };
 
     request.onerror = (event) => {
-      console.error("Error getting offline transactions:", event);
-      reject(new Error("Error getting transactions"));
+      console.error('Error getting pending transactions:', event);
+      reject(new Error('Failed to get pending transactions'));
     };
   });
 };
 
-export const syncOfflineTransactions = async (): Promise<number> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log("User not authenticated, can't sync transactions");
-      return 0;
-    }
-
-    const offlineTransactions = await getOfflineTransactions();
-    const unsyncedTransactions = offlineTransactions.filter(t => !t._synced);
-    
-    if (unsyncedTransactions.length === 0) {
-      console.log("No unsynced transactions to upload");
-      return 0;
-    }
-
-    console.log(`Syncing ${unsyncedTransactions.length} offline transactions`);
-    
-    let syncedCount = 0;
-    const transaction = db.transaction(["transactions"], "readwrite");
-    const store = transaction.objectStore("transactions");
-
-    for (const t of unsyncedTransactions) {
-      try {
-        // Remove offline-specific properties before saving to Supabase
-        const { _offline_id, _synced, ...transactionData } = t;
-        
-        // Ensure user_id is set to current user
-        transactionData.user_id = user.id;
-        
-        const { error } = await supabase
-          .from('transactions')
-          .insert(transactionData);
-
-        if (error) {
-          console.error("Error syncing transaction:", error);
-          continue;
-        }
-
-        // Mark as synced in offline storage
-        const updateRequest = store.put({...t, _synced: true});
-        await new Promise((resolve, reject) => {
-          updateRequest.onsuccess = resolve;
-          updateRequest.onerror = reject;
-        });
-        
-        syncedCount++;
-      } catch (error) {
-        console.error("Error processing transaction:", error);
-      }
-    }
-
-    console.log(`Successfully synced ${syncedCount} transactions`);
-    return syncedCount;
-  } catch (error) {
-    console.error("Error in syncOfflineTransactions:", error);
-    return 0;
-  }
-};
-
-// Add helper to clean up synced transactions
-export const cleanSyncedTransactions = async (): Promise<number> => {
+// Remove a pending transaction
+const removePendingTransaction = (id: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (!db) {
-      reject(new Error("Database not initialized"));
+      reject(new Error('Database not initialized'));
       return;
     }
 
-    const transaction = db.transaction(["transactions"], "readwrite");
-    const store = transaction.objectStore("transactions");
-    const index = store.index("_synced");
-    const request = index.openCursor(IDBKeyRange.only(true));
-    
-    let deletedCount = 0;
+    const tx = db.transaction(PENDING_TRANSACTIONS_STORE, 'readwrite');
+    const store = tx.objectStore(PENDING_TRANSACTIONS_STORE);
+    const request = store.delete(id);
 
-    request.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
-      if (cursor) {
-        store.delete(cursor.primaryKey);
-        deletedCount++;
-        cursor.continue();
-      } else {
-        console.log(`Removed ${deletedCount} synced transactions from offline storage`);
-        resolve(deletedCount);
-      }
+    request.onsuccess = () => {
+      resolve();
     };
 
     request.onerror = (event) => {
-      console.error("Error cleaning synced transactions:", event);
-      reject(new Error("Error cleaning transactions"));
+      console.error('Error removing pending transaction:', event);
+      reject(new Error('Failed to remove pending transaction'));
+    };
+  });
+};
+
+// Set up sync events
+export const setupSyncEvents = () => {
+  // Setup online/offline event listeners
+  window.addEventListener('online', () => {
+    console.log('App is online, attempting to sync');
+    trySync().catch(err => console.error('Sync failed:', err));
+  });
+
+  // Register sync event with service worker (if supported)
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    navigator.serviceWorker.ready
+      .then(registration => {
+        // For newer browsers that support Background Sync API
+        // Note: We don't use sync property directly as it might not be supported
+        // and we handle the sync process manually
+        console.log('Service worker is ready for sync');
+      })
+      .catch(err => console.error('Service worker sync registration failed:', err));
+  }
+};
+
+// Get all stored transactions
+export const getAllTransactions = (): Promise<any[]> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'));
+      return;
+    }
+
+    const tx = db.transaction(TRANSACTIONS_STORE, 'readonly');
+    const store = tx.objectStore(TRANSACTIONS_STORE);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = (event) => {
+      console.error('Error getting all transactions:', event);
+      reject(new Error('Failed to get transactions'));
     };
   });
 };

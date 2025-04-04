@@ -2,7 +2,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { initializeDB } from './services/offlineStorage'
+import { initializeDB, setupSyncEvents } from './services/offlineStorage'
 import { notificationService } from './services/notificationService'
 import { AuthProvider } from './hooks/useAuth'
 
@@ -21,7 +21,10 @@ if ('serviceWorker' in navigator) {
 
 // Initialize the offline database
 initializeDB()
-  .then(() => console.log('Offline storage initialized'))
+  .then(() => {
+    console.log('Offline storage initialized');
+    setupSyncEvents(); // Setup sync events after DB is initialized
+  })
   .catch(err => console.error('Failed to initialize offline storage:', err));
 
 // Request notification permissions on startup

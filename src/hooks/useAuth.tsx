@@ -1,6 +1,6 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
+import { Session, User, AuthResponse } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, currentSession: Session | null) => {
+      (event, currentSession) => {
         console.log(`Auth state changed: ${event}`, currentSession?.user?.id || 'No user');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      const { error, data } = await supabase.auth.signUp({ 
+      const { error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
@@ -85,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Please check your email to confirm your account",
       });
       
-      return data;
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -117,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     session,
     user,
     isLoading,
