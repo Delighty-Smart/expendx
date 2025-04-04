@@ -70,15 +70,20 @@ const Auth = () => {
     }
   };
 
-  const handleSignup = async (email: string, password: string) => {
+  const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
       // Set flag that this is a new user before signup
       setIsNewUser(true);
       
-      const { error } = await supabase.auth.signUp({ 
+      // Create new user with the provided email and password
+      const { error, data } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName
+          },
           emailRedirectTo: window.location.origin
         }
       });

@@ -13,6 +13,12 @@ export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: localStorage
+    },
     realtime: {
       params: {
         eventsPerSecond: 10
@@ -20,11 +26,6 @@ export const supabase = createClient<Database>(
     },
     db: {
       schema: 'public'
-    },
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
     }
   }
 );

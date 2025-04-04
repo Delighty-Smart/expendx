@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
-  onSignup: (email: string, password: string) => Promise<void>;
+  onSignup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
 }
 
 export const AuthForm = ({ onLogin, onSignup }: AuthFormProps) => {
@@ -28,7 +28,7 @@ export const AuthForm = ({ onLogin, onSignup }: AuthFormProps) => {
 
     try {
       if (mode === 'signup') {
-        await onSignup(email, password);
+        await onSignup(email, password, firstName, lastName);
       } else {
         await onLogin(email, password);
       }

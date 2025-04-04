@@ -58,8 +58,9 @@ export const useRealtimeSubscription = (
         .subscribe((status) => {
           console.log(`Subscription to ${tableName} status:`, status);
           
-          if (status === 'SUBSCRIPTION_ERROR' && options.onError) {
-            options.onError(`Error subscribing to ${tableName}`);
+          // Fix: Check if the status includes 'SUBSCRIPTION_ERROR' string instead of direct comparison
+          if (status.includes('ERROR') && options.onError) {
+            options.onError(`Error subscribing to ${tableName}: ${status}`);
           }
         });
     } catch (error) {
