@@ -5,21 +5,27 @@ import { AuthForm } from "@/components/AuthForm";
 import { Toaster } from "@/components/ui/toaster";
 import { Onboarding } from "@/components/Onboarding";
 import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { user, isLoading, signIn, signUp } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [processingAuth, setProcessingAuth] = useState(false);
 
   useEffect(() => {
+    console.log("Auth page effect - user:", user?.id, "isLoading:", isLoading, "isNewUser:", isNewUser);
+    
     // If authenticated and not a new user, redirect to dashboard
     if (user && !isLoading && !isNewUser) {
+      console.log("Redirecting to dashboard - authenticated user");
       navigate('/');
     }
     
     // If authenticated and new user, show onboarding
     if (user && !isLoading && isNewUser) {
+      console.log("Showing onboarding - new user");
       setShowOnboarding(true);
       setIsNewUser(false); // Reset after handling
     }
@@ -27,16 +33,23 @@ const Auth = () => {
 
   const handleLogin = async (email: string, password: string) => {
     try {
+      setProcessingAuth(true);
+      console.log("Handling login for:", email);
       await signIn(email, password);
       // Navigation happens in the useEffect when auth state changes
     } catch (error) {
       // Error is handled in the signIn function
       console.error("Login error:", error);
+    } finally {
+      setProcessingAuth(false);
     }
   };
 
   const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
+      setProcessingAuth(true);
+      console.log("Handling signup for:", email);
+      
       // Set flag that this is a new user before signup
       setIsNewUser(true);
       
@@ -50,6 +63,8 @@ const Auth = () => {
     } catch (error) {
       setIsNewUser(false); // Reset flag if error
       console.error("Signup error:", error);
+    } finally {
+      setProcessingAuth(false);
     }
   };
 
@@ -60,7 +75,12 @@ const Auth = () => {
 
   // Loading state
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-lg">Loading...</p>
+      </div>
+    );
   }
 
   if (showOnboarding) {
@@ -72,7 +92,11 @@ const Auth = () => {
       {/* Left column: Authentication form */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <AuthForm onLogin={handleLogin} onSignup={handleSignup} />
+          <AuthForm 
+            onLogin={handleLogin} 
+            onSignup={handleSignup} 
+            isProcessing={processingAuth}
+          />
         </div>
       </div>
 

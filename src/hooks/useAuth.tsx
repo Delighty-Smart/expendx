@@ -1,6 +1,6 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { Session, User, AuthResponse } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log("Setting up auth state change listener");
+    
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -33,13 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        console.log("Checking for existing session");
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Session check result:", currentSession?.user?.id || 'No session');
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+      } catch (error) {
+        console.error("Error checking session:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -47,10 +60,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("Attempting to sign in with email:", email);
       
-      if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
+      if (error) {
+        console.error("Sign in error:", error.message);
+        throw error;
+      }
+      
+      console.log("Sign in successful, user:", data.user?.id);
       // Auth state change listener will update the session
     } catch (error: any) {
       toast({
@@ -67,17 +89,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
       setIsLoading(true);
+      console.log("Attempting to sign up with email:", email);
       
-      const { error } = await supabase.auth.signUp({ 
+      const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: metadata,
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: `${window.location.origin}/auth`
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Sign up error:", error.message);
+        throw error;
+      }
+      
+      console.log("Sign up response:", data);
       
       // Success toast
       toast({
@@ -86,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
     } catch (error: any) {
+      console.error("Sign up error caught:", error);
       toast({
         variant: "destructive",
         title: "Signup failed",
@@ -100,12 +129,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setIsLoading(true);
+      console.log("Attempting to sign out");
+      
       const { error } = await supabase.auth.signOut();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Sign out error:", error.message);
+        throw error;
+      }
       
+      console.log("Sign out successful");
       // Auth state change listener will update the session
     } catch (error: any) {
+      console.error("Sign out error caught:", error);
       toast({
         variant: "destructive",
         title: "Error signing out",

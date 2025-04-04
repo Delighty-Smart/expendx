@@ -1,3 +1,4 @@
+
 // Service Worker for ExpendX PWA
 
 const CACHE_NAME = 'expendx-cache-v1';
@@ -40,6 +41,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Skip caching for auth requests to prevent login issues
+const isAuthRequest = (url) => {
+  return url.includes('/auth/') || 
+         url.includes('/token') || 
+         url.includes('/supabase.co/') || 
+         url.includes('/signup') ||
+         url.includes('/signin');
+};
+
 // Fetch event - network first, then cache
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests and browser extensions
@@ -47,6 +57,13 @@ self.addEventListener('fetch', (event) => {
       event.request.url.startsWith('chrome-extension://') ||
       event.request.url.includes('extension')) {
     return;
+  }
+
+  // Skip caching for auth requests
+  if (isAuthRequest(event.request.url)) {
+    return fetch(event.request).catch(() => {
+      return caches.match(OFFLINE_URL);
+    });
   }
 
   event.respondWith(
