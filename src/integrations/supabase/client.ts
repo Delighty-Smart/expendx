@@ -17,7 +17,8 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: localStorage
+      storage: localStorage,
+      flowType: 'pkce'
     },
     realtime: {
       params: {
@@ -26,6 +27,11 @@ export const supabase = createClient<Database>(
     },
     db: {
       schema: 'public'
+    },
+    global: {
+      headers: {
+        'x-application-name': 'expendX'
+      }
     }
   }
 );

@@ -3,71 +3,31 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Onboarding } from "@/components/Onboarding";
-import { AuthChangeEvent, Session } from "@supabase/supabase-js";
-
-interface OnboardingProps {
-  onComplete: () => void;
-}
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user, isLoading, signIn, signUp } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session: Session | null) => {
-        if (event === "SIGNED_IN" && session) {
-          console.log("User signed in:", session.user?.id);
-          setIsAuthenticated(true);
-
-          // Check if the user is new (just signed up) using the state
-          if (isNewUser) {
-            setShowOnboarding(true);
-            setIsNewUser(false); // Reset after handling
-          } else {
-            navigate('/');
-          }
-        } else if (event === "SIGNED_OUT") {
-          setIsAuthenticated(false);
-        }
-      }
-    );
-
-    // Check if user is already authenticated
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsAuthenticated(true);
-        navigate('/');
-      } else {
-        setIsAuthenticated(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, isNewUser]);
+    // If authenticated and not a new user, redirect to dashboard
+    if (user && !isLoading && !isNewUser) {
+      navigate('/');
+    }
+    
+    // If authenticated and new user, show onboarding
+    if (user && !isLoading && isNewUser) {
+      setShowOnboarding(true);
+      setIsNewUser(false); // Reset after handling
+    }
+  }, [user, isLoading, isNewUser, navigate]);
 
   const handleLogin = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Navigation happens in the auth state change listener
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message,
-      });
-    }
+    await signIn(email, password);
+    // Navigation happens in the useEffect when auth state changes
   };
 
   const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
@@ -76,35 +36,15 @@ const Auth = () => {
       setIsNewUser(true);
       
       // Create new user with the provided email and password
-      const { error, data } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName
-          },
-          emailRedirectTo: window.location.origin
-        }
-      });
-
-      if (error) {
-        setIsNewUser(false); // Reset flag if error
-        throw error;
-      }
-
-      toast({
-        title: "Signup successful",
-        description: "Please check your email to confirm your account",
+      await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName
       });
       
-      // Onboarding will be shown via the auth state change listener
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Signup failed",
-        description: error.message,
-      });
+      // Onboarding will be shown via the useEffect when auth state changes
+    } catch (error) {
+      setIsNewUser(false); // Reset flag if error
+      throw error;
     }
   };
 
@@ -114,7 +54,7 @@ const Auth = () => {
   };
 
   // Loading state
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 

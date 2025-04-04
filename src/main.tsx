@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import { initializeDB } from './services/offlineStorage'
 import { notificationService } from './services/notificationService'
+import { AuthProvider } from './hooks/useAuth'
 
 // Register the service worker for PWA
 if ('serviceWorker' in navigator) {
@@ -34,5 +35,7 @@ notificationService.requestPermission()
   });
 
 createRoot(document.getElementById("root")!).render(
-  <App />
+  <AuthProvider>
+    <App />
+  </AuthProvider>
 );
