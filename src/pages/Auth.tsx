@@ -51,11 +51,15 @@ const Auth = () => {
       console.log("Handling signup for:", email);
       
       // Sign up with additional metadata
-      await signUp(email, password, {
+      const { error } = await signUp(email, password, {
         first_name: firstName,
         last_name: lastName,
         isNewUser: true // Flag to identify new users
       });
+      
+      if (error) {
+        throw error;
+      }
       
       // After successful signup, try to sign in
       await signIn(email, password);

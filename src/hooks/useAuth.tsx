@@ -4,12 +4,13 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
+// Update the return type of signUp to match its implementation
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ user: User | null; session: Session | null; } | { user: null; session: null; }>;
   signOut: () => Promise<void>;
 }
 
