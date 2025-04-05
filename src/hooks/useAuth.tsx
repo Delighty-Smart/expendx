@@ -92,7 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email, 
         password,
         options: { 
-          data: metadata
+          data: metadata,
+          emailRedirectTo: window.location.origin
         }
       });
 
@@ -112,6 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Account created",
         description: "Your account has been created successfully. You can now log in.",
       });
+
+      return data;
     } catch (error: any) {
       console.error("Sign up error caught:", error);
       throw error;
