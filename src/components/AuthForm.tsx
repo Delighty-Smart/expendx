@@ -11,7 +11,6 @@ import { Loader2 } from "lucide-react";
 interface AuthFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
   onSignup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
-  onGoogleSignIn: () => Promise<void>;
   isProcessing?: boolean;
 }
 
@@ -79,7 +78,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-expendx-blue to-expendx-green text-white" 
+              className="w-full" 
               disabled={isDisabled}
             >
               {isDisabled ? (
@@ -123,7 +122,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-expendx-blue to-expendx-green text-white" 
+              className="w-full" 
               disabled={isDisabled}
             >
               {isDisabled ? (

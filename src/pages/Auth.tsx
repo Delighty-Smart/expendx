@@ -58,12 +58,7 @@ const Auth = () => {
       });
       
       // After successful signup, try to sign in
-      try {
-        console.log("Auto-signing in after signup");
-        await signIn(email, password);
-      } catch (loginError) {
-        console.error("Auto-login after signup failed:", loginError);
-      }
+      await signIn(email, password);
       
     } catch (error) {
       console.error("Signup error:", error);
@@ -73,9 +68,10 @@ const Auth = () => {
     }
   };
 
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
     navigate('/');
+    return Promise.resolve();
   };
 
   // Loading state
@@ -100,7 +96,6 @@ const Auth = () => {
           <AuthForm 
             onLogin={handleLogin} 
             onSignup={handleSignup}
-            onGoogleSignIn={() => {}} // Empty function since Google auth is disabled
             isProcessing={processingAuth}
           />
         </div>

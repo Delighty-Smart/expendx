@@ -5,12 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
 interface OnboardingProps {
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
 }
 
 export const Onboarding = ({ onComplete }: OnboardingProps) => {
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const steps = [
     {
@@ -27,15 +28,33 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
     }
   ];
   
-  const handleNext = () => {
+  const handleNext = async () => {
     if (activeStep < steps.length - 1) {
       setActiveStep(activeStep + 1);
     } else {
-      toast({
-        title: "Setup complete!",
-        description: "You're all set to start your financial journey."
-      });
-      onComplete();
+      setIsProcessing(true);
+      try {
+        toast({
+          title: "Setup complete!",
+          description: "You're all set to start your financial journey."
+        });
+        await onComplete();
+      } catch (error) {
+        console.error("Error completing onboarding:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+  };
+  
+  const handleSkip = async () => {
+    setIsProcessing(true);
+    try {
+      await onComplete();
+    } catch (error) {
+      console.error("Error skipping onboarding:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
   
@@ -66,12 +85,23 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
           <div className="flex justify-between pt-6">
             <Button
               variant="outline"
-              onClick={onComplete}
+              onClick={handleSkip}
+              disabled={isProcessing}
             >
               Skip
             </Button>
-            <Button onClick={handleNext}>
-              {activeStep < steps.length - 1 ? "Next" : "Get Started"}
+            <Button 
+              onClick={handleNext}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                activeStep < steps.length - 1 ? "Next" : "Get Started"
+              )}
             </Button>
           </div>
         </CardContent>
