@@ -29,8 +29,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log(`Auth state changed: ${event}`, currentSession?.user?.id || 'No user');
+        
+        // Update session and user state
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+        } else if (event === 'SIGNED_IN') {
+          console.log('User signed in:', currentSession?.user?.id);
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
+          });
+        } else if (event === 'USER_UPDATED') {
+          console.log('User updated:', currentSession?.user?.id);
+        }
+        
+        // Always set loading to false after auth state changes
         setIsLoading(false);
       }
     );
@@ -39,10 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         console.log("Checking for existing session");
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Session check result:", currentSession?.user?.id || 'No session');
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking session:", error);
+          throw error;
+        }
+        
+        console.log("Session check result:", data.session?.user?.id || 'No session');
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
       } catch (error) {
         console.error("Error checking session:", error);
       } finally {
@@ -56,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -74,10 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       console.log("Sign in successful, user:", data.user?.id);
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
+      
       // Auth state change listener will update the session
     } catch (error: any) {
       toast({
@@ -96,10 +115,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       console.log("Attempting to sign up with email:", email);
       
+      // Simplified signup with better error handling
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
-        options: { data: metadata }
+        options: { 
+          data: metadata,
+          emailRedirectTo: `${window.location.origin}/auth`
+        }
       });
 
       if (error) {
@@ -109,11 +132,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Sign up response:", data);
       
-      // Success toast
-      toast({
-        title: "Account created",
-        description: "You can now sign in with your credentials",
-      });
+      if (data.user) {
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully",
+        });
+      } else {
+        toast({
+          title: "Email confirmation required",
+          description: "Please check your email to confirm your account",
+        });
+      }
       
     } catch (error: any) {
       console.error("Sign up error caught:", error);
@@ -129,35 +158,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   
   const signInWithGoogle = async () => {
-    try {
-      setIsLoading(true);
-      console.log("Attempting to sign in with Google");
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`
-        }
-      });
-      
-      if (error) {
-        console.error("Google sign in error:", error.message);
-        throw error;
-      }
-      
-      console.log("Google sign in initiated:", data);
-      // The redirect will happen automatically
-    } catch (error: any) {
-      console.error("Google sign in error caught:", error);
-      toast({
-        variant: "destructive",
-        title: "Google login failed",
-        description: error.message || "An error occurred during Google sign in",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+    // Removed Google authentication as requested
+    toast({
+      variant: "destructive",
+      title: "Feature disabled",
+      description: "Google authentication is currently disabled",
+    });
   };
 
   const signOut = async () => {

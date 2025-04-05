@@ -15,11 +15,12 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       detectSessionInUrl: true,
       storage: localStorage,
-      flowType: 'implicit'
+      flowType: 'pkce'
     },
     global: {
       headers: {
-        'x-application-name': 'expendX'
+        'x-application-name': 'expendX',
+        'cache-control': 'no-store, no-cache, must-revalidate'
       }
     }
   }

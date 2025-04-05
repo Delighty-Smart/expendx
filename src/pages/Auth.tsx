@@ -9,27 +9,27 @@ import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, isLoading, signIn, signUp } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
   const [processingAuth, setProcessingAuth] = useState(false);
 
   useEffect(() => {
-    console.log("Auth page effect - user:", user?.id, "isLoading:", isLoading, "isNewUser:", isNewUser);
+    console.log("Auth page effect - user:", user?.id, "isLoading:", isLoading);
     
-    // If authenticated and not a new user, redirect to dashboard
-    if (user && !isLoading && !isNewUser) {
-      console.log("Redirecting to dashboard - authenticated user");
-      navigate('/');
+    // If authenticated, decide what to do next
+    if (user && !isLoading) {
+      const isNewUser = !!user.user_metadata?.isNewUser;
+      console.log("User authenticated, is new user:", isNewUser);
+      
+      if (isNewUser) {
+        console.log("Showing onboarding for new user");
+        setShowOnboarding(true);
+      } else {
+        console.log("Redirecting existing user to dashboard");
+        navigate('/');
+      }
     }
-    
-    // If authenticated and new user, show onboarding
-    if (user && !isLoading && isNewUser) {
-      console.log("Showing onboarding - new user");
-      setShowOnboarding(true);
-      setIsNewUser(false); // Reset after handling
-    }
-  }, [user, isLoading, isNewUser, navigate]);
+  }, [user, isLoading, navigate]);
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -38,8 +38,8 @@ const Auth = () => {
       await signIn(email, password);
       // Navigation happens in the useEffect when auth state changes
     } catch (error) {
-      // Error is handled in the signIn function
       console.error("Login error:", error);
+      // Error is handled in the signIn function
     } finally {
       setProcessingAuth(false);
     }
@@ -50,40 +50,24 @@ const Auth = () => {
       setProcessingAuth(true);
       console.log("Handling signup for:", email);
       
-      // Set flag that this is a new user before signup
-      setIsNewUser(true);
-      
-      // Create new user with the provided email and password
+      // Sign up with additional metadata
       await signUp(email, password, {
         first_name: firstName,
-        last_name: lastName
+        last_name: lastName,
+        isNewUser: true // Flag to identify new users
       });
       
-      // After signup, try to login automatically
+      // After successful signup, try to sign in
       try {
+        console.log("Auto-signing in after signup");
         await signIn(email, password);
       } catch (loginError) {
         console.error("Auto-login after signup failed:", loginError);
-        // This is acceptable, user can manually login
       }
       
-      // Onboarding will be shown via the useEffect when auth state changes
     } catch (error) {
-      setIsNewUser(false); // Reset flag if error
       console.error("Signup error:", error);
-    } finally {
-      setProcessingAuth(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setProcessingAuth(true);
-      console.log("Handling Google sign in");
-      await signInWithGoogle();
-      // Google auth will redirect, no navigation needed here
-    } catch (error) {
-      console.error("Google sign in error:", error);
+      // Error is handled in the signUp function
     } finally {
       setProcessingAuth(false);
     }
@@ -115,8 +99,8 @@ const Auth = () => {
         <div className="w-full max-w-md">
           <AuthForm 
             onLogin={handleLogin} 
-            onSignup={handleSignup} 
-            onGoogleSignIn={handleGoogleSignIn}
+            onSignup={handleSignup}
+            onGoogleSignIn={() => {}} // Empty function since Google auth is disabled
             isProcessing={processingAuth}
           />
         </div>
