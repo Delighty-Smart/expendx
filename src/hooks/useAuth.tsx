@@ -4,13 +4,12 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
-// Update the return type of signUp to match its implementation
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ user: User | null; session: Session | null; } | { user: null; session: null; }>;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -89,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       console.log("Attempting sign up with email:", email);
       
+      // Use simpler data structure for the signup
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -118,6 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return data;
     } catch (error: any) {
       console.error("Sign up error caught:", error);
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error.message || "An error occurred during signup",
+      });
       throw error;
     } finally {
       setIsLoading(false);

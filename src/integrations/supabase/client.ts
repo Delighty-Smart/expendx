@@ -13,13 +13,15 @@ export const supabase = createClient<Database>(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: true,
       storage: localStorage,
     },
     global: {
       headers: {
         'x-application-name': 'expendX',
-      }
-    }
+      },
+    },
+    // Add debug for development to help troubleshoot
+    debug: true,
   }
 );
