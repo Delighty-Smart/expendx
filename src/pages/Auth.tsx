@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, isLoading, signIn, signUp } = useAuth();
+  const { user, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [processingAuth, setProcessingAuth] = useState(false);
@@ -76,6 +76,19 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setProcessingAuth(true);
+      console.log("Handling Google sign in");
+      await signInWithGoogle();
+      // Google auth will redirect, no navigation needed here
+    } catch (error) {
+      console.error("Google sign in error:", error);
+    } finally {
+      setProcessingAuth(false);
+    }
+  };
+
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
     navigate('/');
@@ -103,6 +116,7 @@ const Auth = () => {
           <AuthForm 
             onLogin={handleLogin} 
             onSignup={handleSignup} 
+            onGoogleSignIn={handleGoogleSignIn}
             isProcessing={processingAuth}
           />
         </div>
