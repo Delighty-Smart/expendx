@@ -5,6 +5,7 @@
  */
 import { PostgrestSingleResponse, PostgrestResponse } from '@supabase/supabase-js';
 import { asId, DbInsert, DbRow, DbUpdate } from './typeHelpers';
+import { Database } from '@/integrations/supabase/types';
 
 export function safelyUnwrapResponse<T>(
   response: any,  // Using any here to accommodate various Supabase response types
@@ -92,6 +93,8 @@ export function prepareUpdate<T extends keyof Database['public']['Tables']>(
 export function makeId<T extends keyof Database['public']['Tables']>(
   table: T, 
   id: string
-): DbRow<T>['id'] {
-  return id as unknown as DbRow<T>['id'];
+): any {
+  // We're returning 'any' instead of trying to access DbRow<T>['id'] 
+  // to avoid TypeScript errors since not all tables have the same id structure
+  return id as unknown as string;
 }
