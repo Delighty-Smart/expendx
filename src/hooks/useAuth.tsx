@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<any>;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -86,9 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
       setIsLoading(true);
-      console.log("Attempting sign up with email:", email);
+      console.log("Attempting sign up with email:", email, "metadata:", metadata);
       
-      // Use simpler data structure for the signup
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -108,14 +107,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log("Sign up response:", data);
+      console.log("Sign up successful:", data);
       
       toast({
         title: "Account created",
-        description: "Your account has been created successfully. You can now log in.",
+        description: "Your account has been created successfully.",
       });
-
-      return data;
     } catch (error: any) {
       console.error("Sign up error caught:", error);
       toast({

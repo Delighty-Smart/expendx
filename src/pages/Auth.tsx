@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
@@ -51,7 +50,7 @@ const Auth = () => {
       console.log("Handling signup for:", email);
       
       // Sign up with additional metadata
-      const result = await signUp(email, password, {
+      await signUp(email, password, {
         first_name: firstName,
         last_name: lastName,
         isNewUser: true // Flag to identify new users
@@ -59,7 +58,6 @@ const Auth = () => {
       
       // After successful signup, try to sign in
       await signIn(email, password);
-      
     } catch (error) {
       console.error("Signup error:", error);
       // Error is handled in the signUp function
