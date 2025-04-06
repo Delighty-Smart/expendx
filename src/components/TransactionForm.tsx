@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -96,6 +97,7 @@ export function TransactionForm({
       console.log("Saving transaction:", transactionData);
 
       if (transaction) {
+        // Update existing transaction
         const { error } = await supabase
           .from('transactions')
           .update(transactionData)
@@ -111,6 +113,7 @@ export function TransactionForm({
           description: "Transaction updated successfully"
         });
       } else {
+        // Insert new transaction
         const { error } = await supabase
           .from('transactions')
           .insert([transactionData]);

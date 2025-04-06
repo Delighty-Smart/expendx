@@ -65,16 +65,29 @@ export function BudgetForm({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      const { error } = await supabase.from("budget_categories").upsert({
-        id: budgetId,
+      const budgetData = {
         category: values.category,
         monthly_limit: parseFloat(values.monthlyLimit),
         user_id: user.id,
-      }, {
-        onConflict: 'user_id,category'
-      });
+      };
 
-      if (error) throw error;
+      // Handling both insert and update cases
+      if (budgetId) {
+        // Update existing budget
+        const { error } = await supabase
+          .from("budget_categories")
+          .update(budgetData)
+          .eq("id", budgetId);
+
+        if (error) throw error;
+      } else {
+        // Insert new budget
+        const { error } = await supabase
+          .from("budget_categories")
+          .insert([budgetData]);
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",

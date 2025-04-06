@@ -52,13 +52,15 @@ export function MonthlyIncomeForm({
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("No user found");
 
+      const incomeData = {
+        amount: parseFloat(values.amount),
+        user_id: user.id,
+      };
+
       const { error } = await supabase
         .from("monthly_income_estimates")
         .upsert(
-          {
-            amount: parseFloat(values.amount),
-            user_id: user.id,
-          },
+          incomeData,
           {
             onConflict: "user_id",
           }

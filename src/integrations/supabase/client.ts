@@ -21,6 +21,5 @@ export const supabase = createClient<Database>(
         'x-application-name': 'expendX',
       },
     },
-    debug: true, // Enable debug mode to get more detailed error logs
   }
 );
