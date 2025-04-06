@@ -88,6 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       console.log("Attempting sign up with email:", email, "metadata:", metadata);
       
+      // Add detailed debugging for the signup process
+      console.log("Signup metadata being sent:", JSON.stringify(metadata, null, 2));
+      
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -98,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error("Sign up error:", error.message);
+        console.error("Sign up error details:", error);
         toast({
           variant: "destructive",
           title: "Signup failed",
@@ -107,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log("Sign up successful:", data);
+      console.log("Sign up successful, response:", JSON.stringify(data, null, 2));
       
       toast({
         title: "Account created",
@@ -115,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error: any) {
       console.error("Sign up error caught:", error);
+      console.error("Error details:", error.message, error.stack);
       toast({
         variant: "destructive",
         title: "Signup failed",

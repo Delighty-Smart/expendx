@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/AuthForm";
@@ -47,16 +48,22 @@ const Auth = () => {
   const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
       setProcessingAuth(true);
-      console.log("Handling signup for:", email);
+      console.log("Handling signup for:", email, "firstName:", firstName, "lastName:", lastName);
       
-      // Sign up with additional metadata
-      await signUp(email, password, {
+      // Ensure metadata is in the correct format
+      const metadata = {
         first_name: firstName,
         last_name: lastName,
         isNewUser: true // Flag to identify new users
-      });
+      };
+      
+      console.log("Signup metadata:", metadata);
+      
+      // Sign up with additional metadata
+      await signUp(email, password, metadata);
       
       // After successful signup, try to sign in
+      console.log("Signup successful, attempting signin");
       await signIn(email, password);
     } catch (error) {
       console.error("Signup error:", error);
