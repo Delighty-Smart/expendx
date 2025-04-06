@@ -3,6 +3,9 @@
  * Helper function to safely type-cast Supabase query results to the expected type
  * This function helps bridge the gap between Supabase's generated types and our application types
  */
+import { PostgrestSingleResponse, PostgrestResponse } from '@supabase/supabase-js';
+import { asId, DbInsert, DbRow, DbUpdate } from './typeHelpers';
+
 export function safelyUnwrapResponse<T>(
   response: any,  // Using any here to accommodate various Supabase response types
   defaultValue: T
@@ -61,4 +64,34 @@ export function hasError(response: any): boolean {
  */
 export function asUUID(id: string): any {
   return id;
+}
+
+/**
+ * Type-safe helper for handling Supabase insert operations
+ */
+export function prepareInsert<T extends keyof Database['public']['Tables']>(
+  table: T, 
+  data: Partial<DbRow<T>>
+): DbInsert<T> {
+  return data as unknown as DbInsert<T>;
+}
+
+/**
+ * Type-safe helper for handling Supabase update operations
+ */
+export function prepareUpdate<T extends keyof Database['public']['Tables']>(
+  table: T, 
+  data: Partial<DbRow<T>>
+): DbUpdate<T> {
+  return data as unknown as DbUpdate<T>;
+}
+
+/**
+ * Type-safe UUID conversion for table IDs
+ */
+export function makeId<T extends keyof Database['public']['Tables']>(
+  table: T, 
+  id: string
+): DbRow<T>['id'] {
+  return id as unknown as DbRow<T>['id'];
 }

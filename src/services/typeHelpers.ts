@@ -4,12 +4,22 @@
  * between the application domain types and the Supabase database types
  */
 
+import { Database } from '@/integrations/supabase/types';
+
 /**
  * Generic type casting helper for IDs
  * Helps fix TypeScript errors when dealing with database UUIDs
  */
 export function asId<T>(id: string): T {
   return id as unknown as T;
+}
+
+/**
+ * Type-safe helper for Supabase ID fields
+ * Used when passing IDs to Supabase queries
+ */
+export function asDbId(id: string): any {
+  return id;
 }
 
 /**
@@ -61,3 +71,19 @@ export function extractValue<T>(data: any, key: string, defaultValue: T): T {
 export function isError(response: any): boolean {
   return !response || response.error;
 }
+
+/**
+ * Type-safe wrapper for Supabase table operations
+ * Used to safely convert Supabase table types to app types
+ */
+export type DbTable<TableName extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][TableName];
+
+export type DbRow<TableName extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][TableName]['Row'];
+
+export type DbInsert<TableName extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][TableName]['Insert'];
+
+export type DbUpdate<TableName extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][TableName]['Update'];
