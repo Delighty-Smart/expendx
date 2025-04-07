@@ -63,7 +63,7 @@ export function hasError(response: any): boolean {
 /**
  * Safely casts database ID types for use with Supabase queries
  */
-export function asUUID(id: string): any {
+export function asUUID(id: string): string {
   return id;
 }
 
@@ -93,8 +93,6 @@ export function prepareUpdate<T extends keyof Database['public']['Tables']>(
 export function makeId<T extends keyof Database['public']['Tables']>(
   table: T, 
   id: string
-): any {
-  // We're returning 'any' instead of trying to access DbRow<T>['id'] 
-  // to avoid TypeScript errors since not all tables have the same id structure
-  return id as unknown as string;
+): string {
+  return id;
 }

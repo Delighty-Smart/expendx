@@ -18,7 +18,7 @@ export function asId<T>(id: string): T {
  * Type-safe helper for Supabase ID fields
  * Used when passing IDs to Supabase queries
  */
-export function asDbId(id: string): any {
+export function asDbId(id: string): string {
   return id;
 }
 

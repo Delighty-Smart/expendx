@@ -318,21 +318,18 @@ export type Database = {
         Row: {
           created_at: string | null
           currency_code: string
-          id: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
           currency_code?: string
-          id?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
           currency_code?: string
-          id?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -345,7 +342,6 @@ export type Database = {
           current_title: string
           freeze_count: number
           highest_streak: number
-          id: string
           last_login: string
           updated_at: string | null
           user_id: string
@@ -356,7 +352,6 @@ export type Database = {
           current_title?: string
           freeze_count?: number
           highest_streak?: number
-          id?: string
           last_login?: string
           updated_at?: string | null
           user_id: string
@@ -367,7 +362,6 @@ export type Database = {
           current_title?: string
           freeze_count?: number
           highest_streak?: number
-          id?: string
           last_login?: string
           updated_at?: string | null
           user_id?: string
