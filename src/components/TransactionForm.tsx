@@ -1,4 +1,5 @@
 
+// Only updating the dialog styling for mobile in the component
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -13,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -38,6 +40,7 @@ export function TransactionForm({
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -156,7 +159,7 @@ export function TransactionForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto`}>
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
           <DialogDescription>

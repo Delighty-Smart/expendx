@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Bell, Moon, Sun, Laptop } from "lucide-react";
+import { Menu, LogOut, Flame, User, Bell, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -131,14 +131,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setIsSidebarOpen(false);
   };
 
-  const setThemeOption = (option: "light" | "dark" | "system") => {
+  const setThemeOption = (option: "light" | "dark") => {
     updateTheme(option);
   };
 
   const menuItems = [
     { path: "/", label: "Dashboard", icon: "Home" },
     { path: "/transactions", label: "Transactions", icon: "Receipt" },
-    { path: "/budgets", label: "Budgets", icon: "PieChart" },
+    { path: "/budgets", label: "Budgets", icon: "Budgets" },
+    { path: "/savings", label: "Savings", icon: "Savings" },
     { path: "/reports", label: "Reports", icon: "BarChart" },
     { path: "/alerts", label: "Alerts", badge: unreadAlerts, icon: "Bell" },
     { path: "/feedback", label: "Feedback", icon: "MessageSquare" },
@@ -155,6 +156,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         open={showStreakModal} 
         onOpenChange={setShowStreakModal} 
         streak={userStreak}
+        className="max-w-sm mx-auto"
       />
 
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 flex items-center justify-between px-3 z-50">
@@ -189,9 +191,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
               <Moon className="h-4 w-4" /> Dark
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setThemeOption("system")} className="flex gap-2 text-sm">
-              <Laptop className="h-4 w-4" /> System
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -284,11 +283,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="flex items-center gap-2">
                   {theme === "light" && <Sun className="h-4 w-4" />}
                   {theme === "dark" && <Moon className="h-4 w-4" />}
-                  {theme === "system" && <Laptop className="h-4 w-4" />}
                   <span>
                     {theme === "light" && "Light Mode"}
                     {theme === "dark" && "Dark Mode"}
-                    {theme === "system" && "System Theme"}
                   </span>
                 </div>
               </Button>
@@ -299,9 +296,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
                 <Moon className="h-4 w-4" /> Dark Mode
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setThemeOption("system")} className="flex gap-2 text-sm">
-                <Laptop className="h-4 w-4" /> System Default
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -1,168 +1,65 @@
-import React from "react";
-import { Flame, Check, Calendar, Trophy, Award } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getStreakText, STREAK_MILESTONES } from "@/lib/streak";
+
+// Only adding a className prop to the component to control size
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Flame, Award, TrendingUp } from "lucide-react";
+import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
 interface StreakModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  streak: {
-    current_streak: number;
-    highest_streak: number;
-    current_title: string;
-    last_login: string;
-  } | null;
+  streak: any;
+  className?: string;
 }
 
-const StreakModal = ({ open, onOpenChange, streak }: StreakModalProps) => {
+const StreakModal = ({ open, onOpenChange, streak, className }: StreakModalProps) => {
   if (!streak) return null;
-
-  // Create an array of days representing the current week
-  const currentDate = new Date();
-  const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const days = ["S", "M", "T", "W", "T", "F", "S"];
   
-  // Find the current milestone and the next milestone
-  const currentMilestoneIndex = STREAK_MILESTONES.findIndex(
-    m => m.title === streak.current_title
-  );
-  
-  const nextMilestone = STREAK_MILESTONES[currentMilestoneIndex + 1];
-  const daysToNextMilestone = nextMilestone 
-    ? nextMilestone.days - streak.current_streak 
-    : null;
-  
-  // Calculate progress percentage to next milestone
-  const progressPercentage = nextMilestone 
-    ? ((streak.current_streak - STREAK_MILESTONES[currentMilestoneIndex].days) / 
-       (nextMilestone.days - STREAK_MILESTONES[currentMilestoneIndex].days)) * 100
-    : 100;
-
-  // Generate a motivational message based on streak
-  const getMessage = () => {
-    if (streak.current_streak === 1) {
-      return "Great start! Keep up the momentum!";
-    } else if (streak.current_streak < 7) {
-      return "You're on fire! 🔥 Time to keep building your streak!";
-    } else if (streak.current_streak < 30) {
-      return "Impressive dedication! You're building a solid financial habit!";
-    } else {
-      return "Amazing commitment! You're on the path to financial mastery!";
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-br from-background to-background/80 backdrop-blur border border-primary/20">
-        <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl font-bold flex flex-col items-center gap-2">
-            <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-4 rounded-full w-20 h-20 flex items-center justify-center mb-2">
-              <Flame className="w-12 h-12 text-white animate-pulse" />
-            </div>
-            <span className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-500">
-              {streak.current_streak}
-            </span>
-            <span className="text-muted-foreground font-normal text-sm">
-              {getStreakText(streak.current_streak)}
-            </span>
+      <DialogContent className={cn("w-[95%] max-w-[400px] mx-auto", className)}>
+        <DialogHeader>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <Flame className="h-5 w-5 text-orange-500" />
+            {streak.current_streak} Day Streak!
           </DialogTitle>
+          <DialogDescription>
+            Keep logging in daily to maintain your streak and unlock more titles!
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="flex justify-center mb-4">
-          <div className="bg-black/30 p-2 rounded-xl grid grid-cols-7 gap-1 w-full max-w-xs">
-            {days.map((day, index) => {
-              // Calculate if this day has been checked off
-              // For simplicity, we'll mark days before today as checked
-              const isChecked = index < dayOfWeek;
-              const isToday = index === dayOfWeek;
-              
-              return (
-                <div 
-                  key={index} 
-                  className={cn(
-                    "flex flex-col items-center justify-center aspect-square rounded-lg",
-                    isChecked ? "bg-green-500/20" : "bg-gray-700/20",
-                    isToday && "ring-2 ring-primary"
-                  )}
-                >
-                  <span className="text-xs text-muted-foreground">{day}</span>
-                  {isChecked ? (
-                    <Check className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <span className="text-xs">{index + 1}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        
-        {/* Achievement Level Progress */}
-        <div className="bg-black/30 p-4 rounded-xl mb-4">
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-1">
-              <Award className="h-4 w-4 text-pink-500" />
-              <span className="text-sm font-medium">{streak.current_title}</span>
+        <div className="py-4 space-y-6">
+          <div className="flex flex-col items-center gap-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg p-4">
+            <div className="p-3 rounded-full bg-orange-500/20">
+              <Flame className="h-8 w-8 text-orange-500" />
             </div>
-            {nextMilestone && (
-              <div className="text-xs text-muted-foreground">
-                {daysToNextMilestone} days to {nextMilestone.title}
-              </div>
-            )}
+            <p className="text-lg font-semibold">Current Title</p>
+            <div className="bg-gradient-to-r from-amber-500 to-red-500 text-white font-bold py-1.5 px-3 rounded-full shadow-md">
+              {streak.current_title}
+            </div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="h-2 bg-gray-700/50 rounded-full overflow-hidden mb-4">
-            <div 
-              className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
-              style={{ width: `${Math.min(100, Math.max(5, progressPercentage))}%` }}
-            ></div>
-          </div>
-          
-          {/* Level Progression Map */}
-          <div className="grid grid-cols-7 gap-1">
-            {STREAK_MILESTONES.map((milestone, index) => {
-              const isActive = index <= currentMilestoneIndex;
-              const isCurrent = index === currentMilestoneIndex;
-              
-              return (
-                <div key={index} className="flex flex-col items-center">
-                  <div 
-                    className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center mb-1",
-                      isActive 
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500" 
-                        : "bg-gray-700/30",
-                      isCurrent && "ring-2 ring-white"
-                    )}
-                  >
-                    <Trophy className={cn("h-4 w-4", isActive ? "text-white" : "text-gray-500")} />
-                  </div>
-                  <span className={cn(
-                    "text-[8px] text-center",
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  )}>
-                    {milestone.days}d
-                  </span>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="border rounded-lg p-3 flex flex-col items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+              <p className="text-sm text-muted-foreground">Highest Streak</p>
+              <p className="text-xl font-bold">{streak.highest_streak}</p>
+              <p className="text-xs text-muted-foreground">days</p>
+            </div>
+            
+            <div className="border rounded-lg p-3 flex flex-col items-center gap-2">
+              <Award className="h-5 w-5 text-purple-500" />
+              <p className="text-sm text-muted-foreground">Freeze Credits</p>
+              <p className="text-xl font-bold">{streak.freeze_count}</p>
+              <p className="text-xs text-muted-foreground">remaining</p>
+            </div>
           </div>
         </div>
         
-        <div className="bg-black/30 p-4 rounded-xl text-center mb-4">
-          <p className="text-sm">
-            {getMessage()}
-          </p>
-        </div>
-        
-        <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            <span>Current Title: {streak.current_title}</span>
-          </div>
-          <div>Best Streak: {streak.highest_streak} days</div>
+        <div className="flex justify-center">
+          <Button onClick={() => onOpenChange(false)}>
+            Continue
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

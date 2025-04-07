@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/components/ui/use-toast";
-import { Moon, Search, Sun, Laptop } from "lucide-react";
+import { Moon, Search, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CategoryManagement } from "@/components/CategoryManagement";
 
 const Settings = () => {
   const {
@@ -41,7 +42,7 @@ const Settings = () => {
     }
   };
   
-  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
+  const handleThemeChange = (newTheme: "light" | "dark") => {
     updateTheme(newTheme);
     toast({
       title: "Theme updated",
@@ -103,18 +104,11 @@ const Settings = () => {
                 <Moon className="h-4 w-4" />
                 Dark Mode
               </Button>
-              <Button 
-                variant={theme === "system" ? "default" : "outline"} 
-                size={isMobile ? "sm" : "default"}
-                className="flex items-center gap-2 w-full md:w-auto justify-center"
-                onClick={() => handleThemeChange("system")}
-              >
-                <Laptop className="h-4 w-4" />
-                System
-              </Button>
             </div>
           </div>
         </Card>
+        
+        <CategoryManagement />
       </div>
     </Layout>
   );

@@ -9,6 +9,7 @@ import IndexPage from '@/pages/Index'
 import Auth from '@/pages/Auth'
 import Transactions from '@/pages/Transactions'
 import Budgets from '@/pages/Budgets'
+import Savings from '@/pages/Savings'
 import Profile from '@/pages/Profile'
 import Reports from '@/pages/Reports'
 import Alerts from '@/pages/Alerts'
@@ -39,6 +40,7 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/budgets" element={<Budgets />} />
+              <Route path="/savings" element={<Savings />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/alerts" element={<Alerts />} />

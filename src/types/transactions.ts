@@ -12,6 +12,7 @@ export const incomeCategories = [
   "Gifts",
   "Royalties",
   "Miscellaneous earnings",
+  "Withdrawal from Savings",
   "Others"
 ] as const;
 
@@ -82,3 +83,12 @@ export const getCategoriesForType = (type: TransactionType): readonly string[] =
       return expenseCategories; // Default to expense categories as fallback
   }
 };
+
+// Category management section - Add custom categories functionality
+export interface UserCategory {
+  id: string;
+  type: TransactionType;
+  name: string;
+  user_id: string;
+  created_at?: string;
+}

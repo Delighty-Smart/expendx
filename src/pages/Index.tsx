@@ -383,7 +383,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Balance</p>
+                <p className="text-sm text-muted-foreground">Wallet Balance</p>
                 <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
                 <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
                   <div 
