@@ -44,39 +44,58 @@ const SavingsPage = () => {
   const { data: savingsGoals, refetch: refetchSavingsGoals } = useQuery({
     queryKey: ["savings_goals"],
     queryFn: async () => {
-      // Use type assertion to bypass TypeScript errors
-      const { data, error } = await supabase
-        .from("savings_goals" as any)
-        .select("*")
-        .order("category");
-      if (error) throw error;
-      return data as unknown as SavingsGoal[] || [];
+      try {
+        // Use type assertion to bypass TypeScript errors
+        const { data, error } = await supabase
+          .from("savings_goals" as any)
+          .select("*")
+          .order("category");
+          
+        if (error) {
+          console.error("Error fetching savings goals:", error);
+          throw error;
+        }
+        
+        return data as unknown as SavingsGoal[] || [];
+      } catch (error) {
+        console.error("Failed to fetch savings goals:", error);
+        return [];
+      }
     },
   });
 
   const { data: transactionsData } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("type", "savings");
+      try {
+        // Fetch all transactions, not just savings
+        const { data, error } = await supabase
+          .from("transactions")
+          .select("*"); // Removed filter to get all transaction types
 
-      if (error) {
-        console.error("Error fetching transactions:", error);
-        throw error;
+        if (error) {
+          console.error("Error fetching transactions:", error);
+          throw error;
+        }
+        
+        console.log(`Fetched ${data?.length || 0} transactions of all types`);
+        return data as TransactionData[] || [];
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+        return [];
       }
-      
-      return data as TransactionData[] || [];
     },
   });
 
-  // Fixed: Apply proper type casting to ensure transaction categories match the TransactionCategory type
+  // Fixed: Properly cast transaction categories using `as TransactionCategory`
   const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
     ...transaction,
     type: transaction.type as TransactionType,
     category: transaction.category as TransactionCategory // Explicit cast to TransactionCategory
   }));
+
+  // Filter only savings transactions for this page
+  const savingsTransactions = transactions.filter(t => t.type === "savings");
 
   const handleRealTimeUpdates = useCallback(() => {
     console.log('Data changed, refreshing...');
@@ -93,23 +112,22 @@ const SavingsPage = () => {
   }, [refetchSavingsGoals, queryClient]);
 
   const calculateSavingsByCategory = useCallback((category: string) => {
-    if (!transactions) return 0;
+    if (!savingsTransactions) return 0;
     
-    const savings = transactions
+    const savings = savingsTransactions
       .filter((t) => t.category === category)
       .reduce((sum, t) => sum + t.amount, 0);
       
     return savings;
-  }, [transactions]);
+  }, [savingsTransactions]);
 
   const calculateTotalSavings = useCallback(() => {
-    if (!transactions) return 0;
+    if (!savingsTransactions) return 0;
     
-    const savings = transactions
-      .reduce((sum, t) => sum + t.amount, 0);
+    const savings = savingsTransactions.reduce((sum, t) => sum + t.amount, 0);
       
     return savings;
-  }, [transactions]);
+  }, [savingsTransactions]);
 
   const totalSavings = calculateTotalSavings();
 
