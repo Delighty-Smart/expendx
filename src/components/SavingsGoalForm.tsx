@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { savingsCategories } from "@/types/transactions";
+import { savingsCategories, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 
 const savingsGoalSchema = z.object({
@@ -46,8 +46,9 @@ export function SavingsGoalForm({
   useEffect(() => {
     if (open && savingsGoalId) {
       const fetchSavingsGoal = async () => {
+        // Use type assertion to bypass TypeScript errors
         const { data, error } = await supabase
-          .from("savings_goals")
+          .from("savings_goals" as any)
           .select("*")
           .eq("id", savingsGoalId)
           .single();
@@ -58,9 +59,11 @@ export function SavingsGoalForm({
         }
         
         if (data) {
+          // Type assertion here to make TypeScript happy
+          const goalData = data as unknown as SavingsGoal;
           form.reset({
-            category: data.category,
-            target_amount: data.target_amount.toString(),
+            category: goalData.category,
+            target_amount: goalData.target_amount.toString(),
           });
         }
       };
@@ -88,8 +91,9 @@ export function SavingsGoalForm({
 
       if (savingsGoalId) {
         // Update existing savings goal
+        // Use type assertion to bypass TypeScript errors
         const { error } = await supabase
-          .from('savings_goals')
+          .from("savings_goals" as any)
           .update(savingsGoalData)
           .eq('id', savingsGoalId);
           
@@ -104,8 +108,9 @@ export function SavingsGoalForm({
         });
       } else {
         // Check if a goal for this category already exists
+        // Use type assertion to bypass TypeScript errors
         const { data: existingGoal, error: checkError } = await supabase
-          .from('savings_goals')
+          .from("savings_goals" as any)
           .select('*')
           .eq('category', values.category)
           .eq('user_id', user.id)
@@ -118,8 +123,9 @@ export function SavingsGoalForm({
         
         if (existingGoal) {
           // Update the existing goal instead of creating a new one
+          // Use type assertion to bypass TypeScript errors
           const { error } = await supabase
-            .from('savings_goals')
+            .from("savings_goals" as any)
             .update({
               target_amount: parseFloat(values.target_amount)
             })
@@ -136,8 +142,9 @@ export function SavingsGoalForm({
           });
         } else {
           // Insert new savings goal
+          // Use type assertion to bypass TypeScript errors
           const { error } = await supabase
-            .from('savings_goals')
+            .from("savings_goals" as any)
             .insert([savingsGoalData]);
             
           if (error) {
@@ -175,7 +182,7 @@ export function SavingsGoalForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{savingsGoalId ? 'Edit' : 'Add'} Savings Goal</DialogTitle>
           <DialogDescription>

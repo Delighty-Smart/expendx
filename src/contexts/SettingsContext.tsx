@@ -9,9 +9,9 @@ import { toast } from "@/hooks/use-toast";
 interface SettingsContextType {
   currency: Currency;
   isLoading: boolean;
-  theme: "light" | "dark" | "system";
+  theme: "light" | "dark";
   updateCurrency: (code: string) => Promise<void>;
-  updateTheme: (newTheme: "light" | "dark" | "system") => void;
+  updateTheme: (newTheme: "light" | "dark") => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
@@ -20,14 +20,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>(currencies[0]);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
     // First check localStorage
     const storedTheme = localStorage.getItem("theme");
-    if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
+    if (storedTheme === "light" || storedTheme === "dark") {
       return storedTheme;
     }
-    // Default to system preference
-    return "system";
+    
+    // Default to light theme
+    return "light";
   });
 
   // Fetch the current user ID on mount
@@ -41,31 +42,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // Apply theme when it changes
   useEffect(() => {
-    if (theme === "system") {
-      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle("dark", isSystemDark);
-      document.documentElement.classList.toggle("light", !isSystemDark);
-    } else {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-      document.documentElement.classList.toggle("light", theme === "light");
-    }
-    
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
     localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  // Listen for system preference changes when in system mode
-  useEffect(() => {
-    if (theme === "system") {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
-      const handleChange = (event: MediaQueryListEvent) => {
-        document.documentElement.classList.toggle("dark", event.matches);
-        document.documentElement.classList.toggle("light", !event.matches);
-      };
-      
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
   }, [theme]);
 
   // Only fetch settings if we have a user ID
@@ -146,7 +125,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
-  const updateTheme = (newTheme: "light" | "dark" | "system") => {
+  const updateTheme = (newTheme: "light" | "dark") => {
     setTheme(newTheme);
   };
 

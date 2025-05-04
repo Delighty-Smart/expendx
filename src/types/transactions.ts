@@ -92,3 +92,14 @@ export interface UserCategory {
   user_id: string;
   created_at?: string;
 }
+
+// Savings goal interface
+export interface SavingsGoal {
+  id: string;
+  category: string;
+  target_amount: number;
+  current_amount?: number;
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
+}

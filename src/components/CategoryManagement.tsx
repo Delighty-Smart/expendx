@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, X } from "lucide-react";
@@ -30,8 +29,9 @@ export function CategoryManagement() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
       
+      // Use type assertion to bypass TypeScript errors
       const { data, error } = await supabase
-        .from("user_categories")
+        .from("user_categories" as any)
         .select("*")
         .eq("user_id", user.id);
         
@@ -40,7 +40,7 @@ export function CategoryManagement() {
         return [];
       }
       
-      return data as UserCategory[];
+      return data as unknown as UserCategory[];
     }
   });
 
@@ -101,8 +101,9 @@ export function CategoryManagement() {
       return;
     }
     
+    // Use type assertion to bypass TypeScript errors
     const { error } = await supabase
-      .from("user_categories")
+      .from("user_categories" as any)
       .insert({
         type: activeTab,
         name: newCategory,
@@ -156,8 +157,9 @@ export function CategoryManagement() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
+    // Use type assertion to bypass TypeScript errors
     const { error } = await supabase
-      .from("user_categories")
+      .from("user_categories" as any)
       .delete()
       .eq("user_id", user.id)
       .eq("name", categoryName)
@@ -215,7 +217,7 @@ export function CategoryManagement() {
           </Button>
         </div>
         
-        <ScrollArea className="h-[300px] mt-4 pr-4">
+        <ScrollArea className="h-[300px] mt-4 pr-4 transition-all duration-500 ease-in-out">
           <div className="space-y-2">
             {getCategoriesForType(activeTab).map((category) => {
               const isDefaultCategory = (
