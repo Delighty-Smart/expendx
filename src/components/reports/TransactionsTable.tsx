@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -21,7 +22,7 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
   const isMobile = useIsMobile();
   
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = searchQuery ? transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) : true;
     const matchesType = selectedType === "all" || transaction.type === selectedType;
     return matchesSearch && matchesType;
   });
@@ -64,7 +65,7 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
 
       {isMobile ? (
         // Mobile view: Cards for transactions
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[70vh] overflow-y-auto scrollable-container">
           {filteredTransactions.length > 0 ? (
             filteredTransactions.map((transaction) => (
               <Card key={transaction.id} className="p-4">
@@ -109,7 +110,7 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
         </div>
       ) : (
         // Desktop view: Table for transactions
-        <div className="overflow-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <ScrollArea className="max-h-[70vh]">
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
@@ -158,7 +159,7 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
               )}
             </TableBody>
           </Table>
-        </div>
+        </ScrollArea>
       )}
     </div>
   );
