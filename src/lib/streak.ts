@@ -1,9 +1,8 @@
-
 import { addDays, differenceInDays, isSameDay, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface UserStreak {
-  id: string;
+  id?: string; // Make id optional since it might not be present in all contexts
   user_id: string;
   current_streak: number;
   highest_streak: number;

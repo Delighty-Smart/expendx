@@ -56,7 +56,7 @@ export const savingsCategories = [
 export type IncomeCategory = typeof incomeCategories[number];
 export type ExpenseCategory = typeof expenseCategories[number];
 export type SavingsCategory = typeof savingsCategories[number];
-export type TransactionCategory = IncomeCategory | ExpenseCategory | SavingsCategory;
+export type TransactionCategory = IncomeCategory | ExpenseCategory | SavingsCategory | string; // Added string to allow dynamic categories from database
 
 export interface Transaction {
   id: string;

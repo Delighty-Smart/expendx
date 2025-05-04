@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -7,7 +6,7 @@ import { PlusCircle, ArrowDownToLine, Wallet, PiggyBank } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Transaction, TransactionType, savingsCategories, SavingsGoal } from "@/types/transactions";
+import { Transaction, TransactionType, savingsCategories, SavingsGoal, TransactionCategory } from "@/types/transactions";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -72,10 +71,11 @@ const SavingsPage = () => {
     },
   });
 
+  // Fixed: Apply proper type casting to ensure transaction categories match the TransactionCategory type
   const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
     ...transaction,
     type: transaction.type as TransactionType,
-    category: transaction.category
+    category: transaction.category as TransactionCategory // Explicit cast to TransactionCategory
   }));
 
   const handleRealTimeUpdates = useCallback(() => {

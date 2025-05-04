@@ -46,25 +46,29 @@ export function SavingsGoalForm({
   useEffect(() => {
     if (open && savingsGoalId) {
       const fetchSavingsGoal = async () => {
-        // Use type assertion to bypass TypeScript errors
-        const { data, error } = await supabase
-          .from("savings_goals" as any)
-          .select("*")
-          .eq("id", savingsGoalId)
-          .single();
+        try {
+          // Use type assertion to bypass TypeScript errors
+          const { data, error } = await supabase
+            .from("savings_goals" as any)
+            .select("*")
+            .eq("id", savingsGoalId)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching savings goal:", error);
+            return;
+          }
           
-        if (error) {
-          console.error("Error fetching savings goal:", error);
-          return;
-        }
-        
-        if (data) {
-          // Type assertion here to make TypeScript happy
-          const goalData = data as unknown as SavingsGoal;
-          form.reset({
-            category: goalData.category,
-            target_amount: goalData.target_amount.toString(),
-          });
+          if (data) {
+            // Type assertion here to handle data safely
+            const goalData = data as unknown as SavingsGoal;
+            form.reset({
+              category: goalData.category,
+              target_amount: goalData.target_amount.toString(),
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch savings goal:", error);
         }
       };
       
@@ -91,7 +95,6 @@ export function SavingsGoalForm({
 
       if (savingsGoalId) {
         // Update existing savings goal
-        // Use type assertion to bypass TypeScript errors
         const { error } = await supabase
           .from("savings_goals" as any)
           .update(savingsGoalData)
@@ -108,7 +111,6 @@ export function SavingsGoalForm({
         });
       } else {
         // Check if a goal for this category already exists
-        // Use type assertion to bypass TypeScript errors
         const { data: existingGoal, error: checkError } = await supabase
           .from("savings_goals" as any)
           .select('*')
@@ -121,9 +123,9 @@ export function SavingsGoalForm({
           throw checkError;
         }
         
-        if (existingGoal) {
+        // Fix: Check if existingGoal exists and has an id property before accessing it
+        if (existingGoal && 'id' in existingGoal) {
           // Update the existing goal instead of creating a new one
-          // Use type assertion to bypass TypeScript errors
           const { error } = await supabase
             .from("savings_goals" as any)
             .update({
@@ -142,7 +144,6 @@ export function SavingsGoalForm({
           });
         } else {
           // Insert new savings goal
-          // Use type assertion to bypass TypeScript errors
           const { error } = await supabase
             .from("savings_goals" as any)
             .insert([savingsGoalData]);
