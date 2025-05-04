@@ -78,9 +78,18 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
         // Transform the data - make sure we properly handle the nested user_streaks data
         const transformedData = data?.map(profile => {
           // Check if user_streaks exists and has data
-          const streakData = profile.user_streaks && profile.user_streaks[0] 
+          const streakData = profile.user_streaks && Array.isArray(profile.user_streaks) && profile.user_streaks.length > 0
             ? profile.user_streaks[0] 
             : { current_streak: 0, current_title: 'Budget Beginner' };
+            
+          // Ensure streakData has the right shape
+          const streakCurrentStreak = typeof streakData === 'object' && streakData !== null 
+            ? (streakData.current_streak ?? 0) 
+            : 0;
+            
+          const streakCurrentTitle = typeof streakData === 'object' && streakData !== null 
+            ? (streakData.current_title ?? 'Budget Beginner') 
+            : 'Budget Beginner';
             
           return {
             id: profile.id,
@@ -88,8 +97,8 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
             first_name: profile.first_name,
             last_name: profile.last_name,
             avatar_url: profile.avatar_url,
-            current_streak: streakData.current_streak,
-            current_title: streakData.current_title
+            current_streak: streakCurrentStreak,
+            current_title: streakCurrentTitle
           };
         }) || [];
         
