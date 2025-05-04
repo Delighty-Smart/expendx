@@ -45,3 +45,16 @@ html, body {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth !important;
 }
+
+/* Enhanced touch scrolling for mobile devices */
+@media (max-width: 768px) {
+  .overflow-auto, 
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="overflow-"],
+  .ScrollArea,
+  .ScrollAreaViewport {
+    -webkit-overflow-scrolling: touch;
+    scroll-padding: 10px;
+  }
+}
