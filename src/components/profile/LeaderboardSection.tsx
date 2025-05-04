@@ -50,7 +50,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
             first_name,
             last_name,
             avatar_url,
-            user_streaks!inner (
+            user_streaks (
               current_streak,
               current_title
             )
@@ -75,16 +75,23 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
           throw error;
         }
         
-        // Transform the data
-        const transformedData = data?.map(profile => ({
-          id: profile.id,
-          username: profile.username,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          avatar_url: profile.avatar_url,
-          current_streak: profile.user_streaks[0].current_streak,
-          current_title: profile.user_streaks[0].current_title
-        })) || [];
+        // Transform the data - make sure we properly handle the nested user_streaks data
+        const transformedData = data?.map(profile => {
+          // Check if user_streaks exists and has data
+          const streakData = profile.user_streaks && profile.user_streaks[0] 
+            ? profile.user_streaks[0] 
+            : { current_streak: 0, current_title: 'Budget Beginner' };
+            
+          return {
+            id: profile.id,
+            username: profile.username,
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            avatar_url: profile.avatar_url,
+            current_streak: streakData.current_streak,
+            current_title: streakData.current_title
+          };
+        }) || [];
         
         setProfiles(transformedData);
       } catch (err) {
