@@ -13,17 +13,17 @@ import {
 } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface DateRangePickerProps {
+interface DatePickerWithRangeProps {
   dateRange: DateRange;
   setDateRange: React.Dispatch<React.SetStateAction<DateRange>>;
   className?: string;
 }
 
-export function DateRangePicker({
+export function DatePickerWithRange({
   dateRange,
   setDateRange,
   className,
-}: DateRangePickerProps) {
+}: DatePickerWithRangeProps) {
   const isMobile = useIsMobile();
   
   return (
@@ -68,6 +68,3 @@ export function DateRangePicker({
     </div>
   );
 }
-
-// For backward compatibility, also export as DatePickerWithRange
-export { DateRangePicker as DatePickerWithRange };

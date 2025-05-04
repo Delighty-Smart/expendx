@@ -2,144 +2,202 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
- 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
- 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 202 100% 50%; /* #00AAFF */
     --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
+    --secondary: 84 70% 47%; /* #A3CE22 */
+    --secondary-foreground: 210 40% 98%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 210 40% 96.1%;
+    --accent: 84 70% 47%; /* #A3CE22 */
     --accent-foreground: 222.2 47.4% 11.2%;
- 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
- 
-    --radius: 0.5rem;
+    --ring: 202 100% 50%; /* #00AAFF */
+    --radius: 0.75rem;
+    
+    /* Modal overlay background */
+    --modal-overlay: 0 0% 0% / 0.5;
+    
+    /* Glass effect variables */
+    --glass-background: 255 255 255 / 0.8;
+    --glass-border: 255 255 255 / 0.3;
+    --glass-blur: 12px;
   }
  
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
- 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
- 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
- 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 202 100% 50%; /* #00AAFF */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 84 70% 47%; /* #A3CE22 */
     --secondary-foreground: 210 40% 98%;
- 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 84 70% 47%; /* #A3CE22 */
     --accent-foreground: 210 40% 98%;
- 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
- 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 202 100% 50%; /* #00AAFF */
+    
+    /* Modal overlay background */
+    --modal-overlay: 0 0% 0% / 0.7;
+    
+    /* Glass effect variables */
+    --glass-background: 0 0 0 / 0.4;
+    --glass-border: 255 255 255 / 0.1;
+    --glass-blur: 16px;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  /* Add smooth scrolling to the entire app */
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  /* Ensure all scrollable areas have smooth scrolling */
-  .scrollarea, 
-  .overflow-auto, 
-  .overflow-y-auto, 
-  .overflow-x-auto,
-  [data-radix-scroll-area-viewport],
-  .recharts-wrapper {
-    scroll-behavior: smooth;
-    scrollbar-width: thin;
-  }
-  
-  /* Style scrollbars for WebKit browsers (Chrome, Safari, Edge) */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
-  }
-  
-  /* Improved touch scrolling for mobile devices */
-  @media (pointer: coarse) {
-    .overflow-auto, 
-    .overflow-y-auto, 
-    .overflow-x-auto,
-    [data-radix-scroll-area-viewport] {
-      -webkit-overflow-scrolling: touch;
-    }
+    @apply bg-background text-foreground antialiased;
   }
 }
 
-@layer components {
-  .glass-card {
-    @apply bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-white/20 dark:border-gray-800/30 shadow-lg;
+/* Glassmorphism Effects */
+.glass-card {
+  @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg;
+}
+
+.glass-effect {
+  @apply backdrop-blur-lg bg-background/80 border border-border/50 shadow-lg;
+}
+
+.dark .glass-card,
+.dark .glass-effect {
+  @apply bg-background/40 border-white/10;
+}
+
+/* Enhanced Dropdowns */
+.select-content,
+.popover-content,
+.dropdown-content {
+  @apply glass-effect !important;
+}
+
+/* Animated Button Effects */
+.animated-button {
+  @apply relative overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95;
+}
+
+.animated-button::after {
+  content: '';
+  @apply absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300;
+}
+
+.animated-button:hover::after {
+  @apply opacity-100;
+}
+
+/* Card Hover Effects */
+.hover-card {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+  .container {
+    @apply px-3;
   }
   
-  .animate-float {
-    animation: float 5s ease-in-out infinite;
+  h1, h2 {
+    @apply text-base;
   }
   
-  @keyframes float {
-    0% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-    100% {
-      transform: translateY(0px);
-    }
+  .p-4 {
+    @apply p-3;
   }
+  
+  .text-sm {
+    @apply text-xs;
+  }
+}
+
+/* Sidebar and Drawer Improvements */
+.sidebar {
+  @apply glass-effect;
+}
+
+/* Custom Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Progress Bar Animation */
+@keyframes progress {
+  from { stroke-dashoffset: var(--circumference); }
+  to { stroke-dashoffset: var(--dash); }
+}
+
+.animate-progress {
+  animation: progress 1.5s ease-out forwards;
+}
+
+/* Animation for charts */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* Chart Colors */
+.chart-primary {
+  fill: #00AAFF;
+  color: #00AAFF;
+}
+
+.chart-accent {
+  fill: #A3CE22;
+  color: #A3CE22;
+}
+
+.chart-gray {
+  fill: #6B7280;
+  color: #6B7280;
+}
+
+/* Toast notification styles */
+.toast-success {
+  @apply bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800;
+}
+
+.toast-error {
+  @apply bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800;
+}
+
+.toast-warning {
+  @apply bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800;
+}
+
+.toast-info {
+  @apply bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800;
 }

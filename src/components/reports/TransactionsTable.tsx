@@ -15,7 +15,7 @@ interface TransactionsTableProps {
   currency: Currency;
 }
 
-export const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) => {
+const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const isMobile = useIsMobile();
