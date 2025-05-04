@@ -1,0 +1,47 @@
+
+/* Global smooth scrolling styles */
+* {
+  scroll-behavior: smooth !important;
+}
+
+html, body {
+  scroll-behavior: smooth !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbars for modern browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
+}
+
+/* Ensure all scrollable containers have smooth scrolling */
+.overflow-auto, 
+.overflow-y-auto,
+.overflow-x-auto,
+[class*="overflow-"],
+.ScrollArea,
+.ScrollAreaViewport {
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure Tailwind's overflow-auto classes maintain smooth scrolling */
+.overflow-auto, .overflow-y-auto, .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth !important;
+}

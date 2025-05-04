@@ -1,6 +1,7 @@
 
 // Handle offline storage for the application
 import { supabase } from '@/integrations/supabase/client';
+import { Transaction } from '@/types/transactions';
 
 // Database names and object stores
 const DB_NAME = 'expendx_offline';
@@ -77,6 +78,54 @@ export const addTransaction = (transaction: any): Promise<string> => {
   });
 };
 
+// Update an existing transaction in the offline store
+export const updateTransaction = (transaction: any): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'));
+      return;
+    }
+
+    const tx = db.transaction(TRANSACTIONS_STORE, 'readwrite');
+    const store = tx.objectStore(TRANSACTIONS_STORE);
+
+    const request = store.put(transaction);
+
+    request.onsuccess = () => {
+      resolve();
+    };
+
+    request.onerror = (event) => {
+      console.error('Error updating transaction in offline store:', event);
+      reject(new Error('Failed to update transaction offline'));
+    };
+  });
+};
+
+// Delete a transaction from the offline store
+export const deleteTransaction = (id: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'));
+      return;
+    }
+
+    const tx = db.transaction(TRANSACTIONS_STORE, 'readwrite');
+    const store = tx.objectStore(TRANSACTIONS_STORE);
+
+    const request = store.delete(id);
+
+    request.onsuccess = () => {
+      resolve();
+    };
+
+    request.onerror = (event) => {
+      console.error('Error deleting transaction from offline store:', event);
+      reject(new Error('Failed to delete transaction offline'));
+    };
+  });
+};
+
 // Queue a transaction for synchronization when online
 export const queueTransactionForSync = (transaction: any): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -111,6 +160,43 @@ export const queueTransactionForSync = (transaction: any): Promise<void> => {
   });
 };
 
+// Batch update the transactions in offline store
+export const batchUpdateTransactions = (transactions: any[]): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error('Database not initialized'));
+      return;
+    }
+
+    const tx = db.transaction(TRANSACTIONS_STORE, 'readwrite');
+    const store = tx.objectStore(TRANSACTIONS_STORE);
+
+    let completed = 0;
+    let total = transactions.length;
+
+    if (total === 0) {
+      resolve();
+      return;
+    }
+
+    transactions.forEach(transaction => {
+      const request = store.put(transaction);
+
+      request.onsuccess = () => {
+        completed++;
+        if (completed === total) {
+          resolve();
+        }
+      };
+
+      request.onerror = (event) => {
+        console.error('Error batch updating transaction:', event);
+        reject(new Error('Failed during batch update'));
+      };
+    });
+  });
+};
+
 // Attempt to synchronize pending transactions
 export const trySync = async (): Promise<void> => {
   if (!db || !navigator.onLine) {
@@ -121,6 +207,8 @@ export const trySync = async (): Promise<void> => {
   if (pendingTransactions.length === 0) {
     return;
   }
+
+  console.log(`Attempting to sync ${pendingTransactions.length} pending transactions`);
 
   // Get user session
   const { data: { session } } = await supabase.auth.getSession();
@@ -152,10 +240,41 @@ export const trySync = async (): Promise<void> => {
       } else {
         // Remove from pending store if successful
         await removePendingTransaction(transaction.id);
+        console.log(`Successfully synced transaction ${transaction.id}`);
       }
     } catch (err) {
       console.error('Error during sync:', err);
     }
+  }
+
+  // After sync is complete, refresh the transactions from server to update the local cache
+  await refreshLocalCache();
+};
+
+// Refresh the local cache with the latest data from server
+export const refreshLocalCache = async (): Promise<void> => {
+  try {
+    if (!navigator.onLine) {
+      console.log("Can't refresh cache while offline");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching transactions for cache refresh:', error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      await batchUpdateTransactions(data);
+      console.log(`Refreshed local cache with ${data.length} transactions`);
+    }
+  } catch (err) {
+    console.error('Error refreshing local cache:', err);
   }
 };
 
@@ -205,27 +324,6 @@ const removePendingTransaction = (id: string): Promise<void> => {
   });
 };
 
-// Set up sync events
-export const setupSyncEvents = () => {
-  // Setup online/offline event listeners
-  window.addEventListener('online', () => {
-    console.log('App is online, attempting to sync');
-    trySync().catch(err => console.error('Sync failed:', err));
-  });
-
-  // Register sync event with service worker (if supported)
-  if ('serviceWorker' in navigator && 'SyncManager' in window) {
-    navigator.serviceWorker.ready
-      .then(registration => {
-        // For newer browsers that support Background Sync API
-        // Note: We don't use sync property directly as it might not be supported
-        // and we handle the sync process manually
-        console.log('Service worker is ready for sync');
-      })
-      .catch(err => console.error('Service worker sync registration failed:', err));
-  }
-};
-
 // Get all stored transactions
 export const getAllTransactions = (): Promise<any[]> => {
   return new Promise((resolve, reject) => {
@@ -247,4 +345,25 @@ export const getAllTransactions = (): Promise<any[]> => {
       reject(new Error('Failed to get transactions'));
     };
   });
+};
+
+// Set up sync events
+export const setupSyncEvents = () => {
+  // Setup online/offline event listeners
+  window.addEventListener('online', () => {
+    console.log('App is online, attempting to sync');
+    trySync().catch(err => console.error('Sync failed:', err));
+  });
+
+  // Register sync event with service worker (if supported)
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    navigator.serviceWorker.ready
+      .then(registration => {
+        // For newer browsers that support Background Sync API
+        // Note: We don't use sync property directly as it might not be supported
+        // and we handle the sync process manually
+        console.log('Service worker is ready for sync');
+      })
+      .catch(err => console.error('Service worker sync registration failed:', err));
+  }
 };

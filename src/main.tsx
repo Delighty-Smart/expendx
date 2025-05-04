@@ -1,10 +1,10 @@
-
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { initializeDB, setupSyncEvents } from './services/offlineStorage'
 import { notificationService } from './services/notificationService'
 import { AuthProvider } from './hooks/useAuth'
+import "./components/ui/smoothScroll.css"; 
 
 // Register the service worker for PWA
 if ('serviceWorker' in navigator) {

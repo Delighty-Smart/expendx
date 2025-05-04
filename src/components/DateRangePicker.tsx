@@ -61,10 +61,12 @@ export function DatePickerWithRange({
             selected={dateRange}
             onSelect={setDateRange}
             numberOfMonths={isMobile ? 1 : 2}
-            className="pointer-events-auto"
+            className="pointer-events-auto overflow-auto"
           />
         </PopoverContent>
       </Popover>
     </div>
   );
 }
+
+export default DatePickerWithRange;

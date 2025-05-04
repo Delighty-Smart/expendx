@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { SettingsProvider } from '@/contexts/SettingsContext'
@@ -28,6 +27,27 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+// Import the offline storage functions
+import { initializeDB, setupSyncEvents, trySync } from './services/offlineStorage';
+
+// Initialize offline storage and sync events
+useEffect(() => {
+  const setupOfflineStorage = async () => {
+    try {
+      await initializeDB();
+      setupSyncEvents();
+      if (navigator.onLine) {
+        trySync().catch(err => console.error('Initial sync failed:', err));
+      }
+      console.log('Offline storage initialized');
+    } catch (err) {
+      console.error('Failed to initialize offline storage:', err);
+    }
+  };
+  
+  setupOfflineStorage();
+}, []);
 
 function App() {
   return (

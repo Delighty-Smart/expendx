@@ -109,57 +109,60 @@ const TransactionsTable = ({ transactions, currency }: TransactionsTableProps) =
         </div>
       ) : (
         // Desktop view: Table for transactions
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTransactions.length > 0 ? (
-              filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell>{transaction.category}</TableCell>
-                  <TableCell>
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+        <div className="overflow-auto max-h-[60vh] scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 scrollbar-track-transparent">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background z-10">
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>{format(new Date(transaction.date), "MMM d, yyyy")}</TableCell>
+                    <TableCell>{transaction.description}</TableCell>
+                    <TableCell>{transaction.category}</TableCell>
+                    <TableCell>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                        transaction.type === "credit" 
+                          ? "bg-green-100 text-green-800" 
+                          : transaction.type === "debit"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-blue-800"
+                      }`}>
+                        {transaction.type}
+                      </span>
+                    </TableCell>
+                    <TableCell className={`text-right ${
                       transaction.type === "credit" 
-                        ? "bg-green-100 text-green-800" 
+                        ? "text-green-600" 
                         : transaction.type === "debit"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-blue-100 text-blue-800"
+                        ? "text-red-600"
+                        : "text-blue-600"
                     }`}>
-                      {transaction.type}
-                    </span>
-                  </TableCell>
-                  <TableCell className={`text-right ${
-                    transaction.type === "credit" 
-                      ? "text-green-600" 
-                      : transaction.type === "debit"
-                      ? "text-red-600"
-                      : "text-blue-600"
-                  }`}>
-                    {currency.symbol}{formatAmount(transaction.amount)}
+                      {currency.symbol}{formatAmount(transaction.amount)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                    No transactions found for the selected filters
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  No transactions found for the selected filters
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   );
 };
 
+export { TransactionsTable };
 export default TransactionsTable;

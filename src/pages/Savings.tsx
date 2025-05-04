@@ -1,34 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, ArrowDownToLine, Wallet, PiggyBank } from "lucide-react";
+import { PlusCircle, ArrowDownToLine, PiggyBank } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
-import { Transaction, TransactionType, savingsCategories, SavingsGoal, TransactionCategory } from "@/types/transactions";
-import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { savingsCategories, SavingsGoal } from "@/types/transactions";
 import { SavingsGoalForm } from "@/components/SavingsGoalForm";
 import { SavingsWithdrawalForm } from "@/components/SavingsWithdrawalForm";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-
-interface TransactionData {
-  id: string;
-  amount: number;
-  type: string;
-  category: string;
-  date: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
+import { useTransactionData } from "@/hooks/useTransactionData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const SavingsPage = () => {
   const { currency } = useSettings();
@@ -37,10 +22,12 @@ const SavingsPage = () => {
   const [isWithdrawalFormOpen, setWithdrawalFormOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const today = new Date();
-  const firstDayOfMonth = startOfMonth(today).toISOString();
-  const lastDayOfMonth = endOfMonth(today).toISOString();
+  // Use our custom hook to fetch transactions of type "savings"
+  const { transactions: savingsTransactions } = useTransactionData({ 
+    type: "savings" 
+  });
 
+  // Fetch savings goals separately
   const { data: savingsGoals, refetch: refetchSavingsGoals } = useQuery({
     queryKey: ["savings_goals"],
     queryFn: async () => {
@@ -54,62 +41,28 @@ const SavingsPage = () => {
     },
   });
 
-  const { data: transactionsData } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("type", "savings");
-
-      if (error) {
-        console.error("Error fetching transactions:", error);
-        throw error;
-      }
-      
-      return data as TransactionData[] || [];
-    },
-  });
-
-  // Fixed: Apply proper type casting to ensure transaction categories match the TransactionCategory type
-  const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
-    ...transaction,
-    type: transaction.type as TransactionType,
-    category: transaction.category as TransactionCategory // Explicit cast to TransactionCategory
-  }));
-
-  const handleRealTimeUpdates = useCallback(() => {
-    console.log('Data changed, refreshing...');
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
-  }, [queryClient]);
-
-  useRealtimeSubscription('transactions', '*', handleRealTimeUpdates);
-  useRealtimeSubscription('savings_goals', '*', handleRealTimeUpdates);
-
   const handleSavingsGoalUpdate = useCallback(() => {
     refetchSavingsGoals();
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
   }, [refetchSavingsGoals, queryClient]);
 
   const calculateSavingsByCategory = useCallback((category: string) => {
-    if (!transactions) return 0;
+    if (!savingsTransactions) return 0;
     
-    const savings = transactions
+    const savings = savingsTransactions
       .filter((t) => t.category === category)
       .reduce((sum, t) => sum + t.amount, 0);
       
     return savings;
-  }, [transactions]);
+  }, [savingsTransactions]);
 
   const calculateTotalSavings = useCallback(() => {
-    if (!transactions) return 0;
+    if (!savingsTransactions) return 0;
     
-    const savings = transactions
-      .reduce((sum, t) => sum + t.amount, 0);
+    const savings = savingsTransactions.reduce((sum, t) => sum + t.amount, 0);
       
     return savings;
-  }, [transactions]);
+  }, [savingsTransactions]);
 
   const totalSavings = calculateTotalSavings();
 
@@ -164,7 +117,7 @@ const SavingsPage = () => {
           </div>
         </Card>
 
-        <ScrollArea className="h-[calc(100vh-320px)] transition-all duration-500 ease-in-out">
+        <ScrollArea className="h-[calc(100vh-320px)] transition-all duration-500 ease-in-out overflow-auto pr-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-6">
             {savingsGoals?.map((goal) => {
               const progress = getSavingsProgress(goal);

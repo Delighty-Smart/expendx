@@ -15,6 +15,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { addTransaction, queueTransactionForSync } from "@/services/offlineStorage"; 
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -99,37 +100,64 @@ export function TransactionForm({
 
       console.log("Saving transaction:", transactionData);
 
-      if (transaction) {
-        // Update existing transaction
-        const { error } = await supabase
-          .from('transactions')
-          .update(transactionData)
-          .eq('id', transaction.id);
+      if (navigator.onLine) {
+        if (transaction) {
+          // Update existing transaction
+          const { error } = await supabase
+            .from('transactions')
+            .update(transactionData)
+            .eq('id', transaction.id);
+            
+          if (error) {
+            console.error("Update error:", error);
+            throw error;
+          }
           
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
+          toast({
+            title: "Success",
+            description: "Transaction updated successfully"
+          });
+        } else {
+          // Insert new transaction
+          const { error } = await supabase
+            .from('transactions')
+            .insert([transactionData]);
+            
+          if (error) {
+            console.error("Insert error:", error);
+            throw error;
+          }
+          
+          toast({
+            title: "Success",
+            description: "Transaction added successfully"
+          });
         }
-        
-        toast({
-          title: "Success",
-          description: "Transaction updated successfully"
-        });
       } else {
-        // Insert new transaction
-        const { error } = await supabase
-          .from('transactions')
-          .insert([transactionData]);
-          
-        if (error) {
-          console.error("Insert error:", error);
-          throw error;
+        // We're offline, store locally and queue for sync
+        if (transaction) {
+          // For now we don't support updating existing transactions offline
+          toast({
+            title: "Error",
+            description: "Cannot update transactions while offline",
+            variant: "destructive"
+          });
+          return;
         }
         
-        toast({
-          title: "Success",
-          description: "Transaction added successfully"
-        });
+        // Add to local cache and queue for sync
+        try {
+          await addTransaction({...transactionData, id: crypto.randomUUID()});
+          await queueTransactionForSync(transactionData);
+          
+          toast({
+            title: "Transaction Saved Offline",
+            description: "This will be synced when you're back online"
+          });
+        } catch (err) {
+          console.error("Error saving offline:", err);
+          throw new Error("Failed to save transaction offline");
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -159,7 +187,7 @@ export function TransactionForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto`}>
+      <DialogContent className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-y-auto max-h-[90vh]`}>
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
           <DialogDescription>
@@ -238,7 +266,7 @@ export function TransactionForm({
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="max-h-60 overflow-y-auto">
                       {categories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
