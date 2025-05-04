@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Map, Globe, Flag, Flame } from "lucide-react";
+import { Trophy, Map, Globe, Flag, Flame, Award, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
@@ -77,17 +77,22 @@ const LeaderboardSection = ({
     fetchLocations();
   }, [type, continent, country, selectedContinent]);
 
-  // Use real-time subscription to update leaderboard
+  // Use real-time subscription to update leaderboard when streaks change
   useRealtimeSubscription('user_streaks', '*', () => {
     fetchLeaderboard();
   });
 
-  // Fetch leaderboard data
+  // Use real-time subscription to update leaderboard when profiles change
+  useRealtimeSubscription('user_profiles', '*', () => {
+    fetchLeaderboard();
+  });
+
+  // Fetch leaderboard data - get all users for the leaderboard
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
       
-      // First, get user profiles based on location filters
+      // Get user profiles based on location filters
       let profilesQuery = supabase
         .from("user_profiles")
         .select(`
@@ -125,17 +130,17 @@ const LeaderboardSection = ({
       // Extract user IDs to get their streak data
       const userIds = profiles.map(profile => profile.id);
       
-      // Get streak data for these users
+      // Get streak data for ALL these users
       const { data: streakData, error: streakError } = await supabase
         .from("user_streaks")
         .select("*")
-        .in("user_id", userIds)
-        .order(filter === "current" ? "current_streak" : "highest_streak", { ascending: false });
+        .in("user_id", userIds);
       
       if (streakError) throw streakError;
       
-      // Combine profile and streak data
+      // Combine profile and streak data - show ALL users even if they have no streak
       const combinedData = profiles.map(profile => {
+        // Find streak data for user or create default zero values
         const streak = streakData?.find(s => s.user_id === profile.id) || {
           current_streak: 0,
           highest_streak: 0,
@@ -144,13 +149,13 @@ const LeaderboardSection = ({
         
         return {
           id: profile.id,
-          username: profile.username || profile.email.split('@')[0],
+          username: profile.username || profile.email?.split('@')[0] || 'User',
           name: profile.first_name ? `${profile.first_name} ${profile.last_name || ''}` : null,
           email: profile.email,
           avatar_url: profile.avatar_url,
-          current_streak: streak.current_streak,
-          highest_streak: streak.highest_streak,
-          current_title: streak.current_title,
+          current_streak: streak.current_streak || 0,
+          highest_streak: streak.highest_streak || 0,
+          current_title: streak.current_title || "New User",
           continent: profile.continent,
           country: profile.country,
         };
@@ -162,7 +167,8 @@ const LeaderboardSection = ({
         return b[field] - a[field];
       });
       
-      setLeaderboardData(sortedData.slice(0, 10));
+      // Show all users in the leaderboard
+      setLeaderboardData(sortedData);
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     } finally {
@@ -267,8 +273,13 @@ const LeaderboardSection = ({
             {leaderboardData.map((user, index) => (
               <div key={user.id} className="flex items-center p-3 rounded-lg hover:bg-accent/50 transition-colors">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-foreground font-bold">
-                    {index + 1}
+                  <div className={`flex items-center justify-center h-8 w-8 rounded-full text-foreground font-bold
+                    ${index === 0 ? 'bg-yellow-200' : 
+                      index === 1 ? 'bg-gray-200' : 
+                      index === 2 ? 'bg-amber-600/40' : 'bg-primary/10'}`}>
+                    {index === 0 ? <Trophy className="h-4 w-4 text-yellow-600" /> : 
+                     index === 1 ? <Star className="h-4 w-4 text-gray-500" /> :
+                     index === 2 ? <Award className="h-4 w-4 text-amber-700" /> : index + 1}
                   </div>
                   
                   <Avatar>
@@ -288,7 +299,7 @@ const LeaderboardSection = ({
                 
                 <div className="flex flex-col items-end">
                   <div className="flex items-center gap-1 text-sm font-medium">
-                    <Flame className="h-4 w-4 text-pink-500" />
+                    <Flame className={`h-4 w-4 ${user[filter === "current" ? "current_streak" : "highest_streak"] > 0 ? "text-pink-500" : "text-gray-400"}`} />
                     <span>
                       {filter === "current" ? user.current_streak : user.highest_streak}
                     </span>

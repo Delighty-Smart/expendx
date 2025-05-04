@@ -86,19 +86,8 @@ const Dashboard = () => {
     },
   });
 
-  const { data: monthlyIncome } = useQuery({
-    queryKey: ["monthly_income"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("monthly_income_estimates")
-        .select("*")
-        .maybeSingle();
-      if (error) throw error;
-      return data?.amount || 0;
-    },
-  });
-
-  const { data: transactionsData, refetch: refetchTransactions } = useQuery({
+  // Query for monthly transactions (used for monthly metrics)
+  const { data: monthlyTransactionsData, refetch: refetchMonthlyTransactions } = useQuery({
     queryKey: ["transactions", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
       console.log("Dashboard: Fetching transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
@@ -115,7 +104,28 @@ const Dashboard = () => {
     },
   });
 
-  const transactions = (transactionsData || []).map(transaction => ({
+  // Query for ALL transactions (for wallet balance)
+  const { data: allTransactionsData } = useQuery({
+    queryKey: ["all_transactions"],
+    queryFn: async () => {
+      console.log("Dashboard: Fetching ALL transactions for wallet balance");
+      
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*");
+
+      if (error) throw error;
+      console.log(`Dashboard: Found ${data?.length || 0} transactions in total`);
+      return data as TransactionData[] || [];
+    },
+  });
+
+  const transactions = (monthlyTransactionsData || []).map(transaction => ({
+    ...transaction,
+    type: transaction.type as TransactionType
+  }));
+
+  const allTransactions = (allTransactionsData || []).map(transaction => ({
     ...transaction,
     type: transaction.type as TransactionType
   }));
@@ -153,29 +163,52 @@ const Dashboard = () => {
     queryClient.invalidateQueries({ queryKey: ["budgets"] });
   };
 
-  const calculateTotalIncome = () => {
-    return transactions
+  const calculateMonthlyIncome = () => {
+    return monthlyTransactions
       ?.filter((t) => t.type === "credit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  const calculateTotalExpenses = () => {
-    return transactions
+  const calculateMonthlyExpenses = () => {
+    return monthlyTransactions
       ?.filter((t) => t.type === "debit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  const calculateTotalSavings = () => {
-    return transactions
+  const calculateMonthlySavings = () => {
+    return monthlyTransactions
       ?.filter((t) => t.type === "savings")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  const monthlyIncomeTotal = calculateTotalIncome();
-  const monthlyExpenses = calculateTotalExpenses();
-  const monthlySavings = calculateTotalSavings();
+  // Calculate all-time income
+  const calculateTotalIncome = () => {
+    return allTransactions
+      ?.filter((t) => t.type === "credit")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
+  // Calculate all-time expenses
+  const calculateTotalExpenses = () => {
+    return allTransactions
+      ?.filter((t) => t.type === "debit")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
+  // Calculate all-time savings
+  const calculateTotalSavings = () => {
+    return allTransactions
+      ?.filter((t) => t.type === "savings")
+      .reduce((sum, t) => sum + t.amount, 0) || 0;
+  };
+
+  const monthlyIncomeTotal = calculateMonthlyIncome();
+  const monthlyExpenses = calculateMonthlyExpenses();
+  const monthlySavings = calculateMonthlySavings();
   
-  const currentBalance = monthlyIncomeTotal - monthlyExpenses - monthlySavings;
+  // Calculate wallet balance based on all-time transactions
+  // Wallet Balance = Total Income (all-time) - Total Expenses (all-time) - Total Savings (all-time)
+  const currentBalance = calculateTotalIncome() - calculateTotalExpenses() - calculateTotalSavings();
   
   const progressPercentage = monthlyIncome > 0 
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100) 
@@ -383,7 +416,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Wallet Balance</p>
+                <p className="text-sm text-muted-foreground">Wallet Balance (All-time)</p>
                 <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
                 <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
                   <div 
