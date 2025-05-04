@@ -1,320 +1,229 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Map, Globe, Flag, Flame, Award, Star } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Globe, Map, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
-const LeaderboardSection = ({ 
-  type, 
-  continent, 
-  country 
-}: { 
-  type: "global" | "local"; 
-  continent?: string; 
-  country?: string; 
-}) => {
-  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+interface LeaderboardProfile {
+  id: string;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  avatar_url?: string | null;
+  current_streak: number;
+  current_title: string;
+}
+
+interface LeaderboardSectionProps {
+  type: "global" | "local";
+  continent?: string;
+  country?: string;
+}
+
+const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProps) => {
+  const [profiles, setProfiles] = useState<LeaderboardProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [continents, setContinents] = useState<string[]>([]);
-  const [countries, setCountries] = useState<string[]>([]);
-  const [selectedContinent, setSelectedContinent] = useState<string>(continent || "");
-  const [selectedCountry, setSelectedCountry] = useState<string>(country || "");
-  const [filter, setFilter] = useState<"current" | "highest">("current");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Fetch available continents and countries
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        // Get all available continents for selection
-        const { data: allContinents } = await supabase
-          .from("user_profiles")
-          .select("continent")
-          .not("continent", "is", null)
-          .order("continent");
-            
-        if (allContinents) {
-          const distinctContinents = [...new Set(allContinents.map(c => c.continent))];
-          setContinents(distinctContinents.filter(Boolean) as string[]);
-          
-          // If a continent was passed as prop, use it
-          if (continent) {
-            setSelectedContinent(continent);
-          } else if (distinctContinents.length > 0) {
-            setSelectedContinent(distinctContinents[0] as string);
-          }
-        }
-
-        // Get countries for selected continent
-        if (selectedContinent) {
-          const { data: allCountries } = await supabase
-            .from("user_profiles")
-            .select("country")
-            .eq("continent", selectedContinent)
-            .not("country", "is", null)
-            .order("country");
-              
-          if (allCountries) {
-            const distinctCountries = [...new Set(allCountries.map(c => c.country))];
-            setCountries(distinctCountries.filter(Boolean) as string[]);
-            
-            // If a country was passed as prop, use it
-            if (country) {
-              setSelectedCountry(country);
-            } else if (distinctCountries.length > 0) {
-              setSelectedCountry(distinctCountries[0] as string);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching locations:", error);
+    const fetchCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setCurrentUserId(data.user.id);
       }
     };
 
-    fetchLocations();
-  }, [type, continent, country, selectedContinent]);
+    fetchCurrentUser();
+  }, []);
 
-  // Use real-time subscription to update leaderboard when streaks change
-  useRealtimeSubscription('user_streaks', '*', () => {
-    fetchLeaderboard();
-  });
-
-  // Use real-time subscription to update leaderboard when profiles change
-  useRealtimeSubscription('user_profiles', '*', () => {
-    fetchLeaderboard();
-  });
-
-  // Fetch leaderboard data - get all users for the leaderboard
-  const fetchLeaderboard = async () => {
-    try {
+  useEffect(() => {
+    const fetchLeaderboardData = async () => {
       setLoading(true);
       
-      // Get user profiles based on location filters
-      let profilesQuery = supabase
-        .from("user_profiles")
-        .select(`
-          id,
-          username,
-          first_name,
-          last_name,
-          email,
-          avatar_url,
-          continent,
-          country
-        `);
-
-      // Apply location filters for local leaderboard
-      if (type === "local") {
-        if (selectedContinent) {
-          profilesQuery = profilesQuery.eq("continent", selectedContinent);
-          
-          if (selectedCountry) {
-            profilesQuery = profilesQuery.eq("country", selectedCountry);
+      try {
+        let query = supabase
+          .from('user_profiles')
+          .select(`
+            id,
+            username,
+            first_name,
+            last_name,
+            avatar_url,
+            user_streaks!inner (
+              current_streak,
+              current_title
+            )
+          `)
+          .order('user_streaks.current_streak', { ascending: false })
+          .limit(20);
+        
+        // Add geographic filters for local leaderboard
+        if (type === 'local') {
+          if (continent) {
+            query = query.eq('continent', continent);
+          }
+          if (country) {
+            query = query.eq('country', country);
           }
         }
-      }
-
-      const { data: profiles, error: profilesError } = await profilesQuery;
-
-      if (profilesError) throw profilesError;
-      
-      if (!profiles || profiles.length === 0) {
-        setLeaderboardData([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Extract user IDs to get their streak data
-      const userIds = profiles.map(profile => profile.id);
-      
-      // Get streak data for ALL these users
-      const { data: streakData, error: streakError } = await supabase
-        .from("user_streaks")
-        .select("*")
-        .in("user_id", userIds);
-      
-      if (streakError) throw streakError;
-      
-      // Combine profile and streak data - show ALL users even if they have no streak
-      const combinedData = profiles.map(profile => {
-        // Find streak data for user or create default zero values
-        const streak = streakData?.find(s => s.user_id === profile.id) || {
-          current_streak: 0,
-          highest_streak: 0,
-          current_title: "New User"
-        };
         
-        return {
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Error fetching leaderboard data:', error);
+          throw error;
+        }
+        
+        // Transform the data
+        const transformedData = data?.map(profile => ({
           id: profile.id,
-          username: profile.username || profile.email?.split('@')[0] || 'User',
-          name: profile.first_name ? `${profile.first_name} ${profile.last_name || ''}` : null,
-          email: profile.email,
+          username: profile.username,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
           avatar_url: profile.avatar_url,
-          current_streak: streak.current_streak || 0,
-          highest_streak: streak.highest_streak || 0,
-          current_title: streak.current_title || "New User",
-          continent: profile.continent,
-          country: profile.country,
-        };
-      });
+          current_streak: profile.user_streaks[0].current_streak,
+          current_title: profile.user_streaks[0].current_title
+        })) || [];
+        
+        setProfiles(transformedData);
+      } catch (err) {
+        console.error('Failed to load leaderboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchLeaderboardData();
+    
+    // Set up real-time subscription for leaderboard updates
+    const channel = supabase
+      .channel('public:user_streaks')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'user_streaks' }, 
+        () => {
+          fetchLeaderboardData();
+        }
+      )
+      .subscribe();
       
-      // Sort by streak
-      const sortedData = combinedData.sort((a, b) => {
-        const field = filter === "current" ? "current_streak" : "highest_streak";
-        return b[field] - a[field];
-      });
-      
-      // Show all users in the leaderboard
-      setLeaderboardData(sortedData);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-    } finally {
-      setLoading(false);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [type, continent, country]);
+
+  const getInitials = (profile: LeaderboardProfile) => {
+    if (profile.first_name && profile.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`;
     }
+    if (profile.first_name) {
+      return profile.first_name[0];
+    }
+    if (profile.username) {
+      return profile.username[0];
+    }
+    return 'U';
   };
 
-  // Initial data fetch and when filters change
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [type, selectedContinent, selectedCountry, filter]);
+  const getDisplayName = (profile: LeaderboardProfile) => {
+    if (profile.first_name) {
+      return profile.first_name + (profile.last_name ? ` ${profile.last_name}` : '');
+    }
+    if (profile.username) {
+      return profile.username;
+    }
+    return 'User';
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="space-y-1 flex-1">
+              <Skeleton className="h-4 w-[200px]" />
+              <Skeleton className="h-3 w-[150px]" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <CardTitle className="flex items-center gap-2">
-          {type === "global" ? (
-            <>
-              <Globe className="h-5 w-5" />
-              Global Leaderboard
-            </>
-          ) : (
-            <>
-              <Map className="h-5 w-5" />
-              Local Leaderboard
-            </>
-          )}
-        </CardTitle>
-        
-        <Tabs value={filter} onValueChange={(value) => setFilter(value as any)} className="w-full sm:w-auto mt-4 sm:mt-0">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="current">Current Streak</TabsTrigger>
-            <TabsTrigger value="highest">Highest Streak</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </CardHeader>
-      
-      <CardContent>
-        {type === "local" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">
-                Continent
-              </label>
-              <Select 
-                value={selectedContinent} 
-                onValueChange={setSelectedContinent}
-                disabled={continents.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select continent" />
-                </SelectTrigger>
-                <SelectContent>
-                  {continents.map(continent => (
-                    <SelectItem key={continent} value={continent}>
-                      {continent}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">
-                Country
-              </label>
-              <Select 
-                value={selectedCountry} 
-                onValueChange={setSelectedCountry}
-                disabled={!selectedContinent || countries.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={selectedContinent ? "Select country" : "Select continent first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map(country => (
-                    <SelectItem key={country} value={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-        
-        {loading ? (
-          <div className="h-64 flex items-center justify-center">
-            <div className="animate-pulse text-muted-foreground">Loading leaderboard...</div>
-          </div>
-        ) : leaderboardData.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground mb-2">No users found for this leaderboard</p>
-            {type === "local" && (
-              <p className="text-sm text-muted-foreground">
-                Try selecting a different continent or country
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {leaderboardData.map((user, index) => (
-              <div key={user.id} className="flex items-center p-3 rounded-lg hover:bg-accent/50 transition-colors">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`flex items-center justify-center h-8 w-8 rounded-full text-foreground font-bold
-                    ${index === 0 ? 'bg-yellow-200' : 
-                      index === 1 ? 'bg-gray-200' : 
-                      index === 2 ? 'bg-amber-600/40' : 'bg-primary/10'}`}>
-                    {index === 0 ? <Trophy className="h-4 w-4 text-yellow-600" /> : 
-                     index === 1 ? <Star className="h-4 w-4 text-gray-500" /> :
-                     index === 2 ? <Award className="h-4 w-4 text-amber-700" /> : index + 1}
-                  </div>
-                  
-                  <Avatar>
-                    <AvatarImage src={`/lovable-uploads/${user.avatar_url || 'avatar-1.png'}`} alt={user.username} />
-                    <AvatarFallback>
-                      {user.name ? user.name.split(' ').map((n: string) => n[0]).join('') : user.username[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="ml-2">
-                    <p className="font-medium">{user.username}</p>
-                    {user.name && (
-                      <p className="text-xs text-muted-foreground">{user.name}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex flex-col items-end">
-                  <div className="flex items-center gap-1 text-sm font-medium">
-                    <Flame className={`h-4 w-4 ${user[filter === "current" ? "current_streak" : "highest_streak"] > 0 ? "text-pink-500" : "text-gray-400"}`} />
-                    <span>
-                      {filter === "current" ? user.current_streak : user.highest_streak}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {user.current_title}
-                  </span>
-                </div>
+    <div>
+      {profiles.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p className="mb-2">No users found for this leaderboard</p>
+          {type === 'local' && <p className="text-sm">Try checking the global leaderboard instead</p>}
+        </div>
+      ) : (
+        <ul className="space-y-4">
+          {profiles.map((profile, index) => (
+            <li 
+              key={profile.id}
+              className={`flex items-center gap-3 p-3 rounded-lg ${
+                currentUserId === profile.id ? 'bg-primary/10 border border-primary/30' : 'hover:bg-accent/50'
+              }`}
+            >
+              <div className="flex items-center justify-center w-8 h-8 text-sm font-bold">
+                {index === 0 && <Trophy className="text-amber-500 h-6 w-6" />}
+                {index === 1 && <Trophy className="text-slate-400 h-5 w-5" />}
+                {index === 2 && <Trophy className="text-amber-700 h-5 w-5" />}
+                {index > 2 && <span className="text-muted-foreground">{index + 1}</span>}
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              
+              <Avatar className="h-10 w-10 border-2 border-primary/20">
+                <AvatarImage src={profile.avatar_url || ''} alt={getDisplayName(profile)} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {getInitials(profile)}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">
+                    {getDisplayName(profile)}
+                    {currentUserId === profile.id && (
+                      <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded ml-2">
+                        You
+                      </span>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-1 font-semibold text-primary">
+                    <Flame className="h-4 w-4 text-amber-500" />
+                    <span>{profile.current_streak}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">{profile.current_title}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 
 export default LeaderboardSection;
+
+// Add Flame icon definition
+const Flame = (props: any) => {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+    </svg>
+  );
+};

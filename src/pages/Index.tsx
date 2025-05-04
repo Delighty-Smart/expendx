@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +67,27 @@ const Dashboard = () => {
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
+
+  // Query to fetch the estimated monthly income
+  const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
+    queryKey: ["monthly_income_estimate"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from("monthly_income_estimates")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data?.amount || 0;
+    },
+  });
+
+  // Get the monthly income value (with fallback to 0)
+  const monthlyIncome = monthlyIncomeData || 0;
 
   const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
     queryKey: ["user_streak"],
@@ -158,25 +180,25 @@ const Dashboard = () => {
   }, [queryClient]);
 
   const handleTransactionAdded = () => {
-    refetchTransactions();
+    refetchMonthlyTransactions();
     queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
     queryClient.invalidateQueries({ queryKey: ["budgets"] });
   };
 
   const calculateMonthlyIncome = () => {
-    return monthlyTransactions
+    return monthlyTransactionsData
       ?.filter((t) => t.type === "credit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
   const calculateMonthlyExpenses = () => {
-    return monthlyTransactions
+    return monthlyTransactionsData
       ?.filter((t) => t.type === "debit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
   const calculateMonthlySavings = () => {
-    return monthlyTransactions
+    return monthlyTransactionsData
       ?.filter((t) => t.type === "savings")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
