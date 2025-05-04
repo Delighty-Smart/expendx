@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { TransactionsTable } from "@/components/reports/TransactionsTable";
+import TransactionsTable from "@/components/reports/TransactionsTable";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface TransactionData {

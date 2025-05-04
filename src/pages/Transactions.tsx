@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { TransactionsTable } from "@/components/reports/TransactionsTable";
+import TransactionsTable from "@/components/reports/TransactionsTable";
 import { TransactionForm } from "@/components/TransactionForm";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
