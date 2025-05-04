@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +11,60 @@ export const convertToTransaction = (transaction: any): Transaction => ({
   type: transaction.type as TransactionType,
   category: transaction.category as TransactionCategory
 });
+
+// Helper function to queue a transaction for sync when offline
+const queueTransactionForSync = async (transaction: any): Promise<void> => {
+  // If IndexedDB is available in the browser
+  if ('indexedDB' in window) {
+    // Open our database
+    const dbRequest = indexedDB.open('expendx_offline', 1);
+    
+    dbRequest.onerror = (event) => {
+      console.error('Error opening offline database:', event);
+    };
+    
+    dbRequest.onsuccess = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      
+      // Start a transaction and get the pending_transactions store
+      try {
+        const tx = db.transaction('pending_transactions', 'readwrite');
+        const store = tx.objectStore('pending_transactions');
+        
+        // Add the transaction to the pending store
+        const request = store.put(transaction);
+        
+        request.onerror = (event) => {
+          console.error('Error queuing transaction for sync:', event);
+        };
+        
+        request.onsuccess = () => {
+          console.log('Transaction queued for sync when online');
+        };
+        
+        // Close the transaction and database when done
+        tx.oncomplete = () => {
+          db.close();
+        };
+      } catch (err) {
+        console.error('Error creating transaction:', err);
+        db.close();
+      }
+    };
+    
+    // If the database doesn't exist, create it with our object stores
+    dbRequest.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      
+      // Create pending_transactions store if it doesn't exist
+      if (!db.objectStoreNames.contains('pending_transactions')) {
+        db.createObjectStore('pending_transactions', { keyPath: 'id' });
+      }
+    };
+  } else {
+    console.warn('IndexedDB not supported in this browser, cannot queue transaction');
+  }
+};
 
 export function useTransactionData(filter?: {
   type?: TransactionType | "all",
