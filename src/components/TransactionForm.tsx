@@ -187,7 +187,14 @@ export function TransactionForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-hidden max-h-[90vh] scrollable-container`}>
+      <DialogContent 
+        className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-hidden max-h-[90vh] scrollable-container`}
+        style={{
+          scrollBehavior: 'smooth',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+        }}
+      >
         <ScrollArea className="h-full px-1">
           <DialogHeader>
             <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>

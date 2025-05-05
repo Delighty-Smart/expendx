@@ -74,7 +74,11 @@ const Settings = () => {
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover text-popover-foreground backdrop-blur-lg scrollable-container">
-                  <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
+                  <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]" style={{
+                    scrollBehavior: 'smooth',
+                    WebkitOverflowScrolling: 'touch',
+                    overscrollBehavior: 'contain',
+                  }}>
                     {filteredCurrencies.map(c => (
                       <SelectItem key={c.code} value={c.code} className="text-sm">
                         {c.name} ({c.symbol})

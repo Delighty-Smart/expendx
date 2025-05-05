@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as ContextMenuPrimitive from "@radix-ui/react-context-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
@@ -49,6 +48,11 @@ const ContextMenuSubContent = React.forwardRef<
       "bg-background/95 backdrop-blur-sm scrollable-container max-h-[80vh] overflow-y-auto",
       className
     )}
+    style={{
+      scrollBehavior: 'smooth',
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain',
+    }}
     {...props}
   />
 ))
@@ -66,6 +70,11 @@ const ContextMenuContent = React.forwardRef<
         "bg-background/95 backdrop-blur-sm scrollable-container max-h-[80vh] overflow-y-auto scroll-smooth",
         className
       )}
+      style={{
+        scrollBehavior: 'smooth',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+      }}
       {...props}
     />
   </ContextMenuPrimitive.Portal>

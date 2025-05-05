@@ -39,6 +39,11 @@ const AlertDialogContent = React.forwardRef<
         "glass-card backdrop-blur-lg border-border/50 overflow-y-auto max-h-[90vh] scrollable-container",
         className
       )}
+      style={{
+        scrollBehavior: 'smooth',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+      }}
       {...props}
     />
   </AlertDialogPortal>

@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
@@ -53,6 +52,11 @@ const DropdownMenuSubContent = React.forwardRef<
       "bg-background/95 backdrop-blur-sm border-border scrollable-container",
       className
     )}
+    style={{
+      scrollBehavior: 'smooth',
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain',
+    }}
     {...props}
   />
 ))
@@ -73,6 +77,11 @@ const DropdownMenuContent = React.forwardRef<
         "bg-background/95 backdrop-blur-sm max-h-[80vh] overflow-y-auto p-2 scrollable-container scroll-smooth",
         className
       )}
+      style={{
+        scrollBehavior: 'smooth',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+      }}
       {...props}
     />
   </DropdownMenuPrimitive.Portal>

@@ -43,7 +43,7 @@
   color: #888;
 }
 
-/* Enhanced scrolling for scrollable containers */
+/* Enhanced scrolling for all scrollable containers */
 .overflow-auto,
 .overflow-y-auto,
 .overflow-x-auto,
@@ -53,10 +53,11 @@
   overscroll-behavior: contain;
 }
 
-/* Add subtle scroll snap to tables and lists */
+/* Improved momentum scrolling for lists and tables */
 .table-container {
   scroll-snap-type: y proximity;
   scroll-padding: 0.5rem;
+  scroll-behavior: smooth !important;
 }
 
 .table-row {
@@ -67,17 +68,19 @@
 @media (max-width: 640px) {
   .scrollable-container {
     padding-bottom: 30px; /* Add padding to ensure enough scroll area on mobile */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth !important;
   }
 }
 
-/* Add responsive inertia scrolling */
+/* Enhance inertia scrolling */
 @media (pointer: fine) {
   .scrollable-container {
     scroll-behavior: smooth;
   }
 }
 
-/* Specific styles for radix components */
+/* Specific styles for dropdown menus and popovers */
 [role="dialog"] .content,
 [role="listbox"],
 [role="menu"] {
@@ -109,4 +112,10 @@
 .DropdownMenuContent {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+}
+
+/* Hide scroll buttons on dropdowns */
+.ScrollUpButton,
+.ScrollDownButton {
+  display: none !important;
 }
