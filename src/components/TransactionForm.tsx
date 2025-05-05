@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -31,7 +32,7 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
 }
 
-const TransactionForm = ({
+export const TransactionForm = ({
   open,
   onOpenChange,
   onTransactionAdded,
@@ -347,7 +348,3 @@ const TransactionForm = ({
     </Dialog>
   );
 };
-
-export function TransactionForm(props: TransactionFormProps) {
-  return <TransactionForm {...props} />;
-}
