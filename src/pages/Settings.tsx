@@ -12,6 +12,7 @@ import { Moon, Search, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Settings = () => {
   const {
@@ -72,12 +73,14 @@ const Settings = () => {
                 <SelectTrigger className="h-9 md:h-10 text-sm">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover text-popover-foreground backdrop-blur-lg">
-                  {filteredCurrencies.map(c => (
-                    <SelectItem key={c.code} value={c.code} className="text-sm">
-                      {c.name} ({c.symbol})
-                    </SelectItem>
-                  ))}
+                <SelectContent className="bg-popover text-popover-foreground backdrop-blur-lg scrollable-container">
+                  <ScrollArea className="max-h-[40vh] sm:max-h-[50vh]">
+                    {filteredCurrencies.map(c => (
+                      <SelectItem key={c.code} value={c.code} className="text-sm">
+                        {c.name} ({c.symbol})
+                      </SelectItem>
+                    ))}
+                  </ScrollArea>
                 </SelectContent>
               </Select>
             </div>

@@ -76,3 +76,37 @@
     scroll-behavior: smooth;
   }
 }
+
+/* Specific styles for radix components */
+[role="dialog"] .content,
+[role="listbox"],
+[role="menu"] {
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Dialog content needs special treatment for mobile */
+[role="dialog"] [data-state="open"] {
+  max-height: 90vh;
+  overflow-y: auto;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Select and dropdown menu enhancements */
+.SelectContent,
+.SelectViewport {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Ensure no jarring on dialog opens */
+.DialogOverlay,
+.SelectContent,
+.DropdownMenuContent {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
