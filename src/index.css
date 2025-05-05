@@ -69,13 +69,18 @@
   * {
     @apply border-border;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     @apply bg-background text-foreground antialiased;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
   html {
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+    height: 100%;
   }
 }
 
@@ -135,6 +140,16 @@
   
   .text-sm {
     @apply text-xs;
+  }
+  
+  /* Improved touch scrolling for mobile */
+  .overflow-auto, 
+  .overflow-y-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-padding-top: 1rem;
+    scroll-padding-bottom: 1rem;
   }
 }
 
@@ -210,6 +225,7 @@
 .scroll-smooth {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .scrollable-container {
@@ -217,8 +233,10 @@
   overflow-x: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  scroll-padding: 0.5rem;
 }
 
 .horizontal-scroll {
@@ -227,6 +245,19 @@
   white-space: nowrap;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  scroll-padding-left: 0.5rem;
+  scroll-padding-right: 0.5rem;
+}
+
+/* Inertia scrolling and momentum effects */
+@supports (-webkit-touch-callout: none) {
+  /* iOS devices */
+  .scrollable-container,
+  .horizontal-scroll,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
 }

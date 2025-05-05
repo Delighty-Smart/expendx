@@ -50,4 +50,29 @@
 [class*="overflow-"] {
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Add subtle scroll snap to tables and lists */
+.table-container {
+  scroll-snap-type: y proximity;
+  scroll-padding: 0.5rem;
+}
+
+.table-row {
+  scroll-snap-align: start;
+}
+
+/* Improve mobile touch scrolling */
+@media (max-width: 640px) {
+  .scrollable-container {
+    padding-bottom: 30px; /* Add padding to ensure enough scroll area on mobile */
+  }
+}
+
+/* Add responsive inertia scrolling */
+@media (pointer: fine) {
+  .scrollable-container {
+    scroll-behavior: smooth;
+  }
 }

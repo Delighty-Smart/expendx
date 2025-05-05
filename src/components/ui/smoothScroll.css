@@ -8,6 +8,7 @@ html, body {
   scroll-behavior: smooth !important;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Custom scrollbars for modern browsers */
@@ -38,10 +39,52 @@ html, body {
 .ScrollAreaViewport {
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-snap-type: proximity;
 }
 
-/* Ensure Tailwind's overflow-auto classes maintain smooth scrolling */
-.overflow-auto, .overflow-y-auto, .overflow-x-auto {
+/* Enhanced momentum-based scrolling for Safari */
+@supports (-webkit-overflow-scrolling: touch) {
+  .overflow-auto, 
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="overflow-"],
+  .ScrollArea,
+  .ScrollAreaViewport {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Add momentum scrolling to all containers */
+.scrollable-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+/* Horizontal scrolling with momentum */
+.horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth !important;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  scroll-snap-type: x proximity;
+}
+
+/* Apply smooth scrolling to common interactive elements */
+.dialog-content,
+.sheet-content,
+.dropdown-content,
+.popover-content,
+.sidebar-content {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth !important;
 }
@@ -53,8 +96,16 @@ html, body {
   .overflow-x-auto,
   [class*="overflow-"],
   .ScrollArea,
-  .ScrollAreaViewport {
+  .ScrollAreaViewport,
+  .scrollable-container {
     -webkit-overflow-scrolling: touch;
     scroll-padding: 10px;
+    touch-action: pan-y;
+  }
+  
+  .horizontal-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-padding: 10px;
+    touch-action: pan-x;
   }
 }
