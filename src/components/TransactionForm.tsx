@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -189,17 +188,11 @@ export const TransactionForm = ({
     }}>
       <DialogContent 
         className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-hidden max-h-[90vh]`}
-        style={{
-          scrollBehavior: 'smooth',
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'thin'
-        }}
       >
-        <ScrollArea className="h-full px-1"
+        <ScrollArea 
+          className="h-full px-1 overflow-y-auto"
           style={{
+            overflowY: 'auto',
             scrollBehavior: 'smooth',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
@@ -285,24 +278,9 @@ export const TransactionForm = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent
-                        style={{
-                          scrollBehavior: 'smooth',
-                          WebkitOverflowScrolling: 'touch',
-                          overscrollBehavior: 'contain',
-                          touchAction: 'pan-y',
-                          msOverflowStyle: 'none',
-                          scrollbarWidth: 'thin'
-                        }}
+                        className="overflow-y-auto"
                       >
-                        <ScrollArea 
-                          className="max-h-[40vh]"
-                          style={{
-                            scrollBehavior: 'smooth',
-                            WebkitOverflowScrolling: 'touch',
-                            overscrollBehavior: 'contain',
-                            touchAction: 'pan-y'
-                          }}
-                        >
+                        <ScrollArea className="h-72">
                           {categories.map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}

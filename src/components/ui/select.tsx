@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Select = SelectPrimitive.Root;
@@ -29,21 +29,16 @@ const SelectTrigger = React.forwardRef<React.ElementRef<typeof SelectPrimitive.T
 ));
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
-// We'll hide these buttons completely
+// We'll hide these buttons completely since we want natural scrolling
 const SelectScrollUpButton = React.forwardRef<React.ElementRef<typeof SelectPrimitive.ScrollUpButton>, React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>>(({
   className,
   ...props
 }, ref) => (
   <SelectPrimitive.ScrollUpButton 
     ref={ref} 
-    className={cn(
-      "hidden", // Hide completely
-      className
-    )} 
+    className="hidden" // Complete hiding
     {...props}
-  >
-    <ChevronUp className="h-4 w-4" />
-  </SelectPrimitive.ScrollUpButton>
+  />
 ));
 SelectScrollUpButton.displayName = SelectPrimitive.ScrollUpButton.displayName;
 
@@ -53,14 +48,9 @@ const SelectScrollDownButton = React.forwardRef<React.ElementRef<typeof SelectPr
 }, ref) => (
   <SelectPrimitive.ScrollDownButton 
     ref={ref} 
-    className={cn(
-      "hidden", // Hide completely
-      className
-    )} 
+    className="hidden" // Complete hiding
     {...props}
-  >
-    <ChevronDown className="h-4 w-4" />
-  </SelectPrimitive.ScrollDownButton>
+  />
 ));
 SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
 
@@ -83,7 +73,7 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
       position={position} 
       {...props}
     >
-      {/* No scroll buttons needed */}
+      {/* No scroll buttons needed with enhanced natural scrolling */}
       <SelectPrimitive.Viewport 
         className={cn(
           "p-1",
@@ -92,12 +82,14 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
           "max-h-[60vh] overflow-y-auto"
         )}
         style={{
+          overflowY: 'auto',
           scrollBehavior: 'smooth',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
           touchAction: 'pan-y',
-          msOverflowStyle: 'none',  /* IE and Edge */
-          scrollbarWidth: 'thin'    /* Firefox */
+          msOverflowStyle: '-ms-autohiding-scrollbar',
+          scrollbarWidth: 'thin',
+          scrollPadding: '0.5rem'
         }}
       >
         {children}
@@ -131,7 +123,7 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
     ref={ref} 
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      // Enhanced for mobile touch
+      // Enhanced for mobile touch targets
       "py-2.5 px-3 text-base sm:py-1.5 sm:pl-8 sm:pr-2 sm:text-sm",
       className
     )} 

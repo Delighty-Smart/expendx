@@ -43,17 +43,29 @@
   color: #888;
 }
 
-/* Enhanced scrolling for all scrollable containers */
+/* Enhanced universal scrolling for all scrollable containers */
 .overflow-auto,
 .overflow-y-auto,
 .overflow-x-auto,
-[class*="overflow-"] {
+[class*="overflow-"],
+.ScrollAreaViewport,
+.SelectViewport,
+.SelectContent,
+.PopoverContent,
+.DropdownMenuContent,
+.ContextMenuContent,
+.DialogContent,
+[role="dialog"],
+[role="listbox"],
+[role="menu"] {
+  overflow-y: auto !important;
   scroll-behavior: smooth !important;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-  scrollbar-width: thin; /* Firefox */
-  -ms-overflow-style: -ms-autohiding-scrollbar; /* IE and Edge */
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  scrollbar-width: thin !important;
+  -ms-overflow-style: -ms-autohiding-scrollbar !important;
+  scroll-padding: 0.5rem !important;
 }
 
 /* Improved momentum scrolling for lists and tables */
@@ -67,75 +79,93 @@
   scroll-snap-align: start;
 }
 
-/* Improve mobile touch scrolling */
+/* Mobile optimizations */
 @media (max-width: 640px) {
-  .scrollable-container {
+  .scrollable-container,
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="overflow-"],
+  .SelectViewport,
+  .SelectContent,
+  .PopoverContent,
+  .DropdownMenuContent,
+  .ContextMenuContent,
+  .DialogContent {
     padding-bottom: 30px; /* Add padding to ensure enough scroll area on mobile */
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth !important;
     touch-action: pan-y;
+    overscroll-behavior: contain;
+    /* Enhanced mobile interaction */
+    scroll-padding: 1rem;
   }
 }
 
-/* Enhance inertia scrolling */
-@media (pointer: fine) {
-  .scrollable-container {
-    scroll-behavior: smooth;
+/* Enhanced touch input */
+@media (pointer: coarse) {
+  .scrollable-container,
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="overflow-"],
+  .SelectViewport,
+  .SelectContent,
+  .PopoverContent,
+  .DropdownMenuContent,
+  .ContextMenuContent,
+  .DialogContent,
+  [role="dialog"],
+  [role="listbox"],
+  [role="menu"] {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    scroll-padding: 1rem;
+    /* Larger touch targets */
+    min-height: 44px;
   }
 }
 
-/* Specific styles for dropdown menus and popovers */
-[role="dialog"] .content,
+/* Fix specific dropdown menus and popovers */
 [role="listbox"],
 [role="menu"] {
   scroll-behavior: smooth !important;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  max-height: 60vh !important; /* Ensure there's room to scroll */
+  overflow-y: auto !important;
 }
 
-/* Dialog content needs special treatment for mobile */
-[role="dialog"] [data-state="open"] {
-  max-height: 90vh;
-  overflow-y: auto;
-  scroll-behavior: smooth !important;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+/* Target select elements more aggressively */
+.SelectContent .SelectViewport,
+.DropdownMenuContent > *,
+.ContextMenuContent > *,
+.PopoverContent > * {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
 }
 
-/* Select and dropdown menu enhancements */
-.SelectContent,
-.SelectViewport {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth !important;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  touch-action: pan-y;
-}
-
-/* Ensure no jarring on dialog opens */
-.DialogOverlay,
-.SelectContent,
-.DropdownMenuContent {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-/* Hide scroll buttons on dropdowns */
-.ScrollUpButton,
-.ScrollDownButton {
+/* Ensure no scroll buttons in any components */
+[class*="ScrollUpButton"],
+[class*="ScrollDownButton"] {
   display: none !important;
 }
 
-/* Make all scrollable areas smoothly scrollable */
-*[style*="overflow: auto"],
-*[style*="overflow-y: auto"],
-*[style*="overflow-x: auto"],
-*[style*="overflow: scroll"],
-*[style*="overflow-y: scroll"],
-*[style*="overflow-x: scroll"] {
-  scroll-behavior: smooth !important;
+/* Force native scrolling mechanics */
+* {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+}
+
+/* Apply iOS momentum scrolling to all scrollable containers */
+.scrollable-container, 
+.DialogContent, 
+.SelectContent, 
+.PopoverContent,
+.DropdownMenuContent {
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 }
