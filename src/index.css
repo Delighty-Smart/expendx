@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -226,6 +227,7 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .scrollable-container {
@@ -237,6 +239,8 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
   scroll-padding: 0.5rem;
+  touch-action: pan-y;
+  -ms-overflow-style: auto;
 }
 
 .horizontal-scroll {
@@ -250,6 +254,7 @@
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
   scroll-padding-left: 0.5rem;
   scroll-padding-right: 0.5rem;
+  touch-action: pan-x;
 }
 
 /* Inertia scrolling and momentum effects */
@@ -257,7 +262,24 @@
   /* iOS devices */
   .scrollable-container,
   .horizontal-scroll,
-  .overflow-auto {
+  .overflow-auto,
+  [role="listbox"],
+  [role="menu"],
+  .SelectViewport,
+  .SelectContent,
+  .PopoverContent,
+  .DropdownMenuContent,
+  .ContextMenuContent {
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
+}
+
+/* Target Select specifically */
+[role="listbox"] {
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  max-height: 60vh !important;
 }

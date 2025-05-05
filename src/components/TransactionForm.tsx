@@ -1,4 +1,3 @@
-// Only updating the dialog styling for mobile in the component
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -32,12 +31,12 @@ interface TransactionFormProps {
   transaction?: Transaction | null;
 }
 
-export function TransactionForm({
+const TransactionForm = ({
   open,
   onOpenChange,
   onTransactionAdded,
   transaction
-}: TransactionFormProps) {
+}: TransactionFormProps) => {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const queryClient = useQueryClient();
@@ -188,14 +187,24 @@ export function TransactionForm({
       onOpenChange(open);
     }}>
       <DialogContent 
-        className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-hidden max-h-[90vh] scrollable-container`}
+        className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-hidden max-h-[90vh]`}
         style={{
           scrollBehavior: 'smooth',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'thin'
         }}
       >
-        <ScrollArea className="h-full px-1">
+        <ScrollArea className="h-full px-1"
+          style={{
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            touchAction: 'pan-y'
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
             <DialogDescription>
@@ -274,8 +283,25 @@ export function TransactionForm({
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="scrollable-container">
-                        <ScrollArea className="max-h-[40vh]">
+                      <SelectContent
+                        style={{
+                          scrollBehavior: 'smooth',
+                          WebkitOverflowScrolling: 'touch',
+                          overscrollBehavior: 'contain',
+                          touchAction: 'pan-y',
+                          msOverflowStyle: 'none',
+                          scrollbarWidth: 'thin'
+                        }}
+                      >
+                        <ScrollArea 
+                          className="max-h-[40vh]"
+                          style={{
+                            scrollBehavior: 'smooth',
+                            WebkitOverflowScrolling: 'touch',
+                            overscrollBehavior: 'contain',
+                            touchAction: 'pan-y'
+                          }}
+                        >
                           {categories.map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}
@@ -320,4 +346,8 @@ export function TransactionForm({
       </DialogContent>
     </Dialog>
   );
+};
+
+export function TransactionForm(props: TransactionFormProps) {
+  return <TransactionForm {...props} />;
 }
