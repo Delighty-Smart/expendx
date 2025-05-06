@@ -1,5 +1,7 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +9,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { TransactionForm } from "@/components/TransactionForm";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,12 +36,11 @@ interface TransactionData {
 
 const TransactionsPage = () => {
   const { currency } = useSettings();
-  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<AllCategories>("All");
   const [selectedType, setSelectedType] = useState<"all" | "credit" | "debit" | "savings">("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -122,6 +122,11 @@ const TransactionsPage = () => {
     }
   };
 
+  const handleEdit = (transaction: Transaction) => {
+    // Navigate to edit page with transaction data
+    navigate("/add-transaction", { state: { transaction } });
+  };
+
   const filteredTransactions = transactions?.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || transaction.category === selectedCategory;
@@ -196,10 +201,10 @@ const TransactionsPage = () => {
                 Delete Selected ({selectedTransactions.length})
               </Button>
             )}
-            <Button className="flex items-center gap-2" onClick={() => {
-              setEditingTransaction(null);
-              setIsTransactionFormOpen(true);
-            }}>
+            <Button 
+              className="flex items-center gap-2" 
+              onClick={() => navigate("/add-transaction")}
+            >
               <PlusCircle className="h-4 w-4" />
               Add Transaction
             </Button>
@@ -222,7 +227,7 @@ const TransactionsPage = () => {
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[250px] overflow-y-auto">
                     {allCategories.map(category => (
                       <SelectItem key={category} value={category}>
                         {category}
@@ -238,7 +243,7 @@ const TransactionsPage = () => {
                   <SelectTrigger className="w-[160px]">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[250px] overflow-y-auto">
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="credit">Credit (Income)</SelectItem>
                     <SelectItem value="debit">Debit (Expense)</SelectItem>
@@ -332,10 +337,7 @@ const TransactionsPage = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => {
-                                      setEditingTransaction(transaction);
-                                      setIsTransactionFormOpen(true);
-                                    }}>
+                                    <DropdownMenuItem onClick={() => handleEdit(transaction)}>
                                       <Edit className="mr-2 h-4 w-4" />
                                       Edit
                                     </DropdownMenuItem>
@@ -357,13 +359,6 @@ const TransactionsPage = () => {
             ))}
           </div>
         </Card>
-
-        <TransactionForm 
-          open={isTransactionFormOpen} 
-          onOpenChange={setIsTransactionFormOpen} 
-          onTransactionAdded={refetchTransactions} 
-          transaction={editingTransaction} 
-        />
       </div>
     </Layout>
   );

@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 import IndexPage from '@/pages/Index'
 import Auth from '@/pages/Auth'
 import Transactions from '@/pages/Transactions'
+import AddTransaction from '@/pages/AddTransaction'
 import Budgets from '@/pages/Budgets'
 import Savings from '@/pages/Savings'
 import Profile from '@/pages/Profile'
@@ -61,6 +62,7 @@ function App() {
               <Route path="/" element={<IndexPage />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/transactions" element={<Transactions />} />
+              <Route path="/add-transaction" element={<AddTransaction />} />
               <Route path="/budgets" element={<Budgets />} />
               <Route path="/savings" element={<Savings />} />
               <Route path="/profile" element={<Profile />} />
