@@ -30,6 +30,18 @@ html, body {
   background-color: rgba(156, 163, 175, 0.5);
 }
 
+/* Fixed max height for dropdown containers */
+.SelectContent,
+.DropdownMenuContent,
+.ContextMenuContent,
+.PopoverContent,
+[role="listbox"],
+[role="menu"] {
+  max-height: 250px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
 /* Ensure all scrollable containers have smooth scrolling */
 .overflow-auto, 
 .overflow-y-auto,
@@ -43,11 +55,17 @@ html, body {
 .DropdownMenuContent,
 .ContextMenuContent,
 .AlertDialogContent,
-.SheetContent {
+.SheetContent,
+[role="listbox"],
+[role="menu"] {
   scroll-behavior: smooth !important;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  scroll-snap-type: proximity;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  scrollbar-width: thin !important;
+  scroll-padding: 0.5rem !important;
+  pointer-events: auto !important;
+  -ms-overflow-style: auto !important;
 }
 
 /* Enhanced momentum-based scrolling for Safari */
@@ -64,7 +82,9 @@ html, body {
   .DropdownMenuContent,
   .ContextMenuContent,
   .AlertDialogContent,
-  .SheetContent {
+  .SheetContent,
+  [role="listbox"],
+  [role="menu"] {
     -webkit-overflow-scrolling: touch;
   }
 }
@@ -79,71 +99,63 @@ html, body {
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
   -webkit-font-smoothing: antialiased;
+  max-height: 250px;
 }
 
-/* Horizontal scrolling with momentum */
-.horizontal-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth !important;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
-  scroll-snap-type: x proximity;
-}
-
-/* Apply smooth scrolling to common interactive elements */
-.dialog-content,
-.sheet-content,
-.dropdown-content,
-.popover-content,
-.sidebar-content {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth !important;
-}
-
-/* Specific style for dialog modals */
-[role="dialog"] {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth !important;
-}
-
-/* Specific styles for dropdown menus */
-[role="listbox"],
-[role="menu"] {
-  scroll-behavior: smooth !important;
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
-  max-height: 200px;
-}
-
-/* Enhanced touch scrolling for mobile devices */
-@media (max-width: 768px) {
-  .overflow-auto, 
-  .overflow-y-auto,
-  .overflow-x-auto,
-  [class*="overflow-"],
-  .ScrollArea,
-  .ScrollAreaViewport,
-  .SelectViewport,
-  .DialogContent,
+/* Enhanced touch input */
+@media (pointer: coarse) {
   .SelectContent,
   .DropdownMenuContent,
   .ContextMenuContent,
-  .AlertDialogContent,
-  .SheetContent,
-  .scrollable-container {
+  .PopoverContent,
+  [role="listbox"],
+  [role="menu"],
+  .scrollable-container,
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [class*="overflow-"] {
     -webkit-overflow-scrolling: touch;
-    scroll-padding: 10px;
     touch-action: pan-y;
     overscroll-behavior: contain;
+    scroll-padding: 1rem;
+    /* Larger touch targets */
+    min-height: 44px;
   }
-  
-  .horizontal-scroll {
-    -webkit-overflow-scrolling: touch;
-    scroll-padding: 10px;
-    touch-action: pan-x;
-  }
+}
+
+/* Fix z-index for dropdown menus */
+.SelectContent,
+.DropdownMenuContent,
+.ContextMenuContent,
+.PopoverContent {
+  z-index: 50 !important;
+  pointer-events: auto !important;
+}
+
+/* Force native scrolling for all dropdown menus */
+.SelectContent .SelectViewport,
+.DropdownMenuContent > *,
+.ContextMenuContent > *,
+.PopoverContent > *,
+[role="listbox"],
+[role="menu"] {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  max-height: 250px !important;
+}
+
+/* Ensure no scroll buttons in any components */
+[class*="ScrollUpButton"],
+[class*="ScrollDownButton"] {
+  display: none !important;
+}
+
+/* Remove any overflow:hidden that might be blocking scrolling */
+.radix-scroll-area-viewport,
+[data-radix-scroll-area-viewport] {
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }

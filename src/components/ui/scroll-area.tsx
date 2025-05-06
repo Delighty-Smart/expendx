@@ -16,13 +16,14 @@ const ScrollArea = React.forwardRef<
     <ScrollAreaPrimitive.Viewport 
       className="h-full w-full rounded-[inherit]"
       style={{
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-y',
         overflowY: 'auto',
         scrollBehavior: 'smooth',
-        WebkitOverflowScrolling: 'touch', /* Enable momentum scrolling on iOS */
-        overscrollBehavior: 'contain',  /* Prevent scroll chaining */
-        touchAction: 'pan-y', /* Optimize for touch devices */
-        msOverflowStyle: 'none', /* Hide scrollbar on IE/Edge */
-        scrollbarWidth: 'none' /* Hide scrollbar on Firefox */
+        scrollbarWidth: 'none', /* Firefox */
+        msOverflowStyle: 'none', /* IE/Edge */
+        '&::-webkit-scrollbar': { display: 'none' } /* Chrome/Safari/Webkit */
       }}
     >
       {children}
@@ -46,7 +47,7 @@ const ScrollBar = React.forwardRef<
         "h-full w-2.5 border-l border-l-transparent p-[1px]",
       orientation === "horizontal" &&
         "h-2.5 flex-col border-t border-t-transparent p-[1px]",
-      // Make scrollbar visible by default for better usability
+      // Visible by default for better usability
       "opacity-30 hover:opacity-100 transition-opacity",
       className
     )}
