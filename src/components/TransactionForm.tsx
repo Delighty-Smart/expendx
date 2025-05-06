@@ -280,7 +280,7 @@ export const TransactionForm = ({
                       <SelectContent
                         className="overflow-y-auto"
                       >
-                        <ScrollArea className="h-72">
+                        <ScrollArea className="h-[200px]">
                           {categories.map((category) => (
                             <SelectItem key={category} value={category}>
                               {category}

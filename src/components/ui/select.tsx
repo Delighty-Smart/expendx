@@ -79,7 +79,7 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
           "p-1",
           position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
           // Enhanced scrolling styles
-          "max-h-[60vh] overflow-y-auto"
+          "max-h-[200px] overflow-y-auto"
         )}
         style={{
           overflowY: 'auto',
@@ -87,8 +87,8 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
           touchAction: 'pan-y',
-          msOverflowStyle: '-ms-autohiding-scrollbar',
-          scrollbarWidth: 'thin',
+          msOverflowStyle: 'auto',  /* Show scrollbar on IE/Edge */
+          scrollbarWidth: 'thin',   /* Show thin scrollbar on Firefox */
           scrollPadding: '0.5rem'
         }}
       >

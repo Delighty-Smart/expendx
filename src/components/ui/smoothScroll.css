@@ -116,7 +116,7 @@ html, body {
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
-  max-height: 300px;
+  max-height: 200px;
 }
 
 /* Enhanced touch scrolling for mobile devices */

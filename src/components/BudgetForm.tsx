@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +29,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { expenseCategories } from "@/types/transactions";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const budgetSchema = z.object({
   category: z.enum([...expenseCategories] as const),
@@ -130,11 +130,13 @@ export function BudgetForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {expenseCategories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                      <ScrollArea className="h-[200px]">
+                        {expenseCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                   <FormMessage />

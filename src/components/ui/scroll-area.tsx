@@ -18,11 +18,11 @@ const ScrollArea = React.forwardRef<
       style={{
         overflowY: 'auto',
         scrollBehavior: 'smooth',
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain',
-        touchAction: 'pan-y',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none'
+        WebkitOverflowScrolling: 'touch', /* Enable momentum scrolling on iOS */
+        overscrollBehavior: 'contain',  /* Prevent scroll chaining */
+        touchAction: 'pan-y', /* Optimize for touch devices */
+        msOverflowStyle: 'none', /* Hide scrollbar on IE/Edge */
+        scrollbarWidth: 'none' /* Hide scrollbar on Firefox */
       }}
     >
       {children}

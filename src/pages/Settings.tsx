@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -7,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Moon, Search, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import "../components/ui/smoothScroll.css"; // Import the smooth scroll styles
 
 const Settings = () => {
   const {
@@ -75,24 +75,8 @@ const Settings = () => {
                 </SelectTrigger>
                 <SelectContent 
                   className="bg-popover text-popover-foreground backdrop-blur-lg"
-                  style={{
-                    scrollBehavior: 'smooth',
-                    WebkitOverflowScrolling: 'touch',
-                    overscrollBehavior: 'contain',
-                    touchAction: 'pan-y',
-                    msOverflowStyle: 'none',
-                    scrollbarWidth: 'thin'
-                  }}
                 >
-                  <ScrollArea 
-                    className="max-h-[40vh] sm:max-h-[50vh]"
-                    style={{
-                      scrollBehavior: 'smooth',
-                      WebkitOverflowScrolling: 'touch',
-                      overscrollBehavior: 'contain',
-                      touchAction: 'pan-y'
-                    }}
-                  >
+                  <ScrollArea className="h-[200px]">
                     {filteredCurrencies.map(c => (
                       <SelectItem key={c.code} value={c.code} className="text-sm">
                         {c.name} ({c.symbol})

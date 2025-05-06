@@ -134,7 +134,7 @@
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
   touch-action: pan-y !important;
-  max-height: 60vh !important; /* Ensure there's room to scroll */
+  max-height: 200px !important; /* Set a consistent max height */
   overflow-y: auto !important;
 }
 

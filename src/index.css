@@ -266,7 +266,7 @@
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent !important;
   scroll-padding: 0.5rem !important;
   touch-action: pan-y !important;
-  -ms-overflow-style: auto !important;
+  -ms-overflow-style: auto !important; 
 }
 
 .horizontal-scroll {
@@ -308,7 +308,7 @@
   
   /* Ensure select dropdown is scrollable for iOS */
   [role="listbox"] {
-    max-height: 60vh !important;
+    max-height: 200px !important;
     overflow-y: scroll !important;
   }
 }
@@ -319,7 +319,7 @@
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
   touch-action: pan-y !important;
-  max-height: 60vh !important;
+  max-height: 200px !important;
   overflow-y: auto !important;
 }
 
@@ -349,7 +349,7 @@
 .ContextMenuContent,
 .DialogContent,
 .SheetContent {
-  max-height: 80vh !important;
+  max-height: 200px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
