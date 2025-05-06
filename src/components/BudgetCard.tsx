@@ -1,139 +1,137 @@
 
-import { Card } from "@/components/ui/card";
-import { Phone, Zap, ShoppingCart, Wifi, Gift, Coffee, Church, Droplets, Receipt, Film, MoreHorizontal, PiggyBank, Edit, Trash } from "lucide-react";
-import { Currency } from "@/lib/currencies";
-import { BudgetForm } from "@/components/BudgetForm";
 import { useState } from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Edit, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface BudgetCardProps {
+  id: string;
   category: string;
   limit: number;
   spent: number;
-  currency: Currency;
-  onBudgetUpdate: () => void;
-  id?: string;
+  currency: {
+    code: string;
+    symbol: string;
+  };
+  onEditClick?: () => void;
 }
 
-const categoryIcons: Record<string, React.ReactNode> = {
-  Airtime: <Phone className="w-5 h-5" />,
-  Electricity: <Zap className="w-5 h-5" />,
-  Food: <ShoppingCart className="w-5 h-5" />,
-  Internet: <Wifi className="w-5 h-5" />,
-  Gifts: <Gift className="w-5 h-5" />,
-  Refreshments: <Coffee className="w-5 h-5" />,
-  Offerings: <Church className="w-5 h-5" />,
-  Toiletries: <Droplets className="w-5 h-5" />,
-  Taxes: <Receipt className="w-5 h-5" />,
-  Entertainment: <Film className="w-5 h-5" />,
-  Other: <MoreHorizontal className="w-5 h-5" />,
-  Savings: <PiggyBank className="w-5 h-5" />,
-};
-
-export function BudgetCard({ category, limit, spent, currency, onBudgetUpdate, id }: BudgetCardProps) {
-  const [isFormOpen, setIsFormOpen] = useState(false);
+export function BudgetCard({
+  id,
+  category,
+  limit,
+  spent,
+  currency,
+  onEditClick,
+}: BudgetCardProps) {
   const { toast } = useToast();
-  
+  const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const percentage = Math.min((spent / limit) * 100, 100);
   const remaining = Math.max(limit - spent, 0);
-  
-  const getProgressColor = (percent: number) => {
-    if (percent >= 90) return "bg-red-500"; // danger
-    if (percent >= 75) return "bg-amber-500"; // warning
-    return "bg-primary"; // normal
-  };
+  const isOverBudget = spent > limit;
 
-  const handleDelete = async () => {
-    if (!id) return;
-    
+  const handleDeleteBudget = async () => {
     try {
+      setIsDeleting(true);
+
+      // Delete the budget from the database
       const { error } = await supabase
         .from("budget_categories")
         .delete()
         .eq("id", id);
-        
+
       if (error) throw error;
-      
+
       toast({
-        title: "Budget deleted",
-        description: `${category} budget has been removed`,
+        title: "Budget Deleted",
+        description: `Budget for ${category} has been removed`,
       });
-      
-      onBudgetUpdate();
+
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <>
-      <Card className="p-4 hover:shadow-md transition-all duration-300 bg-card">
+    <Card className={`relative overflow-hidden hover:shadow-md transition-shadow ${isOverBudget ? 'border-destructive' : ''}`}>
+      {isOverBudget && (
+        <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-bl">
+          Over Budget
+        </div>
+      )}
+      <CardContent className="pt-6 pb-4">
         <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-full bg-primary/10">
-              {categoryIcons[category] || categoryIcons.Other}
-            </div>
-            <h3 className="font-medium text-base">{category}</h3>
+          <div className="space-y-1">
+            <h3 className="font-medium text-sm truncate w-36">{category}</h3>
+            <p className="text-lg font-bold">
+              {currency.symbol}
+              {spent.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+              <span className="text-xs text-muted-foreground ml-1">
+                / {currency.symbol}
+                {limit.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </p>
           </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsFormOpen(true)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="w-full bg-muted h-2 rounded-full mb-3 mt-2">
-          <div 
-            className={`h-2 rounded-full ${getProgressColor(percentage)}`} 
-            style={{ width: `${percentage}%`, transition: 'width 0.5s ease-out' }}
-          />
-        </div>
-        
-        <div className="flex justify-between text-sm">
-          <div>
-            <p className="text-muted-foreground text-xs">Spent</p>
-            <p className="font-medium">{currency.symbol}{spent.toFixed(2)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-muted-foreground text-xs">Budget</p>
-            <p className="font-medium">{currency.symbol}{limit.toFixed(2)}</p>
+          <div className="flex gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              onClick={onEditClick}
+            >
+              <Edit className="h-4 w-4" />
+              <span className="sr-only">Edit</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 text-destructive"
+              onClick={handleDeleteBudget}
+              disabled={isDeleting}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
+            </Button>
           </div>
         </div>
-        <div className="mt-2 text-center">
-          <p className="text-xs inline-block px-2 py-1 rounded-full bg-muted/50">
-            {currency.symbol}{remaining.toFixed(2)} remaining ({percentage.toFixed(0)}%)
-          </p>
-        </div>
-      </Card>
 
-      <BudgetForm
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        onBudgetAdded={onBudgetUpdate}
-        initialCategory={category}
-        budgetId={id}
-      />
-    </>
+        <div className="space-y-2">
+          <Progress value={percentage} className="h-2" 
+            indicator={isOverBudget ? 'bg-destructive' : undefined} />
+          <div className="flex justify-between text-xs">
+            <p className="text-muted-foreground">
+              {percentage.toFixed(0)}% used
+            </p>
+            <p className={`${isOverBudget ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {isOverBudget ? 'Over by ' : 'Remaining '}
+              {currency.symbol}
+              {remaining.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

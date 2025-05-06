@@ -1,21 +1,18 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, AlertCircle, DollarSign, Eye, EyeOff } from "lucide-react";
+import { PlusCircle, AlertCircle, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { BudgetForm } from "@/components/BudgetForm";
-import { BudgetChart } from "@/components/BudgetChart";
 import { BudgetCard } from "@/components/BudgetCard";
+import { BudgetChart } from "@/components/BudgetChart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { MonthlyIncomeForm } from "@/components/MonthlyIncomeForm";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 import { getBudgetAlerts, syncBudgetAlertsToNotifications } from "@/services/budgetAlerts";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
@@ -33,11 +30,7 @@ interface TransactionData {
 
 const BudgetsPage = () => {
   const { currency } = useSettings();
-  const [isBudgetFormOpen, setIsBudgetFormOpen] = useState(false);
-  const [isIncomeFormOpen, setIsIncomeFormOpen] = useState(false);
-  const [isSavingsDialogOpen, setIsSavingsDialogOpen] = useState(false);
-  const [savingsGoal, setSavingsGoal] = useState(0);
-  const [newSavingsGoal, setNewSavingsGoal] = useState("");
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const today = new Date();
@@ -112,61 +105,6 @@ const BudgetsPage = () => {
     }
   }, [budgetCategories, transactions]);
 
-  useEffect(() => {
-    if (budgetCategories) {
-      const savingsBudget = budgetCategories.find(b => b.category === "Savings");
-      if (savingsBudget) {
-        setSavingsGoal(savingsBudget.monthly_limit);
-      }
-    }
-  }, [budgetCategories]);
-
-  const handleBudgetUpdate = useCallback(() => {
-    refetchBudgets();
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-  }, [refetchBudgets, queryClient]);
-
-  const handleIncomeUpdate = useCallback(() => {
-    refetchIncome();
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-  }, [refetchIncome, queryClient]);
-
-  const handleSavingsGoalSubmit = async () => {
-    const goalAmount = parseFloat(newSavingsGoal);
-    
-    if (isNaN(goalAmount) || goalAmount <= 0) {
-      return;
-    }
-    
-    const savingsBudget = budgetCategories?.find(b => b.category === "Savings");
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-      
-      if (savingsBudget) {
-        await supabase
-          .from("budget_categories")
-          .update({ monthly_limit: goalAmount })
-          .eq("id", savingsBudget.id);
-      } else {
-        await supabase
-          .from("budget_categories")
-          .insert({ 
-            category: "Savings", 
-            monthly_limit: goalAmount,
-            user_id: user.id
-          });
-      }
-      
-      handleBudgetUpdate();
-      setIsSavingsDialogOpen(false);
-      setNewSavingsGoal("");
-    } catch (error) {
-      console.error("Error updating savings goal:", error);
-    }
-  };
-
   const calculateSpending = useCallback((category: string) => {
     if (!transactions) return 0;
     
@@ -212,14 +150,14 @@ const BudgetsPage = () => {
           <div className="flex flex-wrap gap-2">
             <Button
               className="flex items-center gap-2"
-              onClick={() => setIsIncomeFormOpen(true)}
+              onClick={() => navigate("/set-income")}
             >
               <DollarSign className="h-4 w-4" />
               Set Monthly Income
             </Button>
             <Button
               className="flex items-center gap-2"
-              onClick={() => setIsBudgetFormOpen(true)}
+              onClick={() => navigate("/add-budget")}
             >
               <PlusCircle className="h-4 w-4" />
               Set Budget Limit
@@ -259,7 +197,7 @@ const BudgetsPage = () => {
                 limit={budget.monthly_limit}
                 spent={calculateSpending(budget.category)}
                 currency={currency}
-                onBudgetUpdate={handleBudgetUpdate}
+                onEditClick={() => navigate("/edit-budget", { state: { budget } })}
               />
             ))}
           </div>
@@ -312,60 +250,13 @@ const BudgetsPage = () => {
                   )}
                 </div>
               </div>
-              
-              <Dialog open={isSavingsDialogOpen} onOpenChange={setIsSavingsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">Set Savings Goal</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Set Savings Goal</DialogTitle>
-                    <DialogDescription>
-                      Enter your monthly savings target. This will help track your progress.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="savingsGoal" className="text-right col-span-1">
-                        Amount
-                      </Label>
-                      <div className="col-span-3 flex items-center gap-2">
-                        <span>{currency.symbol}</span>
-                        <Input
-                          id="savingsGoal"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={newSavingsGoal}
-                          onChange={(e) => setNewSavingsGoal(e.target.value)}
-                          className="col-span-3"
-                          placeholder="Enter amount"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button onClick={handleSavingsGoalSubmit}>Save</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+
+              <Button variant="outline" onClick={() => navigate("/set-savings-goal")}>
+                Set Savings Goal
+              </Button>
             </div>
           </Card>
         </div>
-
-        <BudgetForm
-          open={isBudgetFormOpen}
-          onOpenChange={setIsBudgetFormOpen}
-          onBudgetAdded={handleBudgetUpdate}
-        />
-
-        <MonthlyIncomeForm
-          open={isIncomeFormOpen}
-          onOpenChange={setIsIncomeFormOpen}
-          onIncomeAdded={handleIncomeUpdate}
-        />
       </div>
     </Layout>
   );

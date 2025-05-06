@@ -11,6 +11,10 @@ import Auth from '@/pages/Auth'
 import Transactions from '@/pages/Transactions'
 import AddTransaction from '@/pages/AddTransaction'
 import Budgets from '@/pages/Budgets'
+import AddBudget from '@/pages/AddBudget'
+import EditBudget from '@/pages/EditBudget'
+import SetIncome from '@/pages/SetIncome'
+import SetSavingsGoal from '@/pages/SetSavingsGoal'
 import Savings from '@/pages/Savings'
 import Profile from '@/pages/Profile'
 import Reports from '@/pages/Reports'
@@ -64,6 +68,10 @@ function App() {
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/add-transaction" element={<AddTransaction />} />
               <Route path="/budgets" element={<Budgets />} />
+              <Route path="/add-budget" element={<AddBudget />} />
+              <Route path="/edit-budget" element={<EditBudget />} />
+              <Route path="/set-income" element={<SetIncome />} />
+              <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
               <Route path="/savings" element={<Savings />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/reports" element={<Reports />} />
