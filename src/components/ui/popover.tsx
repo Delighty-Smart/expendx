@@ -24,6 +24,8 @@ const PopoverContent = React.forwardRef<
         className
       )}
       style={{
+        overflowY: 'auto',
+        maxHeight: '250px',
         scrollBehavior: 'smooth',
         WebkitOverflowScrolling: 'touch',
         overscrollBehavior: 'contain',

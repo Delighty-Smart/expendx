@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
@@ -60,7 +61,12 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden scrollable-container", className)}
+    style={{
+      scrollBehavior: 'smooth',
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain'
+    }}
     {...props}
   />
 ))

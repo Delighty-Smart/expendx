@@ -129,7 +129,7 @@ export function BudgetForm({
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="overflow-y-auto" style={{ maxHeight: '250px' }}>
+                    <SelectContent className="scrollable-container">
                       {expenseCategories.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
