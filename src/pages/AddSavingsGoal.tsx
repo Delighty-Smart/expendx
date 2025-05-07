@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { savingsCategories, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useQueryClient } from "@tanstack/react-query";
