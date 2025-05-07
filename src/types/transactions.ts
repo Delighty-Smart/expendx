@@ -106,7 +106,11 @@ export const getCategoriesForType = async (type: TransactionType): Promise<strin
         // Add user-defined categories, avoiding duplicates
         userCategories.forEach(category => {
           // Make sure the category object has a name property and it's not already in the categories array
-          if (category && 'name' in category && typeof category.name === 'string' && !categories.includes(category.name)) {
+          if (category && 
+              typeof category === 'object' && 
+              'name' in category && 
+              typeof category.name === 'string' && 
+              !categories.includes(category.name)) {
             categories.push(category.name);
           }
         });

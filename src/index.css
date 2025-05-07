@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -73,16 +74,52 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-overflow-scrolling: touch;
   }
+  
+  /* Improve typography */
+  html {
+    font-size: 16px;
+    @apply text-base text-foreground leading-normal;
+  }
+  
   body {
     @apply bg-background text-foreground antialiased;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    line-height: 1.5;
+    font-weight: 400;
   }
-  html {
-    scroll-behavior: smooth;
-    -webkit-tap-highlight-color: transparent;
-    height: 100%;
-    -webkit-overflow-scrolling: touch;
+  
+  /* Typography scaling */
+  h1, .h1 {
+    @apply text-2xl font-semibold md:text-3xl lg:text-4xl leading-tight;
+  }
+  
+  h2, .h2 {
+    @apply text-xl font-semibold md:text-2xl lg:text-3xl leading-tight;
+  }
+  
+  h3, .h3 {
+    @apply text-lg font-medium md:text-xl leading-snug;
+  }
+  
+  h4, .h4 {
+    @apply text-base font-medium md:text-lg leading-snug;
+  }
+  
+  h5, .h5 {
+    @apply text-sm font-medium md:text-base leading-snug;
+  }
+  
+  p {
+    @apply text-sm md:text-base mb-4 last:mb-0;
+  }
+  
+  small, .text-sm {
+    @apply text-xs md:text-sm;
+  }
+  
+  .text-xs {
+    @apply text-[0.75rem] leading-[1.25rem];
   }
   
   /* Enhanced scroll accessibility for all elements */
@@ -107,6 +144,60 @@
     overscroll-behavior: contain !important;
     scroll-padding: 0.5rem !important;
     scrollbar-width: thin !important;
+  }
+}
+
+/* Improved UI Components */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
+    disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  }
+  
+  .btn-sm {
+    @apply h-8 px-3 rounded-md text-xs;
+  }
+  
+  .btn-md {
+    @apply h-9 px-4 py-2 rounded-md text-sm;
+  }
+  
+  .btn-lg {
+    @apply h-10 px-6 rounded-md;
+  }
+  
+  /* Card Styles */
+  .card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+  
+  .card-header {
+    @apply flex flex-col space-y-1 p-5 sm:p-6;
+  }
+  
+  .card-content {
+    @apply p-5 sm:p-6 pt-0;
+  }
+  
+  .card-footer {
+    @apply flex items-center p-5 sm:p-6 pt-0;
+  }
+  
+  /* Form Controls */
+  .form-control {
+    @apply block w-full px-3 py-2 bg-background border border-input rounded-md text-sm
+    focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
+    disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .form-label {
+    @apply text-sm font-medium leading-none mb-2 block;
+  }
+  
+  .form-helper {
+    @apply text-xs text-muted-foreground mt-1;
   }
 }
 
@@ -154,18 +245,6 @@
 @media (max-width: 640px) {
   .container {
     @apply px-3;
-  }
-  
-  h1, h2 {
-    @apply text-base;
-  }
-  
-  .p-4 {
-    @apply p-3;
-  }
-  
-  .text-sm {
-    @apply text-xs;
   }
   
   /* Improved touch scrolling for mobile */
@@ -354,4 +433,66 @@
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
   touch-action: pan-y !important;
+}
+
+/* Data visualization improvements */
+.recharts-wrapper,
+.recharts-surface {
+  overflow: visible !important;
+}
+
+.recharts-tooltip-wrapper {
+  @apply !shadow-lg !rounded-md !border !border-border/50 !bg-popover/95 !backdrop-blur-sm !z-50;
+}
+
+.recharts-default-tooltip {
+  @apply !shadow-none !border-0 !bg-transparent !p-2;
+}
+
+.recharts-tooltip-label {
+  @apply !text-xs !font-medium !text-foreground !mb-1;
+}
+
+.recharts-tooltip-item-list {
+  @apply !m-0 !p-0;
+}
+
+.recharts-tooltip-item {
+  @apply !text-xs !text-muted-foreground;
+}
+
+.recharts-legend-item-text {
+  @apply !text-xs;
+}
+
+.recharts-cartesian-axis-tick-value {
+  @apply !text-[10px] md:!text-xs !fill-muted-foreground;
+}
+
+/* Form spacing improvements */
+.form-group + .form-group,
+.space-y-form > * + * {
+  @apply mt-4;
+}
+
+/* Section spacings */
+.section-spacing {
+  @apply my-4 md:my-6 lg:my-8;
+}
+
+/* Table improvements */
+.table-container {
+  @apply w-full overflow-x-auto rounded-md border;
+}
+
+.table-modern {
+  @apply w-full;
+}
+
+.table-modern th {
+  @apply px-4 py-3 text-xs font-medium text-left text-muted-foreground;
+}
+
+.table-modern td {
+  @apply px-4 py-2.5 text-sm border-t;
 }

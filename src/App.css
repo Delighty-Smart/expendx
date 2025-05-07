@@ -1,20 +1,23 @@
+
+/* Root container styles */
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
   scroll-behavior: smooth;
 }
 
+/* Basic animation for logo/icons */
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -34,20 +37,7 @@
   }
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-/* Enhanced universal scrolling for all scrollable containers */
-.overflow-auto,
-.overflow-y-auto,
-.overflow-x-auto,
-[class*="overflow-"],
-.ScrollAreaViewport,
+/* Enhanced dropdown scrolling */
 .SelectViewport,
 .SelectContent,
 .PopoverContent,
@@ -61,89 +51,22 @@
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
-  touch-action: pan-y !important;
-  scrollbar-width: thin !important;
-  -ms-overflow-style: auto !important;
-  scroll-padding: 0.5rem !important;
-  max-height: 250px;
+  max-height: 250px !important;
 }
 
-/* Specific focus on dropdown containers */
-.SelectContent,
-.DropdownMenuContent,
-.ContextMenuContent,
+/* Optimized z-index stacking */
 .PopoverContent,
-[role="listbox"],
-[role="menu"] {
-  max-height: 250px !important;
-  overflow-y: auto !important;
-  z-index: 9999 !important;
-  pointer-events: auto !important;
-}
-
-/* Fix z-index and remove any possible overflow:hidden */
-.radix-scroll-area-viewport,
-[data-radix-scroll-area-viewport],
-.SelectViewport,
 .DropdownMenuContent,
-.PopoverContent {
-  overflow: auto !important;
-  max-height: 250px !important;
+.SelectContent,
+.ContextMenuContent {
+  z-index: 50 !important;
 }
 
-/* Mobile optimizations */
-@media (max-width: 640px) {
-  .scrollable-container,
-  .overflow-auto,
-  .overflow-y-auto,
-  .overflow-x-auto,
-  [class*="overflow-"],
-  .SelectViewport,
-  .SelectContent,
-  .PopoverContent,
-  .DropdownMenuContent,
-  .ContextMenuContent,
-  .DialogContent,
-  [role="listbox"],
-  [role="menu"] {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth !important;
-    touch-action: pan-y;
-    overscroll-behavior: contain;
-    scroll-padding: 1rem;
-    max-height: 250px !important;
-  }
+.DialogContent,
+.AlertDialogContent {
+  z-index: 51 !important;
 }
 
-/* Target select elements more aggressively */
-.SelectContent .SelectViewport,
-.DropdownMenuContent > *,
-.ContextMenuContent > *,
-.PopoverContent > * {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y !important;
-  overscroll-behavior: contain !important;
-  max-height: 250px !important;
-}
-
-/* Ensure no scroll buttons in any components */
-[class*="ScrollUpButton"],
-[class*="ScrollDownButton"] {
-  display: none !important;
-}
-
-/* Force native scrolling mechanics */
-* {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Larger touch targets for mobile */
-@media (pointer: coarse) {
-  .SelectItem,
-  .DropdownMenuItem,
-  .ContextMenuItem {
-    padding: 12px !important;
-    min-height: 44px !important;
-  }
+.ToastViewport {
+  z-index: 100 !important;
 }
