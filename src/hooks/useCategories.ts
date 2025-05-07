@@ -30,11 +30,16 @@ export function useCategories(type: TransactionType) {
     fetchCategories();
   }, [type]);
 
-  return { categories, loading, error, refetch: () => {
-    setLoading(true);
-    getCategoriesForType(type)
-      .then(cats => setCategories(cats))
-      .catch(err => setError(err instanceof Error ? err : new Error('Failed to load categories')))
-      .finally(() => setLoading(false));
-  }};
+  return { 
+    categories, 
+    loading, 
+    error, 
+    refetch: () => {
+      setLoading(true);
+      getCategoriesForType(type)
+        .then(cats => setCategories(cats))
+        .catch(err => setError(err instanceof Error ? err : new Error('Failed to load categories')))
+        .finally(() => setLoading(false));
+    }
+  };
 }
