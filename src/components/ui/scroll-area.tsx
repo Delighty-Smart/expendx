@@ -22,8 +22,8 @@ const ScrollArea = React.forwardRef<
         overflowY: 'auto',
         scrollBehavior: 'smooth',
         scrollbarWidth: 'none', /* Firefox */
-        msOverflowStyle: 'none' /* IE/Edge */
-        /* Webkit scrollbar is now handled with CSS properly */
+        msOverflowStyle: 'none', /* IE/Edge */
+        scrollPadding: '0.5rem'
       }}
     >
       {children}

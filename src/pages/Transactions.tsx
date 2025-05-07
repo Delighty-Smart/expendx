@@ -1,105 +1,52 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Search, PlusCircle, MoreVertical, Edit, Trash2, Trash } from "lucide-react";
+import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
-import { Transaction, TransactionType, TransactionCategory, expenseCategories, incomeCategories, savingsCategories } from "@/types/transactions";
+import { TransactionType } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-
-// Combine all categories for filtering
-const allCategories = ["All", ...incomeCategories, ...expenseCategories, ...savingsCategories] as const;
-type AllCategories = (typeof allCategories)[number];
-
-interface TransactionData {
-  id: string;
-  amount: number;
-  type: string;
-  category: string;
-  date: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useTransactionData } from "@/hooks/useTransactionData";
 
 const TransactionsPage = () => {
   const { currency } = useSettings();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<AllCategories>("All");
-  const [selectedType, setSelectedType] = useState<"all" | "credit" | "debit" | "savings">("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: transactionsData, refetch: refetchTransactions } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: async () => {
-      console.log("TransactionsPage: Fetching all transactions");
-      
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .order("date", { ascending: false });
-      
-      if (error) throw error;
-      console.log(`TransactionsPage: Retrieved ${data?.length || 0} transactions`);
-      return data as TransactionData[] || [];
-    },
-  });
+  // Use our custom transaction hook for data fetching with pull-to-refresh support
+  const { 
+    transactions, 
+    isLoading, 
+    refetch: refetchTransactions 
+  } = useTransactionData();
 
-  // Convert data to the correct Transaction type with proper category type casting
-  const transactions: Transaction[] = (transactionsData || []).map(transaction => ({
-    ...transaction,
-    type: transaction.type as TransactionType,
-    category: transaction.category as TransactionCategory
-  }));
-
-  // Use our custom realtime subscription hook
-  const handleRealTimeUpdates = useCallback((payload: any) => {
-    console.log('Transaction change detected:', payload);
-    
-    // When changes are detected, refetch data
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-    queryClient.invalidateQueries({ queryKey: ["budgets"] });
-    
-    // Clear any selected transactions when data changes
-    setSelectedTransactions([]);
-    
-    // Show a toast to notify user of data changes
-    const eventType = payload.eventType;
-    if (eventType === 'INSERT') {
+  const handleRefresh = async () => {
+    try {
+      await refetchTransactions();
       toast({
-        title: "New Transaction",
-        description: "A new transaction has been added"
+        title: "Refreshed",
+        description: "Transaction data updated successfully",
       });
-    } else if (eventType === 'UPDATE') {
+    } catch (error) {
       toast({
-        title: "Transaction Updated",
-        description: "A transaction has been updated"
-      });
-    } else if (eventType === 'DELETE') {
-      toast({
-        title: "Transaction Deleted",
-        description: "A transaction has been removed"
+        title: "Refresh failed",
+        description: "Could not update transaction data",
+        variant: "destructive",
       });
     }
-  }, [queryClient, toast]);
-
-  useRealtimeSubscription('transactions', '*', handleRealTimeUpdates);
+  };
 
   const handleDelete = async (ids: string[]) => {
     try {
@@ -108,6 +55,8 @@ const TransactionsPage = () => {
 
       // Clear selected transactions
       setSelectedTransactions([]);
+      
+      await refetchTransactions();
       
       toast({
         title: "Success",
@@ -122,8 +71,7 @@ const TransactionsPage = () => {
     }
   };
 
-  const handleEdit = (transaction: Transaction) => {
-    // Navigate to edit page with transaction data
+  const handleEdit = (transaction: any) => {
     navigate("/add-transaction", { state: { transaction } });
   };
 
@@ -148,25 +96,33 @@ const TransactionsPage = () => {
     
     groups[month][day].push(transaction);
     return groups;
-  }, {} as Record<string, Record<string, Transaction[]>>) || {};
+  }, {} as Record<string, Record<string, any[]>>) || {};
 
-  // Sort daily transactions by creation time (latest first)
-  Object.keys(groupedTransactions).forEach(month => {
-    Object.keys(groupedTransactions[month]).forEach(day => {
-      groupedTransactions[month][day].sort((a, b) => {
-        // First sort by date if available
-        if (a.date !== b.date) {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
+  // Calculate monthly totals
+  const getMonthlyTotals = (month: string) => {
+    let income = 0;
+    let expense = 0;
+    
+    Object.values(groupedTransactions[month] || {}).forEach(dayTransactions => {
+      dayTransactions.forEach(transaction => {
+        if (transaction.type === 'credit') {
+          income += transaction.amount;
+        } else if (transaction.type === 'debit') {
+          expense += transaction.amount;
         }
-        // Then sort by created_at timestamp for same-day transactions
-        const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return bTime - aTime;
       });
     });
-  });
+    
+    return { income, expense };
+  };
 
-  const handleSelectAll = (transactions: Transaction[]) => {
+  const handleSelectTransaction = (id: string, checked: boolean) => {
+    setSelectedTransactions(prev => 
+      checked ? [...prev, id] : prev.filter(transId => transId !== id)
+    );
+  };
+
+  const handleSelectAll = (transactions: any[]) => {
     const transactionIds = transactions.map(t => t.id);
     if (transactionIds.every(id => selectedTransactions.includes(id))) {
       setSelectedTransactions(prev => prev.filter(id => !transactionIds.includes(id)));
@@ -182,11 +138,17 @@ const TransactionsPage = () => {
     });
   };
 
-  // Get sorted days for a month (latest first)
-  const getSortedDays = (month: string) => {
-    return Object.keys(groupedTransactions[month]).sort((a, b) => 
-      new Date(b).getTime() - new Date(a).getTime()
-    );
+  const renderTransactionIcon = (type: TransactionType) => {
+    switch (type) {
+      case 'credit':
+        return <ArrowDown className="h-4 w-4 text-green-500" />;
+      case 'debit':
+        return <ArrowUp className="h-4 w-4 text-red-500" />;
+      case 'savings':
+        return <div className="h-4 w-4 rounded-full bg-blue-400"></div>;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -198,7 +160,7 @@ const TransactionsPage = () => {
             {selectedTransactions.length > 0 && (
               <Button variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(selectedTransactions)}>
                 <Trash className="h-4 w-4" />
-                Delete Selected ({selectedTransactions.length})
+                Delete ({selectedTransactions.length})
               </Button>
             )}
             <Button 
@@ -206,158 +168,167 @@ const TransactionsPage = () => {
               onClick={() => navigate("/add-transaction")}
             >
               <PlusCircle className="h-4 w-4" />
-              Add Transaction
+              Add
             </Button>
           </div>
         </div>
 
-        <Card className="p-6">
-          <div className="space-y-4">
+        <Card className="overflow-hidden p-0">
+          <div className="p-4 border-b">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search transactions..." className="pl-9" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                <Input 
+                  placeholder="Search transactions..." 
+                  className="pl-9" 
+                  value={searchQuery} 
+                  onChange={e => setSearchQuery(e.target.value)} 
+                />
               </div>
 
-              <div className="flex gap-4">
-                <Select
-                  value={selectedCategory}
-                  onValueChange={(value: AllCategories) => setSelectedCategory(value)}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[250px] overflow-y-auto">
-                    {allCategories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
+              <div className="flex gap-2">
                 <Select
                   value={selectedType}
-                  onValueChange={(value: "all" | "credit" | "debit" | "savings") => setSelectedType(value)}
+                  onValueChange={(value: "all" | TransactionType) => setSelectedType(value)}
                 >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Type" />
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="All Types" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[250px] overflow-y-auto">
+                  <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="credit">Credit (Income)</SelectItem>
-                    <SelectItem value="debit">Debit (Expense)</SelectItem>
+                    <SelectItem value="credit">Income</SelectItem>
+                    <SelectItem value="debit">Expense</SelectItem>
                     <SelectItem value="savings">Savings</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+          </div>
 
-            {Object.entries(groupedTransactions).map(([month, daysInMonth]) => (
-              <div key={month} className="rounded-md border">
-                <div className="bg-muted px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Checkbox 
-                      checked={Object.values(daysInMonth).flat().every(t => selectedTransactions.includes(t.id))} 
-                      onCheckedChange={() => handleSelectAll(Object.values(daysInMonth).flat())} 
-                    />
-                    <h3 className="font-semibold">{month}</h3>
-                  </div>
-                </div>
-                
-                {getSortedDays(month).map(day => {
-                  const dayTransactions = daysInMonth[day];
-                  const formattedDay = format(parseISO(day), "EEEE, MMMM d");
+          <PullToRefresh 
+            onRefresh={handleRefresh}
+            containerClassName="transactions-container"
+          >
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
+                <p className="mt-4 text-muted-foreground">Loading transactions...</p>
+              </div>
+            ) : Object.keys(groupedTransactions).length > 0 ? (
+              <div className="divide-y">
+                {Object.entries(groupedTransactions).map(([month, days]) => {
+                  const { income, expense } = getMonthlyTotals(month);
                   
                   return (
-                    <div key={day}>
-                      <div className="px-4 py-2 bg-muted/30 border-t border-b">
-                        <div className="flex items-center gap-2">
-                          <Checkbox 
-                            checked={dayTransactions.every(t => selectedTransactions.includes(t.id))} 
-                            onCheckedChange={() => handleSelectAll(dayTransactions)} 
-                          />
-                          <h4 className="text-sm font-medium text-muted-foreground">{formattedDay}</h4>
+                    <div key={month} className="transaction-month-group">
+                      {/* Month header */}
+                      <div className="bg-gray-50 p-4 border-b">
+                        <div className="flex flex-col">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <Checkbox 
+                                size="sm"
+                                checked={Object.values(days).flat().every(t => selectedTransactions.includes(t.id))} 
+                                onCheckedChange={() => handleSelectAll(Object.values(days).flat())} 
+                              />
+                              <span className="font-medium">{month}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground ml-6 mt-1">
+                            <div>
+                              In: {currency.symbol}{formatAmount(income)}
+                            </div>
+                            <div>
+                              Out: {currency.symbol}{formatAmount(expense)}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[30px]"></TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {dayTransactions.map(transaction => (
-                            <TableRow key={transaction.id}>
-                              <TableCell>
+
+                      {/* Days and transactions */}
+                      <div className="divide-y">
+                        {Object.entries(days)
+                          .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
+                          .map(([day, dayTransactions]) => (
+                            <div key={day} className="transaction-day-group">
+                              <div className="px-4 py-2 bg-gray-50/50 border-b text-sm text-muted-foreground flex items-center gap-2">
                                 <Checkbox 
-                                  checked={selectedTransactions.includes(transaction.id)} 
-                                  onCheckedChange={(checked) => {
-                                    setSelectedTransactions(prev => 
-                                      checked 
-                                        ? [...prev, transaction.id] 
-                                        : prev.filter(id => id !== transaction.id)
-                                    );
-                                  }} 
+                                  size="sm"
+                                  checked={dayTransactions.every(t => selectedTransactions.includes(t.id))} 
+                                  onCheckedChange={() => handleSelectAll(dayTransactions)} 
                                 />
-                              </TableCell>
-                              <TableCell>{transaction.description}</TableCell>
-                              <TableCell>{transaction.category}</TableCell>
-                              <TableCell>
-                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                  transaction.type === "credit" 
-                                    ? "bg-green-100 text-green-800" 
-                                    : transaction.type === "debit"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-blue-100 text-blue-800"
-                                }`}>
-                                  {transaction.type}
-                                </span>
-                              </TableCell>
-                              <TableCell className={`text-right ${
-                                transaction.type === "credit" 
-                                  ? "text-green-600" 
-                                  : transaction.type === "debit"
-                                  ? "text-red-600"
-                                  : "text-blue-600"
-                              }`}>
-                                {currency.symbol}{formatAmount(transaction.amount)}
-                              </TableCell>
-                              <TableCell>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEdit(transaction)}>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-red-600" onClick={() => handleDelete([transaction.id])}>
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
+                                {format(new Date(day), "EEEE, MMM d")}
+                              </div>
+                              
+                              <div className="divide-y">
+                                {dayTransactions.map((transaction) => (
+                                  <div 
+                                    key={transaction.id} 
+                                    className="transaction-row p-4 flex items-center gap-3"
+                                    onClick={() => handleEdit(transaction)}
+                                  >
+                                    <Checkbox 
+                                      size="sm"
+                                      checked={selectedTransactions.includes(transaction.id)}
+                                      onCheckedChange={(checked) => {
+                                        // Stop propagation to prevent navigation
+                                        handleSelectTransaction(transaction.id, checked === true);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    
+                                    <div className="flex-shrink-0">
+                                      {renderTransactionIcon(transaction.type as TransactionType)}
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                      <p className="font-medium text-sm line-clamp-1">
+                                        {transaction.description}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {transaction.category}
+                                      </p>
+                                    </div>
+                                    
+                                    <div className={`text-right ${
+                                      transaction.type === "credit" 
+                                        ? "text-green-600" 
+                                        : transaction.type === "debit"
+                                        ? "text-red-600"
+                                        : "text-blue-600"
+                                    }`}>
+                                      <p className="font-medium text-sm">
+                                        {transaction.type === "credit" ? "+" : transaction.type === "debit" ? "-" : ""}
+                                        {currency.symbol}{formatAmount(transaction.amount)}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {format(new Date(transaction.date), "HH:mm")}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           ))}
-                        </TableBody>
-                      </Table>
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="mb-4">No transactions found for the selected filters</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate("/add-transaction")}
+                  className="flex items-center gap-2"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Add your first transaction
+                </Button>
+              </div>
+            )}
+          </PullToRefresh>
         </Card>
       </div>
     </Layout>

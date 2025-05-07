@@ -1,3 +1,4 @@
+
 export type TransactionType = "credit" | "debit" | "savings";
 
 // Categories for each transaction type
@@ -103,7 +104,6 @@ export const getCategoriesForType = async (type: TransactionType): Promise<strin
         
       if (!error && userCategories && Array.isArray(userCategories)) {
         // Add user-defined categories, avoiding duplicates
-        // Use explicit type checking to ensure TypeScript understands that we're handling null values
         userCategories.forEach((categoryObj: any) => {
           // Skip null or undefined objects entirely
           if (categoryObj === null || categoryObj === undefined) return;
