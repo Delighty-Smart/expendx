@@ -144,19 +144,19 @@ const BudgetsPage = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-neutral">Budget Tracking</h1>
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral">Budget Tracking</h1>
           <div className="flex flex-wrap gap-2">
             <Button
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm h-9"
               onClick={() => navigate("/set-income")}
             >
               <DollarSign className="h-4 w-4" />
               Set Monthly Income
             </Button>
             <Button
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm h-9"
               onClick={() => navigate("/add-budget")}
             >
               <PlusCircle className="h-4 w-4" />
@@ -166,8 +166,8 @@ const BudgetsPage = () => {
         </div>
 
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Estimated Monthly Income</p>
-          <p className="text-2xl font-semibold">
+          <p className="text-xs text-muted-foreground">Estimated Monthly Income</p>
+          <p className="text-xl sm:text-2xl font-semibold">
             {currency.symbol}{formatAmount(monthlyIncome?.amount ?? 0)}
           </p>
         </Card>
@@ -177,8 +177,8 @@ const BudgetsPage = () => {
             {alerts.map((alert) => (
               <Alert variant="destructive" key={alert.category}>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Budget Alert</AlertTitle>
-                <AlertDescription>
+                <AlertTitle className="text-sm font-medium">Budget Alert</AlertTitle>
+                <AlertDescription className="text-xs">
                   You've spent {currency.symbol}{formatAmount(alert.spent)} of your {currency.symbol}{formatAmount(alert.limit)} budget for {alert.category} ({alert.percentage.toFixed(1)}%)
                 </AlertDescription>
               </Alert>

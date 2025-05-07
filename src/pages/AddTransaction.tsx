@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { addTransaction, queueTransactionForSync } from "@/services/offlineStorage"; 
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
@@ -40,6 +40,27 @@ const AddTransactionPage = () => {
       setTransactionType(location.state.transaction.type);
     }
   }, [location.state]);
+
+  // Query to fetch user categories
+  const { data: userCategories } = useQuery({
+    queryKey: ["user_categories"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from("user_categories")
+        .select("*")
+        .eq("user_id", user.id);
+        
+      if (error) {
+        console.error("Error fetching user categories:", error);
+        return [];
+      }
+      
+      return data || [];
+    }
+  });
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -163,12 +184,13 @@ const AddTransactionPage = () => {
     }
   }, [toast, transaction, navigate, queryClient]);
 
-  const categories = getCategoriesForType(transactionType);
+  // Use the enhanced getCategoriesForType function that includes user categories
+  const categories = getCategoriesForType(transactionType, userCategories);
 
   return (
     <Layout>
       <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-5">
           <Button 
             variant="ghost" 
             className="mr-2" 
@@ -177,23 +199,23 @@ const AddTransactionPage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">{transaction ? 'Edit' : 'Add'} Transaction</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">{transaction ? 'Edit' : 'Add'} Transaction</h1>
         </div>
         
-        <div className="bg-card rounded-lg shadow-sm border p-6">
+        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel className="text-sm font-medium">Date</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -202,11 +224,11 @@ const AddTransactionPage = () => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel className="text-sm font-medium">Amount</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="0.00" step="0.01" {...field} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -217,7 +239,7 @@ const AddTransactionPage = () => {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type</FormLabel>
+                    <FormLabel className="text-sm font-medium">Type</FormLabel>
                     <Select
                       onValueChange={(value: TransactionType) => handleTypeChange(value)}
                       value={field.value}
@@ -227,13 +249,13 @@ const AddTransactionPage = () => {
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
+                      <SelectContent className="max-h-[250px]">
                         <SelectItem value="credit">Credit (Income)</SelectItem>
                         <SelectItem value="debit">Debit (Expense)</SelectItem>
                         <SelectItem value="savings">Savings</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -243,7 +265,7 @@ const AddTransactionPage = () => {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="text-sm font-medium">Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -253,7 +275,7 @@ const AddTransactionPage = () => {
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
+                      <SelectContent className="max-h-[250px]">
                         {categories.map((category) => (
                           <SelectItem key={category} value={category}>
                             {category}
@@ -261,7 +283,7 @@ const AddTransactionPage = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -271,16 +293,16 @@ const AddTransactionPage = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-sm font-medium">Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter transaction details..." {...field} />
+                      <Textarea placeholder="Enter transaction details..." className="resize-none" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-3">
                 <Button 
                   type="button" 
                   variant="outline" 

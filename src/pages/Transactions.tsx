@@ -191,18 +191,24 @@ const TransactionsPage = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-neutral">Transactions</h1>
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral">Transactions</h1>
           <div className="flex gap-2">
             {selectedTransactions.length > 0 && (
-              <Button variant="destructive" className="flex items-center gap-2" onClick={() => handleDelete(selectedTransactions)}>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                className="flex items-center gap-2 h-9 text-sm" 
+                onClick={() => handleDelete(selectedTransactions)}
+              >
                 <Trash className="h-4 w-4" />
                 Delete Selected ({selectedTransactions.length})
               </Button>
             )}
             <Button 
-              className="flex items-center gap-2" 
+              size="sm"
+              className="flex items-center gap-2 h-9 text-sm" 
               onClick={() => navigate("/add-transaction")}
             >
               <PlusCircle className="h-4 w-4" />
