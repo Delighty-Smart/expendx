@@ -1,3 +1,4 @@
+
 export type TransactionType = "credit" | "debit" | "savings";
 
 // Categories for each transaction type
@@ -70,28 +71,17 @@ export interface Transaction {
 }
 
 // Helper function to get categories based on transaction type
-export const getCategoriesForType = (type: TransactionType, userCategories: any[] = []): string[] => {
-  let defaultCategories: string[] = [];
-  
+export const getCategoriesForType = (type: TransactionType): readonly string[] => {
   switch (type) {
-    case 'credit':
-      defaultCategories = [...incomeCategories];
-      break;
-    case 'debit':
-      defaultCategories = [...expenseCategories];
-      break;
-    case 'savings':
-      defaultCategories = [...savingsCategories];
-      break;
+    case "credit":
+      return incomeCategories;
+    case "debit":
+      return expenseCategories;
+    case "savings":
+      return savingsCategories;
+    default:
+      return expenseCategories; // Default to expense categories as fallback
   }
-  
-  // Add user categories for the specified type
-  const userCatsForType = userCategories
-    .filter(cat => cat.type === type)
-    .map(cat => cat.name);
-  
-  // Combine and remove duplicates
-  return [...new Set([...defaultCategories, ...userCatsForType])];
 };
 
 // Category management section - Add custom categories functionality

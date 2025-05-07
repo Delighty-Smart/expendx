@@ -12,7 +12,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { savingsCategories, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { ArrowLeft, PiggyBank } from "lucide-react";
 
@@ -33,28 +33,6 @@ const AddSavingsGoalPage = () => {
   const savingsGoalToEdit = location.state?.savingsGoal;
   const isEditing = !!savingsGoalToEdit;
   
-  // Fetch user-defined categories
-  const { data: userCategories } = useQuery({
-    queryKey: ["user_categories"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from("user_categories")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("type", "savings");
-        
-      if (error) {
-        console.error("Error fetching user categories:", error);
-        return [];
-      }
-      
-      return data || [];
-    }
-  });
-  
   const form = useForm<z.infer<typeof savingsGoalSchema>>({
     resolver: zodResolver(savingsGoalSchema),
     defaultValues: {
@@ -72,15 +50,6 @@ const AddSavingsGoalPage = () => {
     }
   }, [savingsGoalToEdit, form]);
 
-  // Combine default savings categories with user-defined ones
-  const allSavingsCategories = [
-    ...savingsCategories,
-    ...(userCategories?.map(cat => cat.name) || [])
-  ];
-  
-  // Remove duplicates
-  const uniqueCategories = [...new Set(allSavingsCategories)];
-
   const onSubmit = async (values: z.infer<typeof savingsGoalSchema>) => {
     try {
       setLoading(true);
@@ -96,7 +65,7 @@ const AddSavingsGoalPage = () => {
       if (isEditing) {
         // Update existing savings goal
         const { error } = await supabase
-          .from("savings_goals")
+          .from("savings_goals" as any)
           .update(savingsGoalData)
           .eq('id', savingsGoalToEdit.id);
           
@@ -112,7 +81,7 @@ const AddSavingsGoalPage = () => {
       } else {
         // Check if a goal for this category already exists
         const { data: existingGoal, error: checkError } = await supabase
-          .from("savings_goals")
+          .from("savings_goals" as any)
           .select('*')
           .eq('category', values.category)
           .eq('user_id', user.id)
@@ -127,7 +96,7 @@ const AddSavingsGoalPage = () => {
         if (existingGoal && 'id' in existingGoal) {
           // Update the existing goal instead of creating a new one
           const { error } = await supabase
-            .from("savings_goals")
+            .from("savings_goals" as any)
             .update({
               target_amount: parseFloat(values.target_amount)
             })
@@ -145,7 +114,7 @@ const AddSavingsGoalPage = () => {
         } else {
           // Insert new savings goal
           const { error } = await supabase
-            .from("savings_goals")
+            .from("savings_goals" as any)
             .insert([savingsGoalData]);
             
           if (error) {
@@ -177,7 +146,7 @@ const AddSavingsGoalPage = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-5">
+        <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 
             className="mr-2" 
@@ -186,17 +155,17 @@ const AddSavingsGoalPage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
+          <h1 className="text-2xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
         </div>
         
-        <div className="bg-card rounded-lg shadow-sm border p-4 sm:p-6">
-          <div className="flex justify-center mb-5">
+        <div className="bg-card rounded-lg shadow-sm border p-6">
+          <div className="flex justify-center mb-6">
             <div className="p-3 rounded-full bg-secondary/20">
-              <PiggyBank className="h-10 w-10 text-secondary" />
+              <PiggyBank className="h-12 w-12 text-secondary" />
             </div>
           </div>
           
-          <p className="text-center mb-5 text-sm text-muted-foreground">
+          <p className="text-center mb-6 text-muted-foreground">
             Set a target amount for your savings category.
           </p>
           
@@ -207,7 +176,7 @@ const AddSavingsGoalPage = () => {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Category</FormLabel>
+                    <FormLabel>Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -219,14 +188,14 @@ const AddSavingsGoalPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {uniqueCategories.map((category) => (
+                        {savingsCategories.map((category) => (
                           <SelectItem key={category} value={category}>
                             {category}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-xs" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -236,16 +205,16 @@ const AddSavingsGoalPage = () => {
                 name="target_amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Target Amount ({currency.symbol})</FormLabel>
+                    <FormLabel>Target Amount ({currency.symbol})</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" min="0" {...field} />
                     </FormControl>
-                    <FormMessage className="text-xs" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-end pt-3">
+              <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
                 <Button type="button" variant="outline" onClick={() => navigate("/savings")}>
                   Cancel
                 </Button>
