@@ -1,4 +1,3 @@
-
 export type TransactionType = "credit" | "debit" | "savings";
 
 // Categories for each transaction type
@@ -103,16 +102,22 @@ export const getCategoriesForType = async (type: TransactionType): Promise<strin
         .eq("user_id", user.id);
         
       if (!error && userCategories && Array.isArray(userCategories)) {
-        // Add user-defined categories, avoiding duplicates and safely handling null values
-        userCategories.forEach((categoryObj) => {
-          // Make sure the category object exists and has a name property that's a string
-          if (categoryObj !== null && 
+        // Add user-defined categories, avoiding duplicates
+        // Use explicit type checking to ensure TypeScript understands that we're handling null values
+        userCategories.forEach((categoryObj: any) => {
+          // Skip null or undefined objects entirely
+          if (categoryObj === null || categoryObj === undefined) return;
+          
+          // Now TypeScript knows categoryObj cannot be null here
+          // Check if it's an object with a valid name property
+          if (
               typeof categoryObj === 'object' && 
               'name' in categoryObj && 
               categoryObj.name !== null &&
               categoryObj.name !== undefined &&
               typeof categoryObj.name === 'string' && 
-              !categories.includes(categoryObj.name)) {
+              !categories.includes(categoryObj.name)
+          ) {
             categories.push(categoryObj.name);
           }
         });
