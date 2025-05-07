@@ -206,10 +206,10 @@ const TransactionsPage = () => {
                             </div>
                           </div>
                           <div className="flex items-center justify-between text-sm text-muted-foreground ml-6 mt-1">
-                            <div>
+                            <div className="px-0 mx-[31px]">
                               In: {currency.symbol}{formatAmount(income)}
                             </div>
-                            <div>
+                            <div className="mx-0">
                               Out: {currency.symbol}{formatAmount(expense)}
                             </div>
                           </div>
@@ -235,11 +235,11 @@ const TransactionsPage = () => {
                                       {renderTransactionIcon(transaction.type as TransactionType)}
                                     </div>
                                     
-                                    <div className="flex-1">
+                                    <div className="flex-1 py-0 my-0 mx-0">
                                       <p className="font-medium text-sm line-clamp-1">
                                         {transaction.description}
                                       </p>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="text-xs text-muted-foreground py-0 my-0">
                                         {transaction.category}
                                       </p>
                                     </div>
