@@ -115,8 +115,11 @@ export function BudgetCard({
         </div>
 
         <div className="space-y-2">
-          <Progress value={percentage} className="h-2" 
-            indicator={isOverBudget ? 'bg-destructive' : undefined} />
+          <Progress 
+            value={percentage} 
+            className="h-2" 
+            indicatorClassName={isOverBudget ? 'bg-destructive' : undefined} 
+          />
           <div className="flex justify-between text-xs">
             <p className="text-muted-foreground">
               {percentage.toFixed(0)}% used
