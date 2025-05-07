@@ -10,11 +10,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { savingsCategories, SavingsGoal } from "@/types/transactions";
+import { getCategoriesForType, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { ArrowLeft, PiggyBank } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const savingsGoalSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -25,6 +26,7 @@ const AddSavingsGoalPage = () => {
   const { toast } = useToast();
   const { currency } = useSettings();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -49,6 +51,20 @@ const AddSavingsGoalPage = () => {
       });
     }
   }, [savingsGoalToEdit, form]);
+
+  // Fetch savings categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const fetchedCategories = await getCategoriesForType("savings");
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error loading savings categories:", error);
+      }
+    };
+    
+    loadCategories();
+  }, []);
 
   const onSubmit = async (values: z.infer<typeof savingsGoalSchema>) => {
     try {
@@ -155,17 +171,17 @@ const AddSavingsGoalPage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
+          <h1 className="text-xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
         </div>
         
         <div className="bg-card rounded-lg shadow-sm border p-6">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-5">
             <div className="p-3 rounded-full bg-secondary/20">
-              <PiggyBank className="h-12 w-12 text-secondary" />
+              <PiggyBank className="h-10 w-10 text-secondary" />
             </div>
           </div>
           
-          <p className="text-center mb-6 text-muted-foreground">
+          <p className="text-center mb-5 text-sm text-muted-foreground">
             Set a target amount for your savings category.
           </p>
           
@@ -176,26 +192,28 @@ const AddSavingsGoalPage = () => {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="text-sm font-medium">Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      disabled={isEditing}
+                      disabled={isEditing || loading || categories.length === 0}
                     >
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {savingsCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
+                        <ScrollArea className="h-[200px]">
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -205,20 +223,37 @@ const AddSavingsGoalPage = () => {
                 name="target_amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Amount ({currency.symbol})</FormLabel>
+                    <FormLabel className="text-sm font-medium">Target Amount ({currency.symbol})</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0" {...field} />
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        {...field} 
+                        className="h-9" 
+                        disabled={loading}
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
 
               <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate("/savings")}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate("/savings")}
+                  className="h-9 text-sm"
+                  disabled={loading}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="h-9 text-sm"
+                >
                   {loading ? "Saving..." : isEditing ? "Update" : "Save"}
                 </Button>
               </div>

@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,13 +10,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { expenseCategories } from "@/types/transactions";
+import { getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const budgetSchema = z.object({
-  category: z.enum([...expenseCategories] as const),
+  category: z.string().min(1, "Category is required"),
   monthlyLimit: z.string().min(1, "Monthly limit is required"),
 });
 
@@ -25,11 +26,26 @@ const AddBudgetPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // Fetch expense categories when component loads
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const fetchedCategories = await getCategoriesForType("debit");
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error loading expense categories:", error);
+      }
+    };
+    
+    loadCategories();
+  }, []);
 
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      category: expenseCategories[0],
+      category: "",
       monthlyLimit: "",
     },
   });
@@ -82,33 +98,39 @@ const AddBudgetPage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">Set Budget Limit</h1>
+          <h1 className="text-xl font-bold">Set Budget Limit</h1>
         </div>
         
         <div className="bg-card rounded-lg shadow-sm border p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-sm font-medium">Category</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value}
+                      disabled={loading || categories.length === 0}
+                    >
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
-                        {expenseCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="max-h-[250px]">
+                        <ScrollArea className="h-[200px]">
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -118,16 +140,18 @@ const AddBudgetPage = () => {
                 name="monthlyLimit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Monthly Limit</FormLabel>
+                    <FormLabel className="text-sm font-medium">Monthly Limit</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="0.00"
                         step="0.01"
                         {...field}
+                        className="h-9"
+                        disabled={loading}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -137,10 +161,16 @@ const AddBudgetPage = () => {
                   type="button"
                   variant="outline"
                   onClick={() => navigate("/budgets")}
+                  className="h-9 text-sm"
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="h-9 text-sm"
+                >
                   {loading ? "Saving..." : "Save Budget"}
                 </Button>
               </div>

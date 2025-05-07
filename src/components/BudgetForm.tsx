@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,10 +30,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { expenseCategories } from "@/types/transactions";
+import { getCategoriesForType } from "@/types/transactions";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const budgetSchema = z.object({
-  category: z.enum([...expenseCategories] as const),
+  category: z.string().min(1, "Category is required"),
   monthlyLimit: z.string().min(1, "Monthly limit is required"),
 });
 
@@ -52,16 +54,40 @@ export function BudgetForm({
   budgetId,
 }: BudgetFormProps) {
   const { toast } = useToast();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      category: (initialCategory as any) || expenseCategories[0],
+      category: initialCategory || "",
       monthlyLimit: "",
     },
   });
 
+  // Fetch expense categories when component mounts or opens
+  useEffect(() => {
+    if (open) {
+      const loadCategories = async () => {
+        try {
+          const fetchedCategories = await getCategoriesForType("debit");
+          setCategories(fetchedCategories);
+          
+          if (initialCategory) {
+            form.setValue("category", initialCategory);
+          }
+        } catch (error) {
+          console.error("Error loading expense categories:", error);
+        }
+      };
+      
+      loadCategories();
+    }
+  }, [open, form, initialCategory]);
+
   async function onSubmit(values: z.infer<typeof budgetSchema>) {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
@@ -103,6 +129,8 @@ export function BudgetForm({
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -110,8 +138,8 @@ export function BudgetForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Set Budget Limit</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg">Set Budget Limit</DialogTitle>
+          <DialogDescription className="text-sm">
             Set a monthly spending limit for a category.
           </DialogDescription>
         </DialogHeader>
@@ -122,22 +150,28 @@ export function BudgetForm({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel className="text-sm font-medium">Category</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={!!initialCategory || loading || categories.length === 0}
+                  >
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="scrollable-container">
-                      {expenseCategories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                    <SelectContent>
+                      <ScrollArea className="h-[200px]">
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -147,16 +181,18 @@ export function BudgetForm({
               name="monthlyLimit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Monthly Limit</FormLabel>
+                  <FormLabel className="text-sm font-medium">Monthly Limit</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       placeholder="0.00"
                       step="0.01"
                       {...field}
+                      className="h-9"
+                      disabled={loading}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
@@ -166,10 +202,18 @@ export function BudgetForm({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="h-9 text-sm"
+                disabled={loading}
               >
                 Cancel
               </Button>
-              <Button type="submit">Save Budget</Button>
+              <Button 
+                type="submit"
+                className="h-9 text-sm"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : budgetId ? "Update" : "Save"} Budget
+              </Button>
             </DialogFooter>
           </form>
         </Form>

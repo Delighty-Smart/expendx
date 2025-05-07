@@ -70,8 +70,56 @@ export interface Transaction {
   updated_at?: string;
 }
 
-// Helper function to get categories based on transaction type
-export const getCategoriesForType = (type: TransactionType): readonly string[] => {
+// Helper function to get categories based on transaction type - Updated to fetch user categories
+export const getCategoriesForType = async (type: TransactionType): Promise<string[]> => {
+  let defaultCategories: readonly string[] = [];
+  
+  switch (type) {
+    case "credit":
+      defaultCategories = incomeCategories;
+      break;
+    case "debit":
+      defaultCategories = expenseCategories;
+      break;
+    case "savings":
+      defaultCategories = savingsCategories;
+      break;
+  }
+
+  // Convert to array since we'll be adding user-defined categories
+  const categories = [...defaultCategories];
+
+  try {
+    // Import dynamically to avoid circular dependencies
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      // Fetch user-defined categories
+      const { data: userCategories, error } = await supabase
+        .from("user_categories" as any)
+        .select("name")
+        .eq("type", type)
+        .eq("user_id", user.id);
+        
+      if (!error && userCategories) {
+        // Add user-defined categories, avoiding duplicates
+        userCategories.forEach(category => {
+          if (!categories.includes(category.name)) {
+            categories.push(category.name);
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching user categories:", error);
+  }
+  
+  return categories;
+};
+
+// This is the synchronous version for components that can't use async directly
+export const getDefaultCategoriesForType = (type: TransactionType): readonly string[] => {
   switch (type) {
     case "credit":
       return incomeCategories;

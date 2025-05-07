@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -39,6 +40,8 @@ export const TransactionForm = ({
 }: TransactionFormProps) => {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   
@@ -53,8 +56,20 @@ export const TransactionForm = ({
     }
   });
 
+  // Fetch categories when transaction type changes
   useEffect(() => {
     if (open) {
+      const loadCategories = async () => {
+        try {
+          const fetchedCategories = await getCategoriesForType(transactionType);
+          setCategories(fetchedCategories);
+        } catch (error) {
+          console.error("Error loading categories:", error);
+        }
+      };
+      
+      loadCategories();
+      
       if (transaction) {
         form.reset({
           date: transaction.date,
@@ -75,7 +90,7 @@ export const TransactionForm = ({
         setTransactionType("debit");
       }
     }
-  }, [transaction, form, open]);
+  }, [transaction, form, open, transactionType]);
 
   const handleTypeChange = (type: TransactionType) => {
     setTransactionType(type);
@@ -85,6 +100,7 @@ export const TransactionForm = ({
 
   const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
@@ -174,10 +190,10 @@ export const TransactionForm = ({
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   }, [toast, transaction, onOpenChange, onTransactionAdded, queryClient]);
-
-  const categories = getCategoriesForType(transactionType);
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
@@ -200,8 +216,8 @@ export const TransactionForm = ({
           }}
         >
           <DialogHeader>
-            <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
+            <DialogDescription className="text-sm">
               Enter the details of your transaction below.
             </DialogDescription>
           </DialogHeader>
@@ -213,11 +229,11 @@ export const TransactionForm = ({
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel className="text-sm font-medium">Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} className="h-9" disabled={loading} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -226,11 +242,11 @@ export const TransactionForm = ({
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel className="text-sm font-medium">Amount</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                        <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-9" disabled={loading} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -241,13 +257,14 @@ export const TransactionForm = ({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type</FormLabel>
+                    <FormLabel className="text-sm font-medium">Type</FormLabel>
                     <Select
                       onValueChange={(value: TransactionType) => handleTypeChange(value)}
                       value={field.value}
+                      disabled={loading}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
@@ -257,7 +274,7 @@ export const TransactionForm = ({
                         <SelectItem value="savings">Savings</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -267,19 +284,18 @@ export const TransactionForm = ({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="text-sm font-medium">Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
+                      disabled={loading || categories.length === 0}
                     >
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent
-                        className="overflow-y-auto"
-                      >
+                      <SelectContent>
                         <ScrollArea className="h-[200px]">
                           {categories.map((category) => (
                             <SelectItem key={category} value={category}>
@@ -289,7 +305,7 @@ export const TransactionForm = ({
                         </ScrollArea>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -299,24 +315,40 @@ export const TransactionForm = ({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-sm font-medium">Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter transaction details..." {...field} />
+                      <Textarea 
+                        placeholder="Enter transaction details..." 
+                        {...field} 
+                        className="resize-none text-sm"
+                        disabled={loading}
+                        rows={3}
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => {
-                  form.reset();
-                  onOpenChange(false);
-                }}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    form.reset();
+                    onOpenChange(false);
+                  }}
+                  className="h-9 text-sm"
+                  disabled={loading}
+                >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {transaction ? 'Update' : 'Add'} Transaction
+                <Button 
+                  type="submit"
+                  className="h-9 text-sm"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : transaction ? 'Update' : 'Add'} Transaction
                 </Button>
               </DialogFooter>
             </form>

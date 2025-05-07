@@ -11,11 +11,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
+import { Transaction, TransactionType, getDefaultCategoriesForType, getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { addTransaction, queueTransactionForSync } from "@/services/offlineStorage"; 
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -28,6 +29,8 @@ const transactionSchema = z.object({
 const AddTransactionPage = () => {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>("debit");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,6 +43,22 @@ const AddTransactionPage = () => {
       setTransactionType(location.state.transaction.type);
     }
   }, [location.state]);
+  
+  // Fetch categories whenever the transaction type changes
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const fetchedCategories = await getCategoriesForType(transactionType);
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        // Fallback to default categories if there's an error
+        setCategories([...getDefaultCategoriesForType(transactionType)]);
+      }
+    };
+    
+    loadCategories();
+  }, [transactionType]);
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -74,6 +93,7 @@ const AddTransactionPage = () => {
 
   const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
       
@@ -160,10 +180,10 @@ const AddTransactionPage = () => {
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   }, [toast, transaction, navigate, queryClient]);
-
-  const categories = getCategoriesForType(transactionType);
 
   return (
     <Layout>
@@ -177,23 +197,23 @@ const AddTransactionPage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">{transaction ? 'Edit' : 'Add'} Transaction</h1>
+          <h1 className="text-xl font-bold">{transaction ? 'Edit' : 'Add'} Transaction</h1>
         </div>
         
         <div className="bg-card rounded-lg shadow-sm border p-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
+                      <FormLabel className="text-sm font-medium">Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} className="h-9" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -202,11 +222,11 @@ const AddTransactionPage = () => {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel className="text-sm font-medium">Amount</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="0.00" step="0.01" {...field} />
+                        <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-9" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -217,23 +237,24 @@ const AddTransactionPage = () => {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type</FormLabel>
+                    <FormLabel className="text-sm font-medium">Type</FormLabel>
                     <Select
                       onValueChange={(value: TransactionType) => handleTypeChange(value)}
                       value={field.value}
+                      disabled={loading}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-9">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
+                      <SelectContent className="max-h-[250px]">
                         <SelectItem value="credit">Credit (Income)</SelectItem>
                         <SelectItem value="debit">Debit (Expense)</SelectItem>
                         <SelectItem value="savings">Savings</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -243,25 +264,28 @@ const AddTransactionPage = () => {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="text-sm font-medium">Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
+                      disabled={loading || categories.length === 0}
                     >
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="max-h-[250px]">
+                        <ScrollArea className="h-[200px]">
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -271,11 +295,16 @@ const AddTransactionPage = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-sm font-medium">Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter transaction details..." {...field} />
+                      <Textarea 
+                        placeholder="Enter transaction details..." 
+                        {...field}
+                        className="resize-none text-sm" 
+                        rows={3}
+                      />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -285,11 +314,17 @@ const AddTransactionPage = () => {
                   type="button" 
                   variant="outline" 
                   onClick={() => navigate("/transactions")}
+                  className="h-9 text-sm"
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {transaction ? 'Update' : 'Add'} Transaction
+                <Button 
+                  type="submit"
+                  className="h-9 text-sm"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : transaction ? 'Update' : 'Add'} Transaction
                 </Button>
               </div>
             </form>
