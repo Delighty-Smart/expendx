@@ -16,7 +16,8 @@ export function useCategories(type: TransactionType) {
         setError(null);
         
         // Start with default categories to avoid empty state
-        setCategories([...getDefaultCategoriesForType(type)]);
+        const defaultCats = [...getDefaultCategoriesForType(type)];
+        setCategories(defaultCats);
         
         // Then fetch the complete list including user categories
         const allCategories = await getCategoriesForType(type);
@@ -35,6 +36,7 @@ export function useCategories(type: TransactionType) {
   const refetch = async () => {
     try {
       setLoading(true);
+      setError(null);
       const refreshedCategories = await getCategoriesForType(type);
       setCategories(refreshedCategories);
       // Invalidate any related queries

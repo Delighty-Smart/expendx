@@ -91,31 +91,36 @@
   
   /* Typography scaling */
   h1, .h1 {
-    @apply text-2xl font-semibold md:text-3xl lg:text-4xl leading-tight;
+    @apply text-2xl font-semibold leading-tight;
   }
   
   h2, .h2 {
-    @apply text-xl font-semibold md:text-2xl lg:text-3xl leading-tight;
+    @apply text-xl font-semibold leading-tight;
   }
   
   h3, .h3 {
-    @apply text-lg font-medium md:text-xl leading-snug;
+    @apply text-lg font-medium leading-snug;
   }
   
   h4, .h4 {
-    @apply text-base font-medium md:text-lg leading-snug;
+    @apply text-base font-medium leading-snug;
   }
   
   h5, .h5 {
-    @apply text-sm font-medium md:text-base leading-snug;
+    @apply text-sm font-medium leading-snug;
   }
   
   p {
-    @apply text-sm md:text-base mb-4 last:mb-0;
+    @apply text-sm mb-4 last:mb-0;
   }
   
-  small, .text-sm {
-    @apply text-xs md:text-sm;
+  small {
+    @apply text-xs;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
   }
   
   .text-xs {
@@ -144,6 +149,56 @@
     overscroll-behavior: contain !important;
     scroll-padding: 0.5rem !important;
     scrollbar-width: thin !important;
+  }
+}
+
+/* Responsive typography classes - without using @apply */
+@media (min-width: 768px) {
+  h1, .h1 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+  
+  h2, .h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  h3, .h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  
+  h4, .h4 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  h5, .h5 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  p {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  small, .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  h1, .h1 {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+  
+  h2, .h2 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
   }
 }
 
@@ -466,7 +521,14 @@
 }
 
 .recharts-cartesian-axis-tick-value {
-  @apply !text-[10px] md:!text-xs !fill-muted-foreground;
+  font-size: 0.625rem;
+  fill: hsl(var(--muted-foreground));
+}
+
+@media (min-width: 768px) {
+  .recharts-cartesian-axis-tick-value {
+    font-size: 0.75rem;
+  }
 }
 
 /* Form spacing improvements */
