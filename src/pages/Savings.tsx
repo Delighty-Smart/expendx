@@ -1,14 +1,13 @@
 
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { PlusCircle, ArrowDownToLine, PiggyBank } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/SettingsContext";
-import { savingsCategories, SavingsGoal } from "@/types/transactions";
-import { SavingsGoalForm } from "@/components/SavingsGoalForm";
-import { SavingsWithdrawalForm } from "@/components/SavingsWithdrawalForm";
+import { SavingsGoal } from "@/types/transactions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useTransactionData } from "@/hooks/useTransactionData";
@@ -18,8 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 const SavingsPage = () => {
   const { currency } = useSettings();
   const { toast } = useToast();
-  const [isSavingsGoalFormOpen, setSavingsGoalFormOpen] = useState(false);
-  const [isWithdrawalFormOpen, setWithdrawalFormOpen] = useState(false);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Use our custom hook to fetch transactions of type "savings"
@@ -28,7 +26,7 @@ const SavingsPage = () => {
   });
 
   // Fetch savings goals separately
-  const { data: savingsGoals, refetch: refetchSavingsGoals } = useQuery({
+  const { data: savingsGoals } = useQuery({
     queryKey: ["savings_goals"],
     queryFn: async () => {
       // Use type assertion to bypass TypeScript errors
@@ -40,11 +38,6 @@ const SavingsPage = () => {
       return data as unknown as SavingsGoal[] || [];
     },
   });
-
-  const handleSavingsGoalUpdate = useCallback(() => {
-    refetchSavingsGoals();
-    queryClient.invalidateQueries({ queryKey: ["transactions"] });
-  }, [refetchSavingsGoals, queryClient]);
 
   const calculateSavingsByCategory = useCallback((category: string) => {
     if (!savingsTransactions) return 0;
@@ -90,14 +83,14 @@ const SavingsPage = () => {
           <div className="flex flex-wrap gap-2">
             <Button
               className="flex items-center gap-2"
-              onClick={() => setWithdrawalFormOpen(true)}
+              onClick={() => navigate("/savings-withdrawal")}
             >
               <ArrowDownToLine className="h-4 w-4" />
               Withdraw
             </Button>
             <Button
               className="flex items-center gap-2"
-              onClick={() => setSavingsGoalFormOpen(true)}
+              onClick={() => navigate("/add-savings-goal")}
             >
               <PlusCircle className="h-4 w-4" />
               Set Savings Goal
@@ -153,18 +146,6 @@ const SavingsPage = () => {
             })}
           </div>
         </ScrollArea>
-
-        <SavingsGoalForm
-          open={isSavingsGoalFormOpen}
-          onOpenChange={setSavingsGoalFormOpen}
-          onSavingsGoalAdded={handleSavingsGoalUpdate}
-        />
-
-        <SavingsWithdrawalForm
-          open={isWithdrawalFormOpen}
-          onOpenChange={setWithdrawalFormOpen}
-          onWithdrawalComplete={handleSavingsGoalUpdate}
-        />
       </div>
     </Layout>
   );

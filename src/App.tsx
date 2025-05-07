@@ -24,6 +24,8 @@ import Admin from '@/pages/Admin'
 import AdminFeedback from '@/pages/AdminFeedback'
 import Feedback from '@/pages/Feedback'
 import NotFound from '@/pages/NotFound'
+import AddSavingsGoal from '@/pages/AddSavingsGoal'
+import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 
 // Import the offline storage functions
 import { initializeDB, setupSyncEvents, trySync } from './services/offlineStorage';
@@ -73,6 +75,8 @@ function App() {
               <Route path="/set-income" element={<SetIncome />} />
               <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
               <Route path="/savings" element={<Savings />} />
+              <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
+              <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/alerts" element={<Alerts />} />

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, X } from "lucide-react";
+import { PlusCircle, X, Edit, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { 
@@ -21,6 +21,8 @@ export function CategoryManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TransactionType>("credit");
   const [newCategory, setNewCategory] = useState("");
+  const [editingCategory, setEditingCategory] = useState<{id: string, name: string} | null>(null);
+  const [editValue, setEditValue] = useState("");
   const queryClient = useQueryClient();
 
   const { data: userCategories, isLoading } = useQuery({
@@ -48,7 +50,7 @@ export function CategoryManagement() {
     // Filter user categories for this type
     const userCatsForType = userCategories
       ?.filter(cat => cat.type === type)
-      .map(cat => cat.name) || [];
+      .map(cat => ({ id: cat.id, name: cat.name })) || [];
     
     // Get default categories for this type
     let defaultCategories: readonly string[] = [];
@@ -64,10 +66,17 @@ export function CategoryManagement() {
         break;
     }
     
-    // Combine both arrays, avoiding duplicates
-    return [...Array.from(defaultCategories), ...userCatsForType.filter(cat => 
-      !defaultCategories.includes(cat as any)
-    )];
+    // Convert default categories to objects with null id (to indicate they're system defaults)
+    const defaultCategoriesObjects = Array.from(defaultCategories).map(name => ({ 
+      id: null, 
+      name
+    }));
+    
+    // Combine both arrays, avoiding duplicates by name
+    const userCategoryNames = new Set(userCatsForType.map(cat => cat.name));
+    const filteredDefaults = defaultCategoriesObjects.filter(cat => !userCategoryNames.has(cat.name));
+    
+    return [...filteredDefaults, ...userCatsForType];
   }, [userCategories]);
 
   const addCategory = useCallback(async () => {
@@ -92,7 +101,7 @@ export function CategoryManagement() {
     
     // Check if category already exists in default or user categories
     const existingCategories = getCategoriesForType(activeTab);
-    if (existingCategories.includes(newCategory)) {
+    if (existingCategories.some(cat => cat.name.toLowerCase() === newCategory.toLowerCase())) {
       toast({
         title: "Error",
         description: `Category "${newCategory}" already exists`,
@@ -129,31 +138,7 @@ export function CategoryManagement() {
     });
   }, [newCategory, activeTab, toast, queryClient, getCategoriesForType]);
 
-  const deleteCategory = useCallback(async (categoryName: string) => {
-    // Check if it's a default category
-    let isDefault = false;
-    
-    switch (activeTab) {
-      case "credit":
-        isDefault = incomeCategories.includes(categoryName as any);
-        break;
-      case "debit":
-        isDefault = expenseCategories.includes(categoryName as any);
-        break;
-      case "savings":
-        isDefault = savingsCategories.includes(categoryName as any);
-        break;
-    }
-    
-    if (isDefault) {
-      toast({
-        title: "Cannot Delete",
-        description: "Default categories cannot be deleted",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  const deleteCategory = useCallback(async (categoryId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
@@ -161,9 +146,7 @@ export function CategoryManagement() {
     const { error } = await supabase
       .from("user_categories" as any)
       .delete()
-      .eq("user_id", user.id)
-      .eq("name", categoryName)
-      .eq("type", activeTab);
+      .eq("id", categoryId);
       
     if (error) {
       console.error("Error deleting category:", error);
@@ -179,9 +162,64 @@ export function CategoryManagement() {
     
     toast({
       title: "Success",
-      description: `Category "${categoryName}" deleted successfully`
+      description: "Category deleted successfully"
     });
-  }, [activeTab, toast, queryClient]);
+  }, [toast, queryClient]);
+
+  const startEditing = (category: {id: string, name: string}) => {
+    setEditingCategory(category);
+    setEditValue(category.name);
+  };
+
+  const saveEdit = async () => {
+    if (!editingCategory || !editValue.trim()) {
+      setEditingCategory(null);
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if category name already exists
+    const existingCategories = getCategoriesForType(activeTab);
+    if (existingCategories.some(cat => 
+      cat.name.toLowerCase() === editValue.toLowerCase() && 
+      cat.id !== editingCategory.id
+    )) {
+      toast({
+        title: "Error",
+        description: `Category "${editValue}" already exists`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("user_categories" as any)
+      .update({ name: editValue })
+      .eq("id", editingCategory.id);
+
+    if (error) {
+      console.error("Error updating category:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update category. Please try again.",
+        variant: "destructive"
+      });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["user_categories"] });
+      toast({
+        title: "Success",
+        description: "Category updated successfully"
+      });
+    }
+
+    setEditingCategory(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingCategory(null);
+  };
 
   // Detect Enter key press to submit new category
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -220,28 +258,67 @@ export function CategoryManagement() {
         <ScrollArea className="h-[300px] mt-4 pr-4 transition-all duration-500 ease-in-out">
           <div className="space-y-2">
             {getCategoriesForType(activeTab).map((category) => {
-              const isDefaultCategory = (
-                activeTab === "credit" && incomeCategories.includes(category as any) ||
-                activeTab === "debit" && expenseCategories.includes(category as any) ||
-                activeTab === "savings" && savingsCategories.includes(category as any)
-              );
+              const isDefaultCategory = category.id === null;
+              const isEditing = editingCategory?.id === category.id;
               
               return (
                 <div 
-                  key={category} 
+                  key={category.id || category.name} 
                   className="flex items-center justify-between p-2 bg-background/50 rounded border"
                 >
-                  <span className="truncate">{category}</span>
-                  {!isDefaultCategory && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => deleteCategory(category)}
-                      className="h-7 w-7 p-0"
-                    >
-                      <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                    </Button>
+                  {isEditing ? (
+                    <Input 
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                      autoFocus
+                      className="flex-1 mr-2"
+                    />
+                  ) : (
+                    <span className="truncate">{category.name}</span>
                   )}
+                  
+                  <div className="flex items-center">
+                    {isEditing ? (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={saveEdit}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Check className="h-4 w-4 text-green-500" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={cancelEdit}
+                          className="h-7 w-7 p-0"
+                        >
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>
+                    ) : !isDefaultCategory && (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => startEditing(category as {id: string, name: string})}
+                          className="h-7 w-7 p-0"
+                        >
+                          <Edit className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => deleteCategory(category.id!)}
+                          className="h-7 w-7 p-0"
+                        >
+                          <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               );
             })}
