@@ -41,41 +41,58 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
       
-      let query = supabase
+      // First get user profiles with their locations to filter by
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, username, first_name, last_name, email, avatar_url, country, continent');
+        
+      if (profilesError) throw profilesError;
+      
+      // Now get all user streaks 
+      const { data: streaksData, error: streaksError } = await supabase
         .from('user_streaks')
-        .select(`
-          id:user_id,
-          current_streak,
-          highest_streak,
-          user_profiles:user_id(username, first_name, last_name, email, avatar_url, country, continent)
-        `)
+        .select('user_id, current_streak, highest_streak')
         .order('current_streak', { ascending: false });
+        
+      if (streaksError) throw streaksError;
       
-      // Apply location filter for local leaderboard
-      if (type === 'local' && country) {
-        query = query.eq('user_profiles.country', country);
-      } else if (type === 'local' && continent && !country) {
-        query = query.eq('user_profiles.continent', continent);
+      if (!profilesData || !streaksData) {
+        setLeaderboard([]);
+        return;
       }
       
-      // Remove any row limit to get ALL users in the leaderboard
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
+      // Filter profiles data if local leaderboard
+      let filteredProfiles = profilesData;
+      if (type === 'local') {
+        if (country) {
+          filteredProfiles = profilesData.filter(profile => profile.country === country);
+        } else if (continent) {
+          filteredProfiles = profilesData.filter(profile => profile.continent === continent);
+        }
       }
       
-      // Transform the data to a flattened structure
-      const formattedData = data?.map(entry => ({
-        id: entry.id,
-        username: entry.user_profiles?.username,
-        first_name: entry.user_profiles?.first_name,
-        last_name: entry.user_profiles?.last_name,
-        email: entry.user_profiles?.email,
-        current_streak: entry.current_streak,
-        highest_streak: entry.highest_streak,
-        avatar_url: entry.user_profiles?.avatar_url,
-      })) || [];
+      // Create a map of user IDs to their profiles for quick lookup
+      const userProfileMap = new Map();
+      filteredProfiles.forEach(profile => {
+        userProfileMap.set(profile.id, profile);
+      });
+      
+      // Join the streaks with the filtered profiles
+      const formattedData = streaksData
+        .filter(streak => userProfileMap.has(streak.user_id))
+        .map(streak => {
+          const profile = userProfileMap.get(streak.user_id);
+          return {
+            id: streak.user_id,
+            username: profile?.username,
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+            email: profile?.email,
+            current_streak: streak.current_streak,
+            highest_streak: streak.highest_streak,
+            avatar_url: profile?.avatar_url,
+          };
+        });
       
       setLeaderboard(formattedData);
       
