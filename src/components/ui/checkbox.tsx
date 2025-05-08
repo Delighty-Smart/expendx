@@ -11,11 +11,11 @@ const Checkbox = React.forwardRef<
     size?: 'sm' | 'md' | 'lg'
   }
 >(({ className, size = 'md', ...props }, ref) => {
-  // Consistent sizing for both desktop and mobile
+  // Consistent sizing for checkboxes - 16x16px as requested
   const sizeClasses = {
-    sm: "h-3.5 w-3.5",
-    md: "h-3.5 w-3.5", // Standardized to small size
-    lg: "h-4 w-4"      // Slightly larger but still compact
+    sm: "h-4 w-4",
+    md: "h-4 w-4", // Set to 16x16px (h-4 w-4 = 16px)
+    lg: "h-4 w-4"  // All sizes now standardized to 16x16px
   };
   
   return (
@@ -33,11 +33,7 @@ const Checkbox = React.forwardRef<
       <CheckboxPrimitive.Indicator
         className={cn("flex items-center justify-center text-current")}
       >
-        <Check className={cn(
-          size === 'sm' ? "h-2.5 w-2.5" : 
-          size === 'md' ? "h-2.5 w-2.5" : // Standardized icon size
-          "h-3 w-3"
-        )} />
+        <Check className="h-3 w-3" /> {/* Adjusted checkmark size for 16x16px checkbox */}
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

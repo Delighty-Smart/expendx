@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { Currency } from "@/lib/currencies";
@@ -183,10 +182,10 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                 </div>
                                 
                                 <div className="flex-1">
-                                  <p className="font-medium text-sm line-clamp-1 leading-tight">
+                                  <p className="font-medium text-sm leading-tight">
                                     {transaction.description}
                                   </p>
-                                  <p className="text-xs text-muted-foreground leading-tight mt-px">
+                                  <p className="text-xs text-muted-foreground leading-none mt-1">
                                     {transaction.category}
                                   </p>
                                 </div>
@@ -202,7 +201,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                     {transaction.type === "debit" ? "-" : "+"}
                                     {currency.symbol}{formatAmount(transaction.amount)}
                                   </p>
-                                  <p className="text-xs text-muted-foreground leading-tight mt-px">
+                                  <p className="text-xs text-muted-foreground leading-none mt-1">
                                     {format(new Date(transaction.date), "HH:mm")}
                                   </p>
                                 </div>

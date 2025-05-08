@@ -118,10 +118,10 @@
   border-bottom: none;
 }
 
-/* Custom checkbox styling - small consistent size */
+/* Custom checkbox styling - 16x16 pixel size */
 .custom-checkbox {
-  width: 14px !important;
-  height: 14px !important;
+  width: 16px !important;
+  height: 16px !important;
   border-radius: 4px !important;
 }
 
@@ -148,7 +148,7 @@
 .transaction-row p {
   margin-top: 0;
   margin-bottom: 0;
-  line-height: 1; /* Reduced from 1.25 for tighter spacing */
+  line-height: 1; /* Reduced for tighter spacing */
 }
 
 /* Consistent circle sizing for transaction icons */
@@ -180,8 +180,8 @@
 }
 
 .transaction-row .text-xs {
-  line-height: 1.1;
-  margin-top: 0px; /* Further reduced spacing between lines */
+  line-height: 1;
+  margin-top: 1px; /* 4px spacing between description and category */
 }
 
 /* Further tighten spacing between transaction title and category on mobile */
@@ -192,6 +192,6 @@
   
   .transaction-row .text-xs {
     line-height: 1;
-    margin-top: 0;
+    margin-top: 1px; /* 4px spacing between description and category */
   }
 }

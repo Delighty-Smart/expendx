@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -288,10 +287,10 @@ const TransactionsPage = () => {
                                     </div>
 
                                     <div className="flex-1 py-0 my-0 mx-0">
-                                      <p className="font-medium text-sm line-clamp-1 leading-tight">
+                                      <p className="font-medium text-sm leading-tight">
                                         {transaction.description}
                                       </p>
-                                      <p className="text-xs text-muted-foreground py-0 my-0 leading-tight mt-px">
+                                      <p className="text-xs text-muted-foreground py-0 my-0 leading-none mt-1">
                                         {transaction.category}
                                       </p>
                                     </div>

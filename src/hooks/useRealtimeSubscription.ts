@@ -1,52 +1,50 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
-
 /**
- * Hook to manage Supabase Realtime subscriptions
- * @param tableName The table to subscribe to
- * @param event The event type ('INSERT', 'UPDATE', 'DELETE', '*')
- * @param callback The callback to execute when an event occurs
+ * A hook to subscribe to real-time changes on a Supabase table
+ * 
+ * @param table The table name to subscribe to
+ * @param event The event to listen for (INSERT, UPDATE, DELETE, or * for all)
+ * @param callback The function to call when an event occurs
+ * @param filter Optional filter configuration
  */
-export const useRealtimeSubscription = (
-  tableName: string,
-  event: RealtimeEvent,
-  callback: (payload: any) => void
-) => {
-  // Create a stable callback reference
-  const stableCallback = useCallback((payload: any) => {
-    callback(payload);
-  }, [callback]);
-
+export function useRealtimeSubscription(
+  table: string,
+  event: 'INSERT' | 'UPDATE' | 'DELETE' | '*',
+  callback: () => void,
+  filter?: { column?: string; value?: string }
+) {
   useEffect(() => {
-    // Generate a unique channel ID
-    const channelId = `${tableName}_${event}_${Math.random().toString(36).substr(2, 9)}`;
+    // Create a unique channel identifier
+    const channelId = `${table}-${event}-${filter?.column || 'all'}-${filter?.value || 'all'}`;
     
-    console.log(`Setting up subscription to ${tableName} table for ${event} events`);
-    
-    const channel = supabase.channel(channelId)
+    // Set up filter configuration if provided
+    const filterConfig = filter?.column && filter?.value
+      ? { [filter.column]: filter.value }
+      : {};
+
+    // Set up the subscription
+    const subscription = supabase
+      .channel(channelId)
       .on(
-        'postgres_changes',
+        'postgres_changes', // Use 'postgres_changes' (string) as the event name
         {
-          event: event === '*' ? undefined : event,
+          event: event,
           schema: 'public',
-          table: tableName
+          table: table,
+          ...filterConfig
         },
-        (payload) => {
-          console.log(`${tableName} change detected:`, payload);
-          stableCallback(payload);
+        () => {
+          callback();
         }
       )
-      .subscribe((status) => {
-        console.log(`Subscription to ${tableName} status:`, status);
-      });
-
-    // Cleanup function
+      .subscribe();
+    
+    // Cleanup function to remove the subscription when component unmounts
     return () => {
-      console.log(`Cleaning up subscription to ${tableName}`);
-      supabase.removeChannel(channel);
+      supabase.removeChannel(subscription);
     };
-  }, [tableName, event, stableCallback]);
-};
+  }, [table, event, callback, filter]);
+}
