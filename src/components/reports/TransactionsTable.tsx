@@ -91,7 +91,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
       case 'debit':
         return <ArrowUp className="h-4 w-4 text-red-500" />;
       case 'savings':
-        return <div className="h-4 w-4 rounded-full bg-blue-400"></div>;
+        return <div className="h-3.5 w-3.5 rounded-full bg-blue-400"></div>;
       default:
         return null;
     }
@@ -183,10 +183,10 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                 </div>
                                 
                                 <div className="flex-1">
-                                  <p className="font-medium text-sm line-clamp-1">
+                                  <p className="font-medium text-sm line-clamp-1 leading-tight">
                                     {transaction.description}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground leading-tight mt-px">
                                     {transaction.category}
                                   </p>
                                 </div>
@@ -198,11 +198,11 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                     ? "text-red-600"
                                     : "text-blue-600"
                                 }`}>
-                                  <p className="font-medium text-sm">
+                                  <p className="font-medium text-sm leading-tight">
                                     {transaction.type === "debit" ? "-" : "+"}
                                     {currency.symbol}{formatAmount(transaction.amount)}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground leading-tight mt-px">
                                     {format(new Date(transaction.date), "HH:mm")}
                                   </p>
                                 </div>

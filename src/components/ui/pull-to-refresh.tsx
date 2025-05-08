@@ -37,6 +37,14 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const handleTouchMove = (e: TouchEvent) => {
       if (!touchingRef.current) return;
       
+      // Only allow pull to refresh when at the top of content
+      if (container.scrollTop > 0) {
+        touchingRef.current = false;
+        setPullDistance(0);
+        setIsPulling(false);
+        return;
+      }
+      
       const touchY = e.touches[0].clientY;
       const distance = touchY - touchStartY.current;
       
