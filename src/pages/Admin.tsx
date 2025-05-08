@@ -9,10 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import UserManagement from "@/components/admin/UserManagement";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
 import SidebarAdmin from "@/components/admin/SidebarAdmin";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [stats, setStats] = useState({
+    userCount: 0,
+    transactionCount: 0,
+    feedbackCount: 0
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -24,6 +30,45 @@ const AdminDashboard = () => {
       setActiveTab(tab);
     }
   }, []);
+
+  // Fetch dashboard statistics
+  const fetchDashboardStats = async () => {
+    try {
+      // Fetch user count
+      const { count: userCount, error: userError } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (userError) throw userError;
+      
+      // Fetch transaction count
+      const { count: transactionCount, error: transactionError } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true });
+      
+      if (transactionError) throw transactionError;
+      
+      // Fetch feedback count
+      const { count: feedbackCount, error: feedbackError } = await supabase
+        .from('user_feedback')
+        .select('*', { count: 'exact', head: true });
+      
+      if (feedbackError) throw feedbackError;
+      
+      setStats({
+        userCount: userCount || 0,
+        transactionCount: transactionCount || 0,
+        feedbackCount: feedbackCount || 0
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+    }
+  };
+
+  // Set up realtime subscriptions for dashboard stats
+  useRealtimeSubscription('user_profiles', '*', () => fetchDashboardStats());
+  useRealtimeSubscription('transactions', '*', () => fetchDashboardStats());
+  useRealtimeSubscription('user_feedback', '*', () => fetchDashboardStats());
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -54,6 +99,7 @@ const AdminDashboard = () => {
         }
 
         setIsAdmin(true);
+        fetchDashboardStats(); // Initial fetch of dashboard stats
       } catch (error) {
         console.error("Error checking admin status:", error);
         toast({
@@ -99,8 +145,27 @@ const AdminDashboard = () => {
           <TabsContent value="overview" className="mt-4">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">System Overview</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</h3>
+                  <p className="text-2xl font-bold">{stats.userCount}</p>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-green-600 dark:text-green-400">Transactions</h3>
+                  <p className="text-2xl font-bold">{stats.transactionCount}</p>
+                </div>
+                
+                <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400">Feedback Entries</h3>
+                  <p className="text-2xl font-bold">{stats.feedbackCount}</p>
+                </div>
+              </div>
+              
               <p className="text-muted-foreground">
                 Welcome to the admin panel. Use the tabs above to navigate between different sections.
+                The dashboard will automatically update when data changes.
               </p>
             </Card>
           </TabsContent>

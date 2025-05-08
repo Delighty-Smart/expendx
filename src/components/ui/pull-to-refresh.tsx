@@ -27,8 +27,8 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     if (!container) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Only enable pull-to-refresh when scrolled to top
-      if (container.scrollTop <= 0) {
+      // Only enable pull-to-refresh when exactly at the top (scrollTop must be 0)
+      if (container.scrollTop === 0) {
         touchStartY.current = e.touches[0].clientY;
         touchingRef.current = true;
       }
@@ -37,7 +37,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     const handleTouchMove = (e: TouchEvent) => {
       if (!touchingRef.current) return;
       
-      // Only allow pull to refresh when at the top of content
+      // Strict check: Immediately disable pull if we scroll down at all
       if (container.scrollTop > 0) {
         touchingRef.current = false;
         setPullDistance(0);
@@ -49,7 +49,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
       const distance = touchY - touchStartY.current;
       
       // Only allow pulling down, not up, and only when at top of the container
-      if (distance > 0 && container.scrollTop <= 0) {
+      if (distance > 0 && container.scrollTop === 0) {
         // Apply resistance to make the pull feel natural
         const dampedDistance = Math.min(distance * 0.4, pullDownThreshold * 1.5);
         setPullDistance(dampedDistance);

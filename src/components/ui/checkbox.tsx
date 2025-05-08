@@ -11,10 +11,11 @@ const Checkbox = React.forwardRef<
     size?: 'sm' | 'md' | 'lg'
   }
 >(({ className, size = 'md', ...props }, ref) => {
+  // Consistent sizing for both desktop and mobile
   const sizeClasses = {
     sm: "h-3.5 w-3.5",
-    md: "h-4 w-4",
-    lg: "h-5 w-5"
+    md: "h-3.5 w-3.5", // Standardized to small size
+    lg: "h-4 w-4"      // Slightly larger but still compact
   };
   
   return (
@@ -34,8 +35,8 @@ const Checkbox = React.forwardRef<
       >
         <Check className={cn(
           size === 'sm' ? "h-2.5 w-2.5" : 
-          size === 'md' ? "h-3.5 w-3.5" : 
-          "h-4 w-4"
+          size === 'md' ? "h-2.5 w-2.5" : // Standardized icon size
+          "h-3 w-3"
         )} />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
