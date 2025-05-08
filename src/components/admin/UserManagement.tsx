@@ -1,16 +1,7 @@
 import { useState, useEffect } from "react";
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
-} from "@/components/ui/table";
-import { 
-  Select, SelectContent, SelectItem, 
-  SelectTrigger, SelectValue 
-} from "@/components/ui/select";
-import { 
-  Dialog, DialogContent, DialogDescription, 
-  DialogFooter, DialogHeader, DialogTitle, DialogTrigger 
-} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +14,6 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 // Define the user role type to match the database enum
 type UserRoleType = 'free' | 'pro' | 'premium' | 'admin';
-
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,31 +40,28 @@ const UserManagement = () => {
   });
   const [selectAll, setSelectAll] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Setup realtime subscription to update users list when changes occur
   useRealtimeSubscription('user_profiles', '*', () => {
     fetchUsers();
   });
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
+
       // Remove any limit from the query to get ALL users
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('user_profiles').select('*');
       if (error) throw error;
-
       if (data) {
         setUsers(data);
-        
         const uniqueCountries = [...new Set(data.map(user => user.country).filter(Boolean))];
         const uniqueContinents = [...new Set(data.map(user => user.continent).filter(Boolean))];
-        
         setCountries(uniqueCountries);
         setContinents(uniqueContinents);
       }
@@ -83,73 +70,62 @@ const UserManagement = () => {
       toast({
         title: "Error fetching users",
         description: "There was a problem loading the user data",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchUsers();
   }, [toast]);
-
   const handleRoleChange = async (userId: string, newRole: UserRoleType) => {
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
-
+      const {
+        error
+      } = await supabase.from('user_profiles').update({
+        role: newRole
+      }).eq('id', userId);
       if (error) throw error;
-
       toast({
         title: "Role updated",
-        description: "User role has been updated successfully",
+        description: "User role has been updated successfully"
       });
-
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
-      ));
+      setUsers(users.map(user => user.id === userId ? {
+        ...user,
+        role: newRole
+      } : user));
     } catch (error) {
       console.error('Error updating role:', error);
       toast({
         title: "Error updating role",
         description: "There was a problem updating the user role",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleSendMessage = async () => {
     try {
       if (!messageDetails.title || !messageDetails.message) {
         toast({
           title: "Missing details",
           description: "Please provide both a title and message",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       const recipientIds = selectedUsers.length > 0 ? selectedUsers : users.map(user => user.id);
-
-      const alertPromises = recipientIds.map(userId => 
-        supabase.from('alerts').insert({
-          user_id: userId,
-          title: messageDetails.title,
-          message: messageDetails.message,
-          type: 'admin_message'
-        })
-      );
-
+      const alertPromises = recipientIds.map(userId => supabase.from('alerts').insert({
+        user_id: userId,
+        title: messageDetails.title,
+        message: messageDetails.message,
+        type: 'admin_message'
+      }));
       await Promise.all(alertPromises);
-
       toast({
         title: "Message sent",
-        description: `Message sent to ${recipientIds.length} user(s)`,
+        description: `Message sent to ${recipientIds.length} user(s)`
       });
-
       setMessageModalOpen(false);
       setMessageDetails({
         title: "",
@@ -163,24 +139,26 @@ const UserManagement = () => {
       toast({
         title: "Error sending message",
         description: "There was a problem sending the message",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleCreateUser = async () => {
     try {
       if (!newUserDetails.email || !newUserDetails.password) {
         toast({
           title: "Missing required fields",
           description: "Email and password are required",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
 
       // Use the auth.signUp method instead which is accessible to admin users
-      const { data, error } = await supabase.auth.signUp({
+      const {
+        data,
+        error
+      } = await supabase.auth.signUp({
         email: newUserDetails.email,
         password: newUserDetails.password,
         options: {
@@ -190,27 +168,21 @@ const UserManagement = () => {
           }
         }
       });
-
       if (error) throw error;
-
       if (data?.user) {
         // Update the user profile with the role
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .update({ 
-            role: newUserDetails.role,
-            first_name: newUserDetails.firstName,
-            last_name: newUserDetails.lastName
-          })
-          .eq('id', data.user.id);
-
+        const {
+          error: profileError
+        } = await supabase.from('user_profiles').update({
+          role: newUserDetails.role,
+          first_name: newUserDetails.firstName,
+          last_name: newUserDetails.lastName
+        }).eq('id', data.user.id);
         if (profileError) throw profileError;
-        
         toast({
           title: "User created",
-          description: "The user has been created successfully",
+          description: "The user has been created successfully"
         });
-
         setCreateUserModalOpen(false);
         setNewUserDetails({
           email: "",
@@ -219,7 +191,6 @@ const UserManagement = () => {
           lastName: "",
           role: "free"
         });
-
         fetchUsers();
       }
     } catch (error: any) {
@@ -227,77 +198,51 @@ const UserManagement = () => {
       toast({
         title: "Error creating user",
         description: error.message || "There was a problem creating the user",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleCheckboxChange = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+    setSelectedUsers(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
   };
-
   const handleSelectAllChange = () => {
     setSelectAll(!selectAll);
     setSelectedUsers(selectAll ? [] : users.map(user => user.id));
   };
-  
   const toggleInfoVisibility = () => {
     setShowInfo(!showInfo);
   };
-
   const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      searchQuery === "" || 
-      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.last_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesSearch = searchQuery === "" || user.email?.toLowerCase().includes(searchQuery.toLowerCase()) || user.username?.toLowerCase().includes(searchQuery.toLowerCase()) || user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) || user.last_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = selectedRoles.length === 0 || selectedRoles.includes(user.role);
-    
-    const matchesCountry = selectedCountries.length === 0 || 
-      (user.country && selectedCountries.includes(user.country));
-    
-    const matchesContinent = selectedContinents.length === 0 || 
-      (user.continent && selectedContinents.includes(user.continent));
-    
+    const matchesCountry = selectedCountries.length === 0 || user.country && selectedCountries.includes(user.country);
+    const matchesContinent = selectedContinents.length === 0 || user.continent && selectedContinents.includes(user.continent);
     return matchesSearch && matchesRole && matchesCountry && matchesContinent;
   });
-
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'admin': return 'destructive';
-      case 'premium': return 'default';
-      case 'pro': return 'secondary';
-      default: return 'outline';
+      case 'admin':
+        return 'destructive';
+      case 'premium':
+        return 'default';
+      case 'pro':
+        return 'secondary';
+      default:
+        return 'outline';
     }
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">User Management</h2>
+        <h2 className="font-bold text-base">User Management</h2>
         <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={toggleInfoVisibility}
-            className="flex items-center gap-2"
-          >
-            {showInfo ? (
-              <>
+          <Button variant="outline" onClick={toggleInfoVisibility} className="flex items-center gap-2 text-base">
+            {showInfo ? <>
                 <EyeOff className="h-4 w-4" />
                 <span>Hide Info</span>
-              </>
-            ) : (
-              <>
+              </> : <>
                 <Eye className="h-4 w-4" />
                 <span>Show Info</span>
-              </>
-            )}
+              </>}
           </Button>
           
           <Dialog open={createUserModalOpen} onOpenChange={setCreateUserModalOpen}>
@@ -317,50 +262,38 @@ const UserManagement = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="email" className="col-span-1">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newUserDetails.email}
-                    onChange={(e) => setNewUserDetails({...newUserDetails, email: e.target.value})}
-                    className="col-span-3"
-                    required
-                  />
+                  <Input id="email" type="email" value={newUserDetails.email} onChange={e => setNewUserDetails({
+                  ...newUserDetails,
+                  email: e.target.value
+                })} className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="password" className="col-span-1">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={newUserDetails.password}
-                    onChange={(e) => setNewUserDetails({...newUserDetails, password: e.target.value})}
-                    className="col-span-3"
-                    required
-                  />
+                  <Input id="password" type="password" value={newUserDetails.password} onChange={e => setNewUserDetails({
+                  ...newUserDetails,
+                  password: e.target.value
+                })} className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="firstName" className="col-span-1">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={newUserDetails.firstName}
-                    onChange={(e) => setNewUserDetails({...newUserDetails, firstName: e.target.value})}
-                    className="col-span-3"
-                  />
+                  <Input id="firstName" value={newUserDetails.firstName} onChange={e => setNewUserDetails({
+                  ...newUserDetails,
+                  firstName: e.target.value
+                })} className="col-span-3" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="lastName" className="col-span-1">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={newUserDetails.lastName}
-                    onChange={(e) => setNewUserDetails({...newUserDetails, lastName: e.target.value})}
-                    className="col-span-3"
-                  />
+                  <Input id="lastName" value={newUserDetails.lastName} onChange={e => setNewUserDetails({
+                  ...newUserDetails,
+                  lastName: e.target.value
+                })} className="col-span-3" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="role" className="col-span-1">Role</Label>
-                  <Select
-                    value={newUserDetails.role}
-                    onValueChange={(value: UserRoleType) => setNewUserDetails({...newUserDetails, role: value})}
-                  >
+                  <Select value={newUserDetails.role} onValueChange={(value: UserRoleType) => setNewUserDetails({
+                  ...newUserDetails,
+                  role: value
+                })}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
@@ -382,10 +315,7 @@ const UserManagement = () => {
           
           <Dialog open={messageModalOpen} onOpenChange={setMessageModalOpen}>
             <DialogTrigger asChild>
-              <Button 
-                variant="secondary"
-                disabled={filteredUsers.length === 0}
-              >
+              <Button variant="secondary" disabled={filteredUsers.length === 0}>
                 <Send className="h-4 w-4 mr-2" />
                 Send Message
               </Button>
@@ -400,23 +330,17 @@ const UserManagement = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="messageTitle" className="col-span-1">Title</Label>
-                  <Input
-                    id="messageTitle"
-                    value={messageDetails.title}
-                    onChange={(e) => setMessageDetails({...messageDetails, title: e.target.value})}
-                    className="col-span-3"
-                    placeholder="Message title"
-                  />
+                  <Input id="messageTitle" value={messageDetails.title} onChange={e => setMessageDetails({
+                  ...messageDetails,
+                  title: e.target.value
+                })} className="col-span-3" placeholder="Message title" />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-2">
                   <Label htmlFor="messageContent" className="col-span-1">Message</Label>
-                  <Input
-                    id="messageContent"
-                    value={messageDetails.message}
-                    onChange={(e) => setMessageDetails({...messageDetails, message: e.target.value})}
-                    className="col-span-3"
-                    placeholder="Message content"
-                  />
+                  <Input id="messageContent" value={messageDetails.message} onChange={e => setMessageDetails({
+                  ...messageDetails,
+                  message: e.target.value
+                })} className="col-span-3" placeholder="Message content" />
                 </div>
               </div>
               <DialogFooter>
@@ -431,24 +355,17 @@ const UserManagement = () => {
       <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Search users..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
         </div>
         
         <div className="flex space-x-2">
-          <Select
-            onValueChange={(value) => {
-              if (value === "all") {
-                setSelectedRoles([]);
-              } else {
-                setSelectedRoles([value]);
-              }
-            }}
-          >
+          <Select onValueChange={value => {
+          if (value === "all") {
+            setSelectedRoles([]);
+          } else {
+            setSelectedRoles([value]);
+          }
+        }}>
             <SelectTrigger className="w-40">
               <div className="flex items-center">
                 <Filter className="h-4 w-4 mr-2" />
@@ -464,15 +381,13 @@ const UserManagement = () => {
             </SelectContent>
           </Select>
           
-          <Select
-            onValueChange={(value) => {
-              if (value === "all") {
-                setSelectedCountries([]);
-              } else {
-                setSelectedCountries([value]);
-              }
-            }}
-          >
+          <Select onValueChange={value => {
+          if (value === "all") {
+            setSelectedCountries([]);
+          } else {
+            setSelectedCountries([value]);
+          }
+        }}>
             <SelectTrigger className="w-40">
               <div className="flex items-center">
                 <Filter className="h-4 w-4 mr-2" />
@@ -481,21 +396,17 @@ const UserManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Countries</SelectItem>
-              {countries.map(country => (
-                <SelectItem key={country} value={country}>{country}</SelectItem>
-              ))}
+              {countries.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
             </SelectContent>
           </Select>
           
-          <Select
-            onValueChange={(value) => {
-              if (value === "all") {
-                setSelectedContinents([]);
-              } else {
-                setSelectedContinents([value]);
-              }
-            }}
-          >
+          <Select onValueChange={value => {
+          if (value === "all") {
+            setSelectedContinents([]);
+          } else {
+            setSelectedContinents([value]);
+          }
+        }}>
             <SelectTrigger className="w-40">
               <div className="flex items-center">
                 <Filter className="h-4 w-4 mr-2" />
@@ -504,34 +415,22 @@ const UserManagement = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Continents</SelectItem>
-              {continents.map(continent => (
-                <SelectItem key={continent} value={continent}>{continent}</SelectItem>
-              ))}
+              {continents.map(continent => <SelectItem key={continent} value={continent}>{continent}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
       
-      {loading ? (
-        <div className="flex justify-center py-8">
+      {loading ? <div className="flex justify-center py-8">
           <div className="animate-pulse text-muted-foreground">Loading users...</div>
-        </div>
-      ) : filteredUsers.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
+        </div> : filteredUsers.length === 0 ? <div className="text-center py-8 text-muted-foreground">
           No users found with the current filters
-        </div>
-      ) : (
-        <div className="rounded-md border">
+        </div> : <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">
-                  <Checkbox 
-                    checked={selectAll}
-                    onCheckedChange={handleSelectAllChange}
-                    aria-label="Select all"
-                    size="sm"
-                  />
+                  <Checkbox checked={selectAll} onCheckedChange={handleSelectAllChange} aria-label="Select all" size="sm" />
                 </TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Location</TableHead>
@@ -540,77 +439,44 @@ const UserManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+              {filteredUsers.map(user => <TableRow key={user.id}>
                   <TableCell>
-                    <Checkbox 
-                      checked={selectedUsers.includes(user.id)}
-                      onCheckedChange={() => handleCheckboxChange(user.id)}
-                      aria-label={`Select ${user.email}`}
-                      size="sm"
-                    />
+                    <Checkbox checked={selectedUsers.includes(user.id)} onCheckedChange={() => handleCheckboxChange(user.id)} aria-label={`Select ${user.email}`} size="sm" />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                        {user.avatar_url ? (
-                          <img 
-                            src={`/lovable-uploads/${user.avatar_url}`} 
-                            alt={user.username || user.email} 
-                            className="h-full w-full object-cover rounded-full"
-                          />
-                        ) : (
-                          <div className="font-semibold text-muted-foreground">
+                        {user.avatar_url ? <img src={`/lovable-uploads/${user.avatar_url}`} alt={user.username || user.email} className="h-full w-full object-cover rounded-full" /> : <div className="font-semibold text-muted-foreground">
                             {user.first_name?.[0]}{user.last_name?.[0]}
-                          </div>
-                        )}
+                          </div>}
                       </div>
                       <div>
                         <div className="font-medium">
-                          {showInfo ? (
-                            user.username || user.email
-                          ) : (
-                            <span className="blur-sm hover:blur-none transition-all select-none">
+                          {showInfo ? user.username || user.email : <span className="blur-sm hover:blur-none transition-all select-none">
                               {user.username || user.email}
-                            </span>
-                          )}
+                            </span>}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {showInfo ? (
-                            user.email
-                          ) : (
-                            <span className="blur-sm hover:blur-none transition-all select-none">
+                          {showInfo ? user.email : <span className="blur-sm hover:blur-none transition-all select-none">
                               {user.email}
-                            </span>
-                          )}
+                            </span>}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {user.country ? (
-                      <div>
-                        {showInfo ? (
-                          <>
+                    {user.country ? <div>
+                        {showInfo ? <>
                             <div>{user.country}</div>
                             <div className="text-sm text-muted-foreground">{user.continent}</div>
-                          </>
-                        ) : (
-                          <span className="blur-sm hover:blur-none transition-all select-none">
+                          </> : <span className="blur-sm hover:blur-none transition-all select-none">
                             <div>{user.country}</div>
                             <div className="text-sm text-muted-foreground">{user.continent}</div>
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">Not specified</span>
-                    )}
+                          </span>}
+                      </div> : <span className="text-muted-foreground">Not specified</span>}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      defaultValue={user.role}
-                      onValueChange={(value: UserRoleType) => handleRoleChange(user.id, value)}
-                    >
+                    <Select defaultValue={user.role} onValueChange={(value: UserRoleType) => handleRoleChange(user.id, value)}>
                       <SelectTrigger className="w-28">
                         <SelectValue>
                           <Badge variant={getRoleBadgeVariant(user.role) as any}>
@@ -627,35 +493,24 @@ const UserManagement = () => {
                     </Select>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setMessageDetails({
-                          title: "",
-                          message: "",
-                          selectedUsers: [user.id]
-                        });
-                        setMessageModalOpen(true);
-                      }}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => {
+                setMessageDetails({
+                  title: "",
+                  message: "",
+                  selectedUsers: [user.id]
+                });
+                setMessageModalOpen(true);
+              }}>
                       <Send className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                    >
+                    <Button variant="ghost" size="icon">
                       <Edit className="h-4 w-4" />
                     </Button>
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)}
             </TableBody>
           </Table>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
-
 export default UserManagement;

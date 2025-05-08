@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -10,7 +9,6 @@ import UserManagement from "@/components/admin/UserManagement";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
 import SidebarAdmin from "@/components/admin/SidebarAdmin";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -19,9 +17,10 @@ const AdminDashboard = () => {
     transactionCount: 0,
     feedbackCount: 0
   });
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   useEffect(() => {
     // Check URL params to set active tab
     const params = new URLSearchParams(window.location.search);
@@ -35,26 +34,34 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       // Fetch user count
-      const { count: userCount, error: userError } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-      
+      const {
+        count: userCount,
+        error: userError
+      } = await supabase.from('user_profiles').select('*', {
+        count: 'exact',
+        head: true
+      });
       if (userError) throw userError;
-      
+
       // Fetch transaction count
-      const { count: transactionCount, error: transactionError } = await supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true });
-      
+      const {
+        count: transactionCount,
+        error: transactionError
+      } = await supabase.from('transactions').select('*', {
+        count: 'exact',
+        head: true
+      });
       if (transactionError) throw transactionError;
-      
+
       // Fetch feedback count
-      const { count: feedbackCount, error: feedbackError } = await supabase
-        .from('user_feedback')
-        .select('*', { count: 'exact', head: true });
-      
+      const {
+        count: feedbackCount,
+        error: feedbackError
+      } = await supabase.from('user_feedback').select('*', {
+        count: 'exact',
+        head: true
+      });
       if (feedbackError) throw feedbackError;
-      
       setStats({
         userCount: userCount || 0,
         transactionCount: transactionCount || 0,
@@ -69,35 +76,32 @@ const AdminDashboard = () => {
   useRealtimeSubscription('user_profiles', '*', () => fetchDashboardStats());
   useRealtimeSubscription('transactions', '*', () => fetchDashboardStats());
   useRealtimeSubscription('user_feedback', '*', () => fetchDashboardStats());
-
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (!user) {
           navigate('/auth');
           return;
         }
-
-        const { data: profileData, error } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
+        const {
+          data: profileData,
+          error
+        } = await supabase.from('user_profiles').select('role').eq('id', user.id).single();
         if (error) throw error;
-        
         if (profileData?.role !== 'admin') {
           toast({
             title: "Access Denied",
             description: "You don't have permission to access the admin dashboard",
-            variant: "destructive",
+            variant: "destructive"
           });
           navigate('/');
           return;
         }
-
         setIsAdmin(true);
         fetchDashboardStats(); // Initial fetch of dashboard stats
       } catch (error) {
@@ -105,35 +109,31 @@ const AdminDashboard = () => {
         toast({
           title: "Error",
           description: "There was an error verifying your permissions",
-          variant: "destructive",
+          variant: "destructive"
         });
         navigate('/');
       }
     };
-
     checkAdminStatus();
   }, [navigate, toast]);
 
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    navigate(`/admin?tab=${value}`, { replace: true });
+    navigate(`/admin?tab=${value}`, {
+      replace: true
+    });
   };
-
   if (isAdmin === null) {
-    return (
-      <Layout>
+    return <Layout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
-      </Layout>
-    );
+      </Layout>;
   }
-
-  return (
-    <Layout>
+  return <Layout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="font-bold text-xl">Admin Dashboard</h1>
         
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
@@ -183,8 +183,6 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default AdminDashboard;
