@@ -1,141 +1,143 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Currency, currencies } from '@/lib/currencies';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { Currency, currencies } from "@/lib/currencies";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import { toast } from "@/hooks/use-toast";
-
-interface SettingsContextType {
+interface Settings {
   currency: Currency;
-  isLoading: boolean;
-  theme: "light" | "dark";
-  updateCurrency: (code: string) => Promise<void>;
-  updateTheme: (newTheme: "light" | "dark") => void;
+  theme: 'light' | 'dark' | 'system';
+  notifications: boolean;
 }
 
-const SettingsContext = createContext<SettingsContextType | null>(null);
+interface SettingsContextType {
+  settings: Settings;
+  updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
+  loading: boolean;
+  currency: Currency;
+}
 
-export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrency] = useState<Currency>(currencies[0]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    // First check localStorage
-    const storedTheme = localStorage.getItem("theme");
-    if (storedTheme === "light" || storedTheme === "dark") {
-      return storedTheme;
+const defaultSettings: Settings = {
+  currency: currencies.USD,
+  theme: 'system',
+  notifications: true,
+};
+
+const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+
+export function SettingsProvider({ children }: { children: ReactNode }) {
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [loading, setLoading] = useState(true);
+
+  // Load settings from database on initial render
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('user_settings')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error loading settings:', error);
+          }
+          
+          if (data) {
+            const loadedSettings: Settings = {
+              currency: currencies[data.currency_code] || currencies.USD,
+              theme: data.theme || 'system',
+              notifications: data.notifications !== undefined ? data.notifications : true,
+            };
+            setSettings(loadedSettings);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     
-    // Default to light theme
-    return "light";
-  });
-
-  // Fetch the current user ID on mount
-  useEffect(() => {
-    async function fetchUser() {
-      const { data } = await supabase.auth.getUser();
-      setUserId(data?.user?.id || null);
-    }
-    fetchUser();
+    loadSettings();
   }, []);
 
-  // Apply theme when it changes
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.classList.toggle("light", theme === "light");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  // Only fetch settings if we have a user ID
-  const { data: settings } = useQuery({
-    queryKey: ["user_settings", userId],
-    queryFn: async () => {
-      if (!userId) return null;
-
-      const { data, error } = await supabase
-        .from("user_settings")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) throw error;
-      
-      // If no settings exist, create default settings
-      if (!data) {
-        const { data: newSettings, error: insertError } = await supabase
-          .from("user_settings")
-          .insert([{ user_id: userId }])
-          .select()
+  // Subscribe to settings changes
+  useRealtimeSubscription(
+    'user_settings',
+    'UPDATE',
+    async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', user.id)
           .single();
-
-        if (insertError) throw insertError;
-        return newSettings;
+          
+        if (error) throw error;
+        
+        if (data) {
+          const updatedSettings: Settings = {
+            currency: currencies[data.currency_code] || currencies.USD,
+            theme: data.theme || 'system',
+            notifications: data.notifications !== undefined ? data.notifications : true,
+          };
+          setSettings(updatedSettings);
+        }
+      } catch (error) {
+        console.error('Error refreshing settings:', error);
       }
-
-      return data;
-    },
-    // Only run this query when we have a userId
-    enabled: !!userId
-  });
-
-  // Subscribe to user settings changes
-  useRealtimeSubscription("user_settings", "*", (payload) => {
-    if (!userId || payload.new.user_id !== userId) return;
-    
-    // Update currency when settings change
-    if (payload.new.currency_code) {
-      const newCurrency = currencies.find(c => c.code === payload.new.currency_code) || currencies[0];
-      setCurrency(newCurrency);
     }
-  });
+  );
 
-  useEffect(() => {
-    if (settings) {
-      const currentCurrency = currencies.find(c => c.code === settings.currency_code) || currencies[0];
-      setCurrency(currentCurrency);
-      setIsLoading(false);
-    }
-  }, [settings]);
-
-  const updateCurrency = async (code: string) => {
+  // Update settings in database
+  const updateSettings = async (newSettings: Partial<Settings>) => {
     try {
-      if (!userId) return;
-
-      const { error } = await supabase
-        .from("user_settings")
-        .update({ currency_code: code })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-
-      const newCurrency = currencies.find(c => c.code === code) || currencies[0];
-      setCurrency(newCurrency);
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
       
-      toast({
-        title: "Currency updated",
-        description: `Your currency has been updated to ${newCurrency.name} (${newCurrency.symbol})`
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error updating currency",
-        description: error.message,
-        variant: "destructive"
-      });
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      const updatedSettings = { ...settings, ...newSettings };
+      setSettings(updatedSettings);
+      
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          currency_code: updatedSettings.currency.code,
+          theme: updatedSettings.theme,
+          notifications: updatedSettings.notifications,
+          updated_at: new Date().toISOString(),
+        });
+        
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      // Revert settings on error
+      setSettings(settings);
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  };
-  
-  const updateTheme = (newTheme: "light" | "dark") => {
-    setTheme(newTheme);
   };
 
   return (
     <SettingsContext.Provider value={{ 
-      currency, 
-      isLoading, 
-      theme,
-      updateCurrency,
-      updateTheme
+      settings, 
+      updateSettings, 
+      loading,
+      currency: settings.currency
     }}>
       {children}
     </SettingsContext.Provider>
@@ -144,8 +146,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
 export function useSettings() {
   const context = useContext(SettingsContext);
-  if (!context) {
-    throw new Error("useSettings must be used within a SettingsProvider");
+  if (context === undefined) {
+    throw new Error('useSettings must be used within a SettingsProvider');
   }
   return context;
 }
