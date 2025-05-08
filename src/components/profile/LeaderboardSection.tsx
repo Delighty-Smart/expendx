@@ -1,245 +1,186 @@
 
 import { useState, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Globe, Map, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
-interface LeaderboardProfile {
+interface LeaderboardItem {
   id: string;
-  username?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  avatar_url?: string | null;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  email: string;
   current_streak: number;
-  current_title: string;
+  highest_streak: number;
+  avatar_url?: string;
 }
 
 interface LeaderboardSectionProps {
-  type: "global" | "local";
+  type: 'global' | 'local';
   continent?: string;
   country?: string;
 }
 
 const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProps) => {
-  const [profiles, setProfiles] = useState<LeaderboardProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setCurrentUserId(data.user.id);
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    const fetchLeaderboardData = async () => {
-      setLoading(true);
-      
-      try {
-        let query = supabase
-          .from('user_profiles')
-          .select(`
-            id,
-            username,
-            first_name,
-            last_name,
-            avatar_url,
-            user_streaks (
-              current_streak,
-              current_title
-            )
-          `)
-          .order('user_streaks.current_streak', { ascending: false })
-          .limit(20);
-        
-        // Add geographic filters for local leaderboard
-        if (type === 'local') {
-          if (continent) {
-            query = query.eq('continent', continent);
-          }
-          if (country) {
-            query = query.eq('country', country);
-          }
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Error fetching leaderboard data:', error);
-          throw error;
-        }
-        
-        // Transform the data - make sure we properly handle the nested user_streaks data
-        const transformedData = data?.map(profile => {
-          // Check if user_streaks exists and has data
-          const streakData = profile.user_streaks && Array.isArray(profile.user_streaks) && profile.user_streaks.length > 0
-            ? profile.user_streaks[0] 
-            : { current_streak: 0, current_title: 'Budget Beginner' };
-            
-          // Ensure streakData has the right shape
-          const streakCurrentStreak = typeof streakData === 'object' && streakData !== null 
-            ? (streakData.current_streak ?? 0) 
-            : 0;
-            
-          const streakCurrentTitle = typeof streakData === 'object' && streakData !== null 
-            ? (streakData.current_title ?? 'Budget Beginner') 
-            : 'Budget Beginner';
-            
-          return {
-            id: profile.id,
-            username: profile.username,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            avatar_url: profile.avatar_url,
-            current_streak: streakCurrentStreak,
-            current_title: streakCurrentTitle
-          };
-        }) || [];
-        
-        setProfiles(transformedData);
-      } catch (err) {
-        console.error('Failed to load leaderboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
+  // Set up realtime subscription to update leaderboard when user_streaks changes
+  useRealtimeSubscription('user_streaks', '*', () => {
+    console.log("User streaks updated, refreshing leaderboard");
     fetchLeaderboardData();
-    
-    // Set up real-time subscription for leaderboard updates
-    const channel = supabase
-      .channel('public:user_streaks')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'user_streaks' }, 
-        () => {
-          fetchLeaderboardData();
-        }
-      )
-      .subscribe();
+  });
+
+  const fetchLeaderboardData = async () => {
+    try {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
       
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [type, continent, country]);
+      let query = supabase
+        .from('user_streaks')
+        .select(`
+          id:user_id,
+          current_streak,
+          highest_streak,
+          user_profiles:user_id(username, first_name, last_name, email, avatar_url, country, continent)
+        `)
+        .order('current_streak', { ascending: false });
+      
+      // Apply location filter for local leaderboard
+      if (type === 'local' && country) {
+        query = query.eq('user_profiles.country', country);
+      } else if (type === 'local' && continent && !country) {
+        query = query.eq('user_profiles.continent', continent);
+      }
+      
+      // Remove any row limit to get ALL users in the leaderboard
+      const { data, error } = await query;
 
-  const getInitials = (profile: LeaderboardProfile) => {
-    if (profile.first_name && profile.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`;
+      if (error) {
+        throw error;
+      }
+      
+      // Transform the data to a flattened structure
+      const formattedData = data?.map(entry => ({
+        id: entry.id,
+        username: entry.user_profiles?.username,
+        first_name: entry.user_profiles?.first_name,
+        last_name: entry.user_profiles?.last_name,
+        email: entry.user_profiles?.email,
+        current_streak: entry.current_streak,
+        highest_streak: entry.highest_streak,
+        avatar_url: entry.user_profiles?.avatar_url,
+      })) || [];
+      
+      setLeaderboard(formattedData);
+      
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load leaderboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    if (profile.first_name) {
-      return profile.first_name[0];
-    }
-    if (profile.username) {
-      return profile.username[0];
-    }
-    return 'U';
   };
 
-  const getDisplayName = (profile: LeaderboardProfile) => {
-    if (profile.first_name) {
-      return profile.first_name + (profile.last_name ? ` ${profile.last_name}` : '');
-    }
-    if (profile.username) {
-      return profile.username;
-    }
-    return 'User';
+  useEffect(() => {
+    fetchLeaderboardData();
+  }, [type, continent, country, toast]);
+
+  const getDisplayName = (item: LeaderboardItem) => {
+    if (item.username) return item.username;
+    if (item.first_name || item.last_name) 
+      return `${item.first_name || ''} ${item.last_name || ''}`.trim();
+    return item.email.split('@')[0];
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="space-y-1 flex-1">
-              <Skeleton className="h-4 w-[200px]" />
-              <Skeleton className="h-3 w-[150px]" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  const getInitials = (item: LeaderboardItem) => {
+    if (item.first_name && item.last_name) 
+      return `${item.first_name[0]}${item.last_name[0]}`.toUpperCase();
+    if (item.username) return item.username.substring(0, 2).toUpperCase();
+    return item.email.substring(0, 2).toUpperCase();
+  };
+
+  const getStreakColor = (streak: number) => {
+    if (streak >= 30) return "bg-gradient-to-r from-amber-500 to-yellow-300 text-black";
+    if (streak >= 14) return "bg-gradient-to-r from-blue-600 to-blue-400 text-white";
+    if (streak >= 7) return "bg-gradient-to-r from-green-600 to-green-400 text-white";
+    return "";
+  };
 
   return (
-    <div>
-      {profiles.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <p className="mb-2">No users found for this leaderboard</p>
-          {type === 'local' && <p className="text-sm">Try checking the global leaderboard instead</p>}
+    <div className="space-y-4">
+      {type === 'local' && (!continent && !country) ? (
+        <div className="text-center p-6 bg-muted/50 rounded-md">
+          <p className="text-muted-foreground">
+            Set your location in your profile to see the local leaderboard
+          </p>
+        </div>
+      ) : isLoading ? (
+        <div className="flex justify-center p-6">
+          <div className="animate-pulse text-muted-foreground">Loading leaderboard...</div>
+        </div>
+      ) : leaderboard.length === 0 ? (
+        <div className="text-center p-6 bg-muted/50 rounded-md">
+          <p className="text-muted-foreground">
+            No data available for the {type} leaderboard
+          </p>
         </div>
       ) : (
-        <ul className="space-y-4">
-          {profiles.map((profile, index) => (
-            <li 
-              key={profile.id}
-              className={`flex items-center gap-3 p-3 rounded-lg ${
-                currentUserId === profile.id ? 'bg-primary/10 border border-primary/30' : 'hover:bg-accent/50'
+        <div className="space-y-2">
+          {leaderboard.map((item, index) => (
+            <div 
+              key={item.id} 
+              className={`flex items-center p-3 rounded-md ${
+                currentUserId === item.id 
+                  ? "bg-primary/10 border border-primary/30" 
+                  : "hover:bg-accent"
               }`}
             >
-              <div className="flex items-center justify-center w-8 h-8 text-sm font-bold">
-                {index === 0 && <Trophy className="text-amber-500 h-6 w-6" />}
-                {index === 1 && <Trophy className="text-slate-400 h-5 w-5" />}
-                {index === 2 && <Trophy className="text-amber-700 h-5 w-5" />}
-                {index > 2 && <span className="text-muted-foreground">{index + 1}</span>}
+              <div className="w-8 text-center font-bold text-muted-foreground">
+                {index + 1}
               </div>
               
-              <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={profile.avatar_url || ''} alt={getDisplayName(profile)} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(profile)}
-                </AvatarFallback>
+              <Avatar className="h-8 w-8 mr-3">
+                {item.avatar_url ? (
+                  <AvatarImage src={item.avatar_url} alt={getDisplayName(item)} />
+                ) : (
+                  <AvatarFallback>{getInitials(item)}</AvatarFallback>
+                )}
               </Avatar>
               
               <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">
-                    {getDisplayName(profile)}
-                    {currentUserId === profile.id && (
-                      <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded ml-2">
-                        You
-                      </span>
-                    )}
-                  </p>
-                  <div className="flex items-center gap-1 font-semibold text-primary">
-                    <Flame className="h-4 w-4 text-amber-500" />
-                    <span>{profile.current_streak}</span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">{profile.current_title}</p>
+                <div className="font-medium text-sm">{getDisplayName(item)}</div>
               </div>
-            </li>
+              
+              <div className="flex gap-2 items-center">
+                <Badge 
+                  className={`${getStreakColor(item.current_streak)}`}
+                  variant="outline"
+                >
+                  {item.current_streak} day{item.current_streak !== 1 ? "s" : ""}
+                </Badge>
+                
+                {item.highest_streak > item.current_streak && (
+                  <span className="text-xs text-muted-foreground">
+                    Best: {item.highest_streak}
+                  </span>
+                )}
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
 };
 
 export default LeaderboardSection;
-
-// Add Flame icon definition
-const Flame = (props: any) => {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-    </svg>
-  );
-};

@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Filter, Send, UserPlus, Edit, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 // Define the user role type to match the database enum
 type UserRoleType = 'free' | 'pro' | 'premium' | 'admin';
@@ -52,10 +53,16 @@ const UserManagement = () => {
   
   const { toast } = useToast();
 
+  // Setup realtime subscription to update users list when changes occur
+  useRealtimeSubscription('user_profiles', '*', () => {
+    fetchUsers();
+  });
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
       
+      // Remove any limit from the query to get ALL users
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*');
@@ -523,6 +530,7 @@ const UserManagement = () => {
                     checked={selectAll}
                     onCheckedChange={handleSelectAllChange}
                     aria-label="Select all"
+                    size="sm"
                   />
                 </TableHead>
                 <TableHead>User</TableHead>
@@ -539,6 +547,7 @@ const UserManagement = () => {
                       checked={selectedUsers.includes(user.id)}
                       onCheckedChange={() => handleCheckboxChange(user.id)}
                       aria-label={`Select ${user.email}`}
+                      size="sm"
                     />
                   </TableCell>
                   <TableCell>
@@ -645,7 +654,6 @@ const UserManagement = () => {
           </Table>
         </div>
       )}
-      
     </div>
   );
 };
