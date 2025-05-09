@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Camera, Save, PencilLine } from "lucide-react";
+import { Camera, Save, PencilLine, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,12 +30,10 @@ const COUNTRIES_BY_CONTINENT: Record<string, string[]> = {
   "Antarctica": ["Research Stations"]
 };
 
-const AVATARS = Array.from({ length: 8 }, (_, i) => `avatar-${i + 1}.png`);
-
 const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profile: any) => void }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState(profile?.continent || "");
   const { toast } = useToast();
   
@@ -105,36 +103,78 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       setIsSubmitting(false);
     }
   };
-  
-  const handleSelectAvatar = async (avatar: string) => {
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      const { error } = await supabase
+      const file = event.target.files?.[0];
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setUploadingAvatar(true);
+      
+      // Upload the file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+      
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      
+      // Update the user profile with the new avatar URL
+      const { error: updateError } = await supabase
         .from("user_profiles")
         .update({
-          avatar_url: avatar
+          avatar_url: publicUrl
         })
         .eq("id", profile.id);
       
-      if (error) throw error;
+      if (updateError) throw updateError;
       
       // Update local state
       setProfile({
         ...profile,
-        avatar_url: avatar
+        avatar_url: publicUrl
       });
       
-      setShowAvatarSelector(false);
       toast({
         title: "Avatar updated",
         description: "Your avatar has been updated successfully.",
       });
     } catch (error: any) {
-      console.error("Error updating avatar:", error);
+      console.error("Error uploading avatar:", error);
       toast({
-        title: "Update failed",
-        description: error.message || "There was an error updating your avatar. Please try again.",
+        title: "Upload failed",
+        description: error.message || "There was an error uploading your avatar. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -144,20 +184,31 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         <div className="relative">
-          <Avatar className="h-24 w-24 cursor-pointer border-2 border-primary/20" onClick={() => setShowAvatarSelector(true)}>
-            <AvatarImage src={`/lovable-uploads/${profile.avatar_url || 'avatar-1.png'}`} alt="Avatar" />
+          <Avatar className="h-24 w-24 cursor-pointer border-2 border-primary/20">
+            <AvatarImage src={profile.avatar_url || '/placeholder.svg'} alt="Avatar" />
             <AvatarFallback className="text-xl">
               {profile.first_name?.[0]}{profile.last_name?.[0] || ''}
             </AvatarFallback>
           </Avatar>
-          <Button 
-            size="icon"
-            variant="secondary" 
-            className="absolute bottom-0 right-0 rounded-full h-8 w-8"
-            onClick={() => setShowAvatarSelector(true)}
-          >
-            <Camera className="h-4 w-4" />
-          </Button>
+          <div className="absolute bottom-0 right-0">
+            <Label htmlFor="avatar-upload" className="cursor-pointer">
+              <div className="bg-primary rounded-full p-2 text-primary-foreground shadow-lg">
+                {uploadingAvatar ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+              </div>
+            </Label>
+            <Input 
+              id="avatar-upload" 
+              type="file"
+              accept="image/*"
+              className="hidden" 
+              onChange={handleFileUpload}
+              disabled={uploadingAvatar}
+            />
+          </div>
         </div>
         
         <div>
@@ -177,34 +228,6 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
           </Button>
         </div>
       </div>
-      
-      {showAvatarSelector && (
-        <div className="bg-background border rounded-lg p-4 shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Select Avatar</h3>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => setShowAvatarSelector(false)}
-            >
-              Close
-            </Button>
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {AVATARS.map((avatar) => (
-              <Avatar 
-                key={avatar} 
-                className={`cursor-pointer h-16 w-16 transition-all ${
-                  profile.avatar_url === avatar ? 'ring-2 ring-primary ring-offset-2' : 'hover:scale-105'
-                }`}
-                onClick={() => handleSelectAvatar(avatar)}
-              >
-                <AvatarImage src={`/lovable-uploads/${avatar}`} alt="Avatar option" />
-              </Avatar>
-            ))}
-          </div>
-        </div>
-      )}
       
       {isEditing ? (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

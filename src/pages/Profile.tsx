@@ -5,7 +5,6 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileForm from "@/components/profile/ProfileForm";
-import CommunityTab from "@/components/profile/CommunityTab";
 import StreakProgress from "@/components/profile/StreakProgress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,34 +163,23 @@ const Profile = () => {
             <div className="animate-pulse text-muted-foreground">Loading profile...</div>
           </div>
         ) : (
-          <Tabs defaultValue="you" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="you">You</TabsTrigger>
-              <TabsTrigger value="community">Community</TabsTrigger>
-            </TabsList>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProfileForm 
+                  profile={userProfile} 
+                  setProfile={setUserProfile} 
+                />
+              </CardContent>
+            </Card>
 
-            <TabsContent value="you" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ProfileForm 
-                    profile={userProfile} 
-                    setProfile={setUserProfile} 
-                  />
-                </CardContent>
-              </Card>
-
-              {userStreak && (
-                <StreakProgress streak={userStreak} />
-              )}
-            </TabsContent>
-
-            <TabsContent value="community">
-              <CommunityTab profile={userProfile} />
-            </TabsContent>
-          </Tabs>
+            {userStreak && (
+              <StreakProgress streak={userStreak} />
+            )}
+          </div>
         )}
       </div>
     </Layout>

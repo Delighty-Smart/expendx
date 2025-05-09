@@ -38,7 +38,7 @@ export function useRealtimeSubscription(
           schema: 'public',
           table: table,
           ...(Object.keys(filterConfig).length > 0 ? { filter: filterConfig } : {})
-        },
+        } as any,
         (payload) => callback(payload)
       )
       .subscribe();

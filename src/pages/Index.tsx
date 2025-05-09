@@ -1,59 +1,21 @@
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import Layout from '@/components/Layout';
+import { useSettings } from '@/contexts/SettingsContext';
+import { supabase } from '@/integrations/supabase/client';
+import { updateUserStreak } from '@/lib/streak';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatDistanceToNow } from 'date-fns';
+import { motion } from 'framer-motion';
+import { ArrowRight, Plus, Wallet, PiggyBank, Target, ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
 
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  BarChart3,
-  DollarSign,
-  PlusCircle,
-  TrendingDown,
-  TrendingUp,
-  AreaChart,
-  LineChart,
-  Eye,
-  EyeOff,
-  ChevronLeft,
-  ChevronRight,
-  Flame
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart as RechartLineChart,
-  Line,
-  AreaChart as RechartAreaChart,
-  Area,
-  Legend,
-  Sector,
-} from "recharts";
-import Layout from "@/components/Layout";
-import { TransactionForm } from "@/components/TransactionForm";
-import { useState, useRef, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useSettings } from "@/contexts/SettingsContext";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, subWeeks, addWeeks } from "date-fns";
-import { TransactionType } from "@/types/transactions";
-import { updateUserStreak, getStreakText } from "@/lib/streak";
-
-interface TransactionData {
-  id: string;
-  amount: number;
-  type: string;
-  category: string;
-  date: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
+// Function to navigate to Add Transaction page
+const handleAddTransaction = () => {
+  window.location.href = '/add-transaction';
+};
 
 const Dashboard = () => {
   const { currency } = useSettings();

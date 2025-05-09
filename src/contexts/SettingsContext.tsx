@@ -1,9 +1,20 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { currencies } from '@/lib/currencies';
+
+// Define type for the currency object
+interface Currency {
+  code: string;
+  symbol: string;
+}
 
 interface SettingsContextType {
-  currency: string;
-  setCurrency: (currency: string) => void;
+  currency: Currency;
+  setCurrency: (currency: Currency) => void;
+  theme: string;
+  updateTheme: (theme: 'light' | 'dark') => void;
+  updateCurrency: (currencyCode: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -17,15 +28,22 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState<Currency>({ code: 'USD', symbol: '$' });
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
     fetchUserSettings();
+    // Set initial theme based on system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(prefersDark ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', prefersDark);
   }, []);
 
   useEffect(() => {
-    updateUserSettings(currency);
-  }, [currency]);
+    updateUserSettings(currency.code);
+    // Update HTML class for theme
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [currency, theme]);
 
   // Get user settings from Supabase
   const fetchUserSettings = async () => {
@@ -47,7 +65,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // If settings exists, update the state with the saved currency
       if (data && data.currency_code) {
-        setCurrency(data.currency_code);
+        const currencyObj = currencies.find(c => c.code === data.currency_code) || { code: 'USD', symbol: '$' };
+        setCurrency(currencyObj);
       }
     } catch (error) {
       console.error('Error in fetchUserSettings:', error);
@@ -97,8 +116,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  // Function to update theme
+  const updateTheme = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+  };
+
+  // Function to update currency by code
+  const updateCurrency = (currencyCode: string) => {
+    const currencyObj = currencies.find(c => c.code === currencyCode) || { code: 'USD', symbol: '$' };
+    setCurrency(currencyObj);
+  };
+
   return (
-    <SettingsContext.Provider value={{ currency, setCurrency }}>
+    <SettingsContext.Provider value={{ 
+      currency, 
+      setCurrency, 
+      theme, 
+      updateTheme,
+      updateCurrency 
+    }}>
       {children}
     </SettingsContext.Provider>
   );

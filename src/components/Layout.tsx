@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Bell, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [userStreak, setUserStreak] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showStreakModal, setShowStreakModal] = useState(false);
-  const [unreadAlerts, setUnreadAlerts] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const { theme, updateTheme } = useSettings();
   const location = useLocation();
@@ -45,49 +44,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     };
 
     updateStreak();
-  }, []);
-
-  useEffect(() => {
-    const fetchUnreadAlerts = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) return;
-
-        const { count, error } = await supabase
-          .from("alerts")
-          .select("*", { count: 'exact', head: true })
-          .eq("user_id", user.id)
-          .eq("read", false);
-
-        if (error) throw error;
-        
-        setUnreadAlerts(count || 0);
-      } catch (error) {
-        console.error("Error fetching unread alerts:", error);
-      }
-    };
-
-    fetchUnreadAlerts();
-    
-    const alertsChannel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public', 
-          table: 'alerts'
-        },
-        (payload) => {
-          fetchUnreadAlerts();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(alertsChannel);
-    };
   }, []);
 
   useEffect(() => {
@@ -141,7 +97,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: "/budgets", label: "Budgets", icon: "Budgets" },
     { path: "/savings", label: "Savings", icon: "Savings" },
     { path: "/reports", label: "Reports", icon: "BarChart" },
-    { path: "/alerts", label: "Alerts", badge: unreadAlerts, icon: "Bell" },
     { path: "/feedback", label: "Feedback", icon: "MessageSquare" },
     { path: "/settings", label: "Settings", icon: "Settings" },
   ];
@@ -263,11 +218,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               onClick={() => setIsSidebarOpen(false)}
             >
               <span>{item.label}</span>
-              {item.badge && item.badge > 0 && (
-                <Badge variant="alert" className="ml-2 px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center text-xs">
-                  {item.badge}
-                </Badge>
-              )}
             </Link>
           ))}
         </nav>
