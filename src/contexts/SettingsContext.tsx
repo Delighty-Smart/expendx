@@ -1,163 +1,101 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Currency, currencies } from '@/lib/currencies';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-
-interface Settings {
-  currency: Currency;
-  theme: 'light' | 'dark' | 'system';
-  notifications: boolean;
-}
+import { currencies, getCurrencyByCode, Currency } from '@/lib/currencies';
 
 interface SettingsContextType {
-  settings: Settings;
-  updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
-  loading: boolean;
   currency: Currency;
-  theme: 'light' | 'dark' | 'system';
-  updateTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
-const defaultSettings: Settings = {
-  currency: currencies.USD,
-  theme: 'system',
-  notifications: true,
-};
+const defaultCurrency = getCurrencyByCode('USD');
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType>({
+  currency: defaultCurrency,
+  loading: true,
+  error: null,
+});
 
-export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [loading, setLoading] = useState(true);
+export const useSettings = () => useContext(SettingsContext);
 
-  // Load settings from database on initial render
+export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currency, setCurrency] = useState<Currency>(defaultCurrency);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    async function loadSettings() {
+    const fetchUserSettings = async () => {
       try {
-        setLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
         
-        if (user) {
-          const { data, error } = await supabase
-            .from('user_settings')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-            
-          if (error && error.code !== 'PGRST116') {
-            console.error('Error loading settings:', error);
-          }
-          
-          if (data) {
-            const loadedSettings: Settings = {
-              currency: currencies[data.currency_code] || currencies.USD,
-              theme: data.theme || 'system',
-              notifications: data.notifications !== undefined ? data.notifications : true,
-            };
-            setSettings(loadedSettings);
-          }
+        if (!user) {
+          setLoading(false);
+          return;
         }
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadSettings();
-  }, []);
-
-  // Subscribe to settings changes
-  useRealtimeSubscription(
-    'user_settings',
-    'UPDATE',
-    async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
         
-        const { data, error } = await supabase
+        const { data: userSettings, error: settingsError } = await supabase
           .from('user_settings')
           .select('*')
           .eq('user_id', user.id)
           .single();
-          
-        if (error) throw error;
         
-        if (data) {
-          const updatedSettings: Settings = {
-            currency: currencies[data.currency_code] || currencies.USD,
-            theme: data.theme || 'system',
-            notifications: data.notifications !== undefined ? data.notifications : true,
-          };
-          setSettings(updatedSettings);
+        if (settingsError) {
+          throw settingsError;
         }
-      } catch (error) {
-        console.error('Error refreshing settings:', error);
-      }
-    }
-  );
-
-  // Update settings in database
-  const updateSettings = async (newSettings: Partial<Settings>) => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      const updatedSettings = { ...settings, ...newSettings };
-      setSettings(updatedSettings);
-      
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({
-          user_id: user.id,
-          currency_code: updatedSettings.currency.code,
-          theme: updatedSettings.theme,
-          notifications: updatedSettings.notifications,
-          updated_at: new Date().toISOString(),
-        });
         
-      if (error) {
-        throw error;
+        if (userSettings) {
+          const currencyCode = userSettings.currency_code;
+          const currencyObj = getCurrencyByCode(currencyCode);
+          setCurrency(currencyObj);
+        }
+      } catch (err: any) {
+        setError(err.message);
+        console.error('Error fetching user settings:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to update settings:', error);
-      // Revert settings on error
-      setSettings(settings);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
+    };
+    
+    fetchUserSettings();
+    
+    // Listen for real-time changes to user settings
+    const channel = supabase
+      .channel('user_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_settings'
+        },
+        (payload) => {
+          const updatedSettings = payload.new;
+          if (updatedSettings) {
+            const currencyCode = updatedSettings.currency_code;
+            const currencyObj = getCurrencyByCode(currencyCode);
+            setCurrency(currencyObj);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+  
+  const value = {
+    currency,
+    loading,
+    error,
   };
-
-  // Convenience method to update theme only
-  const updateTheme = async (theme: 'light' | 'dark' | 'system') => {
-    await updateSettings({ theme });
-  };
-
+  
   return (
-    <SettingsContext.Provider value={{ 
-      settings, 
-      updateSettings, 
-      loading,
-      currency: settings.currency,
-      theme: settings.theme,
-      updateTheme
-    }}>
+    <SettingsContext.Provider value={value}>
       {children}
     </SettingsContext.Provider>
   );
-}
+};
 
-export function useSettings() {
-  const context = useContext(SettingsContext);
-  if (context === undefined) {
-    throw new Error('useSettings must be used within a SettingsProvider');
-  }
-  return context;
-}
+export default SettingsContext;

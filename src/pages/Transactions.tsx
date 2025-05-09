@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw } from "lucide-react";
@@ -15,6 +14,16 @@ import { TransactionType } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useTransactionData } from "@/hooks/useTransactionData";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const TransactionsPage = () => {
   const { currency } = useSettings();
@@ -23,6 +32,8 @@ const TransactionsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const { toast } = useToast();
 
   // Use our custom transaction hook for data fetching with pull-to-refresh support
@@ -48,35 +59,97 @@ const TransactionsPage = () => {
     }
   };
 
-  const handleDelete = async (ids: string[]) => {
+  const handleDelete = async () => {
     try {
-      const {
-        error
-      } = await supabase.from("transactions").delete().in("id", ids);
+      const { error } = await supabase.from("transactions").delete().in("id", selectedTransactions);
       if (error) throw error;
 
-      // Clear selected transactions
+      // Clear selected transactions and exit selection mode
       setSelectedTransactions([]);
+      setSelectionMode(false);
       await refetchTransactions();
+      
       toast({
         title: "Success",
-        description: `${ids.length} transaction(s) deleted successfully`
+        description: `${selectedTransactions.length} transaction(s) deleted successfully`
       });
+      
+      setConfirmDeleteOpen(false);
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive"
       });
+      setConfirmDeleteOpen(false);
     }
   };
 
   const handleEdit = (transaction: any) => {
-    navigate("/add-transaction", {
-      state: {
-        transaction
-      }
-    });
+    if (!selectionMode) {
+      navigate("/add-transaction", {
+        state: { transaction }
+      });
+    }
+  };
+  
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedTransactions([]);
+  };
+
+  const toggleTransactionSelection = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    if (selectionMode) {
+      setSelectedTransactions(prev => 
+        prev.includes(id) ? prev.filter(transId => transId !== id) : [...prev, id]
+      );
+    }
+  };
+
+  const selectAllInDay = (dayTransactions: any[], e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectionMode) return;
+    
+    const dayIds = dayTransactions.map(t => t.id);
+    const allSelected = dayIds.every(id => selectedTransactions.includes(id));
+    
+    if (allSelected) {
+      // Deselect all
+      setSelectedTransactions(prev => prev.filter(id => !dayIds.includes(id)));
+    } else {
+      // Select all
+      const newSelected = [...selectedTransactions];
+      dayIds.forEach(id => {
+        if (!newSelected.includes(id)) {
+          newSelected.push(id);
+        }
+      });
+      setSelectedTransactions(newSelected);
+    }
+  };
+  
+  const selectAllInMonth = (monthTransactions: any[], e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectionMode) return;
+    
+    const monthIds = monthTransactions.flat().map(t => t.id);
+    const allSelected = monthIds.every(id => selectedTransactions.includes(id));
+    
+    if (allSelected) {
+      // Deselect all
+      setSelectedTransactions(prev => prev.filter(id => !monthIds.includes(id)));
+    } else {
+      // Select all
+      const newSelected = [...selectedTransactions];
+      monthIds.forEach(id => {
+        if (!newSelected.includes(id)) {
+          newSelected.push(id);
+        }
+      });
+      setSelectedTransactions(newSelected);
+    }
   };
 
   const filteredTransactions = transactions?.filter(transaction => {
@@ -113,23 +186,7 @@ const TransactionsPage = () => {
         }
       });
     });
-    return {
-      income,
-      expense
-    };
-  };
-
-  const handleSelectTransaction = (id: string, checked: boolean) => {
-    setSelectedTransactions(prev => checked ? [...prev, id] : prev.filter(transId => transId !== id));
-  };
-
-  const handleSelectAll = (transactions: any[]) => {
-    const transactionIds = transactions.map(t => t.id);
-    if (transactionIds.every(id => selectedTransactions.includes(id))) {
-      setSelectedTransactions(prev => prev.filter(id => !transactionIds.includes(id)));
-    } else {
-      setSelectedTransactions(prev => [...prev, ...transactionIds.filter(id => !prev.includes(id))]);
-    }
+    return { income, expense };
   };
 
   const formatAmount = (amount: number) => {
@@ -161,11 +218,11 @@ const TransactionsPage = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-neutral">Transactions</h1>
           <div className="flex gap-2">
-            {selectedTransactions.length > 0 && (
+            {selectionMode && selectedTransactions.length > 0 && (
               <Button
                 variant="destructive"
                 className="flex items-center gap-2"
-                onClick={() => handleDelete(selectedTransactions)}
+                onClick={() => setConfirmDeleteOpen(true)}
               >
                 <Trash className="h-4 w-4" />
                 Delete ({selectedTransactions.length})
@@ -211,6 +268,14 @@ const TransactionsPage = () => {
                     <SelectItem value="savings">Savings</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                <Button 
+                  variant={selectionMode ? "secondary" : "outline"}
+                  onClick={toggleSelectionMode}
+                  size="sm"
+                >
+                  {selectionMode ? "Cancel" : "Select"}
+                </Button>
               </div>
             </div>
           </div>
@@ -225,30 +290,33 @@ const TransactionsPage = () => {
               <div className="divide-y">
                 {Object.entries(groupedTransactions).map(([month, days]) => {
                   const { income, expense } = getMonthlyTotals(month);
+                  const allDayTransactions = Object.values(days).flat();
+                  
                   return (
                     <div key={month} className="transaction-month-group">
                       {/* Month header */}
-                      <div className="bg-gray-50 p-4 border-b">
+                      <div 
+                        className={`bg-gray-50 p-4 border-b ${selectionMode ? 'cursor-pointer' : ''}`}
+                        onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
+                      >
                         <div className="flex flex-col">
                           <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                size="sm"
-                                checked={Object.values(days)
-                                  .flat()
-                                  .every((t) => selectedTransactions.includes(t.id))}
-                                onCheckedChange={() =>
-                                  handleSelectAll(Object.values(days).flat())
-                                }
-                              />
-                              <span className="font-medium">{month}</span>
-                            </div>
+                            <span className="font-medium">{month}</span>
+                            {selectionMode && (
+                              <div className={`h-4 w-4 rounded-sm border border-primary ${
+                                allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                                  ? 'bg-primary'
+                                  : allDayTransactions.some(t => selectedTransactions.includes(t.id))
+                                  ? 'bg-primary/30'
+                                  : ''
+                              }`}></div>
+                            )}
                           </div>
-                          <div className="flex items-center justify-between text-sm text-muted-foreground ml-6 mt-1">
-                            <div className="px-0 mx-[31px]">
+                          <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
+                            <div>
                               In: {currencySymbol}{formatAmount(income)}
                             </div>
-                            <div className="mx-0">
+                            <div>
                               Out: {currencySymbol}{formatAmount(expense)}
                             </div>
                           </div>
@@ -264,46 +332,50 @@ const TransactionsPage = () => {
                           )
                           .map(([day, dayTransactions]) => (
                             <div key={day} className="transaction-day-group">
-                              <div className="px-4 py-2 bg-gray-50/50 border-b text-sm text-muted-foreground flex items-center gap-2">
-                                <Checkbox
-                                  size="sm"
-                                  checked={dayTransactions.every((t) =>
-                                    selectedTransactions.includes(t.id)
-                                  )}
-                                  onCheckedChange={() => handleSelectAll(dayTransactions)}
-                                />
-                                {format(new Date(day), "EEEE, MMM d")}
+                              <div 
+                                className={`px-4 py-2 bg-gray-50/50 border-b text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer' : ''}`}
+                                onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
+                              >
+                                <span>{format(new Date(day), "EEEE, MMM d")}</span>
+                                
+                                {selectionMode && (
+                                  <div className={`h-4 w-4 rounded-sm border border-primary ${
+                                    dayTransactions.every(t => selectedTransactions.includes(t.id))
+                                      ? 'bg-primary'
+                                      : dayTransactions.some(t => selectedTransactions.includes(t.id))
+                                      ? 'bg-primary/30'
+                                      : ''
+                                  }`}></div>
+                                )}
                               </div>
 
                               <div className="divide-y">
                                 {dayTransactions.map((transaction) => (
                                   <div
                                     key={transaction.id}
-                                    className="transaction-row p-4 flex items-center gap-3"
-                                    onClick={() => handleEdit(transaction)}
+                                    className={`transaction-row p-4 flex items-center gap-3 ${selectionMode ? 'cursor-pointer' : ''}`}
+                                    onClick={() => selectionMode 
+                                      ? toggleTransactionSelection(transaction.id) 
+                                      : handleEdit(transaction)
+                                    }
                                   >
-                                    <Checkbox
-                                      size="sm"
-                                      checked={selectedTransactions.includes(transaction.id)}
-                                      onCheckedChange={(checked) => {
-                                        // Stop propagation to prevent navigation
-                                        handleSelectTransaction(
-                                          transaction.id,
-                                          checked === true
-                                        );
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
+                                    {selectionMode && (
+                                      <div 
+                                        className={`h-4 w-4 shrink-0 rounded-sm border border-primary ${
+                                          selectedTransactions.includes(transaction.id) ? 'bg-primary' : ''
+                                        }`}
+                                      />
+                                    )}
 
                                     <div className="flex-shrink-0">
                                       {renderTransactionIcon(transaction.type as TransactionType)}
                                     </div>
 
-                                    <div className="flex-1 py-0 my-0 mx-0 flex flex-col">
+                                    <div className="flex-1 flex flex-col">
                                       <p className="font-medium text-sm leading-tight">
                                         {transaction.description}
                                       </p>
-                                      <p className="text-xs text-muted-foreground leading-none mt-1 mb-0">
+                                      <p className="text-xs text-muted-foreground leading-none mt-1">
                                         {transaction.category}
                                       </p>
                                     </div>
@@ -353,6 +425,24 @@ const TransactionsPage = () => {
           </PullToRefresh>
         </Card>
       </div>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedTransactions.length} transaction(s)? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
