@@ -416,7 +416,9 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Cards section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Wallet Balance Card */}
           <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -442,6 +444,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Monthly Income Card */}
           <Card className="glass-card p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -473,6 +476,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Monthly Expenses Card */}
           <Card className="glass-card p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -506,7 +510,9 @@ const Dashboard = () => {
           </Card>
         </div>
 
+        {/* Charts section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Spending by Category Chart */}
           <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -575,6 +581,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Daily Income & Expenses Chart */}
           <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <AreaChart className="h-5 w-5 text-primary" />
@@ -675,6 +682,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Balance Trend Chart */}
           <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <LineChart className="h-5 w-5 text-primary" />
@@ -722,6 +730,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
+          {/* Expense Distribution Chart */}
           <Card className="glass-card p-6 chart-container transition-opacity duration-500">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
@@ -771,4 +780,22 @@ const Dashboard = () => {
                       backdropFilter: "blur(8px)",
                       border: "1px solid rgba(229, 231, 235, 0.5)",
                       borderRadius: "0.5rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                    }}
+                  />
+                  <Legend 
+                    formatter={(value, entry) => <span style={{ fontSize: '9px' }}>{value}</span>}
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: '9px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default Dashboard;
