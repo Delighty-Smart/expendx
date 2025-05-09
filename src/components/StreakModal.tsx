@@ -17,7 +17,7 @@ const StreakModal = ({ open, onOpenChange, streak, className }: StreakModalProps
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("w-[95%] max-w-[400px] mx-auto", className)}>
+      <DialogContent className={cn("w-[95%] max-w-[400px] mx-auto rounded-2xl", className)}>
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />

@@ -103,11 +103,16 @@
   }
 }
 
-/* Transaction group styling */
+/* Transaction group styling - improved dark mode */
 .transaction-month-group {
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   overflow: hidden;
+}
+
+.dark .transaction-month-group {
+  background-color: rgba(30, 32, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .transaction-day-group {
@@ -116,6 +121,23 @@
 
 .transaction-day-group:last-child {
   border-bottom: none;
+}
+
+.dark .transaction-row {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .transaction-row:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Improved dark mode for transaction headers */
+.dark .bg-gray-50 {
+  background-color: rgba(30, 32, 40, 0.6) !important; 
+}
+
+.dark .bg-gray-50\/50 {
+  background-color: rgba(30, 32, 40, 0.4) !important;
 }
 
 /* Custom checkbox styling - 16x16 pixel size */
@@ -133,6 +155,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   padding-bottom: 20px;
+  scrollbar-width: thin;
 }
 
 /* Transaction row hover effect */
@@ -161,6 +184,15 @@
 * {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+}
+
+html {
+  scroll-behavior: smooth !important;
+}
+
+body {
+  scroll-behavior: smooth !important;
+  overscroll-behavior-y: contain;
 }
 
 /* Ensure consistent padding in transaction rows across all screen sizes */
@@ -194,4 +226,31 @@
     line-height: 1;
     margin-top: 1px; /* 4px spacing between description and category */
   }
+}
+
+/* Enhanced scrollbar styling for transactions */
+.transactions-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.transactions-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.transactions-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 10px;
+}
+
+.dark .transactions-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.transactions-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+.dark .transactions-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
