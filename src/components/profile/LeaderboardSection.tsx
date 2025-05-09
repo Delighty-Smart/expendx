@@ -48,7 +48,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
       
-      // First get user profiles with their locations to filter by
+      // First get all user profiles with their locations
       const { data: profilesData, error: profilesError } = await supabase
         .from('user_profiles')
         .select('id, username, first_name, last_name, email, avatar_url, country, continent');

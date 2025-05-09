@@ -1,3 +1,4 @@
+
 import { addDays, differenceInDays, isSameDay, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -79,26 +80,44 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
     let newStreak = streakData.current_streak;
     let freezeCount = streakData.freeze_count;
     let currentTitle = streakData.current_title;
+    let shouldCreateAlert = false;
+    let alertMessage = "";
     
     // Update streak based on last login time
     if (daysSinceLastLogin === 1) {
       // Consecutive day login, increment streak
       newStreak += 1;
       freezeCount = MAX_FREEZE_DAYS; // Reset freeze count when logging in consecutive days
+      
+      // Check if streak reached a milestone
+      const milestone = STREAK_MILESTONES.find(m => m.days === newStreak);
+      if (milestone) {
+        shouldCreateAlert = true;
+        alertMessage = `Congratulations! You've reached a ${newStreak}-day streak and earned the "${milestone.title}" title!`;
+        currentTitle = milestone.title;
+      }
     } else if (daysSinceLastLogin > 1 && daysSinceLastLogin <= MAX_FREEZE_DAYS) {
       // Within freeze window, decrement freeze count but maintain streak
       freezeCount = Math.max(0, freezeCount - (daysSinceLastLogin - 1));
       newStreak += 1; // Still increment streak since they logged in within freeze period
     } else if (daysSinceLastLogin > MAX_FREEZE_DAYS) {
       // Beyond freeze window, reset streak
+      if (streakData.current_streak >= 7) {
+        shouldCreateAlert = true;
+        alertMessage = `Oh no! Your ${streakData.current_streak}-day streak has been reset because you missed ${daysSinceLastLogin} days.`;
+      }
       newStreak = 1;
       freezeCount = MAX_FREEZE_DAYS;
     }
 
     // Check if new streak has reached a new milestone
-    const newMilestone = determineUserTitle(newStreak);
-    if (getMilestoneRank(newMilestone) > getMilestoneRank(currentTitle)) {
-      currentTitle = newMilestone;
+    if (!shouldCreateAlert) {
+      const newMilestone = determineUserTitle(newStreak);
+      if (getMilestoneRank(newMilestone) > getMilestoneRank(currentTitle)) {
+        currentTitle = newMilestone;
+        shouldCreateAlert = true;
+        alertMessage = `Congratulations! You've earned the "${newMilestone}" title with your ${newStreak}-day streak!`;
+      }
     }
 
     // Update streak in database
@@ -118,6 +137,21 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
     if (updateError) {
       console.error("Error updating streak:", updateError);
       return null;
+    }
+
+    // Create alert if needed
+    if (shouldCreateAlert && alertMessage) {
+      try {
+        await supabase.from('alerts').insert({
+          user_id: user.id,
+          title: 'Streak Update',
+          message: alertMessage,
+          type: 'streak',
+          read: false
+        });
+      } catch (alertError) {
+        console.error("Error creating streak alert:", alertError);
+      }
     }
 
     return updatedStreak;

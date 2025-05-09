@@ -37,7 +37,7 @@ export function useRealtimeSubscription(
           event: event,
           schema: 'public',
           table: table,
-          ...filterConfig
+          ...(Object.keys(filterConfig).length > 0 ? { filter: filterConfig } : {})
         },
         (payload) => callback(payload)
       )

@@ -5,10 +5,11 @@ import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 type Alert = {
   id: string;
@@ -27,6 +28,12 @@ const Alerts = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Set up realtime subscription to alerts
+  useRealtimeSubscription('alerts', '*', () => {
+    console.log("Alerts updated, refreshing list");
+    fetchAlerts();
+  });
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -59,16 +66,21 @@ const Alerts = () => {
     try {
       setLoading(true);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsAuthenticated(false);
+        navigate('/auth');
+        return;
+      }
+
+      // Get all alerts for the current user
       const { data, error } = await supabase
         .from('alerts')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Handle connection request alerts by getting additional data
-      // Removed code that was causing errors since connection_requests table doesn't exist anymore
-
       setAlerts(data || []);
     } catch (error) {
       console.error('Error fetching alerts:', error);
@@ -159,7 +171,7 @@ const Alerts = () => {
       case 'admin_message':
         return <User className="text-purple-500" />;
       case 'streak':
-        return <Check className="text-emerald-500" />;
+        return <Award className="text-emerald-500" />;
       case 'payment':
         return <DollarSign className="text-green-500" />;
       default:

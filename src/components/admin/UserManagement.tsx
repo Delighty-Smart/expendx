@@ -46,18 +46,21 @@ const UserManagement = () => {
 
   // Setup realtime subscription to update users list when changes occur
   useRealtimeSubscription('user_profiles', '*', () => {
+    console.log("User profiles updated, refreshing list");
     fetchUsers();
   });
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
 
-      // Remove any limit from the query to get ALL users
-      const {
-        data,
-        error
-      } = await supabase.from('user_profiles').select('*');
+      // Get ALL users without limit
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*');
+
       if (error) throw error;
+      
       if (data) {
         setUsers(data);
         const uniqueCountries = [...new Set(data.map(user => user.country).filter(Boolean))];
@@ -76,6 +79,7 @@ const UserManagement = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchUsers();
   }, [toast]);
