@@ -2,6 +2,8 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+
 /**
  * A hook to subscribe to real-time changes on a Supabase table
  * 
@@ -12,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export function useRealtimeSubscription(
   table: string,
-  event: 'INSERT' | 'UPDATE' | 'DELETE' | '*',
+  event: RealtimeEvent,
   callback: () => void,
   filter?: { column?: string; value?: string }
 ) {
@@ -25,7 +27,7 @@ export function useRealtimeSubscription(
       ? { [filter.column]: filter.value }
       : {};
 
-    // Set up the subscription
+    // Set up the subscription - Using correct typing
     const subscription = supabase
       .channel(channelId)
       .on(
@@ -36,7 +38,7 @@ export function useRealtimeSubscription(
           table: table,
           ...filterConfig
         },
-        callback
+        () => callback()
       )
       .subscribe();
     

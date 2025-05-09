@@ -5,11 +5,9 @@ import { Currency } from "@/lib/currencies";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ArrowUp, ArrowDown, RefreshCcw } from "lucide-react";
+import { Search, ArrowUp, ArrowDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -97,6 +95,9 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     }
   };
 
+  // Ensure we have a valid currency symbol
+  const currencySymbol = currency?.symbol || "$";
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
@@ -145,10 +146,10 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                         <div>
-                          In: {currency.symbol}{formatAmount(income)}
+                          In: {currencySymbol}{formatAmount(income)}
                         </div>
                         <div>
-                          Out: {currency.symbol}{formatAmount(expense)}
+                          Out: {currencySymbol}{formatAmount(expense)}
                         </div>
                       </div>
                     </div>
@@ -182,7 +183,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                   {renderTransactionIcon(transaction.type)}
                                 </div>
                                 
-                                <div className="flex-1">
+                                <div className="flex-1 flex flex-col">
                                   <p className="font-medium text-sm leading-tight">
                                     {transaction.description}
                                   </p>
@@ -200,7 +201,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                 }`}>
                                   <p className="font-medium text-sm leading-tight">
                                     {transaction.type === "debit" ? "-" : "+"}
-                                    {currency.symbol}{formatAmount(transaction.amount)}
+                                    {currencySymbol}{formatAmount(transaction.amount)}
                                   </p>
                                   <p className="text-xs text-muted-foreground leading-none mt-1">
                                     {format(new Date(transaction.date), "HH:mm")}

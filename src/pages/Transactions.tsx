@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { TransactionType } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -30,6 +31,7 @@ const TransactionsPage = () => {
     isLoading,
     refetch: refetchTransactions
   } = useTransactionData();
+
   const handleRefresh = async () => {
     try {
       await refetchTransactions();
@@ -45,6 +47,7 @@ const TransactionsPage = () => {
       });
     }
   };
+
   const handleDelete = async (ids: string[]) => {
     try {
       const {
@@ -67,6 +70,7 @@ const TransactionsPage = () => {
       });
     }
   };
+
   const handleEdit = (transaction: any) => {
     navigate("/add-transaction", {
       state: {
@@ -74,6 +78,7 @@ const TransactionsPage = () => {
       }
     });
   };
+
   const filteredTransactions = transactions?.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || transaction.category === selectedCategory;
@@ -113,9 +118,11 @@ const TransactionsPage = () => {
       expense
     };
   };
+
   const handleSelectTransaction = (id: string, checked: boolean) => {
     setSelectedTransactions(prev => checked ? [...prev, id] : prev.filter(transId => transId !== id));
   };
+
   const handleSelectAll = (transactions: any[]) => {
     const transactionIds = transactions.map(t => t.id);
     if (transactionIds.every(id => selectedTransactions.includes(id))) {
@@ -124,12 +131,14 @@ const TransactionsPage = () => {
       setSelectedTransactions(prev => [...prev, ...transactionIds.filter(id => !prev.includes(id))]);
     }
   };
+
   const formatAmount = (amount: number) => {
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
   };
+
   const renderTransactionIcon = (type: TransactionType) => {
     switch (type) {
       case 'credit':
@@ -142,6 +151,10 @@ const TransactionsPage = () => {
         return null;
     }
   };
+
+  // Ensure currency has a valid default value to avoid null/undefined errors
+  const currencySymbol = currency?.symbol || "$";
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -233,10 +246,10 @@ const TransactionsPage = () => {
                           </div>
                           <div className="flex items-center justify-between text-sm text-muted-foreground ml-6 mt-1">
                             <div className="px-0 mx-[31px]">
-                              In: {currency.symbol}{formatAmount(income)}
+                              In: {currencySymbol}{formatAmount(income)}
                             </div>
                             <div className="mx-0">
-                              Out: {currency.symbol}{formatAmount(expense)}
+                              Out: {currencySymbol}{formatAmount(expense)}
                             </div>
                           </div>
                         </div>
@@ -286,11 +299,11 @@ const TransactionsPage = () => {
                                       {renderTransactionIcon(transaction.type as TransactionType)}
                                     </div>
 
-                                    <div className="flex-1 py-0 my-0 mx-0">
+                                    <div className="flex-1 py-0 my-0 mx-0 flex flex-col">
                                       <p className="font-medium text-sm leading-tight">
                                         {transaction.description}
                                       </p>
-                                      <p className="text-xs text-muted-foreground py-0 my-0 leading-none mt-1">
+                                      <p className="text-xs text-muted-foreground leading-none mt-1 mb-0">
                                         {transaction.category}
                                       </p>
                                     </div>
@@ -310,7 +323,7 @@ const TransactionsPage = () => {
                                           : transaction.type === "debit"
                                           ? "-"
                                           : ""}
-                                        {currency.symbol}
+                                        {currencySymbol}
                                         {formatAmount(transaction.amount)}
                                       </p>
                                     </div>

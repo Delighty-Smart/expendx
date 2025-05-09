@@ -11,7 +11,7 @@ const Checkbox = React.forwardRef<
     size?: 'sm' | 'md' | 'lg'
   }
 >(({ className, size = 'md', ...props }, ref) => {
-  // All checkbox sizes standardized to exactly 16x16px
+  // All checkbox sizes standardized to exactly 16x16px (h-4 w-4)
   const sizeClasses = {
     sm: "h-4 w-4", // 16x16px
     md: "h-4 w-4", // 16x16px

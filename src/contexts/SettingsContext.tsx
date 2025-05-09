@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Currency, currencies } from '@/lib/currencies';
@@ -14,6 +15,8 @@ interface SettingsContextType {
   updateSettings: (newSettings: Partial<Settings>) => Promise<void>;
   loading: boolean;
   currency: Currency;
+  theme: 'light' | 'dark' | 'system';
+  updateTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
 }
 
 const defaultSettings: Settings = {
@@ -132,12 +135,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Convenience method to update theme only
+  const updateTheme = async (theme: 'light' | 'dark' | 'system') => {
+    await updateSettings({ theme });
+  };
+
   return (
     <SettingsContext.Provider value={{ 
       settings, 
       updateSettings, 
       loading,
-      currency: settings.currency
+      currency: settings.currency,
+      theme: settings.theme,
+      updateTheme
     }}>
       {children}
     </SettingsContext.Provider>
