@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -772,22 +771,4 @@ const Dashboard = () => {
                       backdropFilter: "blur(8px)",
                       border: "1px solid rgba(229, 231, 235, 0.5)",
                       borderRadius: "0.5rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                  />
-                  <Legend 
-                    formatter={(value, entry) => <span style={{ fontSize: '9px' }}>{value}</span>}
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '9px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </Layout>
-  );
-};
-
-export default Dashboard;
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06

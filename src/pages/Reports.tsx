@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -35,7 +34,7 @@ interface DateRange {
 }
 
 const Reports = () => {
-  const { currency } = useSettings();
+  const { currency, hideAmounts } = useSettings();
   const isMobile = useIsMobile();
   const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 30), // Default: Last 30 days
@@ -191,6 +190,14 @@ const Reports = () => {
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#5DADE2', '#48C9B0', '#F4D03F'];
 
+  const formatCurrency = (amount: number) => {
+    const { currency } = useSettings();
+    if (hideAmounts) {
+      return '***';
+    }
+    return `${currency.symbol}${amount.toFixed(2)}`;
+  };
+
   const handleExportData = () => {
     setIsExporting(true);
 
@@ -329,17 +336,17 @@ const Reports = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
             <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
               <h3 className="text-sm text-muted-foreground mb-1">Total Income</h3>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{currency.symbol}{summaryStats.totalIncome.toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(summaryStats.totalIncome)}</p>
             </Card>
             
             <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
               <h3 className="text-sm text-muted-foreground mb-1">Total Expenses</h3>
-              <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{currency.symbol}{summaryStats.totalExpenses.toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(summaryStats.totalExpenses)}</p>
             </Card>
             
             <Card className="p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
               <h3 className="text-sm text-muted-foreground mb-1">Total Savings</h3>
-              <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{currency.symbol}{summaryStats.totalSavings.toFixed(2)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(summaryStats.totalSavings)}</p>
             </Card>
             
             <Card className="p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
@@ -349,7 +356,7 @@ const Reports = () => {
                   ? "text-green-600 dark:text-green-400" 
                   : "text-red-600 dark:text-red-400"
               }`}>
-                {currency.symbol}{Math.abs(summaryStats.netCashflow).toFixed(2)}
+                {formatCurrency(Math.abs(summaryStats.netCashflow))}
                 {summaryStats.netCashflow < 0 && <span> (DEFICIT)</span>}
               </p>
             </Card>
