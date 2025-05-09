@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -9,18 +10,20 @@ import UserManagement from "@/components/admin/UserManagement";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
 import SidebarAdmin from "@/components/admin/SidebarAdmin";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState({
     userCount: 0,
     transactionCount: 0,
-    feedbackCount: 0
+    feedbackCount: 0,
+    streakCount: 0,
+    savingsCount: 0
   });
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
+
   useEffect(() => {
     // Check URL params to set active tab
     const params = new URLSearchParams(window.location.search);
@@ -34,38 +37,46 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       // Fetch user count
-      const {
-        count: userCount,
-        error: userError
-      } = await supabase.from('user_profiles').select('*', {
-        count: 'exact',
-        head: true
-      });
+      const { count: userCount, error: userError } = await supabase
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true });
+      
       if (userError) throw userError;
 
       // Fetch transaction count
-      const {
-        count: transactionCount,
-        error: transactionError
-      } = await supabase.from('transactions').select('*', {
-        count: 'exact',
-        head: true
-      });
+      const { count: transactionCount, error: transactionError } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true });
+      
       if (transactionError) throw transactionError;
 
       // Fetch feedback count
-      const {
-        count: feedbackCount,
-        error: feedbackError
-      } = await supabase.from('user_feedback').select('*', {
-        count: 'exact',
-        head: true
-      });
+      const { count: feedbackCount, error: feedbackError } = await supabase
+        .from('user_feedback')
+        .select('*', { count: 'exact', head: true });
+      
       if (feedbackError) throw feedbackError;
+
+      // Fetch streak count
+      const { count: streakCount, error: streakError } = await supabase
+        .from('user_streaks')
+        .select('*', { count: 'exact', head: true });
+      
+      if (streakError) throw streakError;
+
+      // Fetch savings goal count
+      const { count: savingsCount, error: savingsError } = await supabase
+        .from('savings_goals')
+        .select('*', { count: 'exact', head: true });
+      
+      if (savingsError) throw savingsError;
+
       setStats({
         userCount: userCount || 0,
         transactionCount: transactionCount || 0,
-        feedbackCount: feedbackCount || 0
+        feedbackCount: feedbackCount || 0,
+        streakCount: streakCount || 0,
+        savingsCount: savingsCount || 0
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -73,26 +84,29 @@ const AdminDashboard = () => {
   };
 
   // Set up realtime subscriptions for dashboard stats
-  useRealtimeSubscription('user_profiles', '*', () => fetchDashboardStats());
-  useRealtimeSubscription('transactions', '*', () => fetchDashboardStats());
-  useRealtimeSubscription('user_feedback', '*', () => fetchDashboardStats());
+  useRealtimeSubscription('user_profiles', '*', fetchDashboardStats);
+  useRealtimeSubscription('transactions', '*', fetchDashboardStats);
+  useRealtimeSubscription('user_feedback', '*', fetchDashboardStats);
+  useRealtimeSubscription('user_streaks', '*', fetchDashboardStats);
+  useRealtimeSubscription('savings_goals', '*', fetchDashboardStats);
+
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        const {
-          data: {
-            user
-          }
-        } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           navigate('/auth');
           return;
         }
-        const {
-          data: profileData,
-          error
-        } = await supabase.from('user_profiles').select('role').eq('id', user.id).single();
+
+        const { data: profileData, error } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
         if (error) throw error;
+
         if (profileData?.role !== 'admin') {
           toast({
             title: "Access Denied",
@@ -102,6 +116,7 @@ const AdminDashboard = () => {
           navigate('/');
           return;
         }
+
         setIsAdmin(true);
         fetchDashboardStats(); // Initial fetch of dashboard stats
       } catch (error) {
@@ -114,24 +129,28 @@ const AdminDashboard = () => {
         navigate('/');
       }
     };
+
     checkAdminStatus();
   }, [navigate, toast]);
 
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    navigate(`/admin?tab=${value}`, {
-      replace: true
-    });
+    navigate(`/admin?tab=${value}`, { replace: true });
   };
+
   if (isAdmin === null) {
-    return <Layout>
+    return (
+      <Layout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-pulse text-muted-foreground">Loading...</div>
         </div>
-      </Layout>;
+      </Layout>
+    );
   }
-  return <Layout>
+
+  return (
+    <Layout>
       <div className="space-y-6">
         <h1 className="font-bold text-xl">Admin Dashboard</h1>
         
@@ -163,6 +182,18 @@ const AdminDashboard = () => {
                 </div>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400">Active Streaks</h3>
+                  <p className="text-2xl font-bold">{stats.streakCount}</p>
+                </div>
+                
+                <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-pink-600 dark:text-pink-400">Savings Goals</h3>
+                  <p className="text-2xl font-bold">{stats.savingsCount}</p>
+                </div>
+              </div>
+              
               <p className="text-muted-foreground">
                 Welcome to the admin panel. Use the tabs above to navigate between different sections.
                 The dashboard will automatically update when data changes.
@@ -183,6 +214,8 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>;
+    </Layout>
+  );
 };
+
 export default AdminDashboard;

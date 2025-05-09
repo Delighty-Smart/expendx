@@ -15,6 +15,7 @@ interface LeaderboardItem {
   current_streak: number;
   highest_streak: number;
   avatar_url?: string;
+  rank?: number;
 }
 
 interface LeaderboardSectionProps {
@@ -32,6 +33,12 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
   // Set up realtime subscription to update leaderboard when user_streaks changes
   useRealtimeSubscription('user_streaks', '*', () => {
     console.log("User streaks updated, refreshing leaderboard");
+    fetchLeaderboardData();
+  });
+
+  // Set up realtime subscription to update leaderboard when user_profiles changes
+  useRealtimeSubscription('user_profiles', '*', () => {
+    console.log("User profiles updated, refreshing leaderboard");
     fetchLeaderboardData();
   });
 
@@ -80,7 +87,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
       // Join the streaks with the filtered profiles
       const formattedData = streaksData
         .filter(streak => userProfileMap.has(streak.user_id))
-        .map(streak => {
+        .map((streak, index) => {
           const profile = userProfileMap.get(streak.user_id);
           return {
             id: streak.user_id,
@@ -91,6 +98,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
             current_streak: streak.current_streak,
             highest_streak: streak.highest_streak,
             avatar_url: profile?.avatar_url,
+            rank: index + 1 // Add position rank
           };
         });
       
@@ -110,7 +118,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
 
   useEffect(() => {
     fetchLeaderboardData();
-  }, [type, continent, country, toast]);
+  }, [type, continent, country]);
 
   const getDisplayName = (item: LeaderboardItem) => {
     if (item.username) return item.username;
@@ -153,7 +161,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
         </div>
       ) : (
         <div className="space-y-2">
-          {leaderboard.map((item, index) => (
+          {leaderboard.map((item) => (
             <div 
               key={item.id} 
               className={`flex items-center p-3 rounded-md ${
@@ -163,7 +171,7 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
               }`}
             >
               <div className="w-8 text-center font-bold text-muted-foreground">
-                {index + 1}
+                {item.rank}
               </div>
               
               <Avatar className="h-8 w-8 mr-3">

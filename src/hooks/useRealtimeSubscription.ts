@@ -15,7 +15,7 @@ type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 export function useRealtimeSubscription(
   table: string,
   event: RealtimeEvent,
-  callback: () => void,
+  callback: (payload?: any) => void,
   filter?: { column?: string; value?: string }
 ) {
   useEffect(() => {
@@ -23,12 +23,13 @@ export function useRealtimeSubscription(
     const channelId = `${table}-${event}-${filter?.column || 'all'}-${filter?.value || 'all'}`;
     
     // Set up filter configuration if provided
-    const filterConfig = filter?.column && filter?.value
-      ? { [filter.column]: filter.value }
-      : {};
+    let filterConfig = {};
+    if (filter?.column && filter?.value) {
+      filterConfig = { [filter.column]: filter.value };
+    }
 
-    // Set up the subscription with correct typing
-    const subscription = supabase
+    // Set up the subscription
+    const channel = supabase
       .channel(channelId)
       .on(
         'postgres_changes',
@@ -36,15 +37,15 @@ export function useRealtimeSubscription(
           event: event,
           schema: 'public',
           table: table,
-          ...(filterConfig as any)
+          ...filterConfig
         },
-        () => callback()
+        (payload) => callback(payload)
       )
       .subscribe();
     
     // Cleanup function to remove the subscription when component unmounts
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(channel);
     };
   }, [table, event, callback, filter]);
 }
