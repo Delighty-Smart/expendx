@@ -27,7 +27,7 @@ export function useRealtimeSubscription(
       ? { [filter.column]: filter.value }
       : {};
 
-    // Set up the subscription - Using correct typing
+    // Set up the subscription with correct typing
     const subscription = supabase
       .channel(channelId)
       .on(
@@ -36,7 +36,7 @@ export function useRealtimeSubscription(
           event: event,
           schema: 'public',
           table: table,
-          ...filterConfig
+          ...(filterConfig as any)
         },
         () => callback()
       )
