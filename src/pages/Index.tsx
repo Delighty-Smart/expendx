@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -7,10 +10,58 @@ import Layout from '@/components/Layout';
 import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { updateUserStreak } from '@/lib/streak';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
-import { ArrowRight, Plus, Wallet, PiggyBank, Target, ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
+import { 
+  AreaChart as RechartAreaChart, 
+  LineChart as RechartLineChart,
+  BarChart, 
+  PieChart,
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Legend,
+  Line,
+  Bar,
+  Cell,
+  Sector,
+  Pie
+} from 'recharts';
+import { 
+  format, 
+  formatDistanceToNow, 
+  startOfMonth, 
+  endOfMonth,
+  addWeeks,
+  subWeeks,
+  eachDayOfInterval
+} from 'date-fns';
+import { 
+  ArrowRight, 
+  Plus, 
+  Wallet, 
+  PiggyBank, 
+  Target, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  DollarSign,
+  BarChart3,
+  AreaChart,
+  LineChart,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  PlusCircle,
+  Flame,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { Transaction, TransactionType } from '@/types/transactions';
+
+type TransactionData = Transaction;
 
 // Function to navigate to Add Transaction page
 const handleAddTransaction = () => {
@@ -25,6 +76,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const [hideAmounts, setHideAmounts] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+  const navigate = useNavigate();
   
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
@@ -114,32 +166,17 @@ const Dashboard = () => {
     type: transaction.type as TransactionType
   }));
 
-  useEffect(() => {
-    console.log("Setting up real-time subscription to transactions table");
-    
-    const channel = supabase
-      .channel('dashboard-transactions-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'transactions'
-        },
-        (payload) => {
-          console.log('Transaction changes detected:', payload);
-          queryClient.invalidateQueries({ queryKey: ["transactions"] });
-          queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-          queryClient.invalidateQueries({ queryKey: ["budgets"] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log("Cleaning up real-time subscription");
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  // Set up realtime subscription to transactions
+  useRealtimeSubscription(
+    'transactions',
+    '*',
+    (payload) => {
+      console.log('Transaction changes detected:', payload);
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+    }
+  );
 
   const handleTransactionAdded = () => {
     refetchMonthlyTransactions();
@@ -356,7 +393,7 @@ const Dashboard = () => {
         <div className="flex flex-wrap gap-4 justify-between">
           <Button
             className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
-            onClick={() => setIsTransactionFormOpen(true)}
+            onClick={() => navigate('/add-transaction')}
           >
             <PlusCircle className="h-4 w-4" />
             Add Transaction
@@ -379,12 +416,6 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
-
-        <TransactionForm
-          open={isTransactionFormOpen}
-          onOpenChange={setIsTransactionFormOpen}
-          onTransactionAdded={handleTransactionAdded}
-        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
