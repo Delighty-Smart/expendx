@@ -7,6 +7,7 @@ import { currencies } from '@/lib/currencies';
 interface Currency {
   code: string;
   symbol: string;
+  name: string; // Ensure name property is included
 }
 
 interface SettingsContextType {
@@ -15,6 +16,8 @@ interface SettingsContextType {
   theme: string;
   updateTheme: (theme: 'light' | 'dark') => void;
   updateCurrency: (currencyCode: string) => void;
+  hideAmounts: boolean; // Add the missing hideAmounts property
+  toggleHideAmounts: () => void; // Add method to toggle hideAmounts
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -28,8 +31,9 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currency, setCurrency] = useState<Currency>({ code: 'USD', symbol: '$' });
+  const [currency, setCurrency] = useState<Currency>({ code: 'USD', symbol: '$', name: 'US Dollar' });
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [hideAmounts, setHideAmounts] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUserSettings();
@@ -65,7 +69,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       // If settings exists, update the state with the saved currency
       if (data && data.currency_code) {
-        const currencyObj = currencies.find(c => c.code === data.currency_code) || { code: 'USD', symbol: '$' };
+        const currencyObj = currencies.find(c => c.code === data.currency_code) || { code: 'USD', symbol: '$', name: 'US Dollar' };
         setCurrency(currencyObj);
       }
     } catch (error) {
@@ -123,8 +127,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Function to update currency by code
   const updateCurrency = (currencyCode: string) => {
-    const currencyObj = currencies.find(c => c.code === currencyCode) || { code: 'USD', symbol: '$' };
+    const currencyObj = currencies.find(c => c.code === currencyCode) || { code: 'USD', symbol: '$', name: 'US Dollar' };
     setCurrency(currencyObj);
+  };
+
+  // Function to toggle hideAmounts
+  const toggleHideAmounts = () => {
+    setHideAmounts(prev => !prev);
   };
 
   return (
@@ -133,7 +142,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCurrency, 
       theme, 
       updateTheme,
-      updateCurrency 
+      updateCurrency,
+      hideAmounts,
+      toggleHideAmounts
     }}>
       {children}
     </SettingsContext.Provider>

@@ -31,11 +31,11 @@ export function useRealtimeSubscription(
         filterConfig = { [filter.column]: filter.value };
       }
 
-      // Set up the subscription - fixing the type issue with the postgres_changes event
+      // Set up the subscription with the correct type casting
       const channel = supabase
         .channel(channelId)
         .on(
-          'postgres_changes',
+          'postgres_changes' as any, // Use type assertion to avoid the typescript error
           {
             event: event === '*' ? undefined : event,
             schema: 'public',
