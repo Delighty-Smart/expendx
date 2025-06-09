@@ -43,7 +43,14 @@ export const CategoryManagement = () => {
 
       if (error) throw error;
       
-      setCategories(data || []);
+      // Type the data properly to ensure type is TransactionType
+      const typedCategories: UserCategory[] = (data || []).map(category => ({
+        id: category.id,
+        name: category.name,
+        type: category.type as TransactionType
+      }));
+      
+      setCategories(typedCategories);
     } catch (error: any) {
       console.error("Error fetching categories:", error);
       toast({
@@ -95,7 +102,14 @@ export const CategoryManagement = () => {
 
       if (error) throw error;
 
-      setCategories(prev => [...prev, data]);
+      // Type the new category properly
+      const newCategory: UserCategory = {
+        id: data.id,
+        name: data.name,
+        type: data.type as TransactionType
+      };
+
+      setCategories(prev => [...prev, newCategory]);
       setNewCategoryName("");
       
       // Invalidate queries to refresh category lists

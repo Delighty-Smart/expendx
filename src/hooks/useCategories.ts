@@ -22,8 +22,8 @@ export function useCategories(type: TransactionType) {
         return allCategories;
       } catch (err) {
         console.error('Error loading categories:', err);
-        // Return default categories if there's an error
-        return getDefaultCategoriesForType(type);
+        // Return default categories if there's an error - convert to mutable array
+        return [...getDefaultCategoriesForType(type)];
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -34,7 +34,8 @@ export function useCategories(type: TransactionType) {
 
   useEffect(() => {
     if (data) {
-      setCategories(data);
+      // Ensure we have a mutable array
+      setCategories([...data]);
     }
   }, [data]);
 
@@ -55,7 +56,7 @@ export function useCategories(type: TransactionType) {
   const refreshCategories = async () => {
     try {
       const refreshedCategories = await getCategoriesForType(type);
-      setCategories(refreshedCategories);
+      setCategories([...refreshedCategories]); // Convert to mutable array
       // Invalidate any related queries
       queryClient.invalidateQueries({ queryKey: ['userCategories'] });
       
