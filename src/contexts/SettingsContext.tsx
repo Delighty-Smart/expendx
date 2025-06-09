@@ -36,18 +36,51 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [hideAmounts, setHideAmounts] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchUserSettings();
-    // Set initial theme based on system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(prefersDark ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark', prefersDark);
+    initializeSettings();
   }, []);
 
   useEffect(() => {
-    updateUserSettings(currency.code);
+    // Update user settings when currency or theme changes
+    updateUserSettings();
     // Update HTML class for theme
     document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [currency, theme]);
+  }, [currency, theme, hideAmounts]);
+
+  const initializeSettings = async () => {
+    try {
+      // First, try to get settings from localStorage for immediate UI response
+      const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
+      const savedHideAmounts = localStorage.getItem('expendx_hideAmounts') === 'true';
+      const savedCurrency = localStorage.getItem('expendx_currency');
+
+      // Apply saved theme immediately
+      if (savedTheme) {
+        setTheme(savedTheme);
+        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      } else {
+        // Set initial theme based on system preference if no saved theme
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = prefersDark ? 'dark' : 'light';
+        setTheme(initialTheme);
+        document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+        localStorage.setItem('expendx_theme', initialTheme);
+      }
+
+      // Apply saved hide amounts setting
+      setHideAmounts(savedHideAmounts);
+
+      // Apply saved currency
+      if (savedCurrency) {
+        const currencyObj = currencies.find(c => c.code === savedCurrency) || { code: 'USD', symbol: '$', name: 'US Dollar' };
+        setCurrency(currencyObj);
+      }
+
+      // Then fetch from Supabase to sync with server
+      await fetchUserSettings();
+    } catch (error) {
+      console.error('Error initializing settings:', error);
+    }
+  };
 
   // Get user settings from Supabase
   const fetchUserSettings = async () => {
@@ -71,15 +104,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (data && data.currency_code) {
         const currencyObj = currencies.find(c => c.code === data.currency_code) || { code: 'USD', symbol: '$', name: 'US Dollar' };
         setCurrency(currencyObj);
+        localStorage.setItem('expendx_currency', data.currency_code);
       }
     } catch (error) {
       console.error('Error in fetchUserSettings:', error);
     }
   };
 
-  // Update user settings in Supabase
-  const updateUserSettings = async (currencyCode: string) => {
+  // Update user settings in Supabase and localStorage
+  const updateUserSettings = async () => {
     try {
+      // Always save to localStorage for immediate persistence
+      localStorage.setItem('expendx_theme', theme);
+      localStorage.setItem('expendx_hideAmounts', hideAmounts.toString());
+      localStorage.setItem('expendx_currency', currency.code);
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -99,7 +138,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Update existing settings
         const { error: updateError } = await supabase
           .from('user_settings')
-          .update({ currency_code: currencyCode })
+          .update({ currency_code: currency.code })
           .eq('user_id', user.id);
 
         if (updateError) {
@@ -109,7 +148,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Create new settings
         const { error: insertError } = await supabase
           .from('user_settings')
-          .insert({ user_id: user.id, currency_code: currencyCode });
+          .insert({ user_id: user.id, currency_code: currency.code });
 
         if (insertError) {
           console.error('Error creating user settings:', insertError);

@@ -1,74 +1,61 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, X, Edit, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { 
-  TransactionType, 
-  getDefaultCategoriesForType,
-  UserCategory
-} from "@/types/transactions";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { TransactionType } from "@/types/transactions";
+import { Trash2, Plus } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
-export function CategoryManagement() {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<TransactionType>("credit");
-  const [newCategory, setNewCategory] = useState("");
-  const [editingCategory, setEditingCategory] = useState<{id: string, name: string} | null>(null);
-  const [editValue, setEditValue] = useState("");
+interface UserCategory {
+  id: string;
+  name: string;
+  type: TransactionType;
+}
+
+export const CategoryManagement = () => {
+  const [categories, setCategories] = useState<UserCategory[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryType, setNewCategoryType] = useState<TransactionType>("debit");
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: userCategories, isLoading } = useQuery({
-    queryKey: ["user_categories"],
-    queryFn: async () => {
+  useEffect(() => {
+    fetchUserCategories();
+  }, []);
+
+  const fetchUserCategories = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-      
-      // Use type assertion to bypass TypeScript errors
+      if (!user) return;
+
       const { data, error } = await supabase
-        .from("user_categories" as any)
+        .from("user_categories")
         .select("*")
-        .eq("user_id", user.id);
-        
-      if (error) {
-        console.error("Error fetching user categories:", error);
-        return [];
-      }
+        .eq("user_id", user.id)
+        .order("type", { ascending: true })
+        .order("name", { ascending: true });
+
+      if (error) throw error;
       
-      return data as unknown as UserCategory[];
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error("Error fetching categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive"
+      });
     }
-  });
+  };
 
-  const getCategoriesForType = useCallback((type: TransactionType) => {
-    // Filter user categories for this type
-    const userCatsForType = userCategories
-      ?.filter(cat => cat.type === type)
-      .map(cat => ({ id: cat.id, name: cat.name })) || [];
-    
-    // Get default categories for this type
-    const defaultCategories = getDefaultCategoriesForType(type);
-    
-    // Convert default categories to objects with null id (to indicate they're system defaults)
-    const defaultCategoriesObjects = Array.from(defaultCategories).map(name => ({ 
-      id: null, 
-      name
-    }));
-    
-    // Combine both arrays, avoiding duplicates by name
-    const userCategoryNames = new Set(userCatsForType.map(cat => cat.name));
-    const filteredDefaults = defaultCategoriesObjects.filter(cat => !userCategoryNames.has(cat.name));
-    
-    return [...filteredDefaults, ...userCatsForType];
-  }, [userCategories]);
-
-  const addCategory = useCallback(async () => {
-    if (!newCategory.trim()) {
+  const addCategory = async () => {
+    if (!newCategoryName.trim()) {
       toast({
         title: "Error",
         description: "Category name cannot be empty",
@@ -76,291 +63,183 @@ export function CategoryManagement() {
       });
       return;
     }
-    
+
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (!user) throw new Error("User not authenticated");
+
+      // Check if category already exists for this user and type
+      const existingCategory = categories.find(
+        cat => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase() && cat.type === newCategoryType
+      );
+
+      if (existingCategory) {
         toast({
           title: "Error",
-          description: "You must be logged in to add categories",
+          description: `Category "${newCategoryName}" already exists for ${newCategoryType} transactions`,
           variant: "destructive"
         });
         return;
       }
-      
-      // Check if category already exists in default or user categories
-      const existingCategories = getCategoriesForType(activeTab);
-      if (existingCategories.some(cat => cat.name.toLowerCase() === newCategory.toLowerCase())) {
-        toast({
-          title: "Error",
-          description: `Category "${newCategory}" already exists`,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Use type assertion to bypass TypeScript errors
-      const { error } = await supabase
-        .from("user_categories" as any)
+
+      const { data, error } = await supabase
+        .from("user_categories")
         .insert({
-          type: activeTab,
-          name: newCategory,
-          user_id: user.id
-        });
-        
-      if (error) {
-        console.error("Error adding category:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add category. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
+          user_id: user.id,
+          name: newCategoryName.trim(),
+          type: newCategoryType
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCategories(prev => [...prev, data]);
+      setNewCategoryName("");
       
-      // Invalidate all related queries to ensure components fetch new data
-      queryClient.invalidateQueries({ queryKey: ["user_categories"] });
-      
-      // For instant feedback, update the form dropdowns
-      queryClient.invalidateQueries({ queryKey: ["transactions"] }); 
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
-      
-      setNewCategory("");
+      // Invalidate queries to refresh category lists
+      queryClient.invalidateQueries({ queryKey: ['userCategories'] });
       
       toast({
         title: "Success",
-        description: `Category "${newCategory}" added successfully`
+        description: "Category added successfully"
+      });
+    } catch (error: any) {
+      console.error("Error adding category:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add category",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
-  }, [newCategory, activeTab, toast, queryClient, getCategoriesForType]);
+  };
 
-  const deleteCategory = useCallback(async (categoryId: string) => {
+  const deleteCategory = async (categoryId: string, categoryName: string) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
       
-      // Use type assertion to bypass TypeScript errors
       const { error } = await supabase
-        .from("user_categories" as any)
+        .from("user_categories")
         .delete()
         .eq("id", categoryId);
-        
-      if (error) {
-        console.error("Error deleting category:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete category. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
+
+      if (error) throw error;
+
+      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
       
-      // Invalidate all related queries
-      queryClient.invalidateQueries({ queryKey: ["user_categories"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
+      // Invalidate queries to refresh category lists
+      queryClient.invalidateQueries({ queryKey: ['userCategories'] });
       
       toast({
         title: "Success",
-        description: "Category deleted successfully"
+        description: `Category "${categoryName}" deleted successfully`
+      });
+    } catch (error: any) {
+      console.error("Error deleting category:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete category",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
-  }, [toast, queryClient]);
-
-  const startEditing = (category: {id: string, name: string}) => {
-    setEditingCategory(category);
-    setEditValue(category.name);
   };
 
-  const saveEdit = async () => {
-    if (!editingCategory || !editValue.trim()) {
-      setEditingCategory(null);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-  
-      // Check if category name already exists
-      const existingCategories = getCategoriesForType(activeTab);
-      if (existingCategories.some(cat => 
-        cat.name.toLowerCase() === editValue.toLowerCase() && 
-        cat.id !== editingCategory.id
-      )) {
-        toast({
-          title: "Error",
-          description: `Category "${editValue}" already exists`,
-          variant: "destructive"
-        });
-        return;
-      }
-  
-      const { error } = await supabase
-        .from("user_categories" as any)
-        .update({ name: editValue })
-        .eq("id", editingCategory.id);
-  
-      if (error) {
-        console.error("Error updating category:", error);
-        toast({
-          title: "Error",
-          description: "Failed to update category. Please try again.",
-          variant: "destructive"
-        });
-      } else {
-        // Invalidate all related queries to ensure components fetch new data
-        queryClient.invalidateQueries({ queryKey: ["user_categories"] });
-        queryClient.invalidateQueries({ queryKey: ["transactions"] }); 
-        queryClient.invalidateQueries({ queryKey: ["budgets"] });
-        queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
-        
-        toast({
-          title: "Success",
-          description: "Category updated successfully"
-        });
-      }
-    } finally {
-      setLoading(false);
-      setEditingCategory(null);
-    }
-  };
-
-  const cancelEdit = () => {
-    setEditingCategory(null);
-  };
-
-  // Detect Enter key press to submit new category
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
       addCategory();
     }
   };
-  
+
+  const categoriesByType = categories.reduce((acc, category) => {
+    if (!acc[category.type]) {
+      acc[category.type] = [];
+    }
+    acc[category.type].push(category);
+    return acc;
+  }, {} as Record<TransactionType, UserCategory[]>);
+
   return (
-    <Card className="p-5 glass-card">
-      <h2 className="text-lg font-semibold mb-4">Manage Categories</h2>
-      
-      <Tabs defaultValue="credit" value={activeTab} onValueChange={(v) => setActiveTab(v as TransactionType)}>
-        <TabsList className="w-full">
-          <TabsTrigger value="credit" className="flex-1 text-sm">Income</TabsTrigger>
-          <TabsTrigger value="debit" className="flex-1 text-sm">Expenses</TabsTrigger>
-          <TabsTrigger value="savings" className="flex-1 text-sm">Savings</TabsTrigger>
-        </TabsList>
+    <Card className="p-4 md:p-6 space-y-6 glass-card">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Manage Categories</h3>
         
-        <div className="mt-4 flex gap-2">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Add new category..."
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="h-9 text-sm"
-              disabled={loading}
-            />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label className="text-sm">Category Name</Label>
+              <Input
+                placeholder="Enter category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="h-9 text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm">Type</Label>
+              <Select value={newCategoryType} onValueChange={(value) => setNewCategoryType(value as TransactionType)}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="debit">Expense</SelectItem>
+                  <SelectItem value="credit">Income</SelectItem>
+                  <SelectItem value="savings">Savings</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm invisible">Action</Label>
+              <Button 
+                onClick={addCategory} 
+                disabled={loading || !newCategoryName.trim()}
+                className="h-9 w-full flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Category
+              </Button>
+            </div>
           </div>
-          <Button 
-            onClick={addCategory} 
-            size="sm" 
-            className="h-9 text-sm"
-            disabled={loading}
-          >
-            <PlusCircle className="h-4 w-4 mr-1" />
-            Add
-          </Button>
         </div>
-        
-        <ScrollArea className="h-[300px] mt-4 pr-4 transition-all duration-500 ease-in-out">
-          <div className="space-y-2">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-20">
-                <p className="text-sm text-muted-foreground">Loading categories...</p>
-              </div>
-            ) : (
-              getCategoriesForType(activeTab).map((category) => {
-                const isDefaultCategory = category.id === null;
-                const isEditing = editingCategory?.id === category.id;
-                
-                return (
-                  <div 
-                    key={category.id || category.name} 
-                    className="flex items-center justify-between p-2 bg-background/50 rounded border"
-                  >
-                    {isEditing ? (
-                      <Input 
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                        autoFocus
-                        className="flex-1 mr-2 h-8 text-sm"
+
+        {Object.keys(categoriesByType).length > 0 && (
+          <div className="space-y-4">
+            {(Object.keys(categoriesByType) as TransactionType[]).map(type => (
+              <div key={type} className="space-y-2">
+                <h4 className="font-medium text-sm capitalize">
+                  {type === 'debit' ? 'Expense' : type === 'credit' ? 'Income' : 'Savings'} Categories
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {categoriesByType[type]?.map(category => (
+                    <div 
+                      key={category.id} 
+                      className="flex items-center justify-between p-3 bg-muted/50 rounded-md border"
+                    >
+                      <span className="text-sm font-medium">{category.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteCategory(category.id, category.name)}
                         disabled={loading}
-                      />
-                    ) : (
-                      <span className="truncate text-sm">{category.name}</span>
-                    )}
-                    
-                    <div className="flex items-center">
-                      {isEditing ? (
-                        <>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={saveEdit}
-                            className="h-7 w-7 p-0"
-                            disabled={loading}
-                          >
-                            <Check className="h-4 w-4 text-green-500" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={cancelEdit}
-                            className="h-7 w-7 p-0"
-                            disabled={loading}
-                          >
-                            <X className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </>
-                      ) : !isDefaultCategory && (
-                        <>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => startEditing(category as {id: string, name: string})}
-                            className="h-7 w-7 p-0"
-                            disabled={loading}
-                          >
-                            <Edit className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => deleteCategory(category.id!)}
-                            className="h-7 w-7 p-0"
-                            disabled={loading}
-                          >
-                            <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
-                        </>
-                      )}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        </ScrollArea>
-      </Tabs>
+        )}
+      </div>
     </Card>
   );
-}
+};

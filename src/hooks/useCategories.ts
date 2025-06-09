@@ -2,57 +2,74 @@
 import { useState, useEffect } from 'react';
 import { TransactionType, getDefaultCategoriesForType, getCategoriesForType } from '@/types/transactions';
 import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 export function useCategories(type: TransactionType) {
   const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchCategories = async () => {
+  // Use React Query for better caching and persistence
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['userCategories', type],
+    queryFn: async () => {
       try {
-        setLoading(true);
-        setError(null);
-        
         // Start with default categories to avoid empty state
         const defaultCats = [...getDefaultCategoriesForType(type)];
-        setCategories(defaultCats);
         
         // Then fetch the complete list including user categories
         const allCategories = await getCategoriesForType(type);
-        setCategories(allCategories);
+        
+        return allCategories;
       } catch (err) {
         console.error('Error loading categories:', err);
-        setError(err instanceof Error ? err : new Error('Failed to load categories'));
-      } finally {
-        setLoading(false);
+        // Return default categories if there's an error
+        return getDefaultCategoriesForType(type);
       }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+
+  useEffect(() => {
+    if (data) {
+      setCategories(data);
+    }
+  }, [data]);
+
+  // Listen for category changes from other components
+  useEffect(() => {
+    const handleCategoryUpdate = () => {
+      refetch();
     };
 
-    fetchCategories();
-  }, [type]);
+    // Custom event listener for category updates
+    window.addEventListener('categoriesUpdated', handleCategoryUpdate);
+    
+    return () => {
+      window.removeEventListener('categoriesUpdated', handleCategoryUpdate);
+    };
+  }, [refetch]);
 
-  const refetch = async () => {
+  const refreshCategories = async () => {
     try {
-      setLoading(true);
-      setError(null);
       const refreshedCategories = await getCategoriesForType(type);
       setCategories(refreshedCategories);
       // Invalidate any related queries
       queryClient.invalidateQueries({ queryKey: ['userCategories'] });
+      
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('categoriesUpdated'));
     } catch (err) {
       console.error('Error refreshing categories:', err);
-      setError(err instanceof Error ? err : new Error('Failed to refresh categories'));
-    } finally {
-      setLoading(false);
     }
   };
 
   return { 
     categories, 
-    loading, 
-    error,
-    refetch
+    loading: isLoading, 
+    error: error as Error | null,
+    refetch: refreshCategories
   };
 }
