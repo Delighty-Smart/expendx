@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
-import { Archive, Trash2, Search, Calendar } from "lucide-react";
+import { Archive, Trash2, Search, Calendar, ArchiveRestore } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -103,6 +103,38 @@ export function ArchiveManagement() {
     }
   };
 
+  const unarchiveAllTransactions = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { error } = await supabase
+        .from("transactions")
+        .update({ archived: false })
+        .eq("user_id", user.id)
+        .eq("archived", true);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All archived transactions have been unarchived"
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      loadTransactions();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const archiveByMonth = async () => {
     if (!selectedMonth) {
       toast({
@@ -134,6 +166,53 @@ export function ArchiveManagement() {
       toast({
         title: "Success",
         description: `Transactions for ${selectedMonth} have been archived`
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      loadTransactions();
+      setSelectedMonth("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unarchiveByMonth = async () => {
+    if (!selectedMonth) {
+      toast({
+        title: "Error",
+        description: "Please select a month",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const startDate = `${selectedMonth}-01`;
+      const endDate = `${selectedMonth}-31`;
+
+      const { error } = await supabase
+        .from("transactions")
+        .update({ archived: false })
+        .eq("user_id", user.id)
+        .eq("archived", true)
+        .gte("date", startDate)
+        .lte("date", endDate);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Archived transactions for ${selectedMonth} have been unarchived`
       });
 
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -309,6 +388,48 @@ export function ArchiveManagement() {
           </div>
         )}
 
+        {viewMode === "unarchive" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                onClick={unarchiveAllTransactions}
+                disabled={loading || archivedTransactions.length === 0}
+                variant="outline"
+                className="w-full"
+              >
+                <ArchiveRestore className="h-4 w-4 mr-2" />
+                Unarchive All
+              </Button>
+
+              <div className="flex gap-2">
+                <Input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={unarchiveByMonth}
+                  disabled={loading || !selectedMonth}
+                  variant="outline"
+                >
+                  <ArchiveRestore className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Button
+                onClick={unarchiveSelected}
+                disabled={loading || selectedTransactions.length === 0}
+                variant="outline"
+                className="w-full"
+              >
+                <ArchiveRestore className="h-4 w-4 mr-2" />
+                Unarchive Selected ({selectedTransactions.length})
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -362,16 +483,6 @@ export function ArchiveManagement() {
             )}
           </div>
         </ScrollArea>
-
-        {viewMode === "unarchive" && selectedTransactions.length > 0 && (
-          <Button
-            onClick={unarchiveSelected}
-            disabled={loading}
-            className="w-full"
-          >
-            Unarchive Selected ({selectedTransactions.length})
-          </Button>
-        )}
       </div>
     </Card>
   );

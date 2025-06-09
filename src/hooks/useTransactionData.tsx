@@ -97,7 +97,8 @@ export function useTransactionData(filter?: {
       try {
         let query = supabase.from("transactions").select("*");
         
-        // Exclude archived transactions by default unless explicitly included
+        // ALWAYS exclude archived transactions unless explicitly included
+        // This ensures archived transactions don't affect wallet balance, income, and expenses
         if (!filter?.includeArchived) {
           query = query.eq("archived", false);
         }
@@ -146,7 +147,7 @@ export function useTransactionData(filter?: {
             filteredTransactions = cachedTransactions.filter(t => {
               let matches = true;
               
-              // Exclude archived by default unless explicitly included
+              // ALWAYS exclude archived by default unless explicitly included
               if (!filter.includeArchived && t.archived) {
                 matches = false;
               }
@@ -170,7 +171,7 @@ export function useTransactionData(filter?: {
               return matches;
             });
           } else {
-            // If no filter, exclude archived by default
+            // If no filter, ALWAYS exclude archived by default
             filteredTransactions = cachedTransactions.filter(t => !t.archived);
           }
           
