@@ -1,165 +1,97 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 export type TransactionType = "credit" | "debit" | "savings";
 
-// Categories for each transaction type
-export const incomeCategories = [
-  "Salary/Wages",
-  "Business Income",
-  "Freelance/Consulting",
-  "Rental Income",
-  "Investment Income",
-  "Bonuses & Commissions",
-  "Gifts",
-  "Royalties",
-  "Miscellaneous earnings",
-  "Withdrawal from Savings",
-  "Others"
-] as const;
-
-export const expenseCategories = [
-  "Housing",
-  "Electricity",
-  "Water",
-  "Gas",
-  "Internet",
-  "Airtime",
-  "Food & Groceries",
-  "Transportation",
-  "Health & Medical",
-  "Debt Repayment",
-  "Insurance",
-  "Clothing",
-  "Personal Care",
-  "Entertainment",
-  "hobbies",
-  "Tuition",
-  "Books",
-  "Courses",
-  "Gifts",
-  "Donations",
-  "Subscriptions",
-  "Others"
-] as const;
-
-export const savingsCategories = [
-  "Emergency Fund",
-  "Retirement Savings",
-  "Savings for vacations",
-  "Savings for a new car",
-  "Savings for House/land",
-  "Investment Savings",
-  "Education/College Savings",
-  "Goal-Based Savings",
-  "Others"
-] as const;
-
-export type IncomeCategory = typeof incomeCategories[number];
-export type ExpenseCategory = typeof expenseCategories[number];
-export type SavingsCategory = typeof savingsCategories[number];
-export type TransactionCategory = IncomeCategory | ExpenseCategory | SavingsCategory | string; // Added string to allow dynamic categories from database
+// Category type
+export type TransactionCategory = string;
 
 export interface Transaction {
   id: string;
+  user_id: string;
   date: string;
   amount: number;
   type: TransactionType;
   category: TransactionCategory;
   description: string;
-  user_id?: string;
+  archived?: boolean; // Add archived property
   created_at?: string;
   updated_at?: string;
 }
 
-// Helper function to get categories based on transaction type - Updated to fetch user categories
-export const getCategoriesForType = async (type: TransactionType): Promise<string[]> => {
-  let defaultCategories: readonly string[] = [];
-  
-  switch (type) {
-    case "credit":
-      defaultCategories = incomeCategories;
-      break;
-    case "debit":
-      defaultCategories = expenseCategories;
-      break;
-    case "savings":
-      defaultCategories = savingsCategories;
-      break;
-  }
+// Default categories for each transaction type
+const DEFAULT_CATEGORIES = {
+  credit: [
+    "Salary",
+    "Freelance",
+    "Business Income",
+    "Investment Returns",
+    "Rental Income",
+    "Gifts Received",
+    "Refunds",
+    "Other Income"
+  ],
+  debit: [
+    "Food & Dining",
+    "Transportation",
+    "Shopping",
+    "Entertainment",
+    "Bills & Utilities",
+    "Healthcare",
+    "Education",
+    "Travel",
+    "Groceries",
+    "Rent/Mortgage",
+    "Insurance",
+    "Other Expenses"
+  ],
+  savings: [
+    "Emergency Fund",
+    "Retirement",
+    "Vacation Fund",
+    "Education Fund",
+    "Investment",
+    "Home Down Payment",
+    "Car Fund",
+    "General Savings"
+  ]
+};
 
-  // Convert to array since we'll be adding user-defined categories
-  const categories = [...defaultCategories];
+export function getDefaultCategoriesForType(type: TransactionType): readonly string[] {
+  return DEFAULT_CATEGORIES[type] || [];
+}
 
+export async function getCategoriesForType(type: TransactionType): Promise<string[]> {
   try {
-    // Import dynamically to avoid circular dependencies
-    const { supabase } = await import("@/integrations/supabase/client");
     const { data: { user } } = await supabase.auth.getUser();
-    
-    if (user) {
-      // Fetch user-defined categories
-      const { data: userCategories, error } = await supabase
-        .from("user_categories" as any)
-        .select("name")
-        .eq("type", type)
-        .eq("user_id", user.id);
-        
-      if (!error && userCategories && Array.isArray(userCategories)) {
-        // Add user-defined categories, avoiding duplicates
-        userCategories.forEach((categoryObj: any) => {
-          // Skip null or undefined objects entirely
-          if (categoryObj === null || categoryObj === undefined) return;
-          
-          // Now TypeScript knows categoryObj cannot be null here
-          // Check if it's an object with a valid name property
-          if (
-              typeof categoryObj === 'object' && 
-              'name' in categoryObj && 
-              categoryObj.name !== null &&
-              categoryObj.name !== undefined &&
-              typeof categoryObj.name === 'string' && 
-              !categories.includes(categoryObj.name)
-          ) {
-            categories.push(categoryObj.name);
-          }
-        });
-      }
+    if (!user) {
+      return [...getDefaultCategoriesForType(type)];
     }
+
+    // Get user's custom categories
+    const { data: userCategories, error } = await supabase
+      .from("user_categories")
+      .select("name")
+      .eq("user_id", user.id)
+      .eq("type", type);
+
+    if (error) {
+      console.error("Error fetching user categories:", error);
+      return [...getDefaultCategoriesForType(type)];
+    }
+
+    // Combine default and user categories, removing duplicates
+    const defaultCategories = getDefaultCategoriesForType(type);
+    const customCategories = userCategories?.map(cat => cat.name) || [];
+    
+    const allCategories = [
+      ...defaultCategories,
+      ...customCategories.filter(cat => !defaultCategories.includes(cat))
+    ];
+
+    return allCategories;
   } catch (error) {
-    console.error("Error fetching user categories:", error);
+    console.error("Error in getCategoriesForType:", error);
+    return [...getDefaultCategoriesForType(type)];
   }
-  
-  return categories;
-};
-
-// This is the synchronous version for components that can't use async directly
-export const getDefaultCategoriesForType = (type: TransactionType): readonly string[] => {
-  switch (type) {
-    case "credit":
-      return incomeCategories;
-    case "debit":
-      return expenseCategories;
-    case "savings":
-      return savingsCategories;
-    default:
-      return expenseCategories; // Default to expense categories as fallback
-  }
-};
-
-// Category management section - Add custom categories functionality
-export interface UserCategory {
-  id: string;
-  type: TransactionType;
-  name: string;
-  user_id: string;
-  created_at?: string;
-}
-
-// Savings goal interface
-export interface SavingsGoal {
-  id: string;
-  category: string;
-  target_amount: number;
-  current_amount?: number;
-  user_id: string;
-  created_at?: string;
-  updated_at?: string;
 }

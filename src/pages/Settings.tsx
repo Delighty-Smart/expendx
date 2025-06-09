@@ -12,6 +12,7 @@ import { Moon, Search, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
+import { ArchiveManagement } from "@/components/ArchiveManagement";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import "../components/ui/smoothScroll.css"; // Import the smooth scroll styles
 
@@ -115,6 +116,8 @@ const Settings = () => {
         </Card>
         
         <CategoryManagement />
+        
+        <ArchiveManagement />
       </div>
     </Layout>
   );

@@ -230,6 +230,7 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          archived: boolean
           category: string
           created_at: string | null
           date: string
@@ -241,6 +242,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          archived?: boolean
           category: string
           created_at?: string | null
           date: string
@@ -252,6 +254,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          archived?: boolean
           category?: string
           created_at?: string | null
           date?: string

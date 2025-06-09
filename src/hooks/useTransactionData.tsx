@@ -72,13 +72,14 @@ export function useTransactionData(filter?: {
   startDate?: string,
   endDate?: string,
   category?: string,
+  includeArchived?: boolean,
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   // Create query key based on filters
   const queryKey = filter 
-    ? ['transactions', filter.type, filter.startDate, filter.endDate, filter.category]
+    ? ['transactions', filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
     : ['transactions'];
 
   // Setup the main query
@@ -95,6 +96,11 @@ export function useTransactionData(filter?: {
       
       try {
         let query = supabase.from("transactions").select("*");
+        
+        // Exclude archived transactions by default unless explicitly included
+        if (!filter?.includeArchived) {
+          query = query.eq("archived", false);
+        }
         
         // Apply filters if provided
         if (filter) {
@@ -140,6 +146,11 @@ export function useTransactionData(filter?: {
             filteredTransactions = cachedTransactions.filter(t => {
               let matches = true;
               
+              // Exclude archived by default unless explicitly included
+              if (!filter.includeArchived && t.archived) {
+                matches = false;
+              }
+              
               if (filter.type && filter.type !== "all") {
                 matches = matches && t.type === filter.type;
               }
@@ -158,6 +169,9 @@ export function useTransactionData(filter?: {
               
               return matches;
             });
+          } else {
+            // If no filter, exclude archived by default
+            filteredTransactions = cachedTransactions.filter(t => !t.archived);
           }
           
           return filteredTransactions.map(convertToTransaction);
