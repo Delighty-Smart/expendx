@@ -10,13 +10,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { expenseCategories } from "@/types/transactions";
+import { getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
 
 const budgetSchema = z.object({
-  category: z.enum([...expenseCategories] as const),
+  category: z.string().min(1, "Category is required"),
   monthlyLimit: z.string().min(1, "Monthly limit is required"),
 });
 
@@ -27,6 +27,7 @@ const EditBudgetPage = () => {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [budget, setBudget] = useState<any>(null);
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Get budget from location state
   useEffect(() => {
@@ -37,10 +38,24 @@ const EditBudgetPage = () => {
     }
   }, [location.state, navigate]);
 
+  // Load expense categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const fetchedCategories = await getCategoriesForType("debit");
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error loading expense categories:", error);
+      }
+    };
+    
+    loadCategories();
+  }, []);
+
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
-      category: budget?.category || expenseCategories[0],
+      category: budget?.category || "",
       monthlyLimit: budget?.monthly_limit?.toString() || "",
     },
   });
@@ -135,7 +150,7 @@ const EditBudgetPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="max-h-[250px] overflow-y-auto">
-                        {expenseCategories.map((category) => (
+                        {categories.map((category) => (
                           <SelectItem key={category} value={category}>
                             {category}
                           </SelectItem>
