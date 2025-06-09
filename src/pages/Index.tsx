@@ -121,36 +121,48 @@ const Dashboard = () => {
     },
   });
 
-  // Query for monthly transactions (used for monthly metrics)
+  // Query for monthly transactions (ONLY unarchived)
   const { data: monthlyTransactionsData, refetch: refetchMonthlyTransactions } = useQuery({
-    queryKey: ["transactions", firstDayOfMonth, lastDayOfMonth],
+    queryKey: ["transactions", "monthly", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
-      console.log("Dashboard: Fetching transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
+      console.log("Dashboard: Fetching UNARCHIVED transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
+        .eq("user_id", user.id)
+        .eq("archived", false) // ONLY unarchived transactions
         .gte("date", firstDayOfMonth)
-        .lte("date", lastDayOfMonth);
+        .lte("date", lastDayOfMonth)
+        .order("date", { ascending: false });
 
       if (error) throw error;
-      console.log(`Dashboard: Found ${data?.length || 0} transactions in the current month`);
+      console.log(`Dashboard: Found ${data?.length || 0} UNARCHIVED transactions in the current month`);
       return data as TransactionData[] || [];
     },
   });
 
-  // Query for ALL transactions (for wallet balance)
+  // Query for ALL unarchived transactions (for wallet balance)
   const { data: allTransactionsData } = useQuery({
-    queryKey: ["all_transactions"],
+    queryKey: ["all_transactions", "unarchived"],
     queryFn: async () => {
-      console.log("Dashboard: Fetching ALL transactions for wallet balance");
+      console.log("Dashboard: Fetching ALL UNARCHIVED transactions for wallet balance");
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from("transactions")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("archived", false) // ONLY unarchived transactions
+        .order("date", { ascending: false });
 
       if (error) throw error;
-      console.log(`Dashboard: Found ${data?.length || 0} transactions in total`);
+      console.log(`Dashboard: Found ${data?.length || 0} UNARCHIVED transactions in total`);
       return data as TransactionData[] || [];
     },
   });
@@ -171,7 +183,9 @@ const Dashboard = () => {
     '*',
     (payload) => {
       console.log('Transaction changes detected:', payload);
+      // Invalidate all transaction-related queries to refresh dashboard
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["all_transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
     }
@@ -181,41 +195,43 @@ const Dashboard = () => {
     refetchMonthlyTransactions();
     queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
     queryClient.invalidateQueries({ queryKey: ["budgets"] });
+    queryClient.invalidateQueries({ queryKey: ["all_transactions"] });
   };
 
+  // All calculations now use only unarchived transactions
   const calculateMonthlyIncome = () => {
-    return monthlyTransactionsData
+    return transactions
       ?.filter((t) => t.type === "credit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
   const calculateMonthlyExpenses = () => {
-    return monthlyTransactionsData
+    return transactions
       ?.filter((t) => t.type === "debit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
   const calculateMonthlySavings = () => {
-    return monthlyTransactionsData
+    return transactions
       ?.filter((t) => t.type === "savings")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  // Calculate all-time income
+  // Calculate all-time income from unarchived transactions only
   const calculateTotalIncome = () => {
     return allTransactions
       ?.filter((t) => t.type === "credit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  // Calculate all-time expenses
+  // Calculate all-time expenses from unarchived transactions only
   const calculateTotalExpenses = () => {
     return allTransactions
       ?.filter((t) => t.type === "debit")
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  // Calculate all-time savings
+  // Calculate all-time savings from unarchived transactions only
   const calculateTotalSavings = () => {
     return allTransactions
       ?.filter((t) => t.type === "savings")
@@ -226,14 +242,15 @@ const Dashboard = () => {
   const monthlyExpenses = calculateMonthlyExpenses();
   const monthlySavings = calculateMonthlySavings();
   
-  // Calculate wallet balance based on all-time transactions
-  // Wallet Balance = Total Income (all-time) - Total Expenses (all-time) - Total Savings (all-time)
+  // Calculate wallet balance based on all-time UNARCHIVED transactions only
+  // Wallet Balance = Total Income (unarchived) - Total Expenses (unarchived) - Total Savings (unarchived)
   const currentBalance = calculateTotalIncome() - calculateTotalExpenses() - calculateTotalSavings();
   
   const progressPercentage = monthlyIncome > 0 
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100) 
     : 0;
 
+  // Spending by category calculation - only unarchived transactions
   const spendingByCategory = transactions
     ?.filter((t) => t.type === "debit")
     .reduce((acc, t) => {
@@ -249,6 +266,7 @@ const Dashboard = () => {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 5);
 
+  // Daily spending data - only unarchived transactions
   const getDailySpendingData = () => {
     if (!transactions?.length) return [];
 
@@ -290,6 +308,7 @@ const Dashboard = () => {
 
   const dailyData = getDailySpendingData();
 
+  // Trend data calculation - only unarchived transactions
   const getTrendData = () => {
     if (!transactions?.length) return [];
 
@@ -418,7 +437,7 @@ const Dashboard = () => {
 
         {/* Cards section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Wallet Balance Card */}
+          {/* Wallet Balance Card - Only Unarchived */}
           <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -432,7 +451,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Wallet Balance (All-time)</p>
+                <p className="text-sm text-muted-foreground">Wallet Balance (Active Only)</p>
                 <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
                 <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
                   <div 
@@ -444,7 +463,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* Monthly Income Card */}
+          {/* Monthly Income Card - Only Unarchived */}
           <Card className="glass-card p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -457,7 +476,7 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Monthly Income</p>
+                <p className="text-sm text-muted-foreground">Monthly Income (Active)</p>
                 <p className="text-2xl font-semibold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
                 {monthlyIncome > 0 && (
                   <div className="flex items-center gap-1 mt-1">
@@ -476,7 +495,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* Monthly Expenses Card */}
+          {/* Monthly Expenses Card - Only Unarchived */}
           <Card className="glass-card p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -489,7 +508,7 @@ const Dashboard = () => {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Monthly Expenses</p>
+                <p className="text-sm text-muted-foreground">Monthly Expenses (Active)</p>
                 <p className="text-2xl font-semibold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
@@ -510,7 +529,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Charts section */}
+        {/* Charts section - All using only unarchived data */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Spending by Category Chart */}
           <Card className="glass-card p-6 chart-container transition-opacity duration-500">

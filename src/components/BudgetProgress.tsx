@@ -5,7 +5,7 @@ import { Currency } from "@/lib/currencies";
 interface BudgetProgressProps {
   category: string;
   limit: number;
-  spent: number;
+  spent: number; // This should already be calculated from unarchived transactions only
   currency: Currency;
 }
 
@@ -21,8 +21,8 @@ export function BudgetProgress({ category, limit, spent, currency }: BudgetProgr
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
         <span className="font-medium">{category}</span>
-        <span>
-          {currency.symbol}{spent.toFixed(2)} / {currency.symbol}{limit.toFixed(2)}
+        <span className="text-xs text-muted-foreground">
+          {currency.symbol}{spent.toFixed(2)} / {currency.symbol}{limit.toFixed(2)} (Active only)
         </span>
       </div>
       <Progress
@@ -30,6 +30,9 @@ export function BudgetProgress({ category, limit, spent, currency }: BudgetProgr
         className="h-2"
         indicatorClassName={getProgressColor(percentage)}
       />
+      <div className="text-xs text-muted-foreground">
+        Based on unarchived transactions only
+      </div>
     </div>
   );
 }

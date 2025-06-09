@@ -12,7 +12,7 @@ interface BudgetCardProps {
   id: string;
   category: string;
   limit: number;
-  spent: number;
+  spent: number; // This should be calculated from unarchived transactions only
   currency: {
     code: string;
     symbol: string;
@@ -122,7 +122,7 @@ export function BudgetCard({
           />
           <div className="flex justify-between text-xs">
             <p className="text-muted-foreground">
-              {percentage.toFixed(0)}% used
+              {percentage.toFixed(0)}% used (Active only)
             </p>
             <p className={`${isOverBudget ? 'text-destructive' : 'text-muted-foreground'}`}>
               {isOverBudget ? 'Over by ' : 'Remaining '}
@@ -133,6 +133,9 @@ export function BudgetCard({
               })}
             </p>
           </div>
+          <p className="text-xs text-muted-foreground italic">
+            Calculations based on unarchived transactions only
+          </p>
         </div>
       </CardContent>
     </Card>

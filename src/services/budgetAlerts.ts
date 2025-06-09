@@ -24,8 +24,9 @@ export const getBudgetAlerts = (
   
   return budgetCategories
     .map((budget) => {
+      // Only calculate spending from UNARCHIVED transactions
       const spent = transactions
-        .filter((t) => t.category === budget.category && t.type === "debit")
+        .filter((t) => t.category === budget.category && t.type === "debit" && !t.archived)
         .reduce((sum, t) => sum + t.amount, 0);
       
       const percentage = budget.monthly_limit > 0 ? (spent / budget.monthly_limit) * 100 : 0;
@@ -50,7 +51,7 @@ export const createBudgetAlert = async (alert: BudgetAlert): Promise<void> => {
 
     const alertLevel = alert.percentage >= 100 ? 'exceeded' : 'warning';
     const title = alertLevel === 'exceeded' ? 'Budget Exceeded' : 'Budget Alert';
-    const message = `You've spent ${alert.percentage.toFixed(1)}% of your ${alert.category} budget (${alert.spent.toFixed(2)} of ${alert.limit.toFixed(2)})`;
+    const message = `You've spent ${alert.percentage.toFixed(1)}% of your ${alert.category} budget (${alert.spent.toFixed(2)} of ${alert.limit.toFixed(2)}) - based on active transactions only`;
     
     const { error } = await supabase
       .from('alerts')
@@ -76,7 +77,9 @@ export const syncBudgetAlertsToNotifications = async (
 ): Promise<void> => {
   if (!budgetCategories || !transactions) return;
   
-  const alerts = getBudgetAlerts(budgetCategories, transactions);
+  // Filter to only unarchived transactions before calculating alerts
+  const activeTransactions = transactions.filter(t => !t.archived);
+  const alerts = getBudgetAlerts(budgetCategories, activeTransactions);
   
   // Create alerts for each budget warning/exceeded threshold
   for (const alert of alerts) {
