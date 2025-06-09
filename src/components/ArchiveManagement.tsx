@@ -1,148 +1,148 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Archive, RotateCcw, Search, Calendar, CheckSquare, Square } from "lucide-react";
-import { format } from "date-fns";
-import { useSettings } from "@/contexts/SettingsContext";
+import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
+import { Archive, Trash2, Search, Calendar } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQueryClient } from "@tanstack/react-query";
-import { Transaction, TransactionType } from "@/types/transactions";
 
-interface ArchiveOption {
-  value: string;
-  label: string;
-}
+// Helper to convert database response to Transaction type
+const convertToTransaction = (dbTransaction: any): Transaction => ({
+  ...dbTransaction,
+  type: dbTransaction.type as TransactionType,
+  category: dbTransaction.category as TransactionCategory
+});
 
-const archiveOptions: ArchiveOption[] = [
-  { value: "all", label: "Archive All Transactions" },
-  { value: "month", label: "Archive by Selected Month" },
-  { value: "custom", label: "Custom Selection" }
-];
-
-export const ArchiveManagement = () => {
-  const [selectedOption, setSelectedOption] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
+export function ArchiveManagement() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
   const [archivedTransactions, setArchivedTransactions] = useState<Transaction[]>([]);
   const [activeTransactions, setActiveTransactions] = useState<Transaction[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
-  
-  const { toast } = useToast();
-  const { currency } = useSettings();
-  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"archive" | "unarchive">("archive");
 
+  // Load transactions
   useEffect(() => {
-    if (showArchived) {
-      fetchArchivedTransactions();
-    } else {
-      fetchActiveTransactions();
-    }
-  }, [showArchived]);
+    loadTransactions();
+  }, []);
 
-  const fetchArchivedTransactions = async () => {
+  const loadTransactions = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Load archived transactions
+      const { data: archived, error: archivedError } = await supabase
         .from("transactions")
         .select("*")
         .eq("user_id", user.id)
         .eq("archived", true)
         .order("date", { ascending: false });
 
-      if (error) throw error;
-      setArchivedTransactions(data || []);
-    } catch (error: any) {
-      console.error("Error fetching archived transactions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load archived transactions",
-        variant: "destructive"
-      });
-    }
-  };
+      if (archivedError) throw archivedError;
+      setArchivedTransactions((archived || []).map(convertToTransaction));
 
-  const fetchActiveTransactions = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
+      // Load active transactions for archiving
+      const { data: active, error: activeError } = await supabase
         .from("transactions")
         .select("*")
         .eq("user_id", user.id)
         .eq("archived", false)
         .order("date", { ascending: false });
 
-      if (error) throw error;
-      setActiveTransactions(data || []);
+      if (activeError) throw activeError;
+      setActiveTransactions((active || []).map(convertToTransaction));
     } catch (error: any) {
-      console.error("Error fetching active transactions:", error);
       toast({
         title: "Error",
-        description: "Failed to load active transactions",
+        description: error.message,
         variant: "destructive"
       });
     }
   };
 
-  const archiveTransactions = async () => {
-    if (!selectedOption) return;
+  const archiveAllTransactions = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const { error } = await supabase
+        .from("transactions")
+        .update({ archived: true })
+        .eq("user_id", user.id)
+        .eq("archived", false);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "All transactions have been archived"
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      loadTransactions();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const archiveByMonth = async () => {
+    if (!selectedMonth) {
+      toast({
+        title: "Error",
+        description: "Please select a month",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      let query = supabase
+      const startDate = `${selectedMonth}-01`;
+      const endDate = `${selectedMonth}-31`;
+
+      const { error } = await supabase
         .from("transactions")
         .update({ archived: true })
         .eq("user_id", user.id)
-        .eq("archived", false);
+        .eq("archived", false)
+        .gte("date", startDate)
+        .lte("date", endDate);
 
-      if (selectedOption === "month" && selectedMonth) {
-        const startDate = `${selectedMonth}-01`;
-        const endDate = `${selectedMonth}-31`;
-        query = query.gte("date", startDate).lte("date", endDate);
-      } else if (selectedOption === "custom" && selectedTransactions.length > 0) {
-        query = query.in("id", selectedTransactions);
-      }
-
-      const { error } = await query;
       if (error) throw error;
 
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      
-      // Reset selections
-      setSelectedOption("");
-      setSelectedMonth("");
-      setSelectedTransactions([]);
-      
       toast({
         title: "Success",
-        description: "Transactions archived successfully"
+        description: `Transactions for ${selectedMonth} have been archived`
       });
-      
-      // Refresh the current view
-      if (showArchived) {
-        fetchArchivedTransactions();
-      } else {
-        fetchActiveTransactions();
-      }
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      loadTransactions();
+      setSelectedMonth("");
     } catch (error: any) {
-      console.error("Error archiving transactions:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to archive transactions",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -150,31 +150,75 @@ export const ArchiveManagement = () => {
     }
   };
 
-  const unarchiveTransactions = async (transactionIds: string[]) => {
+  const archiveSelected = async () => {
+    if (selectedTransactions.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select transactions to archive",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-      
+      const { error } = await supabase
+        .from("transactions")
+        .update({ archived: true })
+        .in("id", selectedTransactions);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedTransactions.length} transaction(s) archived`
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      loadTransactions();
+      setSelectedTransactions([]);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unarchiveSelected = async () => {
+    if (selectedTransactions.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select transactions to unarchive",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
       const { error } = await supabase
         .from("transactions")
         .update({ archived: false })
-        .in("id", transactionIds);
+        .in("id", selectedTransactions);
 
       if (error) throw error;
 
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      
       toast({
         title: "Success",
-        description: "Transactions unarchived successfully"
+        description: `${selectedTransactions.length} transaction(s) unarchived`
       });
-      
-      fetchArchivedTransactions();
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      loadTransactions();
+      setSelectedTransactions([]);
     } catch (error: any) {
-      console.error("Error unarchiving transactions:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to unarchive transactions",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -182,230 +226,153 @@ export const ArchiveManagement = () => {
     }
   };
 
-  const toggleTransactionSelection = (id: string) => {
+  const handleTransactionSelect = (transactionId: string) => {
     setSelectedTransactions(prev => 
-      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+      prev.includes(transactionId)
+        ? prev.filter(id => id !== transactionId)
+        : [...prev, transactionId]
     );
   };
 
-  const formatAmount = (amount: number) => {
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
-  const filteredTransactions = showArchived 
-    ? archivedTransactions.filter(t => 
-        t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : activeTransactions.filter(t => 
-        t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-  // Generate month options for the past 12 months
-  const monthOptions = Array.from({ length: 12 }, (_, i) => {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const value = format(date, "yyyy-MM");
-    const label = format(date, "MMMM yyyy");
-    return { value, label };
-  });
+  const filteredTransactions = (viewMode === "archive" ? activeTransactions : archivedTransactions)
+    .filter(t => 
+      t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   return (
     <Card className="p-4 md:p-6 space-y-6 glass-card">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Archive Transactions</h3>
-        <Button
-          variant={showArchived ? "default" : "outline"}
-          onClick={() => setShowArchived(!showArchived)}
-          className="flex items-center gap-2"
-        >
-          <Archive className="h-4 w-4" />
-          {showArchived ? "View Active" : "View Archived"}
-        </Button>
+      <div className="flex items-center gap-2">
+        <Archive className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Archive Management</h2>
       </div>
 
-      {!showArchived ? (
-        // Archive Options
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Archive Option</Label>
-            <Select value={selectedOption} onValueChange={setSelectedOption}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select archive option" />
-              </SelectTrigger>
-              <SelectContent>
-                {archiveOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === "archive" ? "default" : "outline"}
+            onClick={() => {
+              setViewMode("archive");
+              setSelectedTransactions([]);
+            }}
+          >
+            Archive Transactions
+          </Button>
+          <Button
+            variant={viewMode === "unarchive" ? "default" : "outline"}
+            onClick={() => {
+              setViewMode("unarchive");
+              setSelectedTransactions([]);
+            }}
+          >
+            View Archived ({archivedTransactions.length})
+          </Button>
+        </div>
 
-          {selectedOption === "month" && (
-            <div className="space-y-2">
-              <Label>Select Month</Label>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select month to archive" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthOptions.map(month => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+        {viewMode === "archive" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                onClick={archiveAllTransactions}
+                disabled={loading || activeTransactions.length === 0}
+                variant="outline"
+                className="w-full"
+              >
+                Archive All Transactions
+              </Button>
 
-          {selectedOption === "custom" && (
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Search transactions..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  type="month"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  className="flex-1"
                 />
+                <Button
+                  onClick={archiveByMonth}
+                  disabled={loading || !selectedMonth}
+                  variant="outline"
+                >
+                  <Calendar className="h-4 w-4" />
+                </Button>
               </div>
-              
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {filteredTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50"
-                    onClick={() => toggleTransactionSelection(transaction.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      {selectedTransactions.includes(transaction.id) ? (
-                        <CheckSquare className="h-4 w-4 text-primary" />
-                      ) : (
-                        <Square className="h-4 w-4 text-gray-400" />
-                      )}
+
+              <Button
+                onClick={archiveSelected}
+                disabled={loading || selectedTransactions.length === 0}
+                variant="outline"
+                className="w-full"
+              >
+                Archive Selected ({selectedTransactions.length})
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search transactions..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        <ScrollArea className="h-[400px] border rounded-md">
+          <div className="p-4 space-y-2">
+            {filteredTransactions.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                {viewMode === "archive" 
+                  ? "No active transactions found" 
+                  : "No archived transactions found"}
+              </p>
+            ) : (
+              filteredTransactions.map(transaction => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-accent"
+                >
+                  <Checkbox
+                    checked={selectedTransactions.includes(transaction.id)}
+                    onCheckedChange={() => handleTransactionSelect(transaction.id)}
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-medium text-sm">{transaction.description}</p>
-                        <p className="text-xs text-gray-500">
-                          {transaction.category} • {format(new Date(transaction.date), "MMM d, yyyy")}
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {transaction.category} • {transaction.date}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-medium ${
+                          transaction.type === "credit" ? "text-green-600" : "text-red-600"
+                        }`}>
+                          {transaction.type === "credit" ? "+" : "-"}${transaction.amount}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {transaction.type}
                         </p>
                       </div>
                     </div>
-                    <span className={`font-medium text-sm ${
-                      transaction.type === "credit" ? "text-green-600" : "text-red-600"
-                    }`}>
-                      {transaction.type === "credit" ? "+" : "-"}
-                      {currency.symbol}{formatAmount(transaction.amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              
-              {selectedTransactions.length > 0 && (
-                <p className="text-sm text-gray-600">
-                  {selectedTransactions.length} transaction(s) selected
-                </p>
-              )}
-            </div>
-          )}
-
-          <Button
-            onClick={archiveTransactions}
-            disabled={loading || !selectedOption || 
-              (selectedOption === "month" && !selectedMonth) ||
-              (selectedOption === "custom" && selectedTransactions.length === 0)
-            }
-            className="w-full flex items-center gap-2"
-          >
-            <Archive className="h-4 w-4" />
-            {loading ? "Archiving..." : "Archive Transactions"}
-          </Button>
-        </div>
-      ) : (
-        // Archived Transactions View
-        <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search archived transactions..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className="max-h-96 overflow-y-auto space-y-2">
-            {filteredTransactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between p-3 border rounded-md"
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedTransactions.includes(transaction.id)}
-                    onChange={() => toggleTransactionSelection(transaction.id)}
-                    className="rounded"
-                  />
-                  <div>
-                    <p className="font-medium text-sm">{transaction.description}</p>
-                    <p className="text-xs text-gray-500">
-                      {transaction.category} • {format(new Date(transaction.date), "MMM d, yyyy")}
-                    </p>
                   </div>
                 </div>
-                <span className={`font-medium text-sm ${
-                  transaction.type === "credit" ? "text-green-600" : "text-red-600"
-                }`}>
-                  {transaction.type === "credit" ? "+" : "-"}
-                  {currency.symbol}{formatAmount(transaction.amount)}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
+        </ScrollArea>
 
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No archived transactions found
-            </div>
-          )}
-
-          {selectedTransactions.length > 0 && (
-            <div className="flex items-center justify-between pt-4 border-t">
-              <p className="text-sm text-gray-600">
-                {selectedTransactions.length} transaction(s) selected
-              </p>
-              <Button
-                onClick={() => unarchiveTransactions(selectedTransactions)}
-                disabled={loading}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                {loading ? "Unarchiving..." : "Unarchive Selected"}
-              </Button>
-            </div>
-          )}
-
-          {archivedTransactions.length > 0 && (
-            <Button
-              onClick={() => unarchiveTransactions(archivedTransactions.map(t => t.id))}
-              disabled={loading}
-              variant="outline"
-              className="w-full flex items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              {loading ? "Unarchiving..." : "Unarchive All"}
-            </Button>
-          )}
-        </div>
-      )}
+        {viewMode === "unarchive" && selectedTransactions.length > 0 && (
+          <Button
+            onClick={unarchiveSelected}
+            disabled={loading}
+            className="w-full"
+          >
+            Unarchive Selected ({selectedTransactions.length})
+          </Button>
+        )}
+      </div>
     </Card>
   );
-};
+}

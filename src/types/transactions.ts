@@ -19,6 +19,16 @@ export interface Transaction {
   updated_at?: string;
 }
 
+// SavingsGoal interface for other components
+export interface SavingsGoal {
+  id: string;
+  user_id: string;
+  category: string;
+  target_amount: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Default categories for each transaction type
 const DEFAULT_CATEGORIES = {
   credit: [
@@ -56,6 +66,10 @@ const DEFAULT_CATEGORIES = {
     "General Savings"
   ]
 };
+
+// Export specific category arrays for backwards compatibility
+export const expenseCategories = DEFAULT_CATEGORIES.debit;
+export const savingsCategories = DEFAULT_CATEGORIES.savings;
 
 export function getDefaultCategoriesForType(type: TransactionType): readonly string[] {
   return DEFAULT_CATEGORIES[type] || [];
