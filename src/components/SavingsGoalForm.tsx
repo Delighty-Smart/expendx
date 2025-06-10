@@ -201,7 +201,7 @@ export function SavingsGoalForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={isEditing || loading}
+                    disabled={loading}
                   >
                     <FormControl>
                       <SelectTrigger>
