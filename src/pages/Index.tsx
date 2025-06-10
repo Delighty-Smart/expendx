@@ -1,16 +1,37 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownRight, PlusCircle, TrendingUp, Target, PiggyBank, Wallet } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, PlusCircle, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTransactionData } from "@/hooks/useTransactionData";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { updateUserStreak } from "@/lib/streak";
+import { startOfMonth, endOfMonth, addWeeks, subWeeks, eachDayOfInterval, format } from "date-fns";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, PieChart, Pie, Sector, AreaChart as RechartAreaChart, Area, LineChart as RechartLineChart, Line } from "recharts";
+
+// Transaction types
+interface TransactionData {
+  id: string;
+  user_id: string;
+  amount: number;
+  category: string;
+  description: string;
+  date: string;
+  type: TransactionType;
+  archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+type TransactionType = "credit" | "debit" | "savings";
 
 // Function to navigate to Add Transaction page
 const handleAddTransaction = () => {
