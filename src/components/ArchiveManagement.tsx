@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -54,7 +53,19 @@ export const ArchiveManagement = () => {
         .order("date", { ascending: false });
 
       if (error) throw error;
-      setArchivedTransactions(data || []);
+      
+      // Transform the data to match our interface
+      const transformedData: ArchivedTransaction[] = (data || []).map(transaction => ({
+        id: transaction.id,
+        date: transaction.date,
+        amount: transaction.amount,
+        type: transaction.type as TransactionType,
+        category: transaction.category,
+        description: transaction.description,
+        archived: transaction.archived
+      }));
+      
+      setArchivedTransactions(transformedData);
     } catch (error: any) {
       toast({
         title: "Error",

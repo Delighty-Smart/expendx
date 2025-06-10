@@ -381,70 +381,59 @@
   @apply bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800;
 }
 
-/* Enhanced dark mode contrast improvements */
-.dark {
-  /* Transaction list improvements */
-  .transaction-row {
-    background-color: hsl(217.2 32.6% 17.5%);
-    border-color: hsl(217.2 32.6% 22%);
-  }
-  
-  .transaction-row:hover {
-    background-color: hsl(217.2 32.6% 20%);
-  }
-  
-  /* Month headers */
-  .transaction-month-group > div:first-child {
-    background-color: hsl(217.2 32.6% 15%);
-    border-color: hsl(217.2 32.6% 22%);
-  }
-  
-  /* Day headers */
-  .transaction-day-group > div:first-child {
-    background-color: hsl(217.2 32.6% 12%);
-    border-color: hsl(217.2 32.6% 20%);
-    color: hsl(210 40% 98%);
-  }
-  
-  /* Card improvements */
-  .card {
-    background-color: hsl(217.2 32.6% 17.5%);
-    border-color: hsl(217.2 32.6% 22%);
-  }
-  
-  /* Input improvements */
-  input, select, textarea {
-    background-color: hsl(217.2 32.6% 15%);
-    border-color: hsl(217.2 32.6% 22%);
-    color: hsl(210 40% 98%);
-  }
-  
-  input:focus, select:focus, textarea:focus {
-    border-color: hsl(202 100% 50%);
-    box-shadow: 0 0 0 1px hsl(202 100% 50%);
-  }
-  
-  /* Button improvements */
-  button[data-state="open"] {
-    background-color: hsl(217.2 32.6% 20%);
-  }
-  
-  /* Select dropdown improvements */
-  [role="listbox"] {
-    background-color: hsl(217.2 32.6% 17.5%);
-    border-color: hsl(217.2 32.6% 22%);
-  }
-  
-  /* Text contrast improvements */
-  .text-muted-foreground {
-    color: hsl(215 20.2% 70%);
-  }
-  
-  /* Alert dialog improvements */
-  .AlertDialogContent {
-    background-color: hsl(217.2 32.6% 17.5%);
-    border-color: hsl(217.2 32.6% 22%);
-  }
+/* Dark mode improvements - rewritten without nested @apply */
+.dark .transaction-row {
+  background-color: hsl(217.2 32.6% 17.5%);
+  border-color: hsl(217.2 32.6% 22%);
+}
+
+.dark .transaction-row:hover {
+  background-color: hsl(217.2 32.6% 20%);
+}
+
+.dark .transaction-month-group > div:first-child {
+  background-color: hsl(217.2 32.6% 15%);
+  border-color: hsl(217.2 32.6% 22%);
+}
+
+.dark .transaction-day-group > div:first-child {
+  background-color: hsl(217.2 32.6% 12%);
+  border-color: hsl(217.2 32.6% 20%);
+  color: hsl(210 40% 98%);
+}
+
+.dark .card {
+  background-color: hsl(217.2 32.6% 17.5%);
+  border-color: hsl(217.2 32.6% 22%);
+}
+
+.dark input, .dark select, .dark textarea {
+  background-color: hsl(217.2 32.6% 15%);
+  border-color: hsl(217.2 32.6% 22%);
+  color: hsl(210 40% 98%);
+}
+
+.dark input:focus, .dark select:focus, .dark textarea:focus {
+  border-color: hsl(202 100% 50%);
+  box-shadow: 0 0 0 1px hsl(202 100% 50%);
+}
+
+.dark button[data-state="open"] {
+  background-color: hsl(217.2 32.6% 20%);
+}
+
+.dark [role="listbox"] {
+  background-color: hsl(217.2 32.6% 17.5%);
+  border-color: hsl(217.2 32.6% 22%);
+}
+
+.dark .text-muted-foreground {
+  color: hsl(215 20.2% 70%);
+}
+
+.dark .AlertDialogContent {
+  background-color: hsl(217.2 32.6% 17.5%);
+  border-color: hsl(217.2 32.6% 22%);
 }
 
 /* Enhanced scrolling experience */
@@ -608,7 +597,7 @@
   @apply my-4 md:my-6 lg:my-8;
 }
 
-/* Table improvements */
+/* Table improvements - rewritten without nested @apply */
 .table-container {
   @apply w-full overflow-x-auto rounded-md border;
 }
@@ -618,9 +607,15 @@
 }
 
 .table-modern th {
-  @apply px-4 py-3 text-xs font-medium text-left text-muted-foreground;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  color: hsl(var(--muted-foreground));
 }
 
 .table-modern td {
-  @apply px-4 py-2.5 text-sm border-t;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  border-top: 1px solid hsl(var(--border));
 }
