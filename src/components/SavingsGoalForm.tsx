@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { savingsCategories, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const savingsGoalSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -43,11 +44,12 @@ export function SavingsGoalForm({
     }
   });
 
+  const isEditing = !!savingsGoalId;
+
   useEffect(() => {
     if (open && savingsGoalId) {
       const fetchSavingsGoal = async () => {
         try {
-          // Use type assertion to bypass TypeScript errors
           const { data, error } = await supabase
             .from("savings_goals" as any)
             .select("*")
@@ -60,7 +62,6 @@ export function SavingsGoalForm({
           }
           
           if (data) {
-            // Type assertion here to handle data safely
             const goalData = data as unknown as SavingsGoal;
             form.reset({
               category: goalData.category,
@@ -93,7 +94,7 @@ export function SavingsGoalForm({
         user_id: user.id
       };
 
-      if (savingsGoalId) {
+      if (isEditing) {
         // Update existing savings goal
         const { error } = await supabase
           .from("savings_goals" as any)
@@ -123,7 +124,6 @@ export function SavingsGoalForm({
           throw checkError;
         }
         
-        // Fix: Check if existingGoal exists and has an id property before accessing it
         if (existingGoal && 'id' in existingGoal) {
           // Update the existing goal instead of creating a new one
           const { error } = await supabase
@@ -185,9 +185,9 @@ export function SavingsGoalForm({
     }}>
       <DialogContent className="sm:max-w-[425px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{savingsGoalId ? 'Edit' : 'Add'} Savings Goal</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit' : 'Add'} Savings Goal</DialogTitle>
           <DialogDescription>
-            Set a target amount for your savings category.
+            {isEditing ? 'Update your' : 'Set a'} target amount for your savings category.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -201,7 +201,7 @@ export function SavingsGoalForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!!savingsGoalId}
+                    disabled={isEditing || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -209,11 +209,13 @@ export function SavingsGoalForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {savingsCategories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                      <ScrollArea className="h-[200px]">
+                        {savingsCategories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -228,7 +230,7 @@ export function SavingsGoalForm({
                 <FormItem>
                   <FormLabel>Target Amount ({currency.symbol})</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" {...field} />
+                    <Input type="number" step="0.01" min="0" {...field} disabled={loading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -236,11 +238,11 @@ export function SavingsGoalForm({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : savingsGoalId ? "Update" : "Save"}
+                {loading ? "Saving..." : isEditing ? "Update Goal" : "Save Goal"}
               </Button>
             </DialogFooter>
           </form>

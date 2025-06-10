@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -14,6 +13,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
 import { ArchiveManagement } from "@/components/ArchiveManagement";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useRefresh } from "@/hooks/useRefresh";
 import "../components/ui/smoothScroll.css"; // Import the smooth scroll styles
 
 const Settings = () => {
@@ -25,8 +26,21 @@ const Settings = () => {
   } = useSettings();
   
   const { toast } = useToast();
+  const { refreshData } = useRefresh();
   const [search, setSearch] = useState("");
   const isMobile = useIsMobile();
+  
+  // Auto-save search state to localStorage
+  useEffect(() => {
+    const savedSearch = localStorage.getItem('settings_currency_search');
+    if (savedSearch) {
+      setSearch(savedSearch);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('settings_currency_search', search);
+  }, [search]);
   
   const filteredCurrencies = currencies.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -36,6 +50,10 @@ const Settings = () => {
   const handleCurrencyChange = async (code: string) => {
     try {
       await updateCurrency(code);
+      toast({
+        title: "Currency updated",
+        description: `Currency changed to ${currencies.find(c => c.code === code)?.name}`
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -55,70 +73,72 @@ const Settings = () => {
   
   return (
     <Layout>
-      <div className="space-y-6">
-        <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
+      <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+        <div className="space-y-6">
+          <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
 
-        <Card className="p-4 md:p-6 space-y-6 glass-card">
-          <div className="space-y-2">
-            <Label className="text-sm md:text-base">Currency</Label>
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search currencies..." 
-                  value={search} 
-                  onChange={e => setSearch(e.target.value)} 
-                  className="pl-9 h-9 md:h-10 text-sm"
-                />
+          <Card className="p-4 md:p-6 space-y-6 glass-card">
+            <div className="space-y-2">
+              <Label className="text-sm md:text-base">Currency</Label>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search currencies..." 
+                    value={search} 
+                    onChange={e => setSearch(e.target.value)} 
+                    className="pl-9 h-9 md:h-10 text-sm"
+                  />
+                </div>
+                <Select value={currency.code} onValueChange={handleCurrencyChange}>
+                  <SelectTrigger className="h-9 md:h-10 text-sm">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent 
+                    className="bg-popover text-popover-foreground backdrop-blur-lg"
+                  >
+                    <ScrollArea className="h-[200px]">
+                      {filteredCurrencies.map(c => (
+                        <SelectItem key={c.code} value={c.code} className="text-sm">
+                          {c.name} ({c.symbol})
+                        </SelectItem>
+                      ))}
+                    </ScrollArea>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={currency.code} onValueChange={handleCurrencyChange}>
-                <SelectTrigger className="h-9 md:h-10 text-sm">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent 
-                  className="bg-popover text-popover-foreground backdrop-blur-lg"
-                >
-                  <ScrollArea className="h-[200px]">
-                    {filteredCurrencies.map(c => (
-                      <SelectItem key={c.code} value={c.code} className="text-sm">
-                        {c.name} ({c.symbol})
-                      </SelectItem>
-                    ))}
-                  </ScrollArea>
-                </SelectContent>
-              </Select>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm md:text-base">Theme</Label>
-            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
-              <Button 
-                variant={theme === "light" ? "default" : "outline"} 
-                size={isMobile ? "sm" : "default"}
-                className="flex items-center gap-2 w-full md:w-auto justify-center"
-                onClick={() => handleThemeChange("light")}
-              >
-                <Sun className="h-4 w-4" />
-                Light Mode
-              </Button>
-              <Button 
-                variant={theme === "dark" ? "default" : "outline"} 
-                size={isMobile ? "sm" : "default"}
-                className="flex items-center gap-2 w-full md:w-auto justify-center"
-                onClick={() => handleThemeChange("dark")}
-              >
-                <Moon className="h-4 w-4" />
-                Dark Mode
-              </Button>
+            <div className="space-y-2">
+              <Label className="text-sm md:text-base">Theme</Label>
+              <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
+                <Button 
+                  variant={theme === "light" ? "default" : "outline"} 
+                  size={isMobile ? "sm" : "default"}
+                  className="flex items-center gap-2 w-full md:w-auto justify-center"
+                  onClick={() => handleThemeChange("light")}
+                >
+                  <Sun className="h-4 w-4" />
+                  Light Mode
+                </Button>
+                <Button 
+                  variant={theme === "dark" ? "default" : "outline"} 
+                  size={isMobile ? "sm" : "default"}
+                  className="flex items-center gap-2 w-full md:w-auto justify-center"
+                  onClick={() => handleThemeChange("dark")}
+                >
+                  <Moon className="h-4 w-4" />
+                  Dark Mode
+                </Button>
+              </div>
             </div>
-          </div>
-        </Card>
-        
-        <CategoryManagement />
-        
-        <ArchiveManagement />
-      </div>
+          </Card>
+          
+          <CategoryManagement />
+          
+          <ArchiveManagement />
+        </div>
+      </PullToRefresh>
     </Layout>
   );
 };

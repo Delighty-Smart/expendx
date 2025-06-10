@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { currencies } from '@/lib/currencies';
@@ -40,25 +39,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   useEffect(() => {
-    // Update user settings when currency or theme changes
-    updateUserSettings();
-    // Update HTML class for theme
+    // Auto-save settings changes with debouncing
+    const saveTimeout = setTimeout(() => {
+      updateUserSettings();
+    }, 500);
+
+    // Update HTML class for theme immediately
     document.documentElement.classList.toggle('dark', theme === 'dark');
+
+    return () => clearTimeout(saveTimeout);
   }, [currency, theme, hideAmounts]);
 
   const initializeSettings = async () => {
     try {
-      // First, try to get settings from localStorage for immediate UI response
+      // Load from localStorage first for immediate UI response
       const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
       const savedHideAmounts = localStorage.getItem('expendx_hideAmounts') === 'true';
       const savedCurrency = localStorage.getItem('expendx_currency');
 
-      // Apply saved theme immediately
+      // Apply saved settings immediately
       if (savedTheme) {
         setTheme(savedTheme);
         document.documentElement.classList.toggle('dark', savedTheme === 'dark');
       } else {
-        // Set initial theme based on system preference if no saved theme
+        // Detect system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const initialTheme = prefersDark ? 'dark' : 'light';
         setTheme(initialTheme);
@@ -66,16 +70,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem('expendx_theme', initialTheme);
       }
 
-      // Apply saved hide amounts setting
       setHideAmounts(savedHideAmounts);
 
-      // Apply saved currency
       if (savedCurrency) {
         const currencyObj = currencies.find(c => c.code === savedCurrency) || { code: 'USD', symbol: '$', name: 'US Dollar' };
         setCurrency(currencyObj);
       }
 
-      // Then fetch from Supabase to sync with server
+      // Then sync with server
       await fetchUserSettings();
     } catch (error) {
       console.error('Error initializing settings:', error);
@@ -111,18 +113,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Update user settings in Supabase and localStorage
+  // Enhanced updateUserSettings with better persistence
   const updateUserSettings = async () => {
     try {
-      // Always save to localStorage for immediate persistence
+      // Always save to localStorage immediately for persistence
       localStorage.setItem('expendx_theme', theme);
       localStorage.setItem('expendx_hideAmounts', hideAmounts.toString());
       localStorage.setItem('expendx_currency', currency.code);
 
+      // Also save additional settings
+      const additionalSettings = {
+        lastUpdated: new Date().toISOString(),
+        version: '1.0'
+      };
+      localStorage.setItem('expendx_settings_meta', JSON.stringify(additionalSettings));
+
+      // Then sync with server
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if settings already exist for the user
       const { data: existingSettings, error: selectError } = await supabase
         .from('user_settings')
         .select('*')
@@ -135,7 +144,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       if (existingSettings) {
-        // Update existing settings
         const { error: updateError } = await supabase
           .from('user_settings')
           .update({ currency_code: currency.code })
@@ -145,7 +153,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           console.error('Error updating user settings:', updateError);
         }
       } else {
-        // Create new settings
         const { error: insertError } = await supabase
           .from('user_settings')
           .insert({ user_id: user.id, currency_code: currency.code });
@@ -189,3 +196,5 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </SettingsContext.Provider>
   );
 };
+
+export default SettingsProvider;

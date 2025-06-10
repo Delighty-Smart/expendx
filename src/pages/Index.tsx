@@ -1,81 +1,33 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import Layout from '@/components/Layout';
-import { useSettings } from '@/contexts/SettingsContext';
-import { supabase } from '@/integrations/supabase/client';
-import { updateUserStreak } from '@/lib/streak';
-import { 
-  AreaChart as RechartAreaChart, 
-  LineChart as RechartLineChart,
-  BarChart, 
-  PieChart,
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  Legend,
-  Line,
-  Bar,
-  Cell,
-  Sector,
-  Pie
-} from 'recharts';
-import { 
-  format, 
-  formatDistanceToNow, 
-  startOfMonth, 
-  endOfMonth,
-  addWeeks,
-  subWeeks,
-  eachDayOfInterval
-} from 'date-fns';
-import { 
-  ArrowRight, 
-  Plus, 
-  Wallet, 
-  PiggyBank, 
-  Target, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  DollarSign,
-  BarChart3,
-  AreaChart,
-  LineChart,
-  ChevronLeft,
-  ChevronRight,
-  TrendingUp,
-  TrendingDown,
-  PlusCircle,
-  Flame,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import { Transaction, TransactionType } from '@/types/transactions';
-
-type TransactionData = Transaction;
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "@/components/Layout";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowUpRight, ArrowDownRight, PlusCircle, TrendingUp, Target, PiggyBank, Wallet } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
+import { useTransactionData } from "@/hooks/useTransactionData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { BudgetProgress } from "@/components/BudgetProgress";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useRefresh } from "@/hooks/useRefresh";
 
 // Function to navigate to Add Transaction page
 const handleAddTransaction = () => {
   window.location.href = '/add-transaction';
 };
 
-const Dashboard = () => {
+const IndexPage = () => {
   const { currency } = useSettings();
+  const navigate = useNavigate();
+  const { refreshData } = useRefresh();
+  
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const [hideAmounts, setHideAmounts] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  const navigate = useNavigate();
   
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
@@ -407,414 +359,416 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="space-y-8">
-        <div className="flex flex-wrap gap-4 justify-between">
-          <Button
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
-            onClick={() => navigate('/add-transaction')}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Add Transaction
-          </Button>
-          <div className="flex items-center gap-4">
-            {streakData && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg">
-                <Flame className="h-5 w-5 animate-pulse text-yellow-200" />
-                <span className="text-sm font-bold">{streakData.current_streak}</span>
-              </div>
-            )}
+      <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+        <div className="space-y-6 pb-6">
+          <div className="flex flex-wrap gap-4 justify-between">
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setHideAmounts(!hideAmounts)}
-              className="text-muted-foreground hover:text-foreground"
-              title={hideAmounts ? "Show amounts" : "Hide amounts"}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
+              onClick={() => navigate('/add-transaction')}
             >
-              {hideAmounts ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+              <PlusCircle className="h-4 w-4" />
+              Add Transaction
             </Button>
-          </div>
-        </div>
-
-        {/* Cards section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Wallet Balance Card - Only Unarchived */}
-          <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <DollarSign className="h-8 w-8 text-primary" />
+              {streakData && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg">
+                  <Flame className="h-5 w-5 animate-pulse text-yellow-200" />
+                  <span className="text-sm font-bold">{streakData.current_streak}</span>
                 </div>
-                {currentBalance > 0 && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-bold">
-                    +
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Wallet Balance (Active Only)</p>
-                <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
-                <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${currentBalance / (monthlyIncome || 1) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setHideAmounts(!hideAmounts)}
+                className="text-muted-foreground hover:text-foreground"
+                title={hideAmounts ? "Show amounts" : "Hide amounts"}
+              >
+                {hideAmounts ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+              </Button>
             </div>
-          </Card>
+          </div>
 
-          {/* Monthly Income Card - Only Unarchived */}
-          <Card className="glass-card p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
-                  <TrendingUp className="h-8 w-8 text-secondary" />
+          {/* Cards section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Wallet Balance Card - Only Unarchived */}
+            <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="h-8 w-8 text-primary" />
+                  </div>
+                  {currentBalance > 0 && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-bold">
+                      +
+                    </div>
+                  )}
                 </div>
-                <svg className="absolute -top-2 -right-2 w-6 h-6">
-                  <circle cx="12" cy="12" r="12" fill="#00AAFF" />
-                  <path d="M8 12L10 14L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <div>
+                  <p className="text-sm text-muted-foreground">Wallet Balance (Active Only)</p>
+                  <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
+                  <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${currentBalance / (monthlyIncome || 1) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Monthly Income (Active)</p>
-                <p className="text-2xl font-semibold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
-                {monthlyIncome > 0 && (
+            </Card>
+
+            {/* Monthly Income Card - Only Unarchived */}
+            <Card className="glass-card p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
+                    <TrendingUp className="h-8 w-8 text-secondary" />
+                  </div>
+                  <svg className="absolute -top-2 -right-2 w-6 h-6">
+                    <circle cx="12" cy="12" r="12" fill="#00AAFF" />
+                    <path d="M8 12L10 14L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Income (Active)</p>
+                  <p className="text-2xl font-semibold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
+                  {monthlyIncome > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-secondary rounded-full transition-all duration-700 ease-out"
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : monthlyIncome.toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* Monthly Expenses Card - Only Unarchived */}
+            <Card className="glass-card p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <TrendingDown className="h-8 w-8 text-destructive" />
+                  </div>
+                  <svg className="absolute -top-2 -right-2 w-6 h-6">
+                    <circle cx="12" cy="12" r="12" fill="#EF4444" />
+                    <path d="M16 8L8 16M8 8L16 16" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Expenses (Active)</p>
+                  <p className="text-2xl font-semibold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-secondary rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${progressPercentage}%` }}
+                        className="h-full bg-destructive rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome) * 100 : 0}%` }}
                       ></div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : monthlyIncome.toFixed(2)}
+                      {monthlyIncome > 0 
+                        ? `${((monthlyExpenses / monthlyIncome) * 100).toFixed(0)}% of income`
+                        : 'No income estimate'
+                      }
                     </p>
                   </div>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Monthly Expenses Card - Only Unarchived */}
-          <Card className="glass-card p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <TrendingDown className="h-8 w-8 text-destructive" />
-                </div>
-                <svg className="absolute -top-2 -right-2 w-6 h-6">
-                  <circle cx="12" cy="12" r="12" fill="#EF4444" />
-                  <path d="M16 8L8 16M8 8L16 16" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Monthly Expenses (Active)</p>
-                <p className="text-2xl font-semibold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-destructive rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {monthlyIncome > 0 
-                      ? `${((monthlyExpenses / monthlyIncome) * 100).toFixed(0)}% of income`
-                      : 'No income estimate'
-                    }
-                  </p>
                 </div>
               </div>
-            </div>
-          </Card>
-        </div>
+            </Card>
+          </div>
 
-        {/* Charts section - All using only unarchived data */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Spending by Category Chart */}
-          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Spending by Category
-            </h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart 
-                  data={spendingData} 
-                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-                  barSize={50}
-                  layout="vertical"
-                >
-                  <defs>
-                    {COLORS.map((color, index) => (
-                      <linearGradient key={`bar-gradient-${index}`} id={`bar-gradient-${index}`} x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor={color} stopOpacity={0.8} />
-                        <stop offset="100%" stopColor={color} stopOpacity={0.4} />
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category"
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                    width={120}
-                  />
-                  <XAxis 
-                    type="number"
-                    tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(229, 231, 235, 0.5)",
-                      borderRadius: "0.5rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                  />
-                  <Bar 
-                    dataKey="amount" 
-                    animationDuration={1500}
-                    animationEasing="ease-out"
-                    radius={[0, 4, 4, 0]}
+          {/* Charts section - All using only unarchived data */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Spending by Category Chart */}
+            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Spending by Category
+              </h3>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={spendingData} 
+                    margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                    barSize={50}
+                    layout="vertical"
                   >
-                    {spendingData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={`url(#bar-gradient-${index % COLORS.length})`}
-                        stroke={COLORS[index % COLORS.length]}
-                        strokeWidth={1}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          {/* Daily Income & Expenses Chart */}
-          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <AreaChart className="h-5 w-5 text-primary" />
-              Daily Income & Expenses
-            </h3>
-            <div className="h-[300px] relative">
-              <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={scrollToPreviousWeek} 
-                  className="h-8 w-8 p-0"
-                  aria-label="Previous Week"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={scrollToNextWeek} 
-                  className="h-8 w-8 p-0"
-                  aria-label="Next Week"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
+                    <defs>
+                      {COLORS.map((color, index) => (
+                        <linearGradient key={`bar-gradient-${index}`} id={`bar-gradient-${index}`} x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                          <stop offset="100%" stopColor={color} stopOpacity={0.4} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category"
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                      width={120}
+                    />
+                    <XAxis 
+                      type="number"
+                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(229, 231, 235, 0.5)",
+                        borderRadius: "0.5rem",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                    />
+                    <Bar 
+                      dataKey="amount" 
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                      radius={[0, 4, 4, 0]}
+                    >
+                      {spendingData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={`url(#bar-gradient-${index % COLORS.length})`}
+                          stroke={COLORS[index % COLORS.length]}
+                          strokeWidth={1}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <div className="text-center text-sm text-muted-foreground mt-2">
-                Week of {format(currentWeekStart, 'MMMM d, yyyy')}
-              </div>
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartAreaChart data={dailyData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#A3CE22" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#A3CE22" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="expense-gradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00AAFF" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#00AAFF" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                  <XAxis 
-                    dataKey="fullDate" 
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                  />
-                  <YAxis 
-                    tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, ""]}
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(229, 231, 235, 0.5)",
-                      borderRadius: "0.5rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                  />
-                  <Legend 
-                    verticalAlign="top" 
-                    height={36}
-                    iconType="circle"
-                    iconSize={8}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="income" 
-                    name="Income"
-                    stroke="#A3CE22" 
-                    fillOpacity={1} 
-                    fill="url(#income-gradient)"
-                    strokeWidth={2}
-                    activeDot={{ r: 6, stroke: "#A3CE22", strokeWidth: 2, fill: "white" }}
-                    animationDuration={1500}
-                    animationEasing="ease-out"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="expense" 
-                    name="Expense"
-                    stroke="#00AAFF" 
-                    fillOpacity={1} 
-                    fill="url(#expense-gradient)"
-                    strokeWidth={2}
-                    activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
-                    animationDuration={1500}
-                    animationEasing="ease-out"
-                    animationBegin={300}
-                  />
-                </RechartAreaChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+            </Card>
 
-          {/* Balance Trend Chart */}
-          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <LineChart className="h-5 w-5 text-primary" />
-              Balance Trend
-            </h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartLineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                  />
-                  <YAxis 
-                    tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Balance"]}
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(229, 231, 235, 0.5)",
-                      borderRadius: "0.5rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="balance" 
-                    stroke="#00AAFF" 
-                    strokeWidth={3}
-                    connectNulls={true}
-                    dot={false}
-                    activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
-                    animationDuration={2000}
-                    animationEasing="ease-out"
-                  />
-                </RechartLineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          {/* Expense Distribution Chart */}
-          <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Expense Distribution
-            </h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <defs>
-                    {COLORS.map((color, index) => (
-                      <linearGradient key={`pie-gradient-${index}`} id={`pie-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={color} stopOpacity={1} />
-                        <stop offset="100%" stopColor={color} stopOpacity={0.8} />
-                      </linearGradient>
-                    ))}
-                  </defs>
-                  <Pie
-                    activeIndex={activeIndex}
-                    activeShape={props => renderActiveShape({...props, value: hideAmounts ? 0 : props.value})}
-                    data={spendingData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    dataKey="amount"
-                    onMouseEnter={onPieEnter}
-                    animationBegin={0}
-                    animationDuration={1200}
-                    animationEasing="ease-out"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    labelLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                    fontSize={9}
+            {/* Daily Income & Expenses Chart */}
+            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <AreaChart className="h-5 w-5 text-primary" />
+                Daily Income & Expenses
+              </h3>
+              <div className="h-[300px] relative">
+                <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={scrollToPreviousWeek} 
+                    className="h-8 w-8 p-0"
+                    aria-label="Previous Week"
                   >
-                    {spendingData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`}
-                        fill={`url(#pie-gradient-${index % COLORS.length})`}
-                        stroke="#FFFFFF"
-                        strokeWidth={2}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.95)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(229, 231, 235, 0.5)",
-                      borderRadius: "0.5rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                  />
-                  <Legend 
-                    formatter={(value, entry) => <span style={{ fontSize: '9px' }}>{value}</span>}
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '9px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={scrollToNextWeek} 
+                    className="h-8 w-8 p-0"
+                    aria-label="Next Week"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+                <div className="text-center text-sm text-muted-foreground mt-2">
+                  Week of {format(currentWeekStart, 'MMMM d, yyyy')}
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartAreaChart data={dailyData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#A3CE22" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#A3CE22" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="expense-gradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#00AAFF" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#00AAFF" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis 
+                      dataKey="fullDate" 
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, ""]}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(229, 231, 235, 0.5)",
+                        borderRadius: "0.5rem",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                    />
+                    <Legend 
+                      verticalAlign="top" 
+                      height={36}
+                      iconType="circle"
+                      iconSize={8}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="income" 
+                      name="Income"
+                      stroke="#A3CE22" 
+                      fillOpacity={1} 
+                      fill="url(#income-gradient)"
+                      strokeWidth={2}
+                      activeDot={{ r: 6, stroke: "#A3CE22", strokeWidth: 2, fill: "white" }}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="expense" 
+                      name="Expense"
+                      stroke="#00AAFF" 
+                      fillOpacity={1} 
+                      fill="url(#expense-gradient)"
+                      strokeWidth={2}
+                      activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
+                      animationDuration={1500}
+                      animationEasing="ease-out"
+                      animationBegin={300}
+                    />
+                  </RechartAreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Balance Trend Chart */}
+            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <LineChart className="h-5 w-5 text-primary" />
+                Balance Trend
+              </h3>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartLineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    />
+                    <YAxis 
+                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Balance"]}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(229, 231, 235, 0.5)",
+                        borderRadius: "0.5rem",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="balance" 
+                      stroke="#00AAFF" 
+                      strokeWidth={3}
+                      connectNulls={true}
+                      dot={false}
+                      activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
+                      animationDuration={2000}
+                      animationEasing="ease-out"
+                    />
+                  </RechartLineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Expense Distribution Chart */}
+            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Expense Distribution
+              </h3>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <defs>
+                      {COLORS.map((color, index) => (
+                        <linearGradient key={`pie-gradient-${index}`} id={`pie-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={color} stopOpacity={1} />
+                          <stop offset="100%" stopColor={color} stopOpacity={0.8} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <Pie
+                      activeIndex={activeIndex}
+                      activeShape={props => renderActiveShape({...props, value: hideAmounts ? 0 : props.value})}
+                      data={spendingData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      dataKey="amount"
+                      onMouseEnter={onPieEnter}
+                      animationBegin={0}
+                      animationDuration={1200}
+                      animationEasing="ease-out"
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      labelLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                      fontSize={9}
+                    >
+                      {spendingData.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`}
+                          fill={`url(#pie-gradient-${index % COLORS.length})`}
+                          stroke="#FFFFFF"
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                      contentStyle={{
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(229, 231, 235, 0.5)",
+                        borderRadius: "0.5rem",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                      }}
+                    />
+                    <Legend 
+                      formatter={(value, entry) => <span style={{ fontSize: '9px' }}>{value}</span>}
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: '9px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
         </div>
-      </div>
+      </PullToRefresh>
     </Layout>
   );
 };
 
-export default Dashboard;
+export default IndexPage;
