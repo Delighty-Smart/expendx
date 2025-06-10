@@ -247,7 +247,7 @@ const TransactionsPage = () => {
 
   return (
     <Layout>
-      <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+      <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
@@ -325,149 +325,148 @@ const TransactionsPage = () => {
               </div>
             </div>
 
-            <PullToRefresh onRefresh={handleRefresh} containerClassName="transactions-container">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-12 bg-card">
-                  <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
-                  <p className="mt-4 text-muted-foreground">Loading transactions...</p>
-                </div>
-              ) : Object.keys(groupedTransactions).length > 0 ? (
-                <div className="divide-y divide-border">
-                  {Object.entries(groupedTransactions).map(([month, days]) => {
-                    const { income, expense } = getMonthlyTotals(month);
-                    const allDayTransactions = Object.values(days).flat();
-                    
-                    return (
-                      <div key={month} className="transaction-month-group">
-                        {/* Month header */}
-                        <div 
-                          className={`bg-muted/50 dark:bg-muted/20 p-4 border-b border-border ${selectionMode ? 'cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30' : ''}`}
-                          onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
-                        >
-                          <div className="flex flex-col">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium text-foreground">{month}</span>
-                              {selectionMode && (
-                                <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
-                                  allDayTransactions.every(t => selectedTransactions.includes(t.id))
-                                    ? 'bg-primary'
-                                    : allDayTransactions.some(t => selectedTransactions.includes(t.id))
-                                    ? 'bg-primary/30'
-                                    : 'bg-background'
-                                }`}></div>
-                              )}
+            {/* Remove nested PullToRefresh and apply it to the entire page instead */}
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 bg-card">
+                <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
+                <p className="mt-4 text-muted-foreground">Loading transactions...</p>
+              </div>
+            ) : Object.keys(groupedTransactions).length > 0 ? (
+              <div className="divide-y divide-border">
+                {Object.entries(groupedTransactions).map(([month, days]) => {
+                  const { income, expense } = getMonthlyTotals(month);
+                  const allDayTransactions = Object.values(days).flat();
+                  
+                  return (
+                    <div key={month} className="transaction-month-group">
+                      {/* Month header */}
+                      <div 
+                        className={`bg-muted/50 dark:bg-muted/20 p-4 border-b border-border ${selectionMode ? 'cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30' : ''}`}
+                        onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
+                      >
+                        <div className="flex flex-col">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-foreground">{month}</span>
+                            {selectionMode && (
+                              <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
+                                allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                                  ? 'bg-primary'
+                                  : allDayTransactions.some(t => selectedTransactions.includes(t.id))
+                                  ? 'bg-primary/30'
+                                  : 'bg-background'
+                              }`}></div>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
+                            <div>
+                              In: {currencySymbol}{formatAmount(income)}
                             </div>
-                            <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
-                              <div>
-                                In: {currencySymbol}{formatAmount(income)}
-                              </div>
-                              <div>
-                                Out: {currencySymbol}{formatAmount(expense)}
-                              </div>
+                            <div>
+                              Out: {currencySymbol}{formatAmount(expense)}
                             </div>
                           </div>
                         </div>
-
-                        {/* Days and transactions */}
-                        <div className="divide-y divide-border">
-                          {Object.entries(days)
-                            .sort(
-                              ([dayA], [dayB]) =>
-                                new Date(dayB).getTime() - new Date(dayA).getTime()
-                            )
-                            .map(([day, dayTransactions]) => (
-                              <div key={day} className="transaction-day-group">
-                                <div 
-                                  className={`px-4 py-2 bg-muted/30 dark:bg-muted/10 border-b border-border text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/20' : ''}`}
-                                  onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
-                                >
-                                  <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
-                                  
-                                  {selectionMode && (
-                                    <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
-                                      dayTransactions.every(t => selectedTransactions.includes(t.id))
-                                        ? 'bg-primary'
-                                        : dayTransactions.some(t => selectedTransactions.includes(t.id))
-                                        ? 'bg-primary/30'
-                                        : 'bg-background'
-                                    }`}></div>
-                                  )}
-                                </div>
-
-                                <div className="divide-y divide-border">
-                                  {dayTransactions.map((transaction) => (
-                                    <div
-                                      key={transaction.id}
-                                      className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 ${selectionMode ? 'cursor-pointer' : ''}`}
-                                      onClick={() => selectionMode 
-                                        ? toggleTransactionSelection(transaction.id) 
-                                        : handleEdit(transaction)
-                                      }
-                                    >
-                                      {selectionMode && (
-                                        <div 
-                                          className={`h-4 w-4 shrink-0 rounded-sm border-2 border-primary ${
-                                            selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
-                                          }`}
-                                        />
-                                      )}
-
-                                      <div className="flex-shrink-0">
-                                        {renderTransactionIcon(transaction.type as TransactionType)}
-                                      </div>
-
-                                      <div className="flex-1 flex flex-col">
-                                        <p className="font-medium text-sm leading-tight text-foreground">
-                                          {transaction.description}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground leading-none mt-1">
-                                          {transaction.category}
-                                        </p>
-                                      </div>
-
-                                      <div
-                                        className={`text-right ${
-                                          transaction.type === "credit"
-                                            ? "text-green-600 dark:text-green-400"
-                                            : transaction.type === "debit"
-                                            ? "text-red-600 dark:text-red-400"
-                                            : "text-blue-600 dark:text-blue-400"
-                                        }`}
-                                      >
-                                        <p className="font-medium text-sm leading-tight">
-                                          {transaction.type === "credit"
-                                            ? "+"
-                                            : transaction.type === "debit"
-                                            ? "-"
-                                            : ""}
-                                          {currencySymbol}
-                                          {formatAmount(transaction.amount)}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground bg-card">
-                  <p className="mb-4">No transactions found for the selected filters</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate("/add-transaction")}
-                    className="flex items-center gap-2 bg-background border-input text-foreground hover:bg-accent"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Add your first transaction
-                  </Button>
-                </div>
-              )}
-            </PullToRefresh>
+
+                      {/* Days and transactions */}
+                      <div className="divide-y divide-border">
+                        {Object.entries(days)
+                          .sort(
+                            ([dayA], [dayB]) =>
+                              new Date(dayB).getTime() - new Date(dayA).getTime()
+                          )
+                          .map(([day, dayTransactions]) => (
+                            <div key={day} className="transaction-day-group">
+                              <div 
+                                className={`px-4 py-2 bg-muted/30 dark:bg-muted/10 border-b border-border text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/20' : ''}`}
+                                onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
+                              >
+                                <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
+                                
+                                {selectionMode && (
+                                  <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
+                                    dayTransactions.every(t => selectedTransactions.includes(t.id))
+                                      ? 'bg-primary'
+                                      : dayTransactions.some(t => selectedTransactions.includes(t.id))
+                                      ? 'bg-primary/30'
+                                      : 'bg-background'
+                                  }`}></div>
+                                )}
+                              </div>
+
+                              <div className="divide-y divide-border">
+                                {dayTransactions.map((transaction) => (
+                                  <div
+                                    key={transaction.id}
+                                    className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 ${selectionMode ? 'cursor-pointer' : ''}`}
+                                    onClick={() => selectionMode 
+                                      ? toggleTransactionSelection(transaction.id) 
+                                      : handleEdit(transaction)
+                                    }
+                                  >
+                                    {selectionMode && (
+                                      <div 
+                                        className={`h-4 w-4 shrink-0 rounded-sm border-2 border-primary ${
+                                          selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
+                                        }`}
+                                      />
+                                    )}
+
+                                    <div className="flex-shrink-0">
+                                      {renderTransactionIcon(transaction.type as TransactionType)}
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col">
+                                      <p className="font-medium text-sm leading-tight text-foreground">
+                                        {transaction.description}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground leading-none mt-1">
+                                        {transaction.category}
+                                      </p>
+                                    </div>
+
+                                    <div
+                                      className={`text-right ${
+                                        transaction.type === "credit"
+                                          ? "text-green-600 dark:text-green-400"
+                                          : transaction.type === "debit"
+                                          ? "text-red-600 dark:text-red-400"
+                                          : "text-blue-600 dark:text-blue-400"
+                                      }`}
+                                    >
+                                      <p className="font-medium text-sm leading-tight">
+                                        {transaction.type === "credit"
+                                          ? "+"
+                                          : transaction.type === "debit"
+                                          ? "-"
+                                          : ""}
+                                        {currencySymbol}
+                                        {formatAmount(transaction.amount)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground bg-card">
+                <p className="mb-4">No transactions found for the selected filters</p>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/add-transaction")}
+                  className="flex items-center gap-2 bg-background border-input text-foreground hover:bg-accent"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Add your first transaction
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
 
