@@ -38,9 +38,9 @@
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 217.2 32.6% 17.5%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 217.2 32.6% 17.5%;
     --popover-foreground: 210 40% 98%;
     --primary: 202 100% 50%; /* #00AAFF */
     --primary-foreground: 210 40% 98%;
@@ -48,7 +48,7 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 84 70% 47%; /* #A3CE22 */
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -379,6 +379,72 @@
 
 .toast-info {
   @apply bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800;
+}
+
+/* Enhanced dark mode contrast improvements */
+.dark {
+  /* Transaction list improvements */
+  .transaction-row {
+    background-color: hsl(217.2 32.6% 17.5%);
+    border-color: hsl(217.2 32.6% 22%);
+  }
+  
+  .transaction-row:hover {
+    background-color: hsl(217.2 32.6% 20%);
+  }
+  
+  /* Month headers */
+  .transaction-month-group > div:first-child {
+    background-color: hsl(217.2 32.6% 15%);
+    border-color: hsl(217.2 32.6% 22%);
+  }
+  
+  /* Day headers */
+  .transaction-day-group > div:first-child {
+    background-color: hsl(217.2 32.6% 12%);
+    border-color: hsl(217.2 32.6% 20%);
+    color: hsl(210 40% 98%);
+  }
+  
+  /* Card improvements */
+  .card {
+    background-color: hsl(217.2 32.6% 17.5%);
+    border-color: hsl(217.2 32.6% 22%);
+  }
+  
+  /* Input improvements */
+  input, select, textarea {
+    background-color: hsl(217.2 32.6% 15%);
+    border-color: hsl(217.2 32.6% 22%);
+    color: hsl(210 40% 98%);
+  }
+  
+  input:focus, select:focus, textarea:focus {
+    border-color: hsl(202 100% 50%);
+    box-shadow: 0 0 0 1px hsl(202 100% 50%);
+  }
+  
+  /* Button improvements */
+  button[data-state="open"] {
+    background-color: hsl(217.2 32.6% 20%);
+  }
+  
+  /* Select dropdown improvements */
+  [role="listbox"] {
+    background-color: hsl(217.2 32.6% 17.5%);
+    border-color: hsl(217.2 32.6% 22%);
+  }
+  
+  /* Text contrast improvements */
+  .text-muted-foreground {
+    color: hsl(215 20.2% 70%);
+  }
+  
+  /* Alert dialog improvements */
+  .AlertDialogContent {
+    background-color: hsl(217.2 32.6% 17.5%);
+    border-color: hsl(217.2 32.6% 22%);
+  }
 }
 
 /* Enhanced scrolling experience */

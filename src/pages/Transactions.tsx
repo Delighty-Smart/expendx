@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw } from "lucide-react";
+import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -34,6 +34,7 @@ const TransactionsPage = () => {
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
   const { toast } = useToast();
 
   // Use our custom transaction hook for data fetching with pull-to-refresh support
@@ -82,6 +83,36 @@ const TransactionsPage = () => {
         variant: "destructive"
       });
       setConfirmDeleteOpen(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ archived: true })
+        .in("id", selectedTransactions);
+      
+      if (error) throw error;
+
+      // Clear selected transactions and exit selection mode
+      setSelectedTransactions([]);
+      setSelectionMode(false);
+      await refetchTransactions();
+      
+      toast({
+        title: "Success",
+        description: `${selectedTransactions.length} transaction(s) archived successfully`
+      });
+      
+      setConfirmArchiveOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+      setConfirmArchiveOpen(false);
     }
   };
 
@@ -216,17 +247,27 @@ const TransactionsPage = () => {
     <Layout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-neutral">Transactions</h1>
+          <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
           <div className="flex gap-2">
             {selectionMode && selectedTransactions.length > 0 && (
-              <Button
-                variant="destructive"
-                className="flex items-center gap-2"
-                onClick={() => setConfirmDeleteOpen(true)}
-              >
-                <Trash className="h-4 w-4" />
-                Delete ({selectedTransactions.length})
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-950"
+                  onClick={() => setConfirmArchiveOpen(true)}
+                >
+                  <Archive className="h-4 w-4" />
+                  Archive ({selectedTransactions.length})
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                  onClick={() => setConfirmDeleteOpen(true)}
+                >
+                  <Trash className="h-4 w-4" />
+                  Delete ({selectedTransactions.length})
+                </Button>
+              </>
             )}
             <Button
               className="flex items-center gap-2"
@@ -238,14 +279,14 @@ const TransactionsPage = () => {
           </div>
         </div>
 
-        <Card className="overflow-hidden p-0">
-          <div className="p-4 border-b">
+        <Card className="overflow-hidden p-0 bg-card border-border">
+          <div className="p-4 border-b border-border bg-card">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search transactions..."
-                  className="pl-9"
+                  className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -258,14 +299,14 @@ const TransactionsPage = () => {
                     setSelectedType(value)
                   }
                 >
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-[150px] bg-background border-input text-foreground">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="credit">Income</SelectItem>
-                    <SelectItem value="debit">Expense</SelectItem>
-                    <SelectItem value="savings">Savings</SelectItem>
+                  <SelectContent className="bg-popover border-border">
+                    <SelectItem value="all" className="text-foreground">All Types</SelectItem>
+                    <SelectItem value="credit" className="text-foreground">Income</SelectItem>
+                    <SelectItem value="debit" className="text-foreground">Expense</SelectItem>
+                    <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -273,6 +314,7 @@ const TransactionsPage = () => {
                   variant={selectionMode ? "secondary" : "outline"}
                   onClick={toggleSelectionMode}
                   size="sm"
+                  className={selectionMode ? "bg-secondary text-secondary-foreground" : "bg-background border-input text-foreground hover:bg-accent"}
                 >
                   {selectionMode ? "Cancel" : "Select"}
                 </Button>
@@ -282,12 +324,12 @@ const TransactionsPage = () => {
 
           <PullToRefresh onRefresh={handleRefresh} containerClassName="transactions-container">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-12 bg-card">
                 <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
                 <p className="mt-4 text-muted-foreground">Loading transactions...</p>
               </div>
             ) : Object.keys(groupedTransactions).length > 0 ? (
-              <div className="divide-y">
+              <div className="divide-y divide-border">
                 {Object.entries(groupedTransactions).map(([month, days]) => {
                   const { income, expense } = getMonthlyTotals(month);
                   const allDayTransactions = Object.values(days).flat();
@@ -296,19 +338,19 @@ const TransactionsPage = () => {
                     <div key={month} className="transaction-month-group">
                       {/* Month header */}
                       <div 
-                        className={`bg-gray-50 p-4 border-b ${selectionMode ? 'cursor-pointer' : ''}`}
+                        className={`bg-muted/50 dark:bg-muted/20 p-4 border-b border-border ${selectionMode ? 'cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30' : ''}`}
                         onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
                       >
                         <div className="flex flex-col">
                           <div className="flex justify-between items-center">
-                            <span className="font-medium">{month}</span>
+                            <span className="font-medium text-foreground">{month}</span>
                             {selectionMode && (
-                              <div className={`h-4 w-4 rounded-sm border border-primary ${
+                              <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
                                 allDayTransactions.every(t => selectedTransactions.includes(t.id))
                                   ? 'bg-primary'
                                   : allDayTransactions.some(t => selectedTransactions.includes(t.id))
                                   ? 'bg-primary/30'
-                                  : ''
+                                  : 'bg-background'
                               }`}></div>
                             )}
                           </div>
@@ -324,7 +366,7 @@ const TransactionsPage = () => {
                       </div>
 
                       {/* Days and transactions */}
-                      <div className="divide-y">
+                      <div className="divide-y divide-border">
                         {Object.entries(days)
                           .sort(
                             ([dayA], [dayB]) =>
@@ -333,27 +375,27 @@ const TransactionsPage = () => {
                           .map(([day, dayTransactions]) => (
                             <div key={day} className="transaction-day-group">
                               <div 
-                                className={`px-4 py-2 bg-gray-50/50 border-b text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer' : ''}`}
+                                className={`px-4 py-2 bg-muted/30 dark:bg-muted/10 border-b border-border text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/20' : ''}`}
                                 onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
                               >
-                                <span>{format(new Date(day), "EEEE, MMM d")}</span>
+                                <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
                                 
                                 {selectionMode && (
-                                  <div className={`h-4 w-4 rounded-sm border border-primary ${
+                                  <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
                                     dayTransactions.every(t => selectedTransactions.includes(t.id))
                                       ? 'bg-primary'
                                       : dayTransactions.some(t => selectedTransactions.includes(t.id))
                                       ? 'bg-primary/30'
-                                      : ''
+                                      : 'bg-background'
                                   }`}></div>
                                 )}
                               </div>
 
-                              <div className="divide-y">
+                              <div className="divide-y divide-border">
                                 {dayTransactions.map((transaction) => (
                                   <div
                                     key={transaction.id}
-                                    className={`transaction-row p-4 flex items-center gap-3 ${selectionMode ? 'cursor-pointer' : ''}`}
+                                    className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 ${selectionMode ? 'cursor-pointer' : ''}`}
                                     onClick={() => selectionMode 
                                       ? toggleTransactionSelection(transaction.id) 
                                       : handleEdit(transaction)
@@ -361,8 +403,8 @@ const TransactionsPage = () => {
                                   >
                                     {selectionMode && (
                                       <div 
-                                        className={`h-4 w-4 shrink-0 rounded-sm border border-primary ${
-                                          selectedTransactions.includes(transaction.id) ? 'bg-primary' : ''
+                                        className={`h-4 w-4 shrink-0 rounded-sm border-2 border-primary ${
+                                          selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
                                         }`}
                                       />
                                     )}
@@ -372,7 +414,7 @@ const TransactionsPage = () => {
                                     </div>
 
                                     <div className="flex-1 flex flex-col">
-                                      <p className="font-medium text-sm leading-tight">
+                                      <p className="font-medium text-sm leading-tight text-foreground">
                                         {transaction.description}
                                       </p>
                                       <p className="text-xs text-muted-foreground leading-none mt-1">
@@ -383,10 +425,10 @@ const TransactionsPage = () => {
                                     <div
                                       className={`text-right ${
                                         transaction.type === "credit"
-                                          ? "text-green-600"
+                                          ? "text-green-600 dark:text-green-400"
                                           : transaction.type === "debit"
-                                          ? "text-red-600"
-                                          : "text-blue-600"
+                                          ? "text-red-600 dark:text-red-400"
+                                          : "text-blue-600 dark:text-blue-400"
                                       }`}
                                     >
                                       <p className="font-medium text-sm leading-tight">
@@ -410,12 +452,12 @@ const TransactionsPage = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-muted-foreground bg-card">
                 <p className="mb-4">No transactions found for the selected filters</p>
                 <Button
                   variant="outline"
                   onClick={() => navigate("/add-transaction")}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-background border-input text-foreground hover:bg-accent"
                 >
                   <PlusCircle className="h-4 w-4" />
                   Add your first transaction
@@ -427,18 +469,36 @@ const TransactionsPage = () => {
       </div>
 
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-foreground">Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
               Are you sure you want to delete {selectedTransactions.length} transaction(s)? 
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmArchiveOpen} onOpenChange={setConfirmArchiveOpen}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Confirm Archive</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Are you sure you want to archive {selectedTransactions.length} transaction(s)? 
+              Archived transactions can be restored from the Settings page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive} className="bg-orange-600 hover:bg-orange-700 text-white">
+              Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
