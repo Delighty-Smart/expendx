@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -42,7 +43,7 @@ const SavingsPage = () => {
       const { data, error } = await supabase
         .from("savings_goals" as any)
         .select("*")
-        .order("category");
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data as unknown as SavingsGoal[] || [];
     },

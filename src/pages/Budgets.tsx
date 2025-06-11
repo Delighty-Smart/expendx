@@ -111,7 +111,7 @@ const BudgetsPage = () => {
       const { data, error } = await supabase
         .from('budget_categories')
         .select('*')
-        .order('category');
+        .order('created_at', { ascending: false });
 
       if (error) {
         throw new Error(error.message);

@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, TrendingUp, PiggyBank, BarChart, MessageSquare, Settings, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -92,17 +92,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   const menuItems = [
-    { path: "/", label: "Dashboard", icon: "Home" },
-    { path: "/transactions", label: "Transactions", icon: "Receipt" },
-    { path: "/budgets", label: "Budgets", icon: "Budgets" },
-    { path: "/savings", label: "Savings", icon: "Savings" },
-    { path: "/reports", label: "Reports", icon: "BarChart" },
-    { path: "/feedback", label: "Feedback", icon: "MessageSquare" },
-    { path: "/settings", label: "Settings", icon: "Settings" },
+    { path: "/", label: "Home", icon: Home },
+    { path: "/transactions", label: "Transactions", icon: Receipt },
+    { path: "/budgets", label: "Budgets", icon: TrendingUp },
+    { path: "/savings", label: "Savings", icon: PiggyBank },
+    { path: "/reports", label: "Reports", icon: BarChart },
+    { path: "/feedback", label: "Feedback", icon: MessageSquare },
+    { path: "/profile", label: "Profile", icon: User },
+    { path: "/settings", label: "Settings", icon: Settings },
   ];
 
   if (isAdmin) {
-    menuItems.push({ path: "/admin", label: "Admin Panel", icon: "Shield" });
+    menuItems.push({ path: "/admin", label: "Admin Panel", icon: Shield });
   }
 
   return (
@@ -206,20 +207,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         )}
         
         <nav className="flex-1 p-2 md:p-3 overflow-y-auto">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`block px-3 py-1.5 md:px-4 md:py-2 rounded-md mb-1 transition-all duration-200 animated-button text-sm md:text-base ${
-                location.pathname === item.path
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
-              } flex justify-between items-center`}
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-3 py-1.5 md:px-4 md:py-2 rounded-md mb-1 transition-all duration-200 animated-button text-sm md:text-base ${
+                  location.pathname === item.path
+                    ? "bg-primary text-primary-foreground shadow-lg"
+                    : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                } flex items-center gap-3`}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <IconComponent className="h-4 w-4 md:h-5 md:w-5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
         
         <div className="p-2 border-t border-border/50">
