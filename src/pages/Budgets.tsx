@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -19,6 +18,7 @@ interface Budget {
   category: string;
   monthly_limit: number;
   user_id: string;
+  created_at?: string;
 }
 
 const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (budget: Budget) => void; onDelete: (budget: Budget) => void }) => {
@@ -111,7 +111,7 @@ const BudgetsPage = () => {
       const { data, error } = await supabase
         .from('budget_categories')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }); // Sort by most recent first
 
       if (error) {
         throw new Error(error.message);
