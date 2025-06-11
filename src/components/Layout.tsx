@@ -1,290 +1,157 @@
-import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+
+import { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Home, PlusCircle, BarChart3, PieChart, DollarSign, Wallet, Settings, User, MessageSquare, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { updateUserStreak, getUserProfile, getStreakText } from "@/lib/streak";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import StreakModal from "./StreakModal";
-import { Badge } from "@/components/ui/badge";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import AlphaBadge from "./AlphaBadge";
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [userStreak, setUserStreak] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [showStreakModal, setShowStreakModal] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const { theme, updateTheme } = useSettings();
-  const location = useLocation();
+const Layout = ({ children }: { children?: React.ReactNode }) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currency } = useSettings();
 
-  useEffect(() => {
-    const updateStreak = async () => {
-      try {
-        const streak = await updateUserStreak();
-        setUserStreak(streak);
-        
-        const profile = await getUserProfile();
-        setUserProfile(profile);
-        
-        setIsAdmin(profile?.role === 'admin');
-      } catch (error) {
-        console.error("Error updating streak:", error);
-      }
-    };
-
-    updateStreak();
-  }, []);
-
-  useEffect(() => {
-    if (userStreak) {
-      const timer = setTimeout(() => {
-        const hasSeenStreakModal = sessionStorage.getItem('hasSeenStreakModal');
-        if (!hasSeenStreakModal) {
-          setShowStreakModal(true);
-          sessionStorage.setItem('hasSeenStreakModal', 'true');
-        }
-      }, 90000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [userStreak]);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account",
-      });
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error logging out:", error);
-      toast({
-        title: "Logout failed",
-        description: "There was an error logging out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleStreakClick = () => {
-    setShowStreakModal(true);
-  };
-
-  const handleProfileClick = () => {
-    navigate("/profile");
-    setIsSidebarOpen(false);
-  };
-
-  const setThemeOption = (option: "light" | "dark") => {
-    updateTheme(option);
-  };
-
-  const menuItems = [
-    { path: "/", label: "Dashboard", icon: "Home" },
-    { path: "/transactions", label: "Transactions", icon: "Receipt" },
-    { path: "/budgets", label: "Budgets", icon: "Budgets" },
-    { path: "/savings", label: "Savings", icon: "Savings" },
-    { path: "/reports", label: "Reports", icon: "BarChart" },
-    { path: "/feedback", label: "Feedback", icon: "MessageSquare" },
-    { path: "/settings", label: "Settings", icon: "Settings" },
+  const navItems = [
+    { path: "/", icon: Home, label: "Home" },
+    { path: "/transactions", icon: BarChart3, label: "Transactions" },
+    { path: "/budgets", icon: PieChart, label: "Budgets" },
+    { path: "/savings", icon: DollarSign, label: "Savings" },
+    { path: "/reports", icon: Wallet, label: "Reports" },
+    { path: "/profile", icon: User, label: "Profile" },
+    { path: "/feedback", icon: MessageSquare, label: "Feedback" },
+    { path: "/settings", icon: Settings, label: "Settings" },
   ];
 
-  if (isAdmin) {
-    menuItems.push({ path: "/admin", label: "Admin Panel", icon: "Shield" });
-  }
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setSidebarOpen(false);
+  };
+
+  const isActiveRoute = (path: string) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  const DesktopSidebar = () => (
+    <div className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 z-50 bg-card border-r border-border">
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex items-center h-16 px-4 border-b border-border">
+          <h1 className="text-xl font-bold text-foreground flex items-center">
+            ExpendX
+            <AlphaBadge />
+          </h1>
+        </div>
+        <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+          <nav className="mt-5 flex-1 px-2 space-y-1">
+            {navItems.map((item) => (
+              <Button
+                key={item.path}
+                variant={isActiveRoute(item.path) ? "secondary" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleNavigation(item.path)}
+              >
+                <item.icon className="mr-3 h-5 w-5" />
+                {item.label}
+              </Button>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+
+  const MobileHeader = () => (
+    <div className="md:hidden bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center">
+        <h1 className="text-lg font-bold text-foreground flex items-center">
+          ExpendX
+          <AlphaBadge />
+        </h1>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setSidebarOpen(true)}
+        className="p-2"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+    </div>
+  );
+
+  const MobileSidebar = () => (
+    <>
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+          <div className="relative flex flex-col w-64 h-full bg-card border-r border-border">
+            <div className="flex items-center justify-between h-16 px-4 border-b border-border">
+              <h1 className="text-xl font-bold text-foreground flex items-center">
+                ExpendX
+                <AlphaBadge />
+              </h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(false)}
+                className="p-2"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+              <nav className="mt-5 flex-1 px-2 space-y-1">
+                {navItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    variant={isActiveRoute(item.path) ? "secondary" : "ghost"}
+                    className="w-full justify-start"
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <item.icon className="mr-3 h-5 w-5" />
+                    {item.label}
+                  </Button>
+                ))}
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
-      <StreakModal 
-        open={showStreakModal} 
-        onOpenChange={setShowStreakModal} 
-        streak={userStreak}
-        className="max-w-sm mx-auto"
-      />
-
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 flex items-center justify-between px-3 z-50">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="animated-button"
-        >
-          <Menu className="h-5 w-5 text-foreground" />
-        </Button>
-        <div className="h-8">
-          <img 
-            src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
-            alt="expendX" 
-            className="h-full object-contain"
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="animated-button">
-              {theme === "dark" ? (
-                <Moon className="h-5 w-5 text-foreground" />
-              ) : (
-                <Sun className="h-5 w-5 text-foreground" />
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover/80 backdrop-blur-md border-border/50">
-            <DropdownMenuItem onClick={() => setThemeOption("light")} className="flex gap-2 text-sm">
-              <Sun className="h-4 w-4" /> Light
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
-              <Moon className="h-4 w-4" /> Dark
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
-
-      <aside
-        className={`fixed top-0 left-0 h-full w-[280px] md:w-64 glass-effect border-r border-border/50 transform transition-all duration-300 ease-in-out z-40 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 flex flex-col`}
-      >
-        <div className="h-14 md:h-16 flex items-center px-4 md:px-6 border-b border-border/50">
-          <div className="h-8 md:h-10">
-            <img 
-              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
-              alt="expendX" 
-              className="h-full object-contain"
-            />
-          </div>
-        </div>
+    <div className="h-screen flex bg-background">
+      <DesktopSidebar />
+      <MobileSidebar />
+      
+      <div className="flex flex-col flex-1 md:pl-64">
+        <MobileHeader />
         
-        <div 
-          className="p-3 md:p-4 border-b border-border/50 cursor-pointer hover:bg-accent/30 transition-colors"
-          onClick={handleProfileClick}
-        >
-          <div className="flex items-center gap-3 mb-1 md:mb-2">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-5 w-5 text-primary" />
-            </div>
-            <div className="overflow-hidden">
-              <p className="font-medium text-sm md:text-base text-foreground truncate">
-                {userProfile?.username || userProfile?.email || "User"}
-              </p>
-              {userStreak && (
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500"></span>
-                  {userStreak.current_title}
-                </p>
-              )}
+        <main className="flex-1 relative overflow-auto focus:outline-none">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+              {children || <Outlet />}
             </div>
           </div>
-        </div>
+        </main>
         
-        {userStreak && (
-          <div 
-            className="p-3 md:p-4 border-b border-border/50 flex items-center gap-2 cursor-pointer hover:bg-accent/30 transition-colors"
-            onClick={handleStreakClick}
-          >
-            <div className="p-1.5 md:p-2 rounded-full bg-primary/20 flex items-center justify-center">
-              <Flame className="h-3.5 w-3.5 md:h-4 md:w-4 text-pink-500" />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs md:text-sm font-medium">{getStreakText(userStreak.current_streak)}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground">
-                Click to see your progress!
-              </p>
-            </div>
-          </div>
-        )}
-        
-        <nav className="flex-1 p-2 md:p-3 overflow-y-auto">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`block px-3 py-1.5 md:px-4 md:py-2 rounded-md mb-1 transition-all duration-200 animated-button text-sm md:text-base ${
-                location.pathname === item.path
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
-              } flex justify-between items-center`}
-              onClick={() => setIsSidebarOpen(false)}
+        <div className="md:hidden">
+          <div className="bg-card border-t border-border px-4 py-2">
+            <Button
+              onClick={() => navigate("/add-transaction")}
+              className="w-full"
+              size="lg"
             >
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        
-        <div className="p-2 border-t border-border/50">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="w-full justify-between text-sm font-normal"
-              >
-                <div className="flex items-center gap-2">
-                  {theme === "light" && <Sun className="h-4 w-4" />}
-                  {theme === "dark" && <Moon className="h-4 w-4" />}
-                  <span>
-                    {theme === "light" && "Light Mode"}
-                    {theme === "dark" && "Dark Mode"}
-                  </span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover/80 backdrop-blur-md border-border/50 w-[180px]">
-              <DropdownMenuItem onClick={() => setThemeOption("light")} className="flex gap-2 text-sm">
-                <Sun className="h-4 w-4" /> Light Mode
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
-                <Moon className="h-4 w-4" /> Dark Mode
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <PlusCircle className="h-5 w-5 mr-2" />
+              Add Transaction
+            </Button>
+          </div>
         </div>
-        
-        <div className="p-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="w-full justify-start gap-2 text-sm font-normal"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            Log Out
-          </Button>
-        </div>
-        
-        <div className="p-3 text-center text-[10px] md:text-xs text-muted-foreground border-t border-border/50">
-          Powered by <span className="font-bold">Delighty Smart Solutions</span>
-        </div>
-      </aside>
-
-      <main
-        className={`pt-14 lg:pt-0 lg:pl-64 min-h-screen transition-all duration-300 ${
-          isSidebarOpen ? "brightness-50 lg:brightness-100" : ""
-        }`}
-        onClick={() => isSidebarOpen && setIsSidebarOpen(false)}
-      >
-        <div className="container mx-auto p-3 md:p-4 lg:p-6 animate-fadeIn">
-          {children}
-        </div>
-      </main>
-
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      </div>
     </div>
   );
 };
