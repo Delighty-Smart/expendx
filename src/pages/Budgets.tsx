@@ -165,7 +165,7 @@ const BudgetsPage = () => {
   };
 
   const handleEditBudget = (budget: Budget) => {
-    navigate(`/edit-budget?id=${budget.id}`);
+    navigate('/edit-budget', { state: { budget } });
   };
 
   if (isLoading) {
