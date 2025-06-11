@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Send, ThumbsUp, ThumbsDown, MessageCircle, AlertCircle } from "lucide-react";
+import { Image, Send, Upload, Check, ThumbsUp, ThumbsDown, MessageCircle, AlertCircle } from "lucide-react";
 import FeedbackSuccess from "@/components/FeedbackSuccess";
-import ImageUpload from "@/components/ImageUpload";
 
 const ratingOptions = [
   { value: "positive", icon: ThumbsUp, label: "Positive" },
@@ -28,25 +28,34 @@ const FeedbackPage = () => {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleImageSelect = (file: File) => {
-    setScreenshot(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setScreenshot(file);
 
-  const handleImageRemove = () => {
-    setScreenshot(null);
-    setPreviewUrl(null);
+      // Create a preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleRatingSelect = (value: string) => {
     setSelectedRating(value);
+  };
+
+  const handleRemoveScreenshot = () => {
+    setScreenshot(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,7 +95,7 @@ const FeedbackPage = () => {
           formData.append('file', screenshot);
           formData.append('userId', user.id);
           
-          const response = await fetch(`https://wulhjbwijgbticuslygm.supabase.co/functions/v1/upload-feedback-image`, {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-feedback-image`, {
             method: 'POST',
             body: formData,
             headers: {
@@ -211,13 +220,49 @@ const FeedbackPage = () => {
               {/* Screenshot Upload */}
               <div className="space-y-2">
                 <Label>Attach a Screenshot (optional)</Label>
-                <ImageUpload
-                  onImageSelect={handleImageSelect}
-                  onImageRemove={handleImageRemove}
-                  previewUrl={previewUrl}
-                  buttonText="Upload Screenshot"
-                  maxSize={5}
-                />
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload Image
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {screenshot ? screenshot.name : "No file selected"}
+                  </span>
+                </div>
+
+                {/* Preview */}
+                {previewUrl && (
+                  <div className="mt-4 relative">
+                    <div className="relative rounded-md overflow-hidden border border-border">
+                      <img
+                        src={previewUrl}
+                        alt="Screenshot preview"
+                        className="max-h-40 w-auto object-contain"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={handleRemoveScreenshot}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Contact Permission */}
