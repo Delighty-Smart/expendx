@@ -91,26 +91,22 @@ const FeedbackPage = () => {
       // Upload screenshot if there is one
       if (screenshot) {
         try {
-          const formData = new FormData();
-          formData.append('file', screenshot);
-          formData.append('userId', user.id);
+          // Upload the file to Supabase Storage
+          const fileExt = screenshot.name.split('.').pop();
+          const fileName = `${user.id}/${Date.now()}.${fileExt}`;
           
-          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-feedback-image`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-            }
-          });
+          const { error: uploadError, data } = await supabase.storage
+            .from('feedback-images')
+            .upload(fileName, screenshot);
           
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Upload response error:", errorData);
-            throw new Error(errorData.error || 'Failed to upload screenshot');
-          }
+          if (uploadError) throw uploadError;
           
-          const data = await response.json();
-          screenshotUrl = data.url;
+          // Get the public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('feedback-images')
+            .getPublicUrl(fileName);
+          
+          screenshotUrl = publicUrl;
         } catch (uploadError) {
           console.error("Screenshot upload error:", uploadError);
           toast({
