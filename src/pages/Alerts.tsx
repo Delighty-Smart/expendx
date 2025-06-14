@@ -369,12 +369,13 @@ const Alerts = () => {
         </div>
 
         {selectionMode && alerts.length > 0 && (
-          <div className="mb-4 p-4 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-3">
+          <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
               <Checkbox
+                size="sm"
                 checked={allSelected}
                 onCheckedChange={handleSelectAll}
-                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
               />
               <span className="text-sm font-medium">
                 {allSelected ? 'Deselect All' : 'Select All'} 
@@ -397,22 +398,23 @@ const Alerts = () => {
               >
                 {/* Header with Checkbox (if in selection mode), Icon and Title */}
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {selectionMode && (
                       <Checkbox
+                        size="sm"
                         checked={selectedAlerts.has(alert.id)}
                         onCheckedChange={(checked) => handleSelectAlert(alert.id, checked as boolean)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                        className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
                       />
                     )}
                     <div className="flex-shrink-0">
                       {getAlertIcon(alert.type)}
                     </div>
-                    <CardTitle className="text-lg font-semibold flex-1">
+                    <CardTitle className="text-lg font-semibold flex-1 min-w-0">
                       {alert.title}
                     </CardTitle>
                     {!alert.read && (
-                      <div className="ml-auto">
+                      <div className="ml-auto flex-shrink-0">
                         <Button 
                           variant="ghost" 
                           size="sm"
