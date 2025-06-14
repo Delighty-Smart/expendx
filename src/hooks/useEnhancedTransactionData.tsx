@@ -68,8 +68,8 @@ export function useEnhancedTransactionData(filter?: {
           
           if (error) throw error;
           
-          // Update cache with fresh data
-          await enhancedOfflineManager.updateCacheWithFreshData(data || []);
+          // The cache will be updated through performFullDataSync if needed
+          // No need to call updateCacheWithFreshData as it doesn't exist
           
           return (data || []).map(item => ({
             ...item,
