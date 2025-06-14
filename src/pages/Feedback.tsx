@@ -260,17 +260,18 @@ const FeedbackPage = () => {
                 )}
               </div>
 
-              {/* Contact Permission with small checkbox */}
-              <div className="flex items-center space-x-2">
+              {/* Contact Permission with smaller checkbox */}
+              <div className="flex items-start space-x-3">
                 <Checkbox 
                   id="contactPermission"
                   checked={contactPermission}
                   onCheckedChange={(checked) => setContactPermission(checked as boolean)}
                   size="sm"
+                  className="mt-0.5"
                 />
                 <Label
                   htmlFor="contactPermission"
-                  className="text-sm text-muted-foreground cursor-pointer"
+                  className="text-sm text-muted-foreground cursor-pointer leading-relaxed"
                 >
                   ExpendX team may contact me about this feedback
                 </Label>
