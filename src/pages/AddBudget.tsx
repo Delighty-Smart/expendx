@@ -2,20 +2,20 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, Form Control, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCategories } from "@/hooks/useCategories";
 import { Card } from "@/components/ui/card";
+import { useEnhancedBudgetData } from "@/hooks/useEnhancedBudgetData";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -25,9 +25,9 @@ const budgetSchema = z.object({
 const AddBudgetPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const { categories, loading: categoriesLoading } = useCategories("debit");
+  const { addBudgetOffline } = useEnhancedBudgetData();
 
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
@@ -40,54 +40,47 @@ const AddBudgetPage = () => {
   const onSubmit = useCallback(async (values: z.infer<typeof budgetSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
+      
       const budgetData = {
         category: values.category,
         monthly_limit: parseFloat(values.monthlyLimit),
-        user_id: user.id,
       };
 
-      const { error } = await supabase
-        .from("budget_categories")
-        .insert([budgetData]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Budget limit added successfully",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      await addBudgetOffline(budgetData);
       navigate("/budgets");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Error handling is done in the hook
     } finally {
       setLoading(false);
     }
-  }, [toast, navigate, queryClient]);
+  }, [addBudgetOffline, navigate]);
 
   return (
     <Layout>
       <div className="animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-4 md:mb-6">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="mr-2 h-8 px-2" 
-            onClick={() => navigate("/budgets")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back
-          </Button>
-          <h1 className="text-xl font-medium">Set Budget Limit</h1>
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="mr-2 h-8 px-2" 
+              onClick={() => navigate("/budgets")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              Back
+            </Button>
+            <h1 className="text-xl font-medium">Set Budget Limit</h1>
+          </div>
+          <OfflineIndicator />
         </div>
+        
+        {!navigator.onLine && (
+          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              You're offline. Your budget will be saved locally and synced when connection is restored.
+            </p>
+          </div>
+        )}
         
         <Card className="max-w-md mx-auto">
           <div className="p-4 md:p-6">

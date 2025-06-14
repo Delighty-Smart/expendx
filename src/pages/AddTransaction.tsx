@@ -1,350 +1,64 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { Transaction, TransactionType, getDefaultCategoriesForType, getCategoriesForType } from "@/types/transactions";
-import { useQueryClient } from "@tanstack/react-query";
-import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
+import { TransactionForm } from "@/components/TransactionForm";
+import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-const transactionSchema = z.object({
-  date: z.string().min(1, "Date is required"),
-  amount: z.string().min(1, "Amount is required"),
-  type: z.enum(["credit", "debit", "savings"] as const),
-  category: z.string().min(1, "Category is required"),
-  description: z.string().min(1, "Description is required")
-});
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 const AddTransactionPage = () => {
-  const { toast } = useToast();
-  const [transactionType, setTransactionType] = useState<TransactionType>("debit");
-  const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const location = useLocation();
-  const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const navigate = useNavigate();
+  const [showForm, setShowForm] = useState(true);
   
-  // Get transaction from location state if we're editing
-  useEffect(() => {
-    if (location.state?.transaction) {
-      setTransaction(location.state.transaction);
-      setTransactionType(location.state.transaction.type);
-    }
-  }, [location.state]);
-  
-  // Fetch categories whenever the transaction type changes
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const fetchedCategories = await getCategoriesForType(transactionType);
-        setCategories(fetchedCategories);
-      } catch (error) {
-        console.error("Error loading categories:", error);
-        // Fallback to default categories if there's an error
-        setCategories([...getDefaultCategoriesForType(transactionType)]);
-      }
-    };
-    
-    loadCategories();
-  }, [transactionType]);
-  
-  const form = useForm<z.infer<typeof transactionSchema>>({
-    resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      date: transaction?.date || new Date().toISOString().split("T")[0],
-      amount: transaction?.amount.toString() || "",
-      type: transaction?.type || "debit",
-      category: transaction?.category || "",
-      description: transaction?.description || ""
-    }
-  });
+  // Get transaction from location state if editing
+  const transaction = location.state?.transaction || null;
+  const isEditing = !!transaction;
 
-  // Update form when transaction changes
-  useEffect(() => {
-    if (transaction) {
-      form.reset({
-        date: transaction.date,
-        amount: transaction.amount.toString(),
-        type: transaction.type,
-        category: transaction.category,
-        description: transaction.description
-      });
-      setTransactionType(transaction.type);
-    }
-  }, [transaction, form]);
-
-  const handleTypeChange = (type: TransactionType) => {
-    setTransactionType(type);
-    form.setValue("type", type);
-    form.setValue("category", "");
+  const handleTransactionAdded = () => {
+    navigate("/transactions");
   };
 
-  // Helper function to get cached user ID for offline use
-  const getCachedUserId = (): string | null => {
-    try {
-      return localStorage.getItem('cached_user_id');
-    } catch (error) {
-      console.error("Error getting cached user ID:", error);
-      return null;
-    }
+  const handleFormClose = () => {
+    setShowForm(false);
+    navigate("/transactions");
   };
-
-  // Helper function to cache user ID when online
-  const cacheUserId = (userId: string) => {
-    try {
-      localStorage.setItem('cached_user_id', userId);
-    } catch (error) {
-      console.error("Error caching user ID:", error);
-    }
-  };
-
-  const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
-    try {
-      setLoading(true);
-      
-      // Get user ID from cache or auth
-      let userId = getCachedUserId();
-      if (!userId && navigator.onLine) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          userId = user.id;
-          cacheUserId(userId);
-        }
-      }
-
-      if (!userId) {
-        throw new Error("Unable to determine user ID. Please try again when online.");
-      }
-      
-      const transactionData = {
-        date: values.date,
-        amount: parseFloat(values.amount),
-        type: values.type as TransactionType,
-        category: values.category,
-        description: values.description,
-        user_id: userId
-      };
-
-      console.log("Saving transaction:", transactionData);
-
-      if (transaction) {
-        // Update existing transaction using enhanced offline manager
-        await enhancedOfflineManager.updateTransactionOffline(transaction.id, transactionData);
-        
-        toast({
-          title: "Success",
-          description: navigator.onLine ? "Transaction updated successfully" : "Update saved offline and will sync when online"
-        });
-      } else {
-        // Add new transaction using enhanced offline manager
-        await enhancedOfflineManager.addTransactionOffline(transactionData);
-        
-        toast({
-          title: "Success",
-          description: navigator.onLine ? "Transaction added successfully" : "Transaction saved offline and will sync when online"
-        });
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["enhanced_transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
-      queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      
-      // Navigate back to transactions page
-      navigate("/transactions");
-    } catch (error: any) {
-      console.error("Transaction submission error:", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast, transaction, navigate, queryClient]);
-
-  // Cache user ID when component mounts if online
-  useEffect(() => {
-    const cacheUserIdOnMount = async () => {
-      if (navigator.onLine) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            cacheUserId(user.id);
-          }
-        } catch (error) {
-          console.error("Failed to cache user ID on mount:", error);
-        }
-      }
-    };
-    
-    cacheUserIdOnMount();
-  }, []);
 
   return (
     <Layout>
-      <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="mr-2" 
-            onClick={() => navigate("/transactions")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-xl font-bold">{transaction ? 'Edit' : 'Add'} Transaction</h1>
+      <div className="container mx-auto p-4 max-w-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              className="mr-2" 
+              onClick={() => navigate("/transactions")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h1 className="text-2xl font-bold">
+              {isEditing ? 'Edit Transaction' : 'Add Transaction'}
+            </h1>
+          </div>
+          <OfflineIndicator />
         </div>
         
         {!navigator.onLine && (
-          <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded mb-4">
-            You're offline - changes will sync when connection is restored.
+          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              You're offline. Your transaction will be saved locally and synced when connection is restored.
+            </p>
           </div>
         )}
         
-        <div className="bg-card rounded-lg shadow-sm border p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} className="h-9" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Amount</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-9" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Type</FormLabel>
-                    <Select
-                      onValueChange={(value: TransactionType) => handleTypeChange(value)}
-                      value={field.value}
-                      disabled={loading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[250px]">
-                        <SelectItem value="credit">Credit (Income)</SelectItem>
-                        <SelectItem value="debit">Debit (Expense)</SelectItem>
-                        <SelectItem value="savings">Savings</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={loading || categories.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[250px]">
-                        <ScrollArea className="h-[200px]">
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter transaction details..." 
-                        {...field}
-                        className="resize-none text-sm" 
-                        rows={3}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => navigate("/transactions")}
-                  className="h-9 text-sm"
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit"
-                  className="h-9 text-sm"
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : transaction ? 'Update' : 'Add'} Transaction
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+        <TransactionForm
+          open={showForm}
+          onOpenChange={handleFormClose}
+          onTransactionAdded={handleTransactionAdded}
+          transaction={transaction}
+        />
       </div>
     </Layout>
   );

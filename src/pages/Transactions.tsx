@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -7,13 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
 import { TransactionType } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { useTransactionData } from "@/hooks/useTransactionData";
+import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
 import { useRefresh } from "@/hooks/useRefresh";
 import {
   AlertDialog,
@@ -26,6 +24,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
+import { PendingSyncIndicator } from "@/components/PendingSyncIndicator";
 
 const TransactionsPage = () => {
   const { currency } = useSettings();
@@ -39,13 +40,18 @@ const TransactionsPage = () => {
   const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
   const { toast } = useToast();
   const { refreshData } = useRefresh();
+  const { getTransactionSyncStatus } = useEnhancedOfflineSync();
 
-  // Use our custom transaction hook for data fetching with pull-to-refresh support
+  // Use enhanced transaction hook for offline support
   const {
     transactions,
     isLoading,
-    refetch: refetchTransactions
-  } = useTransactionData();
+    refetch: refetchTransactions,
+    deleteTransactionOffline
+  } = useEnhancedTransactionData({
+    type: selectedType,
+    category: selectedCategory !== "All" ? selectedCategory : undefined
+  });
 
   const handleRefresh = async () => {
     try {
@@ -65,18 +71,14 @@ const TransactionsPage = () => {
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase.from("transactions").delete().in("id", selectedTransactions);
-      if (error) throw error;
+      // Use enhanced offline delete for each selected transaction
+      for (const transactionId of selectedTransactions) {
+        await deleteTransactionOffline(transactionId);
+      }
 
       // Clear selected transactions and exit selection mode
       setSelectedTransactions([]);
       setSelectionMode(false);
-      await refetchTransactions();
-      
-      toast({
-        title: "Success",
-        description: `${selectedTransactions.length} transaction(s) deleted successfully`
-      });
       
       setConfirmDeleteOpen(false);
     } catch (error: any) {
@@ -91,17 +93,17 @@ const TransactionsPage = () => {
 
   const handleArchive = async () => {
     try {
-      const { error } = await supabase
-        .from("transactions")
-        .update({ archived: true })
-        .in("id", selectedTransactions);
-      
-      if (error) throw error;
+      // Archive is essentially an update operation
+      for (const transactionId of selectedTransactions) {
+        const transaction = transactions?.find(t => t.id === transactionId);
+        if (transaction) {
+          await transaction.updateTransactionOffline?.(transactionId, { archived: true });
+        }
+      }
 
       // Clear selected transactions and exit selection mode
       setSelectedTransactions([]);
       setSelectionMode(false);
-      await refetchTransactions();
       
       toast({
         title: "Success",
@@ -150,10 +152,8 @@ const TransactionsPage = () => {
     const allSelected = dayIds.every(id => selectedTransactions.includes(id));
     
     if (allSelected) {
-      // Deselect all
       setSelectedTransactions(prev => prev.filter(id => !dayIds.includes(id)));
     } else {
-      // Select all
       const newSelected = [...selectedTransactions];
       dayIds.forEach(id => {
         if (!newSelected.includes(id)) {
@@ -172,10 +172,8 @@ const TransactionsPage = () => {
     const allSelected = monthIds.every(id => selectedTransactions.includes(id));
     
     if (allSelected) {
-      // Deselect all
       setSelectedTransactions(prev => prev.filter(id => !monthIds.includes(id)));
     } else {
-      // Select all
       const newSelected = [...selectedTransactions];
       monthIds.forEach(id => {
         if (!newSelected.includes(id)) {
@@ -248,7 +246,6 @@ const TransactionsPage = () => {
     }
   };
 
-  // Ensure currency has a valid default value to avoid null/undefined errors
   const currencySymbol = currency?.symbol || "$";
 
   return (
@@ -256,7 +253,10 @@ const TransactionsPage = () => {
       <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
+              <OfflineIndicator />
+            </div>
             <div className="flex gap-2">
               {selectionMode && selectedTransactions.length > 0 && (
                 <>
@@ -331,7 +331,14 @@ const TransactionsPage = () => {
               </div>
             </div>
 
-            {/* Remove nested PullToRefresh and apply it to the entire page instead */}
+            {!navigator.onLine && (
+              <div className="px-4 py-2 bg-orange-50 dark:bg-orange-950 border-b border-orange-200 dark:border-orange-800">
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  You're offline. Changes will sync when connection is restored.
+                </p>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 bg-card">
                 <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
@@ -345,7 +352,6 @@ const TransactionsPage = () => {
                   
                   return (
                     <div key={month} className="transaction-month-group">
-                      {/* Month header */}
                       <div 
                         className={`bg-muted/50 dark:bg-muted/20 p-4 border-b border-border ${selectionMode ? 'cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30' : ''}`}
                         onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
@@ -364,23 +370,15 @@ const TransactionsPage = () => {
                             )}
                           </div>
                           <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
-                            <div>
-                              In: {currencySymbol}{formatAmount(income)}
-                            </div>
-                            <div>
-                              Out: {currencySymbol}{formatAmount(expense)}
-                            </div>
+                            <div>In: {currencySymbol}{formatAmount(income)}</div>
+                            <div>Out: {currencySymbol}{formatAmount(expense)}</div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Days and transactions */}
                       <div className="divide-y divide-border">
                         {Object.entries(days)
-                          .sort(
-                            ([dayA], [dayB]) =>
-                              new Date(dayB).getTime() - new Date(dayA).getTime()
-                          )
+                          .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
                           .map(([day, dayTransactions]) => (
                             <div key={day} className="transaction-day-group">
                               <div 
@@ -401,57 +399,64 @@ const TransactionsPage = () => {
                               </div>
 
                               <div className="divide-y divide-border">
-                                {dayTransactions.map((transaction) => (
-                                  <div
-                                    key={transaction.id}
-                                    className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 ${selectionMode ? 'cursor-pointer' : ''}`}
-                                    onClick={() => selectionMode 
-                                      ? toggleTransactionSelection(transaction.id) 
-                                      : handleEdit(transaction)
-                                    }
-                                  >
-                                    {selectionMode && (
-                                      <div 
-                                        className={`h-4 w-4 shrink-0 rounded-sm border-2 border-primary ${
-                                          selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
-                                        }`}
-                                      />
-                                    )}
-
-                                    <div className="flex-shrink-0">
-                                      {renderTransactionIcon(transaction.type as TransactionType)}
-                                    </div>
-
-                                    <div className="flex-1 flex flex-col">
-                                      <p className="font-medium text-sm leading-tight text-foreground">
-                                        {transaction.description}
-                                      </p>
-                                      <p className="text-xs text-muted-foreground leading-none mt-1">
-                                        {transaction.category}
-                                      </p>
-                                    </div>
-
+                                {dayTransactions.map((transaction) => {
+                                  const syncStatus = getTransactionSyncStatus(transaction.id);
+                                  
+                                  return (
                                     <div
-                                      className={`text-right ${
-                                        transaction.type === "credit"
-                                          ? "text-green-600 dark:text-green-400"
-                                          : transaction.type === "debit"
-                                          ? "text-red-600 dark:text-red-400"
-                                          : "text-blue-600 dark:text-blue-400"
-                                      }`}
+                                      key={transaction.id}
+                                      className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 ${selectionMode ? 'cursor-pointer' : ''}`}
+                                      onClick={() => selectionMode 
+                                        ? toggleTransactionSelection(transaction.id) 
+                                        : handleEdit(transaction)
+                                      }
                                     >
-                                      <p className="font-medium text-sm leading-tight">
-                                        {transaction.type === "credit"
-                                          ? "+"
-                                          : transaction.type === "debit"
-                                          ? "-"
-                                          : ""}
-                                        {currencySymbol}
-                                        {formatAmount(transaction.amount)}
-                                      </p>
+                                      {selectionMode && (
+                                        <div 
+                                          className={`h-4 w-4 shrink-0 rounded-sm border-2 border-primary ${
+                                            selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
+                                          }`}
+                                        />
+                                      )}
+
+                                      <div className="flex-shrink-0">
+                                        {renderTransactionIcon(transaction.type as TransactionType)}
+                                      </div>
+
+                                      <div className="flex-1 flex flex-col">
+                                        <div className="flex items-center gap-2">
+                                          <p className="font-medium text-sm leading-tight text-foreground">
+                                            {transaction.description}
+                                          </p>
+                                          <PendingSyncIndicator status={syncStatus} size="sm" />
+                                        </div>
+                                        <p className="text-xs text-muted-foreground leading-none mt-1">
+                                          {transaction.category}
+                                        </p>
+                                      </div>
+
+                                      <div
+                                        className={`text-right ${
+                                          transaction.type === "credit"
+                                            ? "text-green-600 dark:text-green-400"
+                                            : transaction.type === "debit"
+                                            ? "text-red-600 dark:text-red-400"
+                                            : "text-blue-600 dark:text-blue-400"
+                                        }`}
+                                      >
+                                        <p className="font-medium text-sm leading-tight">
+                                          {transaction.type === "credit"
+                                            ? "+"
+                                            : transaction.type === "debit"
+                                            ? "-"
+                                            : ""}
+                                          {currencySymbol}
+                                          {formatAmount(transaction.amount)}
+                                        </p>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           ))}

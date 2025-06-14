@@ -16,6 +16,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { ArrowLeft, ArrowDownToLine } from "lucide-react";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
 
 const withdrawalSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -29,6 +31,7 @@ const SavingsWithdrawalPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { addTransactionOffline } = useEnhancedTransactionData();
   
   const form = useForm<z.infer<typeof withdrawalSchema>>({
     resolver: zodResolver(withdrawalSchema),
@@ -80,47 +83,37 @@ const SavingsWithdrawalPage = () => {
       
       const today = new Date().toISOString().split('T')[0];
       
-      // Create withdrawal transaction (negative savings entry)
-      const { error: savingsError } = await supabase
-        .from('transactions')
-        .insert([{
-          date: today,
-          amount: -withdrawalAmount, // Negative to reduce savings
-          type: "savings",
-          category: values.category,
-          description: `Withdrawal: ${values.description}`,
-          user_id: user.id
-        }]);
-        
-      if (savingsError) {
-        console.error("Savings error:", savingsError);
-        throw savingsError;
-      }
+      // Create withdrawal transaction (negative savings entry) using enhanced offline
+      await addTransactionOffline({
+        date: today,
+        amount: -withdrawalAmount, // Negative to reduce savings
+        type: "savings",
+        category: values.category,
+        description: `Withdrawal: ${values.description}`,
+        user_id: user.id
+      });
       
-      // Add to wallet balance (credit entry)
-      const { error: creditError } = await supabase
-        .from('transactions')
-        .insert([{
-          date: today,
-          amount: withdrawalAmount,
-          type: "credit",
-          category: "Withdrawal from Savings",
-          description: `From ${values.category}: ${values.description}`,
-          user_id: user.id
-        }]);
-        
-      if (creditError) {
-        console.error("Credit error:", creditError);
-        throw creditError;
-      }
+      // Add to wallet balance (credit entry) using enhanced offline
+      await addTransactionOffline({
+        date: today,
+        amount: withdrawalAmount,
+        type: "credit",
+        category: "Withdrawal from Savings",
+        description: `From ${values.category}: ${values.description}`,
+        user_id: user.id
+      });
       
+      const isOffline = !navigator.onLine;
       toast({
         title: "Success",
-        description: `${currency.symbol}${withdrawalAmount.toFixed(2)} withdrawn successfully`
+        description: isOffline 
+          ? `${currency.symbol}${withdrawalAmount.toFixed(2)} withdrawal saved offline and will sync when online`
+          : `${currency.symbol}${withdrawalAmount.toFixed(2)} withdrawn successfully`
       });
 
       // Refresh data and navigate back
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["enhanced_transactions"] });
       queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
       navigate("/savings");
     } catch (error: any) {
@@ -140,17 +133,28 @@ const SavingsWithdrawalPage = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="mr-2" 
-            onClick={() => navigate("/savings")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Withdraw from Savings</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              className="mr-2" 
+              onClick={() => navigate("/savings")}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h1 className="text-2xl font-bold">Withdraw from Savings</h1>
+          </div>
+          <OfflineIndicator />
         </div>
+        
+        {!navigator.onLine && (
+          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              You're offline. Your withdrawal will be saved locally and synced when connection is restored.
+            </p>
+          </div>
+        )}
         
         <div className="bg-card rounded-lg shadow-sm border p-6">
           <div className="flex justify-center mb-6">
