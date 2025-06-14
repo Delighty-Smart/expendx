@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionType, getDefaultCategoriesForType, getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { addTransaction, queueTransactionForSync } from "@/services/offlineStorage"; 
+import { addTransactionEnhanced } from "@/services/enhancedOfflineStorage";
+import { syncManager } from "@/services/syncManager";
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -91,11 +93,55 @@ const AddTransactionPage = () => {
     form.setValue("category", "");
   };
 
+  // Helper function to get cached user ID for offline use
+  const getCachedUserId = (): string | null => {
+    try {
+      return localStorage.getItem('cached_user_id');
+    } catch (error) {
+      console.error("Error getting cached user ID:", error);
+      return null;
+    }
+  };
+
+  // Helper function to cache user ID when online
+  const cacheUserId = (userId: string) => {
+    try {
+      localStorage.setItem('cached_user_id', userId);
+    } catch (error) {
+      console.error("Error caching user ID:", error);
+    }
+  };
+
   const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      
+      let userId: string | null = null;
+      
+      // Try to get user ID - first online, then from cache
+      if (navigator.onLine) {
+        try {
+          const { data: { user }, error } = await supabase.auth.getUser();
+          if (error) throw error;
+          if (!user) throw new Error("No user found");
+          
+          userId = user.id;
+          cacheUserId(userId); // Cache for offline use
+        } catch (authError) {
+          console.error("Online auth failed:", authError);
+          // Fallback to cached user ID
+          userId = getCachedUserId();
+          if (!userId) {
+            throw new Error("Authentication failed and no cached user ID available");
+          }
+        }
+      } else {
+        // We're offline, use cached user ID
+        userId = getCachedUserId();
+        if (!userId) {
+          throw new Error("No cached user ID available for offline use");
+        }
+      }
       
       const transactionData = {
         date: values.date,
@@ -103,7 +149,7 @@ const AddTransactionPage = () => {
         type: values.type as TransactionType,
         category: values.category,
         description: values.description,
-        user_id: user.id
+        user_id: userId
       };
 
       console.log("Saving transaction:", transactionData);
@@ -126,7 +172,7 @@ const AddTransactionPage = () => {
             description: "Transaction updated successfully"
           });
         } else {
-          // Insert new transaction
+          // Insert new transaction online
           const { error } = await supabase
             .from('transactions')
             .insert([transactionData]);
@@ -142,7 +188,7 @@ const AddTransactionPage = () => {
           });
         }
       } else {
-        // We're offline, store locally and queue for sync
+        // We're offline
         if (transaction) {
           // For now we don't support updating existing transactions offline
           toast({
@@ -153,15 +199,16 @@ const AddTransactionPage = () => {
           return;
         }
         
-        // Add to local cache and queue for sync
+        // Add to enhanced local storage and sync queue
         try {
-          await addTransaction({...transactionData, id: crypto.randomUUID()});
-          await queueTransactionForSync(transactionData);
+          const tempId = await addTransactionEnhanced(transactionData);
           
           toast({
             title: "Transaction Saved Offline",
             description: "This will be synced when you're back online"
           });
+          
+          console.log("Transaction saved offline with ID:", tempId);
         } catch (err) {
           console.error("Error saving offline:", err);
           throw new Error("Failed to save transaction offline");
@@ -175,6 +222,7 @@ const AddTransactionPage = () => {
       // Navigate back to transactions page
       navigate("/transactions");
     } catch (error: any) {
+      console.error("Transaction submission error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -184,6 +232,24 @@ const AddTransactionPage = () => {
       setLoading(false);
     }
   }, [toast, transaction, navigate, queryClient]);
+
+  // Cache user ID when component mounts if online
+  useEffect(() => {
+    const cacheUserIdOnMount = async () => {
+      if (navigator.onLine) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            cacheUserId(user.id);
+          }
+        } catch (error) {
+          console.error("Failed to cache user ID on mount:", error);
+        }
+      }
+    };
+    
+    cacheUserIdOnMount();
+  }, []);
 
   return (
     <Layout>

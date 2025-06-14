@@ -22,6 +22,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Helper function to cache user ID for offline use
+  const cacheUserId = (userId: string | null) => {
+    try {
+      if (userId) {
+        localStorage.setItem('cached_user_id', userId);
+      } else {
+        localStorage.removeItem('cached_user_id');
+      }
+    } catch (error) {
+      console.error("Error managing cached user ID:", error);
+    }
+  };
+
   useEffect(() => {
     // First set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -29,6 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log(`Auth state changed: ${event}`, currentSession?.user?.id || 'No user');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        // Cache user ID for offline use
+        cache UserId(currentSession?.user?.id ?? null);
+        
         setIsLoading(false);
       }
     );
@@ -40,6 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setUser(data.session?.user ?? null);
+        
+        // Cache user ID for offline use
+        cacheUserId(data.session?.user?.id ?? null);
       } catch (error) {
         console.error("Error getting session:", error);
       } finally {
@@ -72,6 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       console.log("Sign in successful, user:", data.user?.id);
+      
+      // Cache user ID immediately after successful sign in
+      if (data.user) {
+        cacheUserId(data.user.id);
+      }
+      
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -113,6 +139,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Sign up successful, response:", JSON.stringify(data, null, 2));
       
+      // Cache user ID immediately after successful sign up
+      if (data.user) {
+        cacheUserId(data.user.id);
+      }
+      
       toast({
         title: "Account created",
         description: "Your account has been created successfully.",
@@ -142,6 +173,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Sign out error:", error.message);
         throw error;
       }
+      
+      // Clear cached user ID on sign out
+      cacheUserId(null);
       
       console.log("Sign out successful");
       toast({
