@@ -162,7 +162,7 @@ const Alerts = () => {
 
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case 'budget_alert':
+      case 'budget_nudges':
         return <AlertTriangle className="text-yellow-500" />;
       case 'system':
         return <Bell className="text-blue-500" />;
@@ -170,7 +170,7 @@ const Alerts = () => {
         return <CheckCheck className="text-green-500" />;
       case 'admin_message':
         return <User className="text-purple-500" />;
-      case 'streak':
+      case 'savings_progress':
         return <Award className="text-emerald-500" />;
       case 'payment':
         return <DollarSign className="text-green-500" />;
@@ -181,13 +181,13 @@ const Alerts = () => {
 
   const getAlertBadgeVariant = (type: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (type) {
-      case 'budget_alert':
+      case 'budget_nudges':
         return "destructive";
       case 'system':
         return "default";
       case 'feedback_response':
         return "secondary";
-      case 'streak':
+      case 'savings_progress':
         return "outline";
       default:
         return "default";
@@ -206,9 +206,6 @@ const Alerts = () => {
       minute: '2-digit'
     }).format(date);
   };
-
-  // Removed unused acceptConnectionRequest and rejectConnectionRequest functions
-  // since connection_requests table doesn't exist
 
   if (isAuthenticated === null) {
     return (
