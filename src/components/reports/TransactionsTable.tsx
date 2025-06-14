@@ -9,7 +9,6 @@ import { Search, ArrowUp, ArrowDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -20,7 +19,6 @@ interface TransactionsTableProps {
 const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
-  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const isMobile = useIsMobile();
   
   const filteredTransactions = transactions.filter(transaction => {
@@ -68,12 +66,6 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     });
     
     return { income, expense };
-  };
-
-  const handleSelectTransaction = (id: string, checked: boolean) => {
-    setSelectedTransactions(prev => 
-      checked ? [...prev, id] : prev.filter(transId => transId !== id)
-    );
   };
 
   const handleRefresh = async () => {
@@ -171,14 +163,6 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                 key={transaction.id} 
                                 className="transaction-row p-3 flex items-center gap-3"
                               >
-                                <Checkbox 
-                                  size="sm"
-                                  checked={selectedTransactions.includes(transaction.id)}
-                                  onCheckedChange={(checked) => 
-                                    handleSelectTransaction(transaction.id, checked === true)
-                                  }
-                                />
-                                
                                 <div className="flex-shrink-0">
                                   {renderTransactionIcon(transaction.type)}
                                 </div>
