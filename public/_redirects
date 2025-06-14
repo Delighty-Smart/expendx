@@ -1,5 +1,5 @@
 
-# Handle client-side routing for Single Page Application
-# This rule catches all routes and serves index.html with a 200 status
+# Netlify redirects file for Single Page Application
+# This catches all routes and serves index.html with a 200 status
 # allowing React Router to handle the routing client-side
 /*    /index.html   200

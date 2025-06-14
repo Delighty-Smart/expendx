@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -87,7 +86,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <SettingsProvider>
-          <BrowserRouter basename="/">
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<IndexPage />} />
               <Route path="/auth" element={<Auth />} />
