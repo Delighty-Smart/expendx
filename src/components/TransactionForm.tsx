@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -14,9 +13,12 @@ import { useEffect, useState, useCallback } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { addTransaction, queueTransactionForSync } from "@/services/offlineStorage"; 
-import { addTransactionEnhanced } from "@/services/enhancedOfflineStorage";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PendingSyncIndicator } from "./PendingSyncIndicator";
+import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOff
+
+ineSync";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -45,6 +47,7 @@ export const TransactionForm = ({
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { isTransactionPending } = useEnhancedOfflineSync();
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -140,105 +143,36 @@ export const TransactionForm = ({
     try {
       setLoading(true);
       
-      let userId: string | null = null;
-      
-      // Try to get user ID - first online, then from cache
-      if (navigator.onLine) {
-        try {
-          const { data: { user }, error } = await supabase.auth.getUser();
-          if (error) throw error;
-          if (!user) throw new Error("No user found");
-          
-          userId = user.id;
-          cacheUserId(userId); // Cache for offline use
-        } catch (authError) {
-          console.error("Online auth failed:", authError);
-          // Fallback to cached user ID
-          userId = getCachedUserId();
-          if (!userId) {
-            throw new Error("Authentication failed and no cached user ID available");
-          }
-        }
-      } else {
-        // We're offline, use cached user ID
-        userId = getCachedUserId();
-        if (!userId) {
-          throw new Error("No cached user ID available for offline use");
-        }
-      }
-      
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
         type: values.type as TransactionType,
         category: values.category,
-        description: values.description,
-        user_id: userId
+        description: values.description
       };
 
-      console.log("Saving transaction:", transactionData);
+      console.log("Saving transaction with enhanced offline support:", transactionData);
 
-      if (navigator.onLine) {
-        if (transaction) {
-          // Update existing transaction
-          const { error } = await supabase
-            .from('transactions')
-            .update(transactionData)
-            .eq('id', transaction.id);
-            
-          if (error) {
-            console.error("Update error:", error);
-            throw error;
-          }
-          
-          toast({
-            title: "Success",
-            description: "Transaction updated successfully"
-          });
-        } else {
-          // Insert new transaction online
-          const { error } = await supabase
-            .from('transactions')
-            .insert([transactionData]);
-            
-          if (error) {
-            console.error("Insert error:", error);
-            throw error;
-          }
-          
-          toast({
-            title: "Success",
-            description: "Transaction added successfully"
-          });
-        }
-      } else {
-        // We're offline
-        if (transaction) {
-          // For now we don't support updating existing transactions offline
-          toast({
-            title: "Error",
-            description: "Cannot update transactions while offline",
-            variant: "destructive"
-          });
-          return;
-        }
+      if (transaction) {
+        // Update existing transaction
+        await enhancedOfflineManager.updateTransactionOffline(transaction.id, transactionData);
         
-        // Add to enhanced local storage and sync queue
-        try {
-          const tempId = await addTransactionEnhanced(transactionData);
-          
-          toast({
-            title: "Transaction Saved Offline",
-            description: "This will be synced when you're back online"
-          });
-          
-          console.log("Transaction saved offline with ID:", tempId);
-        } catch (err) {
-          console.error("Error saving offline:", err);
-          throw new Error("Failed to save transaction offline");
-        }
+        toast({
+          title: "Success",
+          description: navigator.onLine ? "Transaction updated successfully" : "Update saved offline and will sync when online"
+        });
+      } else {
+        // Insert new transaction
+        await enhancedOfflineManager.addTransactionOffline(transactionData);
+        
+        toast({
+          title: "Success",
+          description: navigator.onLine ? "Transaction added successfully" : "Transaction saved offline and will sync when online"
+        });
       }
 
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["enhanced_transactions"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
@@ -259,6 +193,8 @@ export const TransactionForm = ({
       setLoading(false);
     }
   }, [toast, transaction, onOpenChange, onTransactionAdded, queryClient]);
+
+  const isPending = transaction ? isTransactionPending(transaction.id) : false;
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
@@ -281,9 +217,17 @@ export const TransactionForm = ({
           }}
         >
           <DialogHeader>
-            <DialogTitle className="text-lg">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
+            <div className="flex items-center gap-2">
+              <DialogTitle className="text-lg">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
+              <PendingSyncIndicator isPending={isPending} />
+            </div>
             <DialogDescription className="text-sm">
               Enter the details of your transaction below.
+              {!navigator.onLine && (
+                <span className="block text-orange-600 mt-1">
+                  You're offline - changes will sync when connection is restored.
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
