@@ -53,7 +53,7 @@ const StreakProgress = ({
               <div className="px-2 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/25 mb-1">
                 <span className="text-white font-bold text-xs">{streak.current_title}</span>
               </div>
-              <p className="text-xs text-muted-foreground">Current Title</p>
+              
             </div>
           </div>
 
