@@ -186,7 +186,7 @@ const Layout = ({
         </div>
         
         {/* Navigation Menu */}
-        <nav className="flex-1 px-3 pt-6 space-y-1">
+        <nav className="flex-1 px-3 pt-8 space-y-1">
           {menuItems.map(item => {
           const IconComponent = item.icon;
           const isActive = location.pathname === item.path;
