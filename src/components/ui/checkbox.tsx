@@ -10,12 +10,17 @@ const Checkbox = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & { 
     size?: 'sm' | 'md' | 'lg'
   }
->(({ className, size = 'md', ...props }, ref) => {
-  // All checkbox sizes standardized to exactly 16x16px (h-4 w-4)
+>(({ className, size = 'sm', ...props }, ref) => {
   const sizeClasses = {
-    sm: "h-4 w-4", // 16x16px
-    md: "h-4 w-4", // 16x16px
-    lg: "h-4 w-4"  // 16x16px
+    sm: "h-3.5 w-3.5", // Smaller default size
+    md: "h-4 w-4",     // Medium size
+    lg: "h-5 w-5"      // Larger size
+  };
+  
+  const iconSizes = {
+    sm: "h-2.5 w-2.5", // Smaller checkmark
+    md: "h-3 w-3",     // Medium checkmark
+    lg: "h-3.5 w-3.5"  // Larger checkmark
   };
   
   return (
@@ -33,7 +38,7 @@ const Checkbox = React.forwardRef<
       <CheckboxPrimitive.Indicator
         className={cn("flex items-center justify-center text-current")}
       >
-        <Check className="h-3 w-3" /> {/* Smaller checkmark for 16x16px checkbox */}
+        <Check className={iconSizes[size]} />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )
