@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Toggle } from "@/components/ui/toggle";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Clock, Smartphone, Check } from "lucide-react";
+import { Bell, Clock, Smartphone } from "lucide-react";
 
 interface NotificationPreference {
   id: string;
@@ -215,15 +216,12 @@ const NotificationPreferences = () => {
                   <Label className="text-sm font-medium">{option.label}</Label>
                   <p className="text-xs text-muted-foreground">{option.description}</p>
                 </div>
-                <Toggle
-                  pressed={preferences[option.key]}
-                  onPressedChange={(pressed) => updatePreference(option.key, pressed)}
+                <Switch
+                  checked={preferences[option.key]}
+                  onCheckedChange={(checked) => updatePreference(option.key, checked)}
                   disabled={saving}
-                  className="ml-4 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                  aria-label={`Toggle ${option.label}`}
-                >
-                  <Check className="h-4 w-4" />
-                </Toggle>
+                  className="ml-4"
+                />
               </div>
             ))}
           </div>
