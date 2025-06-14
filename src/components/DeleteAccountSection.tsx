@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,23 +53,17 @@ const DeleteAccountSection = () => {
     if (!user) return;
 
     try {
-      // Delete all user data from database
-      const tables = [
-        'transactions',
-        'budget_categories', 
-        'savings_goals',
-        'user_categories',
-        'user_settings',
-        'notification_preferences',
-        'user_streaks',
-        'monthly_income_estimates',
-        'alerts',
-        'user_feedback'
-      ];
-
-      for (const table of tables) {
-        await supabase.from(table).delete().eq('user_id', user.id);
-      }
+      // Delete all user data from database - using direct table names to avoid TypeScript errors
+      await supabase.from('transactions').delete().eq('user_id', user.id);
+      await supabase.from('budget_categories').delete().eq('user_id', user.id);
+      await supabase.from('savings_goals').delete().eq('user_id', user.id);
+      await supabase.from('user_categories').delete().eq('user_id', user.id);
+      await supabase.from('user_settings').delete().eq('user_id', user.id);
+      await supabase.from('notification_preferences').delete().eq('user_id', user.id);
+      await supabase.from('user_streaks').delete().eq('user_id', user.id);
+      await supabase.from('monthly_income_estimates').delete().eq('user_id', user.id);
+      await supabase.from('alerts').delete().eq('user_id', user.id);
+      await supabase.from('user_feedback').delete().eq('user_id', user.id);
 
       // Clear local storage
       localStorage.clear();
