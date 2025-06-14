@@ -53,34 +53,6 @@ function App() {
     };
     
     initializeEnhancedOffline();
-
-    // Enable native pull-to-refresh by setting appropriate meta tags
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
-    }
-
-    // Add CSS to enable native pull-to-refresh
-    const style = document.createElement('style');
-    style.textContent = `
-      html, body {
-        overscroll-behavior: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      /* Enable native pull-to-refresh on mobile */
-      @supports (-webkit-overflow-scrolling: touch) {
-        body {
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior-y: auto;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
   }, []);
 
   return (
