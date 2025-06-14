@@ -13,8 +13,13 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
   containerClassName = "",
 }) => {
   React.useEffect(() => {
-    // Enable native pull-to-refresh behavior
-    const handleRefresh = async () => {
+    // Register the refresh handler for native pull-to-refresh
+    const handleRefresh = async (event: any) => {
+      // Check if this is a native refresh event
+      if (event.type === 'beforeunload' || document.visibilityState === 'hidden') {
+        return;
+      }
+      
       try {
         await onRefresh();
       } catch (error) {
@@ -22,22 +27,29 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
       }
     };
 
-    // Use browser's native pull-to-refresh if available
-    if ('serviceWorker' in navigator) {
-      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        // This allows the browser to handle native refresh
-        return;
-      };
-      
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      
-      return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-      };
+    // Listen for native refresh events
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Page became visible again, trigger refresh
+        handleRefresh({ type: 'visibilitychange' });
+      }
+    };
+
+    // Add event listeners for native refresh
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Enable native pull-to-refresh via meta tag if not already present
+    let refreshMeta = document.querySelector('meta[name="theme-color"]');
+    if (!refreshMeta) {
+      refreshMeta = document.createElement('meta');
+      refreshMeta.setAttribute('name', 'theme-color');
+      refreshMeta.setAttribute('content', '#ffffff');
+      document.head.appendChild(refreshMeta);
     }
 
-    // For mobile devices, we rely on the browser's native implementation
-    // by setting the appropriate CSS properties
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [onRefresh]);
 
   return (
@@ -45,10 +57,10 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
       className={`${containerClassName}`}
       style={{ 
         // Enable native pull-to-refresh on supported browsers/devices
-        overscrollBehavior: "contain",
+        overscrollBehavior: "auto",
         WebkitOverflowScrolling: "touch",
-        // This allows the browser to handle native refresh animations
-        touchAction: "manipulation"
+        // Allow native browser refresh behavior
+        touchAction: "auto"
       }}
     >
       {children}
