@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, Mirror, Settings, Briefcase } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -181,7 +181,7 @@ const Alerts = () => {
       case 'monthly_snapshot':
         return <BarChart className="text-emerald-500" />;
       case 'reflection_prompts':
-        return <Mirror className="text-pink-500" />;
+        return <MessageSquare className="text-pink-500" />;
       case 'custom_goal_reminder':
         return <Settings className="text-gray-500" />;
       case 'business_mode_nudges':
