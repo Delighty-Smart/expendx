@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -16,6 +15,7 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { updateUserStreak } from "@/lib/streak";
 import { startOfMonth, endOfMonth, addWeeks, subWeeks, eachDayOfInterval, format } from "date-fns";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, PieChart, Pie, Sector, AreaChart as RechartAreaChart, Area, LineChart as RechartLineChart, Line } from "recharts";
+import { cn } from "@/lib/utils";
 
 // Transaction types
 interface TransactionData {
