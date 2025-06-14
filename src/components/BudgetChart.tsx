@@ -2,6 +2,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, Sector } from "recharts";
 import { TransactionType } from "@/types/transactions";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface Budget {
   id: string;
@@ -28,7 +29,7 @@ interface BudgetChartProps {
 }
 
 export function BudgetChart({ budgets, transactions, currency }: BudgetChartProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
   
   // Only use debit transactions for spending chart
   const expenseTransactions = transactions.filter(t => t.type === "debit");
@@ -76,117 +77,96 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
     });
   };
 
-  const onPieEnter = (_: any, index: number) => {
-    setActiveIndex(index);
-  };
-
-  const renderActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
-    
-    return (
-      <g>
-        <text x={cx} y={cy - 20} dy={8} textAnchor="middle" fill="#888888" className="text-xs">
-          {payload.name}
-        </text>
-        <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="text-xl font-bold">
-          {currency.symbol}{formatAmount(value)}
-        </text>
-        <text x={cx} y={cy + 20} dy={8} textAnchor="middle" fill="#888888" className="text-xs">
-          {`${(percent * 100).toFixed(0)}%`}
-        </text>
-        <Sector
-          cx={cx}
-          cy={cy}
-          innerRadius={innerRadius}
-          outerRadius={outerRadius + 6}
-          startAngle={startAngle}
-          endAngle={endAngle}
-          fill={fill}
-          opacity={0.3}
-        />
-        <Sector
-          cx={cx}
-          cy={cy}
-          innerRadius={innerRadius}
-          outerRadius={outerRadius}
-          startAngle={startAngle}
-          endAngle={endAngle}
-          fill={fill}
-        />
-      </g>
-    );
-  };
-
   // Calculate total amount for percentage calculations
   const totalAmount = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="w-full h-[350px]">
+    <div className="w-full h-[400px]">
       {data.length > 0 ? (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <defs>
-              {COLORS.map((color, index) => (
-                <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={color} stopOpacity={1} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0.8} />
-                </linearGradient>
-              ))}
-            </defs>
-            <Pie
-              activeIndex={activeIndex}
-              activeShape={renderActiveShape}
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              dataKey="value"
-              onMouseEnter={onPieEnter}
-              animationBegin={0}
-              animationDuration={800}
-              animationEasing="ease-out"
-            >
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`}
-                  fill={`url(#gradient-${index % COLORS.length})`}
-                  stroke="#FFFFFF"
-                  strokeWidth={2}
-                  className="hover:opacity-90 transition-opacity"
+        <div className="space-y-4">
+          {/* Pie Chart */}
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <defs>
+                  {COLORS.map((color, index) => (
+                    <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.8} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={80}
+                  dataKey="value"
+                  animationBegin={0}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                >
+                  {data.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`}
+                      fill={`url(#gradient-${index % COLORS.length})`}
+                      stroke="#FFFFFF"
+                      strokeWidth={2}
+                      opacity={hoveredLegendItem === null || hoveredLegendItem === entry.name ? 1 : 0.3}
+                      className="hover:opacity-90 transition-opacity"
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, `${((value / totalAmount) * 100).toFixed(1)}%`]}
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    border: "1px solid rgba(0, 0, 0, 0.05)",
+                    padding: "0.5rem 1rem"
+                  }}
                 />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, `${((value / totalAmount) * 100).toFixed(1)}%`]}
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                borderRadius: "0.5rem",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                border: "1px solid rgba(0, 0, 0, 0.05)",
-                padding: "0.5rem 1rem"
-              }}
-            />
-            <Legend 
-              layout="horizontal" 
-              verticalAlign="bottom" 
-              align="center"
-              wrapperStyle={{
-                paddingTop: "20px",
-                fontSize: "12px"
-              }}
-              iconType="circle"
-              iconSize={10}
-              formatter={(value, entry, index) => {
-                // Calculate percentage for each entry
-                const item = data[index];
-                if (!item) return value;
-                const percentage = totalAmount > 0 ? ((item.value / totalAmount) * 100).toFixed(0) : '0';
-                return `${value} (${percentage}%)`;
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Interactive Legend */}
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {data.map((entry, index) => {
+              const percentage = totalAmount > 0 ? ((entry.value / totalAmount) * 100).toFixed(1) : '0';
+              return (
+                <div
+                  key={entry.name}
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200",
+                    "hover:bg-slate-100 dark:hover:bg-slate-700",
+                    hoveredLegendItem === entry.name && "bg-slate-100 dark:bg-slate-700 shadow-sm"
+                  )}
+                  onMouseEnter={() => setHoveredLegendItem(entry.name)}
+                  onMouseLeave={() => setHoveredLegendItem(null)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    <span className="font-medium text-sm">{entry.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-sm">
+                      {currency.symbol}{formatAmount(entry.value)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {percentage}%
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       ) : (
         <div className="flex items-center justify-center h-full text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-muted">
           <div className="text-center p-6">

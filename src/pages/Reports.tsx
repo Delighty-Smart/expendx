@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
@@ -36,6 +35,7 @@ const ReportsPage = () => {
   const [dateTo, setDateTo] = useState<Date>(endOfMonth(new Date()));
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
   const { currency } = useSettings();
   const { refreshData } = useRefresh();
 
@@ -161,7 +161,9 @@ const ReportsPage = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
+
+  const totalAmount = categoryData.reduce((sum, item) => sum + item.value || item.amount, 0);
 
   return (
     <Layout>
@@ -463,7 +465,7 @@ const ReportsPage = () => {
                 </Card>
               </AccordionItem>
 
-              {/* Category Analysis Section */}
+              {/* Category Analysis Section with Interactive Legend */}
               <AccordionItem value="categories">
                 <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-slate-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
                   <AccordionTrigger className="px-6 py-4 hover:no-underline">
@@ -480,39 +482,82 @@ const ReportsPage = () => {
                   <AccordionContent className="px-6 pb-6">
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       
-                      {/* Pie Chart */}
+                      {/* Interactive Pie Chart */}
                       <Card className="border-0 bg-gradient-to-br from-white/80 to-slate-50/40 dark:from-slate-700/80 dark:to-slate-600/40">
                         <CardHeader>
                           <CardTitle className="text-lg">Category Distribution</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="h-80">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <RechartsPieChart>
-                                <Pie
-                                  dataKey="amount"
-                                  data={categoryData}
-                                  cx="50%"
-                                  cy="50%"
-                                  labelLine={false}
-                                  label={({ category, percent }: any) => `${category} (${(percent * 100).toFixed(0)}%)`}
-                                  outerRadius={100}
-                                  fill="#8884d8"
-                                >
-                                  {categoryData.map((entry: CategoryDataPoint, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                                </Pie>
-                                <Tooltip 
-                                  contentStyle={{ 
-                                    backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                                    border: 'none', 
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                  }} 
-                                />
-                              </RechartsPieChart>
-                            </ResponsiveContainer>
+                          <div className="space-y-4">
+                            {/* Pie Chart */}
+                            <div className="h-64">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RechartsPieChart>
+                                  <Pie
+                                    dataKey="amount"
+                                    data={categoryData}
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                  >
+                                    {categoryData.map((entry: CategoryDataPoint, index: number) => (
+                                      <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={COLORS[index % COLORS.length]}
+                                        opacity={hoveredLegendItem === null || hoveredLegendItem === entry.category ? 1 : 0.3}
+                                        stroke={hoveredLegendItem === entry.category ? "#333" : "none"}
+                                        strokeWidth={hoveredLegendItem === entry.category ? 2 : 0}
+                                      />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip 
+                                    formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
+                                    contentStyle={{ 
+                                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                      border: 'none', 
+                                      borderRadius: '8px',
+                                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                    }} 
+                                  />
+                                </RechartsPieChart>
+                              </ResponsiveContainer>
+                            </div>
+
+                            {/* Interactive Legend */}
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {categoryData.map((entry: CategoryDataPoint, index: number) => {
+                                const percentage = totalAmount > 0 ? ((entry.amount / totalAmount) * 100).toFixed(1) : '0';
+                                return (
+                                  <div
+                                    key={entry.category}
+                                    className={cn(
+                                      "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200",
+                                      "hover:bg-slate-100 dark:hover:bg-slate-700",
+                                      hoveredLegendItem === entry.category && "bg-slate-100 dark:bg-slate-700 shadow-sm"
+                                    )}
+                                    onMouseEnter={() => setHoveredLegendItem(entry.category)}
+                                    onMouseLeave={() => setHoveredLegendItem(null)}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div 
+                                        className="w-4 h-4 rounded-full"
+                                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                      />
+                                      <span className="font-medium text-sm">{entry.category}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-semibold text-sm">
+                                        {currency.symbol}{formatAmount(entry.amount)}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {percentage}%
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -528,8 +573,9 @@ const ReportsPage = () => {
                               <BarChart data={categoryData.slice(0, 8)} layout="horizontal">
                                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis type="number" tick={{ fontSize: 12 }} />
-                                <YAxis dataKey="category" type="category" width={80} tick={{ fontSize: 10 }} />
+                                <YAxis dataKey="category" type="category"  tick={{ fontSize: 10 }} />
                                 <Tooltip 
+                                  formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
                                   contentStyle={{ 
                                     backgroundColor: 'rgba(255, 255, 255, 0.95)', 
                                     border: 'none', 
