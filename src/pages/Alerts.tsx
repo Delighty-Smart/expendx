@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2 } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -27,6 +27,7 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -214,6 +215,14 @@ const Alerts = () => {
     }
   };
 
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    if (selectionMode) {
+      // Exit selection mode, clear selected items
+      setSelectedAlerts(new Set());
+    }
+  };
+
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'weekly_recap':
@@ -313,29 +322,53 @@ const Alerts = () => {
           <h1 className="text-3xl font-bold">Alerts & Notifications</h1>
           
           <div className="flex items-center gap-2">
-            {someSelected && (
-              <Button 
-                variant="destructive" 
-                onClick={handleDeleteSelected}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedAlerts.size})
-              </Button>
+            {selectionMode ? (
+              <>
+                {someSelected && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDeleteSelected}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedAlerts.size})
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  onClick={toggleSelectionMode}
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                {alerts.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={toggleSelectionMode}
+                  >
+                    Select
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  onClick={handleMarkAllAsRead}
+                  disabled={alerts.every(alert => alert.read) || alerts.length === 0}
+                >
+                  <CheckCheck className="mr-2 h-4 w-4" />
+                  <span>Mark All as Read</span>
+                </Button>
+              </>
             )}
-            
-            <Button 
-              variant="outline" 
-              onClick={handleMarkAllAsRead}
-              disabled={alerts.every(alert => alert.read) || alerts.length === 0}
-            >
-              <CheckCheck className="mr-2 h-4 w-4" />
-              <span>Mark All as Read</span>
-            </Button>
           </div>
         </div>
 
-        {alerts.length > 0 && (
+        {selectionMode && alerts.length > 0 && (
           <div className="mb-4 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-3">
               <Checkbox
@@ -362,14 +395,16 @@ const Alerts = () => {
                 key={alert.id} 
                 className={`transition-all ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : ''}`}
               >
-                {/* Header with Checkbox, Icon and Title */}
+                {/* Header with Checkbox (if in selection mode), Icon and Title */}
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={selectedAlerts.has(alert.id)}
-                      onCheckedChange={(checked) => handleSelectAlert(alert.id, checked as boolean)}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                    />
+                    {selectionMode && (
+                      <Checkbox
+                        checked={selectedAlerts.has(alert.id)}
+                        onCheckedChange={(checked) => handleSelectAlert(alert.id, checked as boolean)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      />
+                    )}
                     <div className="flex-shrink-0">
                       {getAlertIcon(alert.type)}
                     </div>
