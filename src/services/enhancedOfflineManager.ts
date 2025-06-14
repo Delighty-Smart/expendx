@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { Transaction } from '@/types/transactions';
+import { Transaction, TransactionType } from '@/types/transactions';
 
 // Enhanced offline storage with full data caching
 const CACHE_VERSION = '1.0';
@@ -95,7 +94,7 @@ class EnhancedOfflineManager {
         this.fetchSettings(user.id)
       ]);
 
-      // Update local cache
+      // Update local cache with properly typed transactions
       this.dataCache = {
         transactions: transactions || [],
         budgets: budgets || [],
@@ -122,7 +121,7 @@ class EnhancedOfflineManager {
     }
   }
 
-  private async fetchTransactions(userId: string) {
+  private async fetchTransactions(userId: string): Promise<Transaction[]> {
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -131,7 +130,12 @@ class EnhancedOfflineManager {
       .order('date', { ascending: false });
     
     if (error) throw error;
-    return data;
+    
+    // Cast the data to properly typed Transaction objects
+    return (data || []).map(item => ({
+      ...item,
+      type: item.type as TransactionType
+    }));
   }
 
   private async fetchBudgets(userId: string) {
@@ -361,11 +365,14 @@ class EnhancedOfflineManager {
         
         if (insertError) throw insertError;
         
-        // Update local cache with real ID
+        // Update local cache with real ID and properly cast the type
         if (this.dataCache && (item as any).tempId) {
           const tempIndex = this.dataCache.transactions.findIndex(t => t.id === (item as any).tempId);
           if (tempIndex !== -1) {
-            this.dataCache.transactions[tempIndex] = insertedData;
+            this.dataCache.transactions[tempIndex] = {
+              ...insertedData,
+              type: insertedData.type as TransactionType
+            };
             await this.saveDataCache();
           }
         }
