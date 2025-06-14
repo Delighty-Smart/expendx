@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Card } from "@/components/ui/card";
+import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit, Trash2, TrendingUp } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -58,14 +58,14 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
   };
 
   return (
-    <Card className="p-4 glass-card hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-medium">{budget.category}</h3>
+    <GlassCard className="p-4 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-orange-50/40 to-red-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-orange-200/30 dark:border-slate-600/30">
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="font-semibold text-foreground">{budget.category}</h3>
         <div className="flex gap-1">
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-orange-100 dark:hover:bg-slate-700"
             onClick={() => onEdit(budget)}
           >
             <Edit className="h-3 w-3" />
@@ -73,17 +73,17 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
             onClick={() => onDelete(budget)}
           >
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Budget:</span>
-          <span className="font-medium">{currency.symbol}{formatAmount(budget.monthly_limit)}</span>
+          <span className="text-muted-foreground font-medium">Budget:</span>
+          <span className="font-semibold text-foreground">{currency.symbol}{formatAmount(budget.monthly_limit)}</span>
         </div>
         <BudgetProgress 
           category={budget.category} 
@@ -92,7 +92,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
           currency={currency}
         />
       </div>
-    </Card>
+    </GlassCard>
   );
 };
 
@@ -188,20 +188,20 @@ const BudgetsPage = () => {
             </Button>
           </div>
 
-          <Card className="p-4 glass-card">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-primary" />
+          <GlassCard className="p-6 bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10 border-orange-200/30 dark:border-orange-800/30">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-400 dark:to-amber-500 flex items-center justify-center shadow-lg">
+                <TrendingUp className="h-8 w-8 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Budget</p>
-                <p className="text-2xl font-semibold">
+                <p className="text-sm font-medium text-muted-foreground mb-1">Total Budget</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
                   {currency.symbol}
                   {formatAmount(budgets?.reduce((sum, budget) => sum + budget.monthly_limit, 0) || 0)}
                 </p>
               </div>
             </div>
-          </Card>
+          </GlassCard>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {budgets?.map((budget) => (
