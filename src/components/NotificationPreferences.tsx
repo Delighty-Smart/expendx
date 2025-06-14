@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,6 +24,41 @@ interface NotificationPreference {
   business_mode_nudges: boolean;
   preferred_time: string;
 }
+
+// Custom Toggle Component
+const CustomToggle = ({ 
+  checked, 
+  onCheckedChange, 
+  disabled 
+}: { 
+  checked: boolean; 
+  onCheckedChange: (checked: boolean) => void; 
+  disabled?: boolean; 
+}) => {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onCheckedChange(!checked)}
+      className={`
+        relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+        transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        ${checked ? 'bg-blue-500' : 'bg-gray-200'}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+      `}
+    >
+      <span
+        className={`
+          pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 
+          transition duration-200 ease-in-out
+          ${checked ? 'translate-x-5' : 'translate-x-0'}
+        `}
+      />
+    </button>
+  );
+};
 
 const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
@@ -216,11 +249,10 @@ const NotificationPreferences = () => {
                   <Label className="text-sm font-medium">{option.label}</Label>
                   <p className="text-xs text-muted-foreground">{option.description}</p>
                 </div>
-                <Switch
+                <CustomToggle
                   checked={preferences[option.key]}
                   onCheckedChange={(checked) => updatePreference(option.key, checked)}
                   disabled={saving}
-                  className="ml-4"
                 />
               </div>
             ))}
