@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePickerWithRange } from "@/components/DateRangePicker";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ import {
 import TransactionsTable from "@/components/reports/TransactionsTable";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, FileDown } from "lucide-react";
+import { Download, Calendar, FileDown, TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
@@ -188,7 +188,7 @@ const Reports = () => {
   }, [filteredTransactions, budgetCategories]);
 
   // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#5DADE2', '#48C9B0', '#F4D03F'];
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
 
   const formatCurrency = (amount: number) => {
     const { currency } = useSettings();
@@ -198,6 +198,7 @@ const Reports = () => {
     return `${currency.symbol}${amount.toFixed(2)}`;
   };
 
+  // Handle export data
   const handleExportData = () => {
     setIsExporting(true);
 
@@ -244,6 +245,7 @@ const Reports = () => {
     }
   };
 
+  // Get preset date ranges
   const getPresetDateRanges = () => {
     const today = new Date();
     return (
@@ -251,6 +253,7 @@ const Reports = () => {
         <Button 
           variant="outline" 
           size="sm"
+          className="text-xs"
           onClick={() => setDateRange({
             from: subDays(today, 7),
             to: today
@@ -261,6 +264,7 @@ const Reports = () => {
         <Button 
           variant="outline"
           size="sm"
+          className="text-xs"
           onClick={() => setDateRange({
             from: subDays(today, 30),
             to: today
@@ -271,6 +275,7 @@ const Reports = () => {
         <Button 
           variant="outline"
           size="sm"
+          className="text-xs"
           onClick={() => setDateRange({
             from: new Date(today.getFullYear(), today.getMonth(), 1),
             to: today
@@ -281,6 +286,7 @@ const Reports = () => {
         <Button 
           variant="outline"
           size="sm"
+          className="text-xs"
           onClick={() => setDateRange({
             from: new Date(today.getFullYear(), 0, 1),
             to: today
@@ -294,294 +300,405 @@ const Reports = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-2xl font-bold">Financial Reports</h1>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2" 
-            onClick={handleExportData}
-            disabled={isExporting || filteredTransactions.length === 0}
-          >
-            {isExporting ? "Exporting..." : "Export Report"}
-            <FileDown className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <Card className="p-4 sm:p-6">
-          <div className="flex flex-col space-y-4">
-            <h2 className="text-xl font-semibold">Select Date Range</h2>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <div className="container mx-auto px-4 py-8 space-y-8">
+          {/* Header Section */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
+                Financial Reports
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-2">Comprehensive insights into your financial performance</p>
+            </div>
             
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <DatePickerWithRange 
-                dateRange={dateRange} 
-                setDateRange={setDateRange} 
-                className="w-full md:w-auto"
-              />
-              
-              {!isMobile && (
-                <div className="hidden md:block">
+            <Button 
+              variant="default" 
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all duration-200 flex items-center gap-2" 
+              onClick={handleExportData}
+              disabled={isExporting || filteredTransactions.length === 0}
+            >
+              {isExporting ? "Exporting..." : "Export Report"}
+              <FileDown className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Date Range Selection */}
+          <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                Select Date Range
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <DatePickerWithRange 
+                  dateRange={dateRange} 
+                  setDateRange={setDateRange} 
+                  className="w-full lg:w-auto"
+                />
+                
+                <div className="w-full lg:w-auto">
                   {getPresetDateRanges()}
                 </div>
-              )}
-            </div>
-
-            {isMobile && (
-              <div className="mt-2">
-                {getPresetDateRanges()}
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-            <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-              <h3 className="text-sm text-muted-foreground mb-1">Total Income</h3>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(summaryStats.totalIncome)}</p>
-            </Card>
-            
-            <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
-              <h3 className="text-sm text-muted-foreground mb-1">Total Expenses</h3>
-              <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(summaryStats.totalExpenses)}</p>
-            </Card>
-            
-            <Card className="p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-              <h3 className="text-sm text-muted-foreground mb-1">Total Savings</h3>
-              <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(summaryStats.totalSavings)}</p>
-            </Card>
-            
-            <Card className="p-4 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
-              <h3 className="text-sm text-muted-foreground mb-1">Net Cashflow</h3>
-              <p className={`text-xl sm:text-2xl font-bold ${
-                summaryStats.netCashflow >= 0 
-                  ? "text-green-600 dark:text-green-400" 
-                  : "text-red-600 dark:text-red-400"
-              }`}>
-                {formatCurrency(Math.abs(summaryStats.netCashflow))}
-                {summaryStats.netCashflow < 0 && <span> (DEFICIT)</span>}
-              </p>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="overview" className="w-full mt-6">
-            <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4 mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="expenses">Expenses</TabsTrigger>
-              <TabsTrigger value="budgets">Budgets</TabsTrigger>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="overview" className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-4">Income vs Expenses Over Time</h3>
-                <div className="h-[300px] sm:h-[400px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={timeSeriesData}
-                      margin={{ 
-                        top: 20, 
-                        right: isMobile ? 10 : 30, 
-                        left: isMobile ? 0 : 20, 
-                        bottom: 5 
-                      }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                      <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
-                      <Tooltip />
-                      <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                      <Bar dataKey="income" name="Income" fill="#3B82F6" />
-                      <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
-                      <Bar dataKey="savings" name="Savings" fill="#10B981" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Expenses by Category</h3>
-                  <div className="h-[250px] sm:h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={expensesByCategory}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={!isMobile}
-                          label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={isMobile ? 60 : 80}
-                          fill="#8884d8"
-                          dataKey="amount"
-                          nameKey="category"
-                        >
-                          {expensesByCategory.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`} />
-                        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                      </PieChart>
-                    </ResponsiveContainer>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Income</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">
+                      {formatCurrency(summaryStats.totalIncome)}
+                    </p>
                   </div>
+                  <div className="h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-700 dark:text-red-300">Total Expenses</p>
+                    <p className="text-2xl font-bold text-red-900 dark:text-red-100 mt-1">
+                      {formatCurrency(summaryStats.totalExpenses)}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-red-600 rounded-full flex items-center justify-center">
+                    <TrendingDown className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">Total Savings</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100 mt-1">
+                      {formatCurrency(summaryStats.totalSavings)}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-600 rounded-full flex items-center justify-center">
+                    <Target className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300">Net Cashflow</p>
+                    <p className={`text-2xl font-bold mt-1 ${
+                      summaryStats.netCashflow >= 0 
+                        ? "text-green-700 dark:text-green-300" 
+                        : "text-red-700 dark:text-red-300"
+                    }`}>
+                      {formatCurrency(Math.abs(summaryStats.netCashflow))}
+                      {summaryStats.netCashflow < 0 && <span className="text-sm"> DEFICIT</span>}
+                    </p>
+                  </div>
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                    summaryStats.netCashflow >= 0 ? "bg-green-600" : "bg-red-600"
+                  }`}>
+                    <DollarSign className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Analytics Tabs */}
+          <Card className="border-0 shadow-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+            <CardContent className="p-0">
+              <Tabs defaultValue="overview" className="w-full">
+                <div className="px-6 pt-6">
+                  <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                    <TabsTrigger value="overview" className="rounded-md font-medium">Overview</TabsTrigger>
+                    <TabsTrigger value="expenses" className="rounded-md font-medium">Expenses</TabsTrigger>
+                    <TabsTrigger value="budgets" className="rounded-md font-medium">Budgets</TabsTrigger>
+                    <TabsTrigger value="transactions" className="rounded-md font-medium">Transactions</TabsTrigger>
+                  </TabsList>
                 </div>
                 
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Transaction Distribution</h3>
-                  <div className="h-[250px] sm:h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { name: 'Income', value: summaryStats.totalIncome },
-                            { name: 'Expenses', value: summaryStats.totalExpenses },
-                            { name: 'Savings', value: summaryStats.totalSavings }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={!isMobile}
-                          label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={isMobile ? 60 : 80}
-                          fill="#8884d8"
-                          dataKey="value"
+                <TabsContent value="overview" className="p-6 space-y-8">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Income vs Expenses Over Time</h3>
+                    <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={timeSeriesData}
+                          margin={{ 
+                            top: 20, 
+                            right: isMobile ? 10 : 30, 
+                            left: isMobile ? 0 : 20, 
+                            bottom: 5 
+                          }}
                         >
-                          <Cell fill="#3B82F6" /> {/* Income */}
-                          <Cell fill="#EF4444" /> {/* Expenses */}
-                          <Cell fill="#10B981" /> {/* Savings */}
-                        </Pie>
-                        <Tooltip formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`} />
-                        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                      </PieChart>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                          <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                          <Bar dataKey="income" name="Income" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                          <Bar dataKey="expenses" name="Expenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                          <Bar dataKey="savings" name="Savings" fill="#10B981" radius={[2, 2, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  
+                  <Separator className="my-8" />
+                  
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div>
+                      <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Expenses by Category</h3>
+                      <div className="h-[300px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={expensesByCategory}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={!isMobile}
+                              label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                              outerRadius={isMobile ? 60 : 80}
+                              fill="#8884d8"
+                              dataKey="amount"
+                              nameKey="category"
+                            >
+                              {expensesByCategory.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
+                              contentStyle={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                border: 'none',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                              }}
+                            />
+                            <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Transaction Distribution</h3>
+                      <div className="h-[300px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Income', value: summaryStats.totalIncome },
+                                { name: 'Expenses', value: summaryStats.totalExpenses },
+                                { name: 'Savings', value: summaryStats.totalSavings }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={!isMobile}
+                              label={isMobile ? undefined : ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                              outerRadius={isMobile ? 60 : 80}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              <Cell fill="#3B82F6" />
+                              <Cell fill="#EF4444" />
+                              <Cell fill="#10B981" />
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
+                              contentStyle={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                border: 'none',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                              }}
+                            />
+                            <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="expenses" className="p-6">
+                  <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Expense Analysis</h3>
+                  
+                  <div className="h-[350px] w-full mb-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={expensesByCategory}
+                        layout="vertical"
+                        margin={{ 
+                          top: 5, 
+                          right: isMobile ? 10 : 30, 
+                          left: isMobile ? 70 : 100, 
+                          bottom: 5 
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                        <YAxis 
+                          type="category" 
+                          dataKey="category" 
+                          tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }}
+                          width={isMobile ? 70 : 100} 
+                        />
+                        <Tooltip 
+                          formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Bar dataKey="amount" name="Amount" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="expenses">
-              <h3 className="text-lg font-medium mb-4">Expense Analysis</h3>
-              
-              <div className="h-[300px] sm:h-[400px] w-full mb-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={expensesByCategory}
-                    layout="vertical"
-                    margin={{ 
-                      top: 5, 
-                      right: isMobile ? 10 : 30, 
-                      left: isMobile ? 70 : 100, 
-                      bottom: 5 
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                    <YAxis 
-                      type="category" 
-                      dataKey="category" 
-                      tick={{ fontSize: isMobile ? 10 : 12 }}
-                      width={isMobile ? 70 : 100} 
-                    />
-                    <Tooltip formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`} />
-                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                    <Bar dataKey="amount" name="Amount" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3">Category</th>
-                      <th className="text-right py-3">Amount</th>
-                      <th className="text-right py-3">% of Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {expensesByCategory.sort((a, b) => b.amount - a.amount).map((item, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="py-3">{item.category}</td>
-                        <td className="text-right py-3">{currency.symbol}{item.amount.toFixed(2)}</td>
-                        <td className="text-right py-3">
-                          {summaryStats.totalExpenses > 0 
-                            ? ((item.amount / summaryStats.totalExpenses) * 100).toFixed(1) 
-                            : 0}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="budgets">
-              <h3 className="text-lg font-medium mb-4">Budget Analysis</h3>
-              
-              <div className="h-[300px] sm:h-[400px] w-full mb-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={budgetVsActual}
-                    margin={{ 
-                      top: 20, 
-                      right: isMobile ? 10 : 30, 
-                      left: isMobile ? 0 : 20, 
-                      bottom: 5 
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" tick={{ fontSize: isMobile ? 10 : 12 }} />
-                    <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                    <Bar dataKey="budget" name="Budget" fill="#8884d8" />
-                    <Bar dataKey="spent" name="Actual Spending" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3">Category</th>
-                      <th className="text-right py-3">Budget</th>
-                      <th className="text-right py-3">Spent</th>
-                      <th className="text-right py-3">Remaining</th>
-                      <th className="text-right py-3">% Used</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {budgetVsActual.map((item, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="py-3">{item.category}</td>
-                        <td className="text-right py-3">{currency.symbol}{item.budget.toFixed(2)}</td>
-                        <td className="text-right py-3">{currency.symbol}{item.spent.toFixed(2)}</td>
-                        <td className="text-right py-3">{currency.symbol}{item.remaining.toFixed(2)}</td>
-                        <td className={`text-right py-3 ${
-                          (item.spent / item.budget) * 100 > 90 
-                            ? "text-red-500" 
-                            : (item.spent / item.budget) * 100 > 75
-                            ? "text-yellow-500"
-                            : "text-green-500"
-                        }`}>
-                          {item.budget > 0 ? ((item.spent / item.budget) * 100).toFixed(1) : 0}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="transactions">
-              <TransactionsTable 
-                transactions={filteredTransactions} 
-                currency={currency}
-              />
-            </TabsContent>
-          </Tabs>
-        </Card>
+                  
+                  <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70">
+                    <CardContent className="p-6">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-slate-200 dark:border-slate-700">
+                              <th className="text-left py-3 font-semibold text-slate-700 dark:text-slate-300">Category</th>
+                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Amount</th>
+                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">% of Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {expensesByCategory.sort((a, b) => b.amount - a.amount).map((item, index) => (
+                              <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td className="py-3 text-slate-800 dark:text-slate-200">{item.category}</td>
+                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                                  {currency.symbol}{item.amount.toFixed(2)}
+                                </td>
+                                <td className="text-right py-3 text-slate-600 dark:text-slate-400">
+                                  {summaryStats.totalExpenses > 0 
+                                    ? ((item.amount / summaryStats.totalExpenses) * 100).toFixed(1) 
+                                    : 0}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="budgets" className="p-6">
+                  <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Budget Analysis</h3>
+                  
+                  <div className="h-[350px] w-full mb-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={budgetVsActual}
+                        margin={{ 
+                          top: 20, 
+                          right: isMobile ? 10 : 30, 
+                          left: isMobile ? 0 : 20, 
+                          bottom: 5 
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="category" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                        <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                        <Bar dataKey="budget" name="Budget" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                        <Bar dataKey="spent" name="Actual Spending" fill="#10B981" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70">
+                    <CardContent className="p-6">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-slate-200 dark:border-slate-700">
+                              <th className="text-left py-3 font-semibold text-slate-700 dark:text-slate-300">Category</th>
+                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Budget</th>
+                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Spent</th>
+                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Remaining</th>
+                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">% Used</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {budgetVsActual.map((item, index) => (
+                              <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td className="py-3 text-slate-800 dark:text-slate-200">{item.category}</td>
+                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                                  {currency.symbol}{item.budget.toFixed(2)}
+                                </td>
+                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                                  {currency.symbol}{item.spent.toFixed(2)}
+                                </td>
+                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                                  {currency.symbol}{item.remaining.toFixed(2)}
+                                </td>
+                                <td className={`text-right py-3 font-semibold ${
+                                  (item.spent / item.budget) * 100 > 90 
+                                    ? "text-red-600" 
+                                    : (item.spent / item.budget) * 100 > 75
+                                    ? "text-yellow-600"
+                                    : "text-green-600"
+                                }`}>
+                                  {item.budget > 0 ? ((item.spent / item.budget) * 100).toFixed(1) : 0}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="transactions" className="p-6">
+                  <TransactionsTable 
+                    transactions={filteredTransactions} 
+                    currency={currency}
+                  />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );
