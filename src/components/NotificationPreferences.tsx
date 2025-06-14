@@ -43,11 +43,12 @@ const CustomToggle = ({
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={`
-        relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+        relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
         transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        ${checked ? 'bg-blue-500' : 'bg-gray-200'}
+        ${checked ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
+      style={{ minWidth: '44px', minHeight: '24px' }}
     >
       <span
         className={`
@@ -244,16 +245,18 @@ const NotificationPreferences = () => {
         <CardContent className="space-y-6">
           <div className="space-y-4">
             {notificationOptions.map((option) => (
-              <div key={option.key} className="flex items-center justify-between py-2">
-                <div className="space-y-1 flex-1">
-                  <Label className="text-sm font-medium">{option.label}</Label>
-                  <p className="text-xs text-muted-foreground">{option.description}</p>
+              <div key={option.key} className="flex items-start justify-between py-2 gap-4">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <Label className="text-sm font-medium leading-tight">{option.label}</Label>
+                  <p className="text-xs text-muted-foreground leading-tight">{option.description}</p>
                 </div>
-                <CustomToggle
-                  checked={preferences[option.key]}
-                  onCheckedChange={(checked) => updatePreference(option.key, checked)}
-                  disabled={saving}
-                />
+                <div className="flex-shrink-0 mt-1">
+                  <CustomToggle
+                    checked={preferences[option.key]}
+                    onCheckedChange={(checked) => updatePreference(option.key, checked)}
+                    disabled={saving}
+                  />
+                </div>
               </div>
             ))}
           </div>
