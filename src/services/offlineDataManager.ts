@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Transaction } from '@/types/transactions';
 
 // Database names and object stores
 const DB_NAME = 'expendx_offline_complete';
@@ -103,7 +102,7 @@ class OfflineDataManager {
     console.log('Starting full data sync for user:', this.currentUserId);
 
     try {
-      // Fetch all user data in parallel
+      // Fetch all user data in parallel using specific table methods
       const [
         transactions,
         budgets,
@@ -150,7 +149,7 @@ class OfflineDataManager {
     }
   }
 
-  // Fetch methods for different data types
+  // Specific fetch methods for each table to avoid TypeScript issues
   private async fetchTransactions() {
     const { data, error } = await supabase
       .from('transactions')
@@ -494,28 +493,19 @@ class OfflineDataManager {
     delete cleanData.last_synced;
     delete cleanData.last_modified;
 
-    switch (operation) {
-      case 'INSERT':
-        const { error: insertError } = await supabase
-          .from(table)
-          .insert(cleanData);
-        if (insertError) throw insertError;
+    // Use specific sync methods for each table type
+    switch (table) {
+      case 'transactions':
+        await this.syncTransactionItem(operation, cleanData);
         break;
-
-      case 'UPDATE':
-        const { error: updateError } = await supabase
-          .from(table)
-          .update(cleanData)
-          .eq('id', data.id);
-        if (updateError) throw updateError;
+      case 'budget_categories':
+        await this.syncBudgetItem(operation, cleanData);
         break;
-
-      case 'DELETE':
-        const { error: deleteError } = await supabase
-          .from(table)
-          .delete()
-          .eq('id', data.id);
-        if (deleteError) throw deleteError;
+      case 'savings_goals':
+        await this.syncSavingsItem(operation, cleanData);
+        break;
+      default:
+        console.warn(`Unsupported table for sync: ${table}`);
         break;
     }
 
@@ -526,6 +516,87 @@ class OfflineDataManager {
       local_modified: false,
       last_synced: Date.now()
     });
+  }
+
+  private async syncTransactionItem(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'INSERT':
+        const { error: insertError } = await supabase
+          .from('transactions')
+          .insert(data);
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await supabase
+          .from('transactions')
+          .update(data)
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
+  }
+
+  private async syncBudgetItem(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'INSERT':
+        const { error: insertError } = await supabase
+          .from('budget_categories')
+          .insert(data);
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await supabase
+          .from('budget_categories')
+          .update(data)
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await supabase
+          .from('budget_categories')
+          .delete()
+          .eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
+  }
+
+  private async syncSavingsItem(operation: string, data: any): Promise<void> {
+    switch (operation) {
+      case 'INSERT':
+        const { error: insertError } = await supabase
+          .from('savings_goals')
+          .insert(data);
+        if (insertError) throw insertError;
+        break;
+
+      case 'UPDATE':
+        const { error: updateError } = await supabase
+          .from('savings_goals')
+          .update(data)
+          .eq('id', data.id);
+        if (updateError) throw updateError;
+        break;
+
+      case 'DELETE':
+        const { error: deleteError } = await supabase
+          .from('savings_goals')
+          .delete()
+          .eq('id', data.id);
+        if (deleteError) throw deleteError;
+        break;
+    }
   }
 
   // Metadata management

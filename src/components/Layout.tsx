@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthForm } from "./AuthForm";
@@ -11,7 +10,7 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, signIn, signUp } = useAuth();
 
   if (isLoading) {
     return (
@@ -22,7 +21,14 @@ const Layout = ({ children }: LayoutProps) => {
   }
 
   if (!user) {
-    return <AuthForm />;
+    return (
+      <AuthForm 
+        onLogin={signIn}
+        onSignup={async (email: string, password: string, firstName: string, lastName: string) => {
+          await signUp(email, password, { first_name: firstName, last_name: lastName });
+        }}
+      />
+    );
   }
 
   return (
