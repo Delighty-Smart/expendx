@@ -4,7 +4,8 @@ import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -25,6 +26,7 @@ const Alerts = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -159,6 +161,59 @@ const Alerts = () => {
     }
   };
 
+  const handleSelectAlert = (alertId: string, checked: boolean) => {
+    const newSelected = new Set(selectedAlerts);
+    if (checked) {
+      newSelected.add(alertId);
+    } else {
+      newSelected.delete(alertId);
+    }
+    setSelectedAlerts(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAlerts(new Set(alerts.map(alert => alert.id)));
+    } else {
+      setSelectedAlerts(new Set());
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedAlerts.size === 0) {
+      toast({
+        title: "Info",
+        description: "No alerts selected for deletion",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('alerts')
+        .delete()
+        .in('id', Array.from(selectedAlerts));
+
+      if (error) throw error;
+
+      // Update local state
+      setAlerts(alerts.filter(alert => !selectedAlerts.has(alert.id)));
+      setSelectedAlerts(new Set());
+
+      toast({
+        title: "Success",
+        description: `${selectedAlerts.size} alert(s) deleted`,
+      });
+    } catch (error) {
+      console.error('Error deleting alerts:', error);
+      toast({
+        title: "Error",
+        description: "Could not delete alerts. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'weekly_recap':
@@ -248,21 +303,53 @@ const Alerts = () => {
     );
   }
 
+  const allSelected = alerts.length > 0 && selectedAlerts.size === alerts.length;
+  const someSelected = selectedAlerts.size > 0;
+
   return (
     <Layout>
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Alerts & Notifications</h1>
           
-          <Button 
-            variant="outline" 
-            onClick={handleMarkAllAsRead}
-            disabled={alerts.every(alert => alert.read) || alerts.length === 0}
-          >
-            <CheckCheck className="mr-2 h-4 w-4" />
-            <span>Mark All as Read</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            {someSelected && (
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteSelected}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Selected ({selectedAlerts.size})
+              </Button>
+            )}
+            
+            <Button 
+              variant="outline" 
+              onClick={handleMarkAllAsRead}
+              disabled={alerts.every(alert => alert.read) || alerts.length === 0}
+            >
+              <CheckCheck className="mr-2 h-4 w-4" />
+              <span>Mark All as Read</span>
+            </Button>
+          </div>
         </div>
+
+        {alerts.length > 0 && (
+          <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={handleSelectAll}
+                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+              />
+              <span className="text-sm font-medium">
+                {allSelected ? 'Deselect All' : 'Select All'} 
+                {someSelected && !allSelected && ` (${selectedAlerts.size} selected)`}
+              </span>
+            </div>
+          </div>
+        )}
         
         {loading ? (
           <div className="flex items-center justify-center h-64">
@@ -275,13 +362,18 @@ const Alerts = () => {
                 key={alert.id} 
                 className={`transition-all ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : ''}`}
               >
-                {/* Header with Icon and Title */}
+                {/* Header with Checkbox, Icon and Title */}
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={selectedAlerts.has(alert.id)}
+                      onCheckedChange={(checked) => handleSelectAlert(alert.id, checked as boolean)}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                    />
                     <div className="flex-shrink-0">
                       {getAlertIcon(alert.type)}
                     </div>
-                    <CardTitle className="text-lg font-semibold">
+                    <CardTitle className="text-lg font-semibold flex-1">
                       {alert.title}
                     </CardTitle>
                     {!alert.read && (

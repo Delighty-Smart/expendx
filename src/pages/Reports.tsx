@@ -368,8 +368,8 @@ const ReportsPage = () => {
 
             </div>
 
-            {/* Accordion Sections */}
-            <Accordion type="multiple" defaultValue={["overview"]} className="space-y-4">
+            {/* Accordion Sections - Changed to single select */}
+            <Accordion type="single" defaultValue="overview" collapsible className="space-y-4">
               
               {/* Financial Overview Section */}
               <AccordionItem value="overview">
