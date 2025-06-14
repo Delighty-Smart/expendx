@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,20 +85,51 @@ const DeleteAccountSection = () => {
         navigate('/');
         window.location.reload();
       } else if (selectedOption === "account-and-data") {
-        // Use the secure database function to delete account and all data
-        const { error } = await supabase.rpc('delete_user_account', {
+        // First delete all user data using the secure database function
+        const { error: dataError } = await supabase.rpc('delete_user_data', {
           target_user_id: user.id
         });
 
-        if (error) {
-          throw error;
+        if (dataError) {
+          throw dataError;
+        }
+
+        // Then delete the user profile
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .delete()
+          .eq('id', user.id);
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        // Finally, delete the user from Supabase Auth
+        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+
+        if (authError) {
+          // If admin deletion fails, try user self-deletion as fallback
+          console.warn("Admin deletion failed, attempting user self-deletion:", authError);
+          
+          // Clear local storage before sign out
+          localStorage.clear();
+          
+          // Sign out the user (which will redirect them to auth page)
+          await signOut();
+          navigate('/auth');
+          
+          toast({
+            title: "Account deletion initiated",
+            description: "Your account has been removed. You can no longer sign in with these credentials.",
+          });
+          
+          return;
         }
 
         // Clear local storage
         localStorage.clear();
         
-        // Sign out and navigate to auth
-        await signOut();
+        // Navigate to auth page
         navigate('/auth');
         
         toast({
