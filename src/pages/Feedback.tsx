@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,26 +260,20 @@ const FeedbackPage = () => {
                 )}
               </div>
 
-              {/* Contact Permission with circular radio button */}
+              {/* Contact Permission with small checkbox */}
               <div className="flex items-center space-x-2">
-                <RadioGroup 
-                  value={contactPermission ? "yes" : "no"} 
-                  onValueChange={(value) => setContactPermission(value === "yes")}
+                <Checkbox 
+                  id="contactPermission"
+                  checked={contactPermission}
+                  onCheckedChange={(checked) => setContactPermission(checked as boolean)}
+                  size="sm"
+                />
+                <Label
+                  htmlFor="contactPermission"
+                  className="text-sm text-muted-foreground cursor-pointer"
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem 
-                      value="yes" 
-                      id="contactPermission" 
-                      className="h-3 w-3"
-                    />
-                    <Label
-                      htmlFor="contactPermission"
-                      className="text-sm text-muted-foreground"
-                    >
-                      ExpendX team may contact me about this feedback
-                    </Label>
-                  </div>
-                </RadioGroup>
+                  ExpendX team may contact me about this feedback
+                </Label>
               </div>
 
               {/* Submit Button */}
