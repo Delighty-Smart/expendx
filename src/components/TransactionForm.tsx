@@ -78,20 +78,19 @@ export const TransactionForm = ({
     }
   };
 
-  // Fetch categories when transaction type changes
+  // Load categories when transaction type changes
+  const loadCategories = useCallback(async (type: TransactionType) => {
+    try {
+      const fetchedCategories = await getCategoriesForType(type);
+      setCategories(fetchedCategories);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    }
+  }, []);
+
+  // Initialize form when dialog opens or transaction changes
   useEffect(() => {
     if (open) {
-      const loadCategories = async () => {
-        try {
-          const fetchedCategories = await getCategoriesForType(transactionType);
-          setCategories(fetchedCategories);
-        } catch (error) {
-          console.error("Error loading categories:", error);
-        }
-      };
-      
-      loadCategories();
-      
       if (transaction) {
         form.reset({
           date: transaction.date,
@@ -101,6 +100,7 @@ export const TransactionForm = ({
           description: transaction.description
         });
         setTransactionType(transaction.type);
+        loadCategories(transaction.type);
       } else {
         form.reset({
           date: new Date().toISOString().split("T")[0],
@@ -110,9 +110,10 @@ export const TransactionForm = ({
           description: ""
         });
         setTransactionType("debit");
+        loadCategories("debit");
       }
     }
-  }, [transaction, form, open, transactionType]);
+  }, [transaction, form, open, loadCategories]);
 
   // Cache user ID when dialog opens if online
   useEffect(() => {
@@ -132,11 +133,13 @@ export const TransactionForm = ({
     cacheUserIdOnOpen();
   }, [open]);
 
-  const handleTypeChange = (type: TransactionType) => {
+  const handleTypeChange = useCallback(async (type: TransactionType) => {
+    console.log("Type changing to:", type);
     setTransactionType(type);
     form.setValue("type", type);
-    form.setValue("category", "");
-  };
+    form.setValue("category", ""); // Clear category when type changes
+    await loadCategories(type);
+  }, [form, loadCategories]);
 
   const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
     try {
@@ -284,8 +287,8 @@ export const TransactionForm = ({
                   <FormItem>
                     <FormLabel className="text-sm font-medium">Type</FormLabel>
                     <Select
-                      onValueChange={(value: TransactionType) => handleTypeChange(value)}
-                      value={field.value}
+                      onValueChange={handleTypeChange}
+                      value={transactionType}
                       disabled={loading}
                     >
                       <FormControl>
