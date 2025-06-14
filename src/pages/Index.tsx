@@ -429,7 +429,7 @@ const IndexPage = () => {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Wallet Balance (Active Only)</p>
+                  <p className="text-sm text-muted-foreground mb-1">Wallet Balance</p>
                   <p className="text-2xl font-bold text-foreground">{currency.symbol}{formatAmount(currentBalance)}</p>
                   <div className="mt-2 h-1 w-36 bg-muted/50 rounded-full overflow-hidden">
                     <div 
@@ -455,7 +455,7 @@ const IndexPage = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Income (Active)</p>
+                  <p className="text-sm text-muted-foreground mb-1">Monthly Income</p>
                   <p className="text-2xl font-bold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
                   {monthlyIncome > 0 && (
                     <div className="flex items-center gap-2 mt-2">
@@ -488,7 +488,7 @@ const IndexPage = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Expenses (Active)</p>
+                  <p className="text-sm text-muted-foreground mb-1">Monthly Expenses</p>
                   <p className="text-2xl font-bold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="h-1 w-24 bg-muted/50 rounded-full overflow-hidden">
