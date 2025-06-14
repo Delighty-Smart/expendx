@@ -114,12 +114,27 @@ const AddTransactionPage = () => {
     try {
       setLoading(true);
       
+      // Get user ID from cache or auth
+      let userId = getCachedUserId();
+      if (!userId && navigator.onLine) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userId = user.id;
+          cacheUserId(userId);
+        }
+      }
+
+      if (!userId) {
+        throw new Error("Unable to determine user ID. Please try again when online.");
+      }
+      
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
         type: values.type as TransactionType,
         category: values.category,
-        description: values.description
+        description: values.description,
+        user_id: userId
       };
 
       console.log("Saving transaction:", transactionData);
