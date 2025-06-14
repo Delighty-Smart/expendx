@@ -48,64 +48,14 @@ const DeleteAccountSection = () => {
     });
   };
 
-  const clearUserData = async () => {
-    if (!user) return;
-
-    try {
-      console.log("Clearing data for user:", user.id);
-      
-      await supabase.from('transactions').delete().eq('user_id', user.id);
-      await supabase.from('budget_categories').delete().eq('user_id', user.id);
-      await supabase.from('savings_goals').delete().eq('user_id', user.id);
-      await supabase.from('user_categories').delete().eq('user_id', user.id);
-      await supabase.from('user_settings').delete().eq('user_id', user.id);
-      await supabase.from('notification_preferences').delete().eq('user_id', user.id);
-      await supabase.from('user_streaks').delete().eq('user_id', user.id);
-      await supabase.from('monthly_income_estimates').delete().eq('user_id', user.id);
-      await supabase.from('alerts').delete().eq('user_id', user.id);
-      await supabase.from('user_feedback').delete().eq('user_id', user.id);
-
-      localStorage.clear();
-      
-      toast({
-        title: "Data cleared",
-        description: "All your data has been deleted.",
-      });
-    } catch (error) {
-      console.error("Error clearing user data:", error);
-      throw error;
-    }
-  };
-
-  const deleteAccount = async () => {
-    if (!user) return;
-
-    try {
-      console.log("Deleting account for user:", user.id);
-      
-      await clearUserData();
-      await supabase.from('user_profiles').delete().eq('id', user.id);
-      
-      await signOut();
-      navigate('/auth');
-      
-      toast({
-        title: "Account deleted",
-        description: "Your account has been permanently deleted.",
-      });
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      throw error;
-    }
-  };
-
   const handleFinalDelete = async () => {
-    if (!selectedOption) return;
+    if (!selectedOption || !user) return;
 
     setIsProcessing(true);
     
     try {
-      if (feedbackReason && user) {
+      // Save feedback if provided
+      if (feedbackReason) {
         const feedbackText = feedbackReason === "other" ? otherReason : feedbackReason;
         await supabase.from('user_feedback').insert({
           user_id: user.id,
@@ -116,17 +66,52 @@ const DeleteAccountSection = () => {
       }
 
       if (selectedOption === "data-only") {
-        await clearUserData();
+        // Use the secure database function to delete only user data
+        const { error } = await supabase.rpc('delete_user_data', {
+          target_user_id: user.id
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        // Clear local storage
+        localStorage.clear();
+        
+        toast({
+          title: "Data cleared",
+          description: "All your data has been deleted.",
+        });
+        
         navigate('/');
         window.location.reload();
       } else if (selectedOption === "account-and-data") {
-        await deleteAccount();
+        // Use the secure database function to delete account and all data
+        const { error } = await supabase.rpc('delete_user_account', {
+          target_user_id: user.id
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        // Clear local storage
+        localStorage.clear();
+        
+        // Sign out and navigate to auth
+        await signOut();
+        navigate('/auth');
+        
+        toast({
+          title: "Account deleted",
+          description: "Your account has been permanently deleted.",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during deletion:", error);
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive"
       });
     } finally {

@@ -523,6 +523,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_user_account: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      delete_user_data: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
