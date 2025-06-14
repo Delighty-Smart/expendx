@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Tags, Archive, HardDrive, Settings as SettingsIcon, Bell } from "lucide-react";
+import { Moon, Search, Sun, Palette, Tags, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
@@ -20,6 +20,7 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import "../components/ui/smoothScroll.css";
+import DeleteAccountSection from "@/components/DeleteAccountSection";
 
 const Settings = () => {
   const {
@@ -225,7 +226,7 @@ const Settings = () => {
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="offline" className="border-0">
+              <AccordionItem value="offline" className="border-b">
                 <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
                   <div className="flex items-center gap-3">
                     <HardDrive className="h-5 w-5 text-primary" />
@@ -237,6 +238,21 @@ const Settings = () => {
                 </AccordionTrigger>
                 <AccordionContent className="px-4 md:px-6 pb-6">
                   <DebugSection />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="delete-account" className="border-0">
+                <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <Trash2 className="h-5 w-5 text-destructive" />
+                    <div className="text-left">
+                      <div className="font-medium text-destructive">Delete Your Account or Data</div>
+                      <div className="text-sm text-muted-foreground">Permanently remove your account or data</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 md:px-6 pb-6">
+                  <DeleteAccountSection />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
