@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface PendingSyncIndicatorProps {
   syncStatus?: 'synced' | 'pending' | 'failed';
-  size?: 'sm' |md';
+  size?: 'sm' | 'md';
   showTooltip?: boolean;
 }
 
