@@ -72,9 +72,9 @@ const Auth = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-lg font-medium text-muted-foreground">Loading...</p>
+        <p className="text-lg font-medium text-foreground">Loading...</p>
       </div>
     );
   }
@@ -84,11 +84,11 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/5 dark:bg-secondary/10 rounded-full blur-3xl" />
       </div>
 
       {/* Main content */}
@@ -96,7 +96,7 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
-            <span className="text-2xl font-bold text-white">E</span>
+            <span className="text-2xl font-bold text-primary-foreground">E</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">ExpendX</h1>
           <p className="text-muted-foreground">Your Smart Finance Companion</p>

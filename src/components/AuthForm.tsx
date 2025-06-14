@@ -58,19 +58,19 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
   const isDisabled = loading || isProcessing;
 
   return (
-    <Card className="w-full shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+    <Card className="w-full shadow-2xl border bg-card">
       <CardHeader className="pb-4">
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/30 dark:bg-muted/50">
             <TabsTrigger 
               value="login" 
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium rounded-lg"
             >
               Sign In
             </TabsTrigger>
             <TabsTrigger 
               value="signup"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+              className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium rounded-lg"
             >
               Sign Up
             </TabsTrigger>
@@ -91,7 +91,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                         name="email" 
                         type="email" 
                         placeholder="you@example.com"
-                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
                         required 
                       />
                     </div>
@@ -108,7 +108,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                         name="password" 
                         type="password" 
                         placeholder="Enter your password"
-                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
                         required 
                       />
                     </div>
@@ -117,7 +117,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isDisabled}
                 >
                   {isDisabled ? (
@@ -149,7 +149,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                           name="firstName" 
                           type="text" 
                           placeholder="John"
-                          className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                          className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
                           required 
                         />
                       </div>
@@ -164,7 +164,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                         name="lastName" 
                         type="text" 
                         placeholder="Doe"
-                        className="h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
                         required 
                       />
                     </div>
@@ -181,7 +181,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                         name="email" 
                         type="email" 
                         placeholder="you@example.com"
-                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
                         required 
                       />
                     </div>
@@ -198,7 +198,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                         name="password" 
                         type="password" 
                         placeholder="Create a strong password"
-                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
                         required 
                         minLength={6}
                       />
@@ -211,7 +211,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isDisabled}
                 >
                   {isDisabled ? (
@@ -223,7 +223,7 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                     "Create Account"
                   )}
                 </Button>
-              </form>
+                </form>
             </CardContent>
           </TabsContent>
         </Tabs>
