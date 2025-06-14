@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -265,7 +264,7 @@ const FeedbackPage = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="contactPermission"
-                  size="sm"
+                  className="h-3 w-3"
                   checked={contactPermission}
                   onCheckedChange={(checked) => 
                     setContactPermission(checked === true)
