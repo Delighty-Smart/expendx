@@ -27,8 +27,9 @@ import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 
-// Import the offline storage functions
-import { initializeDB, setupSyncEvents, trySync } from './services/offlineStorage';
+// Import enhanced offline manager
+import { enhancedOfflineManager } from './services/enhancedOfflineManager';
+import { CacheStatusDebug } from '@/components/CacheStatusDebug';
 
 // Create a new QueryClient instance with proper configuration
 const queryClient = new QueryClient({
@@ -41,22 +42,18 @@ const queryClient = new QueryClient({
 })
 
 function App() {
-  // Initialize offline storage and sync events
+  // Initialize enhanced offline manager
   useEffect(() => {
-    const setupOfflineStorage = async () => {
+    const initializeEnhancedOffline = async () => {
       try {
-        await initializeDB();
-        setupSyncEvents();
-        if (navigator.onLine) {
-          trySync().catch(err => console.error('Initial sync failed:', err));
-        }
-        console.log('Offline storage initialized');
+        // The enhanced offline manager initializes itself
+        console.log('Enhanced offline manager initialized');
       } catch (err) {
-        console.error('Failed to initialize offline storage:', err);
+        console.error('Failed to initialize enhanced offline manager:', err);
       }
     };
     
-    setupOfflineStorage();
+    initializeEnhancedOffline();
   }, []);
 
   return (
@@ -87,6 +84,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
+            <CacheStatusDebug />
           </BrowserRouter>
         </SettingsProvider>
       </AuthProvider>

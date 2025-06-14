@@ -13,9 +13,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionType, getDefaultCategoriesForType, getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
-import { addTransaction, queueTransactionForSync } from "@/services/offlineStorage"; 
-import { addTransactionEnhanced } from "@/services/enhancedOfflineStorage";
-import { syncManager } from "@/services/syncManager";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -116,105 +114,35 @@ const AddTransactionPage = () => {
     try {
       setLoading(true);
       
-      let userId: string | null = null;
-      
-      // Try to get user ID - first online, then from cache
-      if (navigator.onLine) {
-        try {
-          const { data: { user }, error } = await supabase.auth.getUser();
-          if (error) throw error;
-          if (!user) throw new Error("No user found");
-          
-          userId = user.id;
-          cacheUserId(userId); // Cache for offline use
-        } catch (authError) {
-          console.error("Online auth failed:", authError);
-          // Fallback to cached user ID
-          userId = getCachedUserId();
-          if (!userId) {
-            throw new Error("Authentication failed and no cached user ID available");
-          }
-        }
-      } else {
-        // We're offline, use cached user ID
-        userId = getCachedUserId();
-        if (!userId) {
-          throw new Error("No cached user ID available for offline use");
-        }
-      }
-      
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
         type: values.type as TransactionType,
         category: values.category,
-        description: values.description,
-        user_id: userId
+        description: values.description
       };
 
       console.log("Saving transaction:", transactionData);
 
-      if (navigator.onLine) {
-        if (transaction) {
-          // Update existing transaction
-          const { error } = await supabase
-            .from('transactions')
-            .update(transactionData)
-            .eq('id', transaction.id);
-            
-          if (error) {
-            console.error("Update error:", error);
-            throw error;
-          }
-          
-          toast({
-            title: "Success",
-            description: "Transaction updated successfully"
-          });
-        } else {
-          // Insert new transaction online
-          const { error } = await supabase
-            .from('transactions')
-            .insert([transactionData]);
-            
-          if (error) {
-            console.error("Insert error:", error);
-            throw error;
-          }
-          
-          toast({
-            title: "Success",
-            description: "Transaction added successfully"
-          });
-        }
-      } else {
-        // We're offline
-        if (transaction) {
-          // For now we don't support updating existing transactions offline
-          toast({
-            title: "Error",
-            description: "Cannot update transactions while offline",
-            variant: "destructive"
-          });
-          return;
-        }
+      if (transaction) {
+        // Update existing transaction using enhanced offline manager
+        await enhancedOfflineManager.updateTransactionOffline(transaction.id, transactionData);
         
-        // Add to enhanced local storage and sync queue
-        try {
-          const tempId = await addTransactionEnhanced(transactionData);
-          
-          toast({
-            title: "Transaction Saved Offline",
-            description: "This will be synced when you're back online"
-          });
-          
-          console.log("Transaction saved offline with ID:", tempId);
-        } catch (err) {
-          console.error("Error saving offline:", err);
-          throw new Error("Failed to save transaction offline");
-        }
+        toast({
+          title: "Success",
+          description: navigator.onLine ? "Transaction updated successfully" : "Update saved offline and will sync when online"
+        });
+      } else {
+        // Add new transaction using enhanced offline manager
+        await enhancedOfflineManager.addTransactionOffline(transactionData);
+        
+        toast({
+          title: "Success",
+          description: navigator.onLine ? "Transaction added successfully" : "Transaction saved offline and will sync when online"
+        });
       }
 
+      queryClient.invalidateQueries({ queryKey: ["enhanced_transactions"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
@@ -265,6 +193,12 @@ const AddTransactionPage = () => {
           </Button>
           <h1 className="text-xl font-bold">{transaction ? 'Edit' : 'Add'} Transaction</h1>
         </div>
+        
+        {!navigator.onLine && (
+          <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded mb-4">
+            You're offline - changes will sync when connection is restored.
+          </div>
+        )}
         
         <div className="bg-card rounded-lg shadow-sm border p-6">
           <Form {...form}>
@@ -362,7 +296,7 @@ const AddTransactionPage = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">Description</FormLabel>
-                    <FormControl>
+                    <Form Control>
                       <Textarea 
                         placeholder="Enter transaction details..." 
                         {...field}

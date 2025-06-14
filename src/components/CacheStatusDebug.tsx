@@ -3,9 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOff
-
-ineSync";
+import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Database, Cloud, Wifi, WifiOff } from "lucide-react";

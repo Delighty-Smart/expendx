@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -16,9 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PendingSyncIndicator } from "./PendingSyncIndicator";
-import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOff
-
-ineSync";
+import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
