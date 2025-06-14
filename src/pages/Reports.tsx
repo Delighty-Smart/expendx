@@ -17,6 +17,19 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, X
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 
+// Define chart data types
+interface ChartDataPoint {
+  date: string;
+  income: number;
+  expenses: number;
+  savings: number;
+}
+
+interface CategoryDataPoint {
+  category: string;
+  amount: number;
+}
+
 const ReportsPage = () => {
   const [dateFrom, setDateFrom] = useState<Date>(startOfMonth(new Date()));
   const [dateTo, setDateTo] = useState<Date>(endOfMonth(new Date()));
@@ -71,8 +84,8 @@ const ReportsPage = () => {
     };
   }, [filteredTransactions]);
 
-  // Prepare chart data
-  const chartData = useMemo(() => {
+  // Prepare chart data with proper typing
+  const chartData = useMemo((): ChartDataPoint[] => {
     if (!filteredTransactions) return [];
     
     const dailyData = filteredTransactions.reduce((acc, transaction) => {
@@ -91,15 +104,15 @@ const ReportsPage = () => {
       }
       
       return acc;
-    }, {} as Record<string, { date: string; income: number; expenses: number; savings: number }>);
+    }, {} as Record<string, ChartDataPoint>);
     
     return Object.values(dailyData).sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }, [filteredTransactions]);
 
-  // Prepare category breakdown
-  const categoryData = useMemo(() => {
+  // Prepare category breakdown with proper typing
+  const categoryData = useMemo((): CategoryDataPoint[] => {
     if (!filteredTransactions) return [];
     
     const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
@@ -356,7 +369,7 @@ const ReportsPage = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ category, percent }: { category: string; percent: number }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                        label={(entry: any) => `${entry.category} ${(entry.percent * 100).toFixed(0)}%`}
                         outerRadius={80}
                         fill="#8884d8"
                       >
