@@ -3,16 +3,34 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Database, Cloud, Wifi, WifiOff, Bug, Trash2 } from "lucide-react";
+import { ChevronDown, Database, Cloud, Wifi, WifiOff, HardDrive, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 export const DebugSection = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [autoSync, setAutoSync] = useState(true);
   const { syncStatus, forceSync, getCacheAge } = useEnhancedOfflineSync();
   const [debugInfo, setDebugInfo] = useState<any>(null);
+
+  // Load auto-sync preference from localStorage on mount
+  useEffect(() => {
+    const savedAutoSync = localStorage.getItem('expendx_auto_sync');
+    if (savedAutoSync !== null) {
+      setAutoSync(JSON.parse(savedAutoSync));
+    }
+  }, []);
+
+  // Save auto-sync preference to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('expendx_auto_sync', JSON.stringify(autoSync));
+    // TODO: Pass this setting to the enhanced offline manager
+    console.log('Auto-sync setting changed to:', autoSync);
+  }, [autoSync]);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,14 +70,32 @@ export const DebugSection = () => {
     <Card className="glass-card">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Bug className="h-5 w-5" />
-          Developer Tools
+          <HardDrive className="h-5 w-5" />
+          Offline and Cache
         </CardTitle>
         <CardDescription>
-          Advanced debugging and cache management tools
+          Manage offline data storage, sync settings, and cache status
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="auto-sync" className="text-sm font-medium">
+              Auto-sync when online
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Automatically sync changes when connected to the internet
+            </p>
+          </div>
+          <Switch
+            id="auto-sync"
+            checked={autoSync}
+            onCheckedChange={setAutoSync}
+          />
+        </div>
+
+        <Separator />
+
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="w-full justify-between">
