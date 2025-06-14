@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -93,17 +93,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   const menuItems = [
-    { path: "/", label: "Dashboard", icon: "Home" },
-    { path: "/transactions", label: "Transactions", icon: "Receipt" },
-    { path: "/budgets", label: "Budgets", icon: "Budgets" },
-    { path: "/savings", label: "Savings", icon: "Savings" },
-    { path: "/reports", label: "Reports", icon: "BarChart" },
-    { path: "/feedback", label: "Feedback", icon: "MessageSquare" },
-    { path: "/settings", label: "Settings", icon: "Settings" },
+    { path: "/", label: "Dashboard", icon: Home },
+    { path: "/transactions", label: "Transactions", icon: Receipt },
+    { path: "/budgets", label: "Budgets", icon: DollarSign },
+    { path: "/savings", label: "Savings", icon: PiggyBank },
+    { path: "/reports", label: "Reports", icon: BarChart },
+    { path: "/feedback", label: "Feedback", icon: MessageSquare },
+    { path: "/settings", label: "Settings", icon: Settings },
   ];
 
   if (isAdmin) {
-    menuItems.push({ path: "/admin", label: "Admin Panel", icon: "Shield" });
+    menuItems.push({ path: "/admin", label: "Admin Panel", icon: Shield });
   }
 
   return (
@@ -155,119 +155,132 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </header>
 
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] md:w-64 glass-effect border-r border-border/50 transform transition-all duration-300 ease-in-out z-40 ${
+        className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 flex flex-col`}
+        } lg:translate-x-0 flex flex-col shadow-lg`}
       >
-        <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-border/50">
-          <div className="h-8 md:h-10">
-            <img 
-              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
-              alt="expendX" 
-              className="h-full object-contain"
-            />
+        {/* Integration Header */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <div className="w-4 h-4 bg-white rounded-sm"></div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Integration</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-foreground rounded-full"></div>
+            </div>
+            <span>Supabase</span>
+            <span>Financial Data</span>
           </div>
         </div>
         
-        <div 
-          className="p-3 md:p-4 border-b border-border/50 cursor-pointer hover:bg-accent/30 transition-colors"
-          onClick={handleProfileClick}
-        >
-          <div className="flex items-center gap-3 mb-1 md:mb-2">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-5 w-5 text-primary" />
+        {/* Navigation Menu */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = location.pathname === item.path;
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                }`}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <IconComponent className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm font-medium">{item.label}</span>
+                {item.path === "/feedback" && (
+                  <div className="ml-auto w-2 h-2 bg-red-500 rounded-full"></div>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Shortcuts Section */}
+        <div className="px-3 py-2">
+          <p className="text-xs font-medium text-muted-foreground mb-2 px-3">SHORTCUTS</p>
+          <div className="space-y-1">
+            <Link
+              to="/add-transaction"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+              <span className="text-sm">Add Transaction</span>
+            </Link>
+            <Link
+              to="/reports"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <div className="w-4 h-4 bg-orange-500 rounded-sm flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+              </div>
+              <span className="text-sm">Monthly Report</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Usage Stats */}
+        <div className="mx-3 mb-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Used space</span>
+            <span className="text-xs text-muted-foreground">71%</span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-2">
+            Admin updated 09:12 am<br />
+            November 08, 2020
+          </p>
+          <div className="w-full bg-background rounded-full h-1.5">
+            <div className="bg-primary h-1.5 rounded-full" style={{ width: '71%' }}></div>
+          </div>
+        </div>
+
+        {/* User Profile */}
+        <div className="border-t border-border p-3">
+          <div 
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+            onClick={handleProfileClick}
+          >
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {userProfile?.avatar_url ? (
+                <img 
+                  src={userProfile.avatar_url} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="h-4 w-4 text-primary" />
+              )}
             </div>
-            <div className="overflow-hidden">
-              <p className="font-medium text-sm md:text-base text-foreground truncate">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
                 {userProfile?.username || userProfile?.email || "User"}
               </p>
               {userStreak && (
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                  <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500"></span>
+                <p className="text-xs text-muted-foreground truncate">
                   {userStreak.current_title}
                 </p>
               )}
             </div>
+            <Button variant="ghost" size="sm" onClick={(e) => {
+              e.stopPropagation();
+              handleLogout();
+            }}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-        
-        {userStreak && (
-          <div 
-            className="p-3 md:p-4 border-b border-border/50 flex items-center gap-2 cursor-pointer hover:bg-accent/30 transition-colors"
-            onClick={handleStreakClick}
-          >
-            <div className="p-1.5 md:p-2 rounded-full bg-primary/20 flex items-center justify-center">
-              <Flame className="h-3.5 w-3.5 md:h-4 md:w-4 text-pink-500" />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs md:text-sm font-medium">{getStreakText(userStreak.current_streak)}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground">
-                Click to see your progress!
-              </p>
-            </div>
-          </div>
-        )}
-        
-        <nav className="flex-1 p-2 md:p-3 overflow-y-auto">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`block px-3 py-1.5 md:px-4 md:py-2 rounded-md mb-1 transition-all duration-200 animated-button text-sm md:text-base ${
-                location.pathname === item.path
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
-              } flex justify-between items-center`}
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        
-        <div className="p-2 border-t border-border/50">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="w-full justify-between text-sm font-normal"
-              >
-                <div className="flex items-center gap-2">
-                  {theme === "light" && <Sun className="h-4 w-4" />}
-                  {theme === "dark" && <Moon className="h-4 w-4" />}
-                  <span>
-                    {theme === "light" && "Light Mode"}
-                    {theme === "dark" && "Dark Mode"}
-                  </span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover/80 backdrop-blur-md border-border/50 w-[180px]">
-              <DropdownMenuItem onClick={() => setThemeOption("light")} className="flex gap-2 text-sm">
-                <Sun className="h-4 w-4" /> Light Mode
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
-                <Moon className="h-4 w-4" /> Dark Mode
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        <div className="p-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="w-full justify-start gap-2 text-sm font-normal"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            Log Out
-          </Button>
-        </div>
-        
-        <div className="p-3 text-center text-[10px] md:text-xs text-muted-foreground border-t border-border/50">
-          Powered by <span className="font-bold">Delighty Smart Solutions</span>
         </div>
       </aside>
 
