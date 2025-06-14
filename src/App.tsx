@@ -87,7 +87,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <SettingsProvider>
-          <BrowserRouter>
+          <BrowserRouter basename="/">
             <Routes>
               <Route path="/" element={<IndexPage />} />
               <Route path="/auth" element={<Auth />} />
