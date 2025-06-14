@@ -192,8 +192,8 @@ const Reports = () => {
   // Colors for charts
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'];
 
+  // Move formatCurrency function to use the component's currency and hideAmounts values
   const formatCurrency = (amount: number) => {
-    const { currency } = useSettings();
     if (hideAmounts) {
       return '***';
     }
@@ -762,9 +762,9 @@ const Reports = () => {
                     <SelectTrigger className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg h-12 text-base font-medium">
                       <SelectValue placeholder="Select a view" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 shadow-lg z-50">
                       {tabOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="text-base py-3">
+                        <SelectItem key={option.value} value={option.value} className="text-base py-3 hover:bg-slate-100 dark:hover:bg-slate-700">
                           {option.label}
                         </SelectItem>
                       ))}
