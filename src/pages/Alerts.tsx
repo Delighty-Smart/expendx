@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase } from "lucide-react";
@@ -163,43 +162,43 @@ const Alerts = () => {
   const getAlertIcon = (type: string) => {
     switch (type) {
       case 'weekly_recap':
-        return <Calendar className="text-blue-500" />;
+        return <Calendar className="h-5 w-5 text-blue-500" />;
       case 'budget_nudges':
-        return <Target className="text-yellow-500" />;
+        return <Target className="h-5 w-5 text-yellow-500" />;
       case 'unusual_activity':
-        return <AlertTriangle className="text-red-500" />;
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
       case 'daily_log_reminder':
-        return <Bell className="text-purple-500" />;
+        return <Bell className="h-5 w-5 text-purple-500" />;
       case 'savings_progress':
-        return <TrendingUp className="text-green-500" />;
+        return <TrendingUp className="h-5 w-5 text-green-500" />;
       case 'month_reset_preview':
-        return <Calendar className="text-orange-500" />;
+        return <Calendar className="h-5 w-5 text-orange-500" />;
       case 'recurring_expense_reminder':
-        return <Clock className="text-blue-600" />;
+        return <Clock className="h-5 w-5 text-blue-600" />;
       case 'night_owl_checkin':
-        return <Moon className="text-indigo-500" />;
+        return <Moon className="h-5 w-5 text-indigo-500" />;
       case 'monthly_snapshot':
-        return <BarChart className="text-emerald-500" />;
+        return <BarChart className="h-5 w-5 text-emerald-500" />;
       case 'reflection_prompts':
-        return <MessageSquare className="text-pink-500" />;
+        return <MessageSquare className="h-5 w-5 text-pink-500" />;
       case 'custom_goal_reminder':
-        return <Settings className="text-gray-500" />;
+        return <Settings className="h-5 w-5 text-gray-500" />;
       case 'business_mode_nudges':
-        return <Briefcase className="text-slate-600" />;
+        return <Briefcase className="h-5 w-5 text-slate-600" />;
       case 'budget_alert':
-        return <AlertTriangle className="text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       case 'system':
-        return <Bell className="text-blue-500" />;
+        return <Bell className="h-5 w-5 text-blue-500" />;
       case 'feedback_response':
-        return <CheckCheck className="text-green-500" />;
+        return <CheckCheck className="h-5 w-5 text-green-500" />;
       case 'admin_message':
-        return <User className="text-purple-500" />;
+        return <User className="h-5 w-5 text-purple-500" />;
       case 'streak':
-        return <Award className="text-emerald-500" />;
+        return <Award className="h-5 w-5 text-emerald-500" />;
       case 'payment':
-        return <DollarSign className="text-green-500" />;
+        return <DollarSign className="h-5 w-5 text-green-500" />;
       default:
-        return <Bell className="text-blue-500" />;
+        return <Bell className="h-5 w-5 text-blue-500" />;
     }
   };
 
@@ -272,40 +271,53 @@ const Alerts = () => {
         ) : alerts.length > 0 ? (
           <div className="space-y-4">
             {alerts.map((alert) => (
-              <Card key={alert.id} className={`overflow-hidden transition-all ${!alert.read ? 'border-l-4 border-l-primary' : ''}`}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-muted">
-                        {getAlertIcon(alert.type)}
-                      </div>
-                      <CardTitle className="text-lg">
-                        {alert.title}
-                      </CardTitle>
-                      <Badge variant={getAlertBadgeVariant(alert.type)}>
-                        {alert.type.replace('_', ' ')}
-                      </Badge>
+              <Card 
+                key={alert.id} 
+                className={`transition-all ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : ''}`}
+              >
+                {/* Header with Icon and Title */}
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {getAlertIcon(alert.type)}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatDate(alert.created_at)}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-4">
-                  <p className="mb-4">{alert.message}</p>
-                  <div className="flex justify-end">
+                    <CardTitle className="text-lg font-semibold">
+                      {alert.title}
+                    </CardTitle>
                     {!alert.read && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleMarkAsRead(alert.id)}
-                      >
-                        <CheckCheck className="mr-2 h-4 w-4" />
-                        Mark as Read
-                      </Button>
+                      <div className="ml-auto">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleMarkAsRead(alert.id)}
+                          className="text-xs px-2 py-1 h-auto"
+                        >
+                          <Check className="h-3 w-3 mr-1" />
+                          Mark Read
+                        </Button>
+                      </div>
                     )}
                   </div>
+                </CardHeader>
+
+                {/* Message Content */}
+                <CardContent className="py-0">
+                  <p className="text-muted-foreground leading-relaxed">
+                    {alert.message}
+                  </p>
                 </CardContent>
+
+                {/* Footer with Badge and Date */}
+                <CardFooter className="pt-4 pb-4">
+                  <div className="flex items-center justify-between w-full">
+                    <Badge variant={getAlertBadgeVariant(alert.type)} className="text-xs">
+                      {alert.type.replace('_', ' ')}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDate(alert.created_at)}
+                    </span>
+                  </div>
+                </CardFooter>
               </Card>
             ))}
           </div>
