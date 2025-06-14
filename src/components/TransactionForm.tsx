@@ -46,7 +46,7 @@ export const TransactionForm = ({
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const { isTransactionPending } = useEnhancedOfflineSync();
+  const { getTransactionSyncStatus } = useEnhancedOfflineSync();
   
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -171,17 +171,19 @@ export const TransactionForm = ({
         // Update existing transaction
         await enhancedOfflineManager.updateTransactionOffline(transaction.id, transactionData);
         
+        const isOffline = !navigator.onLine;
         toast({
           title: "Success",
-          description: navigator.onLine ? "Transaction updated successfully" : "Update saved offline and will sync when online"
+          description: isOffline ? "Update saved offline and will sync when online" : "Transaction updated successfully"
         });
       } else {
         // Insert new transaction
         await enhancedOfflineManager.addTransactionOffline(transactionData);
         
+        const isOffline = !navigator.onLine;
         toast({
           title: "Success",
-          description: navigator.onLine ? "Transaction added successfully" : "Transaction saved offline and will sync when online"
+          description: isOffline ? "Transaction saved offline and will sync when online" : "Transaction added successfully"
         });
       }
 
@@ -208,7 +210,7 @@ export const TransactionForm = ({
     }
   }, [toast, transaction, onOpenChange, onTransactionAdded, queryClient]);
 
-  const isPending = transaction ? isTransactionPending(transaction.id) : false;
+  const syncStatus = transaction ? getTransactionSyncStatus(transaction.id) : 'synced';
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
@@ -233,12 +235,12 @@ export const TransactionForm = ({
           <DialogHeader>
             <div className="flex items-center gap-2">
               <DialogTitle className="text-lg">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
-              <PendingSyncIndicator isPending={isPending} />
+              <PendingSyncIndicator status={syncStatus} />
             </div>
             <DialogDescription className="text-sm">
               Enter the details of your transaction below.
               {!navigator.onLine && (
-                <span className="block text-orange-600 mt-1">
+                <span className="block text-orange-600 mt-1 font-medium">
                   You're offline - changes will sync when connection is restored.
                 </span>
               )}

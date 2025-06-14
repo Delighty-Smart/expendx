@@ -30,7 +30,6 @@ import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
-import { CacheStatusDebug } from '@/components/CacheStatusDebug';
 
 // Create a new QueryClient instance with proper configuration
 const queryClient = new QueryClient({
@@ -86,7 +85,6 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
-              <CacheStatusDebug />
             </BrowserRouter>
           </SettingsProvider>
         </AuthProvider>

@@ -71,18 +71,18 @@ export function useEnhancedTransactionData(filter?: {
           const eventType = payload.eventType;
           if (eventType === 'INSERT') {
             toast({
-              title: "Transaction Added",
-              description: "A new transaction has been synced"
+              title: "Transaction Synced",
+              description: "A new transaction has been synced from the cloud"
             });
           } else if (eventType === 'UPDATE') {
             toast({
               title: "Transaction Updated", 
-              description: "A transaction has been updated"
+              description: "A transaction has been updated and synced"
             });
           } else if (eventType === 'DELETE') {
             toast({
               title: "Transaction Deleted",
-              description: "A transaction has been deleted"
+              description: "A transaction has been deleted and synced"
             });
           }
         }
@@ -106,11 +106,12 @@ export function useEnhancedTransactionData(filter?: {
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       
+      const isOffline = !navigator.onLine;
       toast({
-        title: navigator.onLine ? "Transaction Added" : "Transaction Saved Offline",
-        description: navigator.onLine ? 
-          "Transaction saved successfully" : 
-          "Transaction will sync when you're back online"
+        title: isOffline ? "Transaction Saved Offline" : "Transaction Added",
+        description: isOffline ? 
+          "Transaction saved and will sync when you're back online" : 
+          "Transaction saved successfully"
       });
       
       return tempId;
@@ -133,11 +134,12 @@ export function useEnhancedTransactionData(filter?: {
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       
+      const isOffline = !navigator.onLine;
       toast({
-        title: navigator.onLine ? "Transaction Updated" : "Update Saved Offline",
-        description: navigator.onLine ? 
-          "Transaction updated successfully" : 
-          "Changes will sync when you're back online"
+        title: isOffline ? "Update Saved Offline" : "Transaction Updated",
+        description: isOffline ? 
+          "Changes saved and will sync when you're back online" : 
+          "Transaction updated successfully"
       });
     } catch (error: any) {
       console.error("Error updating transaction:", error);
@@ -158,11 +160,12 @@ export function useEnhancedTransactionData(filter?: {
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       
+      const isOffline = !navigator.onLine;
       toast({
-        title: navigator.onLine ? "Transaction Deleted" : "Deletion Saved Offline",
-        description: navigator.onLine ? 
-          "Transaction deleted successfully" : 
-          "Changes will sync when you're back online"
+        title: isOffline ? "Deletion Saved Offline" : "Transaction Deleted",
+        description: isOffline ? 
+          "Changes saved and will sync when you're back online" : 
+          "Transaction deleted successfully"
       });
     } catch (error: any) {
       console.error("Error deleting transaction:", error);

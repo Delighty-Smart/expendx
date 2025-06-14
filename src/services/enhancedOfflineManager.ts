@@ -24,7 +24,9 @@ export interface SyncQueueItem {
   data: any;
   timestamp: number;
   retryCount: number;
-  status: 'pending' | 'syncing' | 'failed';
+  status: 'pending' | 'syncing' | 'failed' | 'synced';
+  tempId?: string;
+  lastSyncedAt?: number;
 }
 
 class EnhancedOfflineManager {
@@ -180,7 +182,7 @@ class EnhancedOfflineManager {
     return data;
   }
 
-  // Local data access methods
+  // Local data access methods with sync status
   getTransactions(filters?: any): Transaction[] {
     if (!this.dataCache) return [];
     
@@ -221,7 +223,7 @@ class EnhancedOfflineManager {
     return this.dataCache?.settings;
   }
 
-  // Offline operations with pending indicators
+  // Enhanced offline operations with better sync tracking
   async addTransactionOffline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
@@ -230,18 +232,19 @@ class EnhancedOfflineManager {
       id: tempId
     };
 
-    // Add to local cache immediately
+    // Add to local cache immediately with sync status
     if (this.dataCache) {
       this.dataCache.transactions.unshift(transaction);
       await this.saveDataCache();
     }
 
-    // Add to sync queue
+    // Add to sync queue with enhanced tracking
     await this.addToSyncQueue({
       type: 'INSERT',
       table: 'transactions',
       data: transactionData,
-      tempId
+      tempId,
+      status: 'pending'
     });
 
     console.log('Transaction added offline with temp ID:', tempId);
@@ -253,16 +256,20 @@ class EnhancedOfflineManager {
     if (this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
-        this.dataCache.transactions[index] = { ...this.dataCache.transactions[index], ...updates };
+        this.dataCache.transactions[index] = { 
+          ...this.dataCache.transactions[index], 
+          ...updates 
+        };
         await this.saveDataCache();
       }
     }
 
-    // Add to sync queue
+    // Add to sync queue with proper status tracking
     await this.addToSyncQueue({
       type: 'UPDATE',
       table: 'transactions',
-      data: { id, ...updates }
+      data: { id, ...updates },
+      status: 'pending'
     });
   }
 
@@ -278,18 +285,24 @@ class EnhancedOfflineManager {
       await this.addToSyncQueue({
         type: 'DELETE',
         table: 'transactions',
-        data: { id }
+        data: { id },
+        status: 'pending'
       });
+    } else {
+      // Remove temp transaction from sync queue if it exists
+      this.syncQueue = this.syncQueue.filter(item => 
+        !(item.tempId === id || (item.data && item.data.id === id))
+      );
+      await this.saveSyncQueue();
     }
   }
 
-  // Sync queue management
-  private async addToSyncQueue(operation: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retryCount' | 'status'> & { tempId?: string }) {
+  // Enhanced sync queue management with better retry logic
+  private async addToSyncQueue(operation: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retryCount'>) {
     const queueItem: SyncQueueItem = {
       id: crypto.randomUUID(),
       timestamp: Date.now(),
       retryCount: 0,
-      status: 'pending',
       ...operation
     };
 
@@ -309,7 +322,11 @@ class EnhancedOfflineManager {
     this.isSyncing = true;
     this.notifyStatusChange();
 
-    const pendingItems = this.syncQueue.filter(item => item.status === 'pending');
+    // Sort queue by timestamp to maintain order
+    const pendingItems = this.syncQueue
+      .filter(item => item.status === 'pending')
+      .sort((a, b) => a.timestamp - b.timestamp);
+    
     console.log(`Processing ${pendingItems.length} pending sync items`);
 
     for (const item of pendingItems) {
@@ -317,8 +334,10 @@ class EnhancedOfflineManager {
         item.status = 'syncing';
         await this.syncItem(item);
         
-        // Remove successfully synced item
-        this.syncQueue = this.syncQueue.filter(q => q.id !== item.id);
+        // Mark as synced and set sync timestamp
+        item.status = 'synced';
+        item.lastSyncedAt = Date.now();
+        
         console.log(`Successfully synced ${item.type} ${item.table}`);
         
       } catch (error) {
@@ -328,11 +347,15 @@ class EnhancedOfflineManager {
         
         // Remove item if max retries exceeded
         if (item.retryCount >= 3) {
-          this.syncQueue = this.syncQueue.filter(q => q.id !== item.id);
           console.log(`Removed item ${item.id} after max retries`);
         }
       }
     }
+
+    // Clean up successfully synced items
+    this.syncQueue = this.syncQueue.filter(item => 
+      item.status !== 'synced' && item.retryCount < 3
+    );
 
     await this.saveSyncQueue();
     this.isSyncing = false;
@@ -366,8 +389,8 @@ class EnhancedOfflineManager {
         if (insertError) throw insertError;
         
         // Update local cache with real ID and properly cast the type
-        if (this.dataCache && (item as any).tempId) {
-          const tempIndex = this.dataCache.transactions.findIndex(t => t.id === (item as any).tempId);
+        if (this.dataCache && item.tempId) {
+          const tempIndex = this.dataCache.transactions.findIndex(t => t.id === item.tempId);
           if (tempIndex !== -1) {
             this.dataCache.transactions[tempIndex] = {
               ...insertedData,
@@ -454,8 +477,10 @@ class EnhancedOfflineManager {
       isOnline: this.isOnline,
       isSyncing: this.isSyncing,
       queueCount: this.syncQueue.filter(item => item.status === 'pending').length,
+      failedCount: this.syncQueue.filter(item => item.status === 'failed').length,
       lastSync: localStorage.getItem(LAST_SYNC_KEY) ? new Date(parseInt(localStorage.getItem(LAST_SYNC_KEY)!)) : null,
-      hasData: !!this.dataCache
+      hasData: !!this.dataCache,
+      syncQueue: this.syncQueue
     };
   }
 
@@ -478,11 +503,29 @@ class EnhancedOfflineManager {
 
   // Check if transaction is pending sync
   isTransactionPending(transactionId: string): boolean {
-    return transactionId.startsWith('temp_') || 
-           this.syncQueue.some(item => 
-             item.table === 'transactions' && 
-             (item.data.id === transactionId || (item as any).tempId === transactionId)
-           );
+    if (transactionId.startsWith('temp_')) return true;
+    
+    return this.syncQueue.some(item => 
+      item.table === 'transactions' && 
+      item.status === 'pending' &&
+      (item.data.id === transactionId || item.tempId === transactionId)
+    );
+  }
+
+  isTransactionSyncing(transactionId: string): boolean {
+    return this.syncQueue.some(item => 
+      item.table === 'transactions' && 
+      item.status === 'syncing' &&
+      (item.data.id === transactionId || item.tempId === transactionId)
+    );
+  }
+
+  isTransactionFailed(transactionId: string): boolean {
+    return this.syncQueue.some(item => 
+      item.table === 'transactions' && 
+      item.status === 'failed' &&
+      (item.data.id === transactionId || item.tempId === transactionId)
+    );
   }
 
   // Get cached data age

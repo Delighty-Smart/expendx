@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -12,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
 import { ArchiveManagement } from "@/components/ArchiveManagement";
+import { DebugSection } from "@/components/DebugSection";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
-import "../components/ui/smoothScroll.css"; // Import the smooth scroll styles
+import "../components/ui/smoothScroll.css";
 
 const Settings = () => {
   const {
@@ -137,6 +139,8 @@ const Settings = () => {
           <CategoryManagement />
           
           <ArchiveManagement />
+          
+          <DebugSection />
         </div>
       </PullToRefresh>
     </Layout>
