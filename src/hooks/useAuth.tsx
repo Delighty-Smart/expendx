@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentSession?.user ?? null);
         
         // Cache user ID for offline use
-        cache UserId(currentSession?.user?.id ?? null);
+        cacheUserId(currentSession?.user?.id ?? null);
         
         setIsLoading(false);
       }
