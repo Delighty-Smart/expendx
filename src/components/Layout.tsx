@@ -1,3 +1,4 @@
+
 import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -191,6 +192,18 @@ const Layout = ({
               </div>
               <span className="text-sm">Monthly Report</span>
             </Link>
+            <button 
+              onClick={() => {
+                handleStreakClick();
+                setIsSidebarOpen(false);
+              }} 
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left"
+            >
+              <div className="w-4 h-4 bg-purple-500 rounded-sm flex items-center justify-center">
+                <Flame className="w-2 h-2 text-white" />
+              </div>
+              <span className="text-sm">Streak Progress</span>
+            </button>
           </div>
         </div>
 
