@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera, Save, PencilLine, Upload } from "lucide-react";
@@ -10,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import ImageCropper from "./ImageCropper";
 
 const AGE_BRACKETS = [
   "18-24", "25-34", "35-44", "45-54", "55-64", "65+"
@@ -35,6 +35,8 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedContinent, setSelectedContinent] = useState(profile?.continent || "");
+  const [cropperImage, setCropperImage] = useState<string>("");
+  const [showCropper, setShowCropper] = useState(false);
   const { toast } = useToast();
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
@@ -129,15 +131,32 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
         return;
       }
       
+      // Create preview URL and show cropper
+      const previewUrl = URL.createObjectURL(file);
+      setCropperImage(previewUrl);
+      setShowCropper(true);
+    } catch (error: any) {
+      console.error("Error processing file:", error);
+      toast({
+        title: "Processing failed",
+        description: "There was an error processing your image. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    try {
       setUploadingAvatar(true);
+      setShowCropper(false);
       
-      // Upload the file to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      // Upload the cropped file to Supabase Storage
+      const fileExt = 'jpg'; // Always save as JPG after cropping
       const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
       
       const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file);
+        .upload(fileName, croppedBlob);
       
       if (uploadError) throw uploadError;
       
@@ -175,7 +194,16 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       });
     } finally {
       setUploadingAvatar(false);
+      // Clean up the preview URL
+      URL.revokeObjectURL(cropperImage);
+      setCropperImage("");
     }
+  };
+
+  const handleCropperClose = () => {
+    setShowCropper(false);
+    URL.revokeObjectURL(cropperImage);
+    setCropperImage("");
   };
 
   if (!profile) return null;
@@ -185,7 +213,11 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         <div className="relative">
           <Avatar className="h-24 w-24 cursor-pointer border-2 border-primary/20">
-            <AvatarImage src={profile.avatar_url || '/placeholder.svg'} alt="Avatar" />
+            <AvatarImage 
+              src={profile.avatar_url || '/placeholder.svg'} 
+              alt="Avatar"
+              className="object-cover"
+            />
             <AvatarFallback className="text-xl">
               {profile.first_name?.[0]}{profile.last_name?.[0] || ''}
             </AvatarFallback>
@@ -367,6 +399,13 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
           )}
         </div>
       )}
+      
+      <ImageCropper
+        image={cropperImage}
+        isOpen={showCropper}
+        onClose={handleCropperClose}
+        onCrop={handleCropComplete}
+      />
     </div>
   );
 };
