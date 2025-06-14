@@ -32,12 +32,12 @@ const StreakProgress = ({ streak }: { streak: any }) => {
   const todayIndex = today === 0 ? 6 : today - 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Compact Main Display */}
       <GlassCard className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-blue-500/10" />
-        <CardContent className="relative p-4">
-          <div className="flex items-center justify-between mb-3">
+        <CardContent className="relative p-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full blur-md opacity-30 animate-pulse" />
@@ -67,8 +67,8 @@ const StreakProgress = ({ streak }: { streak: any }) => {
           </div>
 
           {/* Compact Stats Row */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-lg p-2 flex items-center gap-2">
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-lg p-3 flex items-center gap-2">
               <Trophy className="h-4 w-4 text-amber-500" />
               <div>
                 <p className="text-lg font-bold">{streak.highest_streak}</p>
@@ -76,7 +76,7 @@ const StreakProgress = ({ streak }: { streak: any }) => {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-2 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-3 flex items-center gap-2">
               <Shield className="h-4 w-4 text-blue-500" />
               <div>
                 <p className="text-lg font-bold">{streak.freeze_count}</p>
@@ -84,7 +84,7 @@ const StreakProgress = ({ streak }: { streak: any }) => {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-lg p-2 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-lg p-3 flex items-center gap-2">
               <Target className="h-4 w-4 text-purple-500" />
               <div>
                 <p className="text-lg font-bold">{STREAK_MILESTONES.length - STREAK_MILESTONES.findIndex(m => m.days > streak.current_streak)}</p>
@@ -95,7 +95,7 @@ const StreakProgress = ({ streak }: { streak: any }) => {
 
           {/* Progress to Next Level - Compact */}
           {nextMilestone && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Zap className="h-3 w-3 text-purple-500" />
@@ -119,68 +119,62 @@ const StreakProgress = ({ streak }: { streak: any }) => {
         </CardContent>
       </GlassCard>
 
-      {/* Accordions for Additional Content */}
-      <Accordion type="single" collapsible className="space-y-2">
-        {/* Weekly Progress Accordion */}
-        <AccordionItem value="weekly" className="border-none">
-          <GlassCard className="overflow-hidden">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-blue-500" />
-                <span className="font-medium text-sm">Weekly Progress</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="px-4 pb-4">
-                <div className="grid grid-cols-7 gap-2">
-                  {days.map((day, index) => {
-                    const isChecked = index < todayIndex;
-                    const isToday = index === todayIndex;
-                    
-                    return (
-                      <div key={index} className="flex flex-col items-center gap-1">
-                        <div 
-                          className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300",
-                            isChecked 
-                              ? "bg-gradient-to-r from-green-400 to-emerald-500 shadow-md shadow-green-500/25" 
-                              : "bg-white/10 backdrop-blur-sm border border-white/20",
-                            isToday && "ring-2 ring-pink-500 ring-offset-1 ring-offset-transparent scale-110"
-                          )}
-                        >
-                          {isChecked ? (
-                            <Check className="h-4 w-4 text-white" />
-                          ) : isToday ? (
-                            <div className="w-2 h-2 rounded-full bg-pink-500" />
-                          ) : null}
-                        </div>
-                        <span className={cn(
-                          "text-xs font-medium",
-                          isToday ? "text-pink-500" : "text-muted-foreground"
-                        )}>
-                          {day}
-                        </span>
-                      </div>
-                    );
-                  })}
+      {/* Weekly Progress - No Accordion */}
+      <GlassCard className="overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="h-4 w-4 text-blue-500" />
+            <span className="font-medium text-sm">Weekly Progress</span>
+          </div>
+          
+          <div className="grid grid-cols-7 gap-3">
+            {days.map((day, index) => {
+              const isChecked = index < todayIndex;
+              const isToday = index === todayIndex;
+              
+              return (
+                <div key={index} className="flex flex-col items-center gap-2">
+                  <div 
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300",
+                      isChecked 
+                        ? "bg-gradient-to-r from-green-400 to-emerald-500 shadow-md shadow-green-500/25" 
+                        : "bg-white/10 backdrop-blur-sm border border-white/20",
+                      isToday && "ring-2 ring-pink-500 ring-offset-1 ring-offset-transparent scale-110"
+                    )}
+                  >
+                    {isChecked ? (
+                      <Check className="h-4 w-4 text-white" />
+                    ) : isToday ? (
+                      <div className="w-2 h-2 rounded-full bg-pink-500" />
+                    ) : null}
+                  </div>
+                  <span className={cn(
+                    "text-xs font-medium",
+                    isToday ? "text-pink-500" : "text-muted-foreground"
+                  )}>
+                    {day}
+                  </span>
                 </div>
-              </div>
-            </AccordionContent>
-          </GlassCard>
-        </AccordionItem>
+              );
+            })}
+          </div>
+        </CardContent>
+      </GlassCard>
 
-        {/* All Titles Accordion */}
+      {/* All Titles Accordion Only */}
+      <Accordion type="single" collapsible className="space-y-2">
         <AccordionItem value="titles" className="border-none">
           <GlassCard className="overflow-hidden">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-indigo-500" />
                 <span className="font-medium text-sm">All Titles & Requirements</span>
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="px-4 pb-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="px-6 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {STREAK_MILESTONES.map((milestone, index) => {
                     const isUnlocked = streak.current_streak >= milestone.days;
                     const isCurrent = milestone.title === streak.current_title;
@@ -190,7 +184,7 @@ const StreakProgress = ({ streak }: { streak: any }) => {
                       <div
                         key={index}
                         className={cn(
-                          "relative p-2 rounded-lg border transition-all duration-300",
+                          "relative p-3 rounded-lg border transition-all duration-300",
                           isUnlocked 
                             ? "bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/30"
                             : isHighestAchieved
@@ -200,14 +194,14 @@ const StreakProgress = ({ streak }: { streak: any }) => {
                         )}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-2 h-2 rounded-full",
                               isUnlocked ? "bg-green-500" : isHighestAchieved ? "bg-amber-500" : "bg-gray-400"
                             )} />
                             <div>
                               <p className={cn(
-                                "font-medium text-xs",
+                                "font-medium text-sm",
                                 isCurrent && "text-amber-500"
                               )}>
                                 {milestone.title}
