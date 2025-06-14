@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
@@ -80,12 +80,14 @@ const Settings = () => {
     }
   };
   
-  const handleThemeChange = (newTheme: "light" | "dark") => {
-    updateTheme(newTheme);
-    toast({
-      title: "Theme updated",
-      description: `Theme switched to ${newTheme} mode.`
-    });
+  const handleThemeChange = (newTheme: string) => {
+    if (newTheme === "light" || newTheme === "dark") {
+      updateTheme(newTheme);
+      toast({
+        title: "Theme updated",
+        description: `Theme switched to ${newTheme} mode.`
+      });
+    }
   };
   
   return (
@@ -148,28 +150,31 @@ const Settings = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label className="text-sm md:text-base">Theme</Label>
-                      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
-                        <Button 
-                          variant={theme === "light" ? "default" : "outline"} 
-                          size={isMobile ? "sm" : "default"}
-                          className="flex items-center gap-2 w-full md:w-auto justify-center"
-                          onClick={() => handleThemeChange("light")}
+                      <ToggleGroup 
+                        type="single" 
+                        value={theme} 
+                        onValueChange={handleThemeChange}
+                        className="justify-start"
+                      >
+                        <ToggleGroupItem 
+                          value="light" 
+                          aria-label="Light mode"
+                          className="flex items-center gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                         >
                           <Sun className="h-4 w-4" />
                           Light Mode
-                        </Button>
-                        <Button 
-                          variant={theme === "dark" ? "default" : "outline"} 
-                          size={isMobile ? "sm" : "default"}
-                          className="flex items-center gap-2 w-full md:w-auto justify-center"
-                          onClick={() => handleThemeChange("dark")}
+                        </ToggleGroupItem>
+                        <ToggleGroupItem 
+                          value="dark" 
+                          aria-label="Dark mode"
+                          className="flex items-center gap-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                         >
                           <Moon className="h-4 w-4" />
                           Dark Mode
-                        </Button>
-                      </div>
+                        </ToggleGroupItem>
+                      </ToggleGroup>
                     </div>
                   </div>
                 </AccordionContent>
