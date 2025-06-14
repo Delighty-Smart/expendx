@@ -1,9 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Loader2, Wallet, Chart, Cloud, Shield, ChevronRight } from "lucide-react";
+import { Loader2, Wallet, PieChart, Cloud, Shield, ChevronRight } from "lucide-react";
 
 interface OnboardingProps {
   onComplete: () => Promise<void>;
@@ -22,7 +21,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       gradient: "from-primary/20 to-primary/5"
     },
     {
-      icon: <Chart className="w-16 h-16 text-secondary" />,
+      icon: <PieChart className="w-16 h-16 text-secondary" />,
       title: "📊 Smart Budgeting Tools",
       description: "Set monthly budgets, get spending alerts, and stay in control of your finances.",
       gradient: "from-secondary/20 to-secondary/5"
