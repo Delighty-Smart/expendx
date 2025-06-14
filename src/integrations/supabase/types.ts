@@ -140,6 +140,10 @@ export type Database = {
           recurring_expense_reminder: boolean | null
           reflection_prompts: boolean | null
           savings_progress: boolean | null
+          streak_breaking_alerts: boolean | null
+          streak_freeze_warnings: boolean | null
+          streak_milestone_alerts: boolean | null
+          streak_recovery_reminders: boolean | null
           unusual_activity: boolean | null
           updated_at: string
           user_id: string
@@ -159,6 +163,10 @@ export type Database = {
           recurring_expense_reminder?: boolean | null
           reflection_prompts?: boolean | null
           savings_progress?: boolean | null
+          streak_breaking_alerts?: boolean | null
+          streak_freeze_warnings?: boolean | null
+          streak_milestone_alerts?: boolean | null
+          streak_recovery_reminders?: boolean | null
           unusual_activity?: boolean | null
           updated_at?: string
           user_id: string
@@ -178,6 +186,10 @@ export type Database = {
           recurring_expense_reminder?: boolean | null
           reflection_prompts?: boolean | null
           savings_progress?: boolean | null
+          streak_breaking_alerts?: boolean | null
+          streak_freeze_warnings?: boolean | null
+          streak_milestone_alerts?: boolean | null
+          streak_recovery_reminders?: boolean | null
           unusual_activity?: boolean | null
           updated_at?: string
           user_id?: string

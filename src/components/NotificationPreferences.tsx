@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,10 @@ interface NotificationPreference {
   reflection_prompts: boolean;
   custom_goal_reminder: boolean;
   business_mode_nudges: boolean;
+  streak_milestone_alerts: boolean;
+  streak_freeze_warnings: boolean;
+  streak_recovery_reminders: boolean;
+  streak_breaking_alerts: boolean;
   preferred_time: string;
 }
 
@@ -230,6 +235,26 @@ const NotificationPreferences = () => {
       key: 'business_mode_nudges' as const,
       label: '💼 Business Mode Nudges',
       description: 'Reminders for business expense tracking'
+    },
+    {
+      key: 'streak_milestone_alerts' as const,
+      label: '🏆 Streak Milestone Alerts',
+      description: 'Celebrate when you reach logging streak milestones'
+    },
+    {
+      key: 'streak_freeze_warnings' as const,
+      label: '❄️ Streak Freeze Warnings',
+      description: 'Alerts when your streak freeze is about to expire'
+    },
+    {
+      key: 'streak_recovery_reminders' as const,
+      label: '🔄 Streak Recovery Reminders',
+      description: 'Gentle nudges to help you get back on track'
+    },
+    {
+      key: 'streak_breaking_alerts' as const,
+      label: '⚠️ Streak Breaking Alerts',
+      description: 'Urgent alerts when your streak is at risk'
     }
   ];
 

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { notificationService } from './notificationService';
 
@@ -14,7 +13,11 @@ export type NotificationType =
   | 'monthly_snapshot'
   | 'reflection_prompts'
   | 'custom_goal_reminder'
-  | 'business_mode_nudges';
+  | 'business_mode_nudges'
+  | 'streak_milestone_alerts'
+  | 'streak_freeze_warnings'
+  | 'streak_recovery_reminders'
+  | 'streak_breaking_alerts';
 
 interface NotificationData {
   title: string;
@@ -201,10 +204,47 @@ class NotificationManager {
 
   async sendBusinessModeNudge(userId: string, stats: any): Promise<boolean> {
     return this.sendNotification(userId, {
-      title: "💼 Business Mode Nudge",
+      title: "💼 Business Mode Nudges",
       message: `${stats.clients} clients, ${stats.expenses} expenses, 1 you — update your business tab before bed?`,
       type: 'business_mode_nudges',
       metadata: stats
+    });
+  }
+
+  // New streak-related notification methods
+  async sendStreakMilestone(userId: string, streakCount: number, title: string): Promise<boolean> {
+    return this.sendNotification(userId, {
+      title: "🏆 Streak Milestone Achieved!",
+      message: `Congratulations! You've reached a ${streakCount}-day logging streak and earned the title "${title}"!`,
+      type: 'streak_milestone_alerts',
+      metadata: { streakCount, title }
+    });
+  }
+
+  async sendStreakFreezeWarning(userId: string, freezesLeft: number): Promise<boolean> {
+    return this.sendNotification(userId, {
+      title: "❄️ Streak Freeze Warning",
+      message: `Your streak freeze protection expires soon! You have ${freezesLeft} freeze${freezesLeft !== 1 ? 's' : ''} remaining.`,
+      type: 'streak_freeze_warnings',
+      metadata: { freezesLeft }
+    });
+  }
+
+  async sendStreakRecoveryReminder(userId: string, daysMissed: number): Promise<boolean> {
+    return this.sendNotification(userId, {
+      title: "🔄 Get Back on Track",
+      message: `You've missed ${daysMissed} day${daysMissed !== 1 ? 's' : ''} of logging. Ready to restart your streak?`,
+      type: 'streak_recovery_reminders',
+      metadata: { daysMissed }
+    });
+  }
+
+  async sendStreakBreakingAlert(userId: string, currentStreak: number): Promise<boolean> {
+    return this.sendNotification(userId, {
+      title: "⚠️ Streak at Risk!",
+      message: `Your ${currentStreak}-day streak is about to break! Log a transaction now to keep it alive.`,
+      type: 'streak_breaking_alerts',
+      metadata: { currentStreak }
     });
   }
 }
