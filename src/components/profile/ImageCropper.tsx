@@ -111,14 +111,14 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
               style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
             />
             
-            {imageLoaded && (
+            {imageLoaded && imageRef.current && (
               <div
                 className="absolute border-2 border-primary bg-primary/20 cursor-move"
                 style={{
-                  left: `${(cropArea.x / imageRef.current!.naturalWidth) * 100}%`,
-                  top: `${(cropArea.y / imageRef.current!.naturalHeight) * 100}%`,
-                  width: `${(cropArea.width / imageRef.current!.naturalWidth) * 100}%`,
-                  height: `${(cropArea.height / imageRef.current!.naturalHeight) * 100}%`,
+                  left: `${(cropArea.x / imageRef.current.naturalWidth) * 100}%`,
+                  top: `${(cropArea.y / imageRef.current.naturalHeight) * 100}%`,
+                  width: `${(cropArea.width / imageRef.current.naturalWidth) * 100}%`,
+                  height: `${(cropArea.height / imageRef.current.naturalHeight) * 100}%`,
                 }}
                 onMouseDown={handleMouseDown}
               >
