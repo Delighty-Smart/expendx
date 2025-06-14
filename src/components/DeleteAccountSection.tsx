@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,30 +54,17 @@ const DeleteAccountSection = () => {
     try {
       console.log("Clearing data for user:", user.id);
       
-      // Delete user data with explicit user_id filtering for safety
-      const deletePromises = [
-        supabase.from('transactions').delete().eq('user_id', user.id),
-        supabase.from('budget_categories').delete().eq('user_id', user.id),
-        supabase.from('savings_goals').delete().eq('user_id', user.id),
-        supabase.from('user_categories').delete().eq('user_id', user.id),
-        supabase.from('user_settings').delete().eq('user_id', user.id),
-        supabase.from('notification_preferences').delete().eq('user_id', user.id),
-        supabase.from('user_streaks').delete().eq('user_id', user.id),
-        supabase.from('monthly_income_estimates').delete().eq('user_id', user.id),
-        supabase.from('alerts').delete().eq('user_id', user.id),
-        supabase.from('user_feedback').delete().eq('user_id', user.id)
-      ];
+      await supabase.from('transactions').delete().eq('user_id', user.id);
+      await supabase.from('budget_categories').delete().eq('user_id', user.id);
+      await supabase.from('savings_goals').delete().eq('user_id', user.id);
+      await supabase.from('user_categories').delete().eq('user_id', user.id);
+      await supabase.from('user_settings').delete().eq('user_id', user.id);
+      await supabase.from('notification_preferences').delete().eq('user_id', user.id);
+      await supabase.from('user_streaks').delete().eq('user_id', user.id);
+      await supabase.from('monthly_income_estimates').delete().eq('user_id', user.id);
+      await supabase.from('alerts').delete().eq('user_id', user.id);
+      await supabase.from('user_feedback').delete().eq('user_id', user.id);
 
-      const results = await Promise.allSettled(deletePromises);
-      
-      // Check for any failures
-      const failures = results.filter(result => result.status === 'rejected');
-      if (failures.length > 0) {
-        console.error("Some data deletion failed:", failures);
-        // Continue anyway - partial deletion is better than no deletion
-      }
-
-      // Clear local storage
       localStorage.clear();
       
       toast({
@@ -97,13 +83,9 @@ const DeleteAccountSection = () => {
     try {
       console.log("Deleting account for user:", user.id);
       
-      // First clear all user data
       await clearUserData();
-      
-      // Delete user profile (must be done before auth deletion)
       await supabase.from('user_profiles').delete().eq('id', user.id);
       
-      // Sign out and redirect
       await signOut();
       navigate('/auth');
       
@@ -123,7 +105,6 @@ const DeleteAccountSection = () => {
     setIsProcessing(true);
     
     try {
-      // Submit feedback if provided
       if (feedbackReason && user) {
         const feedbackText = feedbackReason === "other" ? otherReason : feedbackReason;
         await supabase.from('user_feedback').insert({
@@ -162,32 +143,32 @@ const DeleteAccountSection = () => {
             Why are you leaving?
           </CardTitle>
           <CardDescription className="text-red-600 dark:text-red-300">
-            Help us improve the app.
+            Help us improve.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <RadioGroup value={feedbackReason} onValueChange={(value) => setFeedbackReason(value as FeedbackReason)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="not-useful" id="not-useful" />
-              <Label htmlFor="not-useful">App isn't useful</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="privacy-concerns" id="privacy-concerns" />
-              <Label htmlFor="privacy-concerns">Privacy concerns</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="different-tool" id="different-tool" />
-              <Label htmlFor="different-tool">Using different tool</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="technical-issues" id="technical-issues" />
-              <Label htmlFor="technical-issues">Technical issues</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="other" id="other" />
-              <Label htmlFor="other">Other reason</Label>
-            </div>
-          </RadioGroup>
+          <div className="space-y-3">
+            {[
+              { id: "not-useful", label: "App isn't useful" },
+              { id: "privacy-concerns", label: "Privacy concerns" },
+              { id: "different-tool", label: "Using different tool" },
+              { id: "technical-issues", label: "Technical issues" },
+              { id: "other", label: "Other reason" }
+            ].map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id={option.id}
+                  name="feedback"
+                  value={option.id}
+                  checked={feedbackReason === option.id}
+                  onChange={(e) => setFeedbackReason(e.target.value as FeedbackReason)}
+                  className="h-4 w-4 text-red-600"
+                />
+                <Label htmlFor={option.id}>{option.label}</Label>
+              </div>
+            ))}
+          </div>
 
           {feedbackReason === "other" && (
             <div className="space-y-2">
@@ -244,8 +225,8 @@ const DeleteAccountSection = () => {
           </CardTitle>
           <CardDescription className="text-red-600 dark:text-red-300">
             {selectedOption === "data-only" 
-              ? "This will delete all your data but keep your account." 
-              : "This will permanently delete your account and all data."
+              ? "Delete all data but keep account." 
+              : "Permanently delete account and all data."
             }
           </CardDescription>
         </CardHeader>
