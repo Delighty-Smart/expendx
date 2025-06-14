@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Card } from "@/components/ui/card";
+import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownRight, PlusCircle, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -411,23 +411,23 @@ const IndexPage = () => {
 
           {/* Cards section */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Wallet Balance Card - Only Unarchived */}
-            <Card className="glass-card p-6 animate-float hover:scale-105 transition-transform duration-200">
+            {/* Wallet Balance Card - Using Glass Card Style */}
+            <GlassCard className="p-6 animate-float hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shadow-lg">
                     <DollarSign className="h-8 w-8 text-primary" />
                   </div>
                   {currentBalance > 0 && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-bold">
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-bold shadow-sm">
                       +
                     </div>
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Wallet Balance (Active Only)</p>
-                  <p className="text-2xl font-semibold">{currency.symbol}{formatAmount(currentBalance)}</p>
-                  <div className="mt-1 h-1 w-36 bg-gray-200 rounded-full overflow-hidden">
+                  <p className="text-sm text-muted-foreground mb-1">Wallet Balance (Active Only)</p>
+                  <p className="text-2xl font-bold text-foreground">{currency.symbol}{formatAmount(currentBalance)}</p>
+                  <div className="mt-2 h-1 w-36 bg-muted/50 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
                       style={{ width: `${currentBalance / (monthlyIncome || 1) * 100}%` }}
@@ -435,26 +435,27 @@ const IndexPage = () => {
                   </div>
                 </div>
               </div>
-            </Card>
+            </GlassCard>
 
-            {/* Monthly Income Card - Only Unarchived */}
-            <Card className="glass-card p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200">
+            {/* Monthly Income Card - Using Glass Card Style */}
+            <GlassCard className="p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-secondary/5 to-secondary/10 dark:from-secondary/10 dark:to-secondary/20 border border-border/50">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-2xl bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center shadow-lg">
                     <TrendingUp className="h-8 w-8 text-secondary" />
                   </div>
-                  <svg className="absolute -top-2 -right-2 w-6 h-6">
-                    <circle cx="12" cy="12" r="12" fill="#00AAFF" />
-                    <path d="M8 12L10 14L16 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Monthly Income (Active)</p>
-                  <p className="text-2xl font-semibold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Monthly Income (Active)</p>
+                  <p className="text-2xl font-bold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
                   {monthlyIncome > 0 && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="h-1 w-24 bg-muted/50 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-secondary rounded-full transition-all duration-700 ease-out"
                           style={{ width: `${progressPercentage}%` }}
@@ -467,25 +468,26 @@ const IndexPage = () => {
                   )}
                 </div>
               </div>
-            </Card>
+            </GlassCard>
 
-            {/* Monthly Expenses Card - Only Unarchived */}
-            <Card className="glass-card p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200">
+            {/* Monthly Expenses Card - Using Glass Card Style */}
+            <GlassCard className="p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/20 border border-border/50">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-2xl bg-destructive/10 dark:bg-destructive/20 flex items-center justify-center shadow-lg">
                     <TrendingDown className="h-8 w-8 text-destructive" />
                   </div>
-                  <svg className="absolute -top-2 -right-2 w-6 h-6">
-                    <circle cx="12" cy="12" r="12" fill="#EF4444" />
-                    <path d="M16 8L8 16M8 8L16 16" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-sm">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Monthly Expenses (Active)</p>
-                  <p className="text-2xl font-semibold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <div className="h-1 w-24 bg-gray-200 rounded-full overflow-hidden">
+                  <p className="text-sm text-muted-foreground mb-1">Monthly Expenses (Active)</p>
+                  <p className="text-2xl font-bold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="h-1 w-24 bg-muted/50 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-destructive rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome) * 100 : 0}%` }}
@@ -500,14 +502,14 @@ const IndexPage = () => {
                   </div>
                 </div>
               </div>
-            </Card>
+            </GlassCard>
           </div>
 
-          {/* Charts section - All using only unarchived data */}
+          {/* Charts section - All using glass card style */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Spending by Category Chart */}
-            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 Spending by Category
               </h3>
@@ -549,7 +551,7 @@ const IndexPage = () => {
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
                         border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.5rem",
+                        borderRadius: "0.75rem",
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                       }}
                       cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
@@ -572,11 +574,11 @@ const IndexPage = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
+            </GlassCard>
 
             {/* Daily Income & Expenses Chart */}
-            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-blue-500/5 to-blue-500/10 dark:from-blue-500/10 dark:to-blue-500/20 border border-border/50">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
                 <AreaChart className="h-5 w-5 text-primary" />
                 Daily Income & Expenses
               </h3>
@@ -635,7 +637,7 @@ const IndexPage = () => {
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
                         border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.5rem",
+                        borderRadius: "0.75rem",
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                       }}
                     />
@@ -673,11 +675,11 @@ const IndexPage = () => {
                   </RechartAreaChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
+            </GlassCard>
 
             {/* Balance Trend Chart */}
-            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-green-500/5 to-green-500/10 dark:from-green-500/10 dark:to-green-500/20 border border-border/50">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
                 <LineChart className="h-5 w-5 text-primary" />
                 Balance Trend
               </h3>
@@ -703,7 +705,7 @@ const IndexPage = () => {
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
                         border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.5rem",
+                        borderRadius: "0.75rem",
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                       }}
                     />
@@ -721,11 +723,11 @@ const IndexPage = () => {
                   </RechartLineChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
+            </GlassCard>
 
             {/* Expense Distribution Chart */}
-            <Card className="glass-card p-6 chart-container transition-opacity duration-500">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-purple-500/5 to-purple-500/10 dark:from-purple-500/10 dark:to-purple-500/20 border border-border/50">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
                 <BarChart3 className="h-5 w-5 text-primary" />
                 Expense Distribution
               </h3>
@@ -772,7 +774,7 @@ const IndexPage = () => {
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
                         border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.5rem",
+                        borderRadius: "0.75rem",
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                       }}
                     />
@@ -784,7 +786,7 @@ const IndexPage = () => {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
+            </GlassCard>
           </div>
         </div>
       </PullToRefresh>
