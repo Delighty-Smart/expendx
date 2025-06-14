@@ -3,10 +3,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock, User } from "lucide-react";
 
 interface AuthFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -27,7 +27,6 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
       const email = formData.get('email') as string;
       const password = formData.get('password') as string;
       
-      // Validate inputs
       if (!email || !password) {
         throw new Error("Email and password are required");
       }
@@ -59,84 +58,176 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
   const isDisabled = loading || isProcessing;
 
   return (
-    <Card className="w-full max-w-md p-6 shadow-lg">
-      <Tabs defaultValue="login" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="login">
-          <form onSubmit={(e) => handleSubmit(e, 'login')} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isDisabled}
+    <Card className="w-full shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50">
+            <TabsTrigger 
+              value="login" 
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
             >
-              {isDisabled ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Login"
-              )}
-            </Button>
-          </form>
-        </TabsContent>
+              Sign In
+            </TabsTrigger>
+            <TabsTrigger 
+              value="signup"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+            >
+              Sign Up
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login" className="mt-0">
+            <CardContent className="p-0">
+              <form onSubmit={(e) => handleSubmit(e, 'login')} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                      Email Address
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        placeholder="you@example.com"
+                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="password" 
+                        name="password" 
+                        type="password" 
+                        placeholder="Enter your password"
+                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        required 
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={isDisabled}
+                >
+                  {isDisabled ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </TabsContent>
 
-        <TabsContent value="signup">
-          <form onSubmit={(e) => handleSubmit(e, 'signup')} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="signup-email">Email</Label>
-              <Input id="signup-email" name="email" type="email" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="signup-password">Password</Label>
-              <Input 
-                id="signup-password" 
-                name="password" 
-                type="password" 
-                required 
-                minLength={6}
-              />
-              <p className="text-xs text-muted-foreground">
-                Password must be at least 6 characters long
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" name="firstName" type="text" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" name="lastName" type="text" required />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isDisabled}
-            >
-              {isDisabled ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Sign Up"
-              )}
-            </Button>
-          </form>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="signup" className="mt-0">
+            <CardContent className="p-0">
+              <form onSubmit={(e) => handleSubmit(e, 'signup')} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName" className="text-sm font-medium text-foreground">
+                        First Name
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="firstName" 
+                          name="firstName" 
+                          type="text" 
+                          placeholder="John"
+                          className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName" className="text-sm font-medium text-foreground">
+                        Last Name
+                      </Label>
+                      <Input 
+                        id="lastName" 
+                        name="lastName" 
+                        type="text" 
+                        placeholder="Doe"
+                        className="h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-sm font-medium text-foreground">
+                      Email Address
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-email" 
+                        name="email" 
+                        type="email" 
+                        placeholder="you@example.com"
+                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        required 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-sm font-medium text-foreground">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-password" 
+                        name="password" 
+                        type="password" 
+                        placeholder="Create a strong password"
+                        className="pl-10 h-12 bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        required 
+                        minLength={6}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-1">
+                      Minimum 6 characters required
+                    </p>
+                  </div>
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={isDisabled}
+                >
+                  {isDisabled ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </TabsContent>
+        </Tabs>
+      </CardHeader>
     </Card>
   );
 };

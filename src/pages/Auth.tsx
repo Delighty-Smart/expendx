@@ -16,7 +16,6 @@ const Auth = () => {
   useEffect(() => {
     console.log("Auth page effect - user:", user?.id, "isLoading:", isLoading);
     
-    // If authenticated, decide what to do next
     if (user && !isLoading) {
       const isNewUser = !!user.user_metadata?.isNewUser;
       console.log("User authenticated, is new user:", isNewUser);
@@ -36,10 +35,8 @@ const Auth = () => {
       setProcessingAuth(true);
       console.log("Handling login for:", email);
       await signIn(email, password);
-      // Navigation happens in the useEffect when auth state changes
     } catch (error) {
       console.error("Login error:", error);
-      // Error is handled in the signIn function
     } finally {
       setProcessingAuth(false);
     }
@@ -50,24 +47,18 @@ const Auth = () => {
       setProcessingAuth(true);
       console.log("Handling signup for:", email, "firstName:", firstName, "lastName:", lastName);
       
-      // Ensure metadata is in the correct format
       const metadata = {
         first_name: firstName,
         last_name: lastName,
-        isNewUser: true // Flag to identify new users
+        isNewUser: true
       };
       
       console.log("Signup metadata:", metadata);
-      
-      // Sign up with additional metadata
       await signUp(email, password, metadata);
-      
-      // After successful signup, try to sign in
       console.log("Signup successful, attempting signin");
       await signIn(email, password);
     } catch (error) {
       console.error("Signup error:", error);
-      // Error is handled in the signUp function
     } finally {
       setProcessingAuth(false);
     }
@@ -79,12 +70,11 @@ const Auth = () => {
     return Promise.resolve();
   };
 
-  // Loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-lg">Loading...</p>
+        <p className="text-lg font-medium text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -94,27 +84,37 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Left column: Authentication form */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <AuthForm 
-            onLogin={handleLogin} 
-            onSignup={handleSignup}
-            isProcessing={processingAuth}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Main content */}
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
+            <span className="text-2xl font-bold text-white">E</span>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">ExpendX</h1>
+          <p className="text-muted-foreground">Your Smart Finance Companion</p>
+        </div>
+
+        {/* Auth Form */}
+        <AuthForm 
+          onLogin={handleLogin} 
+          onSignup={handleSignup}
+          isProcessing={processingAuth}
+        />
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-sm text-muted-foreground">
+          <p>Secure • Private • Reliable</p>
         </div>
       </div>
 
-      {/* Right column: Image or branding */}
-      <div className="hidden md:flex flex-1 bg-primary items-center justify-center p-6">
-        <div className="max-w-lg text-white">
-          <h1 className="text-4xl font-bold mb-6">Take control of your finances</h1>
-          <p className="text-xl opacity-90">
-            Track expenses, manage budgets, and achieve your financial goals with our intuitive budgeting tool.
-          </p>
-        </div>
-      </div>
       <Toaster />
     </div>
   );
