@@ -125,66 +125,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notification_preferences: {
-        Row: {
-          budget_nudges: boolean | null
-          business_mode_nudges: boolean | null
-          created_at: string
-          custom_goal_reminder: boolean | null
-          daily_log_reminder: boolean | null
-          id: string
-          month_reset_preview: boolean | null
-          monthly_snapshot: boolean | null
-          night_owl_checkin: boolean | null
-          preferred_time: string | null
-          recurring_expense_reminder: boolean | null
-          reflection_prompts: boolean | null
-          savings_progress: boolean | null
-          unusual_activity: boolean | null
-          updated_at: string
-          user_id: string
-          weekly_recap: boolean | null
-        }
-        Insert: {
-          budget_nudges?: boolean | null
-          business_mode_nudges?: boolean | null
-          created_at?: string
-          custom_goal_reminder?: boolean | null
-          daily_log_reminder?: boolean | null
-          id?: string
-          month_reset_preview?: boolean | null
-          monthly_snapshot?: boolean | null
-          night_owl_checkin?: boolean | null
-          preferred_time?: string | null
-          recurring_expense_reminder?: boolean | null
-          reflection_prompts?: boolean | null
-          savings_progress?: boolean | null
-          unusual_activity?: boolean | null
-          updated_at?: string
-          user_id: string
-          weekly_recap?: boolean | null
-        }
-        Update: {
-          budget_nudges?: boolean | null
-          business_mode_nudges?: boolean | null
-          created_at?: string
-          custom_goal_reminder?: boolean | null
-          daily_log_reminder?: boolean | null
-          id?: string
-          month_reset_preview?: boolean | null
-          monthly_snapshot?: boolean | null
-          night_owl_checkin?: boolean | null
-          preferred_time?: string | null
-          recurring_expense_reminder?: boolean | null
-          reflection_prompts?: boolean | null
-          savings_progress?: boolean | null
-          unusual_activity?: boolean | null
-          updated_at?: string
-          user_id?: string
-          weekly_recap?: boolean | null
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           created_at: string | null
@@ -376,30 +316,6 @@ export type Database = {
           id?: string
           rating?: string
           screenshot_url?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_notification_logs: {
-        Row: {
-          id: string
-          metadata: Json | null
-          notification_type: string
-          sent_at: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          metadata?: Json | null
-          notification_type: string
-          sent_at?: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          metadata?: Json | null
-          notification_type?: string
-          sent_at?: string
           user_id?: string
         }
         Relationships: []
