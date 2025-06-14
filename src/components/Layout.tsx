@@ -1,4 +1,5 @@
-import { Menu, LogOut, Flame, User, Moon, Sun, OfflineIndicator } from "lucide-react";
+
+import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import StreakModal from "./StreakModal";
 import { Badge } from "@/components/ui/badge";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { OfflineIndicator } from "./OfflineIndicator";
 import { 
   DropdownMenu,
   DropdownMenuContent,

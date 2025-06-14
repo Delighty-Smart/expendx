@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -210,15 +211,20 @@ const TransactionsPage = () => {
   const getMonthlyTotals = (month: string) => {
     let income = 0;
     let expense = 0;
-    Object.values(groupedTransactions[month] || {}).forEach(dayTransactions => {
-      dayTransactions.forEach(transaction => {
-        if (transaction.type === 'credit') {
-          income += transaction.amount;
-        } else if (transaction.type === 'debit') {
-          expense += transaction.amount;
+    const monthData = groupedTransactions[month];
+    if (monthData && typeof monthData === 'object') {
+      Object.values(monthData).forEach((dayTransactions: any) => {
+        if (Array.isArray(dayTransactions)) {
+          dayTransactions.forEach(transaction => {
+            if (transaction.type === 'credit') {
+              income += transaction.amount;
+            } else if (transaction.type === 'debit') {
+              expense += transaction.amount;
+            }
+          });
         }
       });
-    });
+    }
     return { income, expense };
   };
 
