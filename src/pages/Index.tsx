@@ -385,7 +385,7 @@ const IndexPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
-        <div className="space-y-6 pb-6">
+        <div className="space-y-4 pb-6">
           <div className="flex flex-wrap gap-4 justify-between">
             <Button
               className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
@@ -413,98 +413,70 @@ const IndexPage = () => {
             </div>
           </div>
 
-          {/* Cards section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Wallet Balance Card - Using Glass Card Style */}
-            <GlassCard className="p-6 animate-float hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shadow-lg">
-                    <DollarSign className="h-8 w-8 text-primary" />
-                  </div>
-                  {currentBalance > 0 && (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                      +
-                    </div>
-                  )}
+          {/* Compact Cards section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Wallet Balance Card - Compact Version */}
+            <GlassCard className="p-4 animate-float hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-primary" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Wallet Balance (Active Only)</p>
-                  <p className="text-2xl font-bold text-foreground">{currency.symbol}{formatAmount(currentBalance)}</p>
-                  <div className="mt-2 h-1 w-36 bg-muted/50 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${currentBalance / (monthlyIncome || 1) * 100}%` }}
-                    ></div>
+                {currentBalance > 0 && (
+                  <div className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                    +{((currentBalance / (monthlyIncome || 1)) * 100).toFixed(0)}%
                   </div>
-                </div>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">WALLET BALANCE</p>
+                <p className="text-xl font-bold text-foreground">{currency.symbol}{formatAmount(currentBalance)}</p>
               </div>
             </GlassCard>
 
-            {/* Monthly Income Card - Using Glass Card Style */}
-            <GlassCard className="p-6 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-secondary/5 to-secondary/10 dark:from-secondary/10 dark:to-secondary/20 border border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center shadow-lg">
-                    <TrendingUp className="h-8 w-8 text-secondary" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
+            {/* Monthly Income Card - Compact Version */}
+            <GlassCard className="p-4 animate-float [animation-delay:200ms] hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-secondary/5 to-secondary/10 dark:from-secondary/10 dark:to-secondary/20 border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-secondary/10 dark:bg-secondary/20 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-secondary" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Income (Active)</p>
-                  <p className="text-2xl font-bold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
-                  {monthlyIncome > 0 && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="h-1 w-24 bg-muted/50 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-secondary rounded-full transition-all duration-700 ease-out"
-                          style={{ width: `${progressPercentage}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : monthlyIncome.toFixed(2)}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                {progressPercentage > 0 && (
+                  <div className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                    +{progressPercentage.toFixed(0)}%
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">MONTHLY INCOME</p>
+                <p className="text-xl font-bold text-secondary">{currency.symbol}{formatAmount(monthlyIncomeTotal)}</p>
+                {monthlyIncome > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : monthlyIncome.toFixed(2)}
+                  </p>
+                )}
               </div>
             </GlassCard>
 
-            {/* Monthly Expenses Card - Using Glass Card Style */}
-            <GlassCard className="p-6 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/20 border border-border/50">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-destructive/10 dark:bg-destructive/20 flex items-center justify-center shadow-lg">
-                    <TrendingDown className="h-8 w-8 text-destructive" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-sm">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
+            {/* Monthly Expenses Card - Compact Version */}
+            <GlassCard className="p-4 animate-float [animation-delay:400ms] hover:scale-105 transition-transform duration-200 bg-gradient-to-br from-destructive/5 to-destructive/10 dark:from-destructive/10 dark:to-destructive/20 border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-destructive/10 dark:bg-destructive/20 flex items-center justify-center">
+                  <TrendingDown className="h-4 w-4 text-destructive" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Monthly Expenses (Active)</p>
-                  <p className="text-2xl font-bold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="h-1 w-24 bg-muted/50 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-destructive rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome) * 100 : 0}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {monthlyIncome > 0 
-                        ? `${((monthlyExpenses / monthlyIncome) * 100).toFixed(0)}% of income`
-                        : 'No income estimate'
-                      }
-                    </p>
+                {monthlyExpenses > 0 && monthlyIncome > 0 && (
+                  <div className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                    -{((monthlyExpenses / monthlyIncome) * 100).toFixed(0)}%
                   </div>
-                </div>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">MONTHLY EXPENSES</p>
+                <p className="text-xl font-bold text-destructive">{currency.symbol}{formatAmount(monthlyExpenses)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {monthlyIncome > 0 
+                    ? `${((monthlyExpenses / monthlyIncome) * 100).toFixed(0)}% of income`
+                    : 'No income estimate'
+                  }
+                </p>
               </div>
             </GlassCard>
           </div>
