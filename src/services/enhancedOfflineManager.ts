@@ -133,7 +133,6 @@ class EnhancedOfflineManager {
     
     if (error) throw error;
     
-    // Cast the data to properly typed Transaction objects
     return (data || []).map(item => ({
       ...item,
       type: item.type as TransactionType
@@ -223,8 +222,14 @@ class EnhancedOfflineManager {
     return this.dataCache?.settings;
   }
 
-  // Enhanced offline operations with better sync tracking
+  // Enhanced offline operations - ONLY queue when offline
   async addTransactionOffline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
+    // If online, save directly to database
+    if (this.isOnline) {
+      return await this.addTransactionOnline(transactionData);
+    }
+
+    // If offline, use offline queue system
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const transaction: Transaction = {
@@ -232,13 +237,13 @@ class EnhancedOfflineManager {
       id: tempId
     };
 
-    // Add to local cache immediately with sync status
+    // Add to local cache immediately
     if (this.dataCache) {
       this.dataCache.transactions.unshift(transaction);
       await this.saveDataCache();
     }
 
-    // Add to sync queue with enhanced tracking
+    // Add to sync queue for when we're back online
     await this.addToSyncQueue({
       type: 'INSERT',
       table: 'transactions',
@@ -247,11 +252,74 @@ class EnhancedOfflineManager {
       status: 'pending'
     });
 
-    console.log('Transaction added offline with temp ID:', tempId);
+    console.log('Transaction queued offline with temp ID:', tempId);
     return tempId;
   }
 
+  private async addTransactionOnline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({ ...transactionData, user_id: user.id })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Update local cache with the new transaction
+    if (this.dataCache) {
+      const newTransaction = {
+        ...data,
+        type: data.type as TransactionType
+      };
+      this.dataCache.transactions.unshift(newTransaction);
+      await this.saveDataCache();
+    }
+
+    console.log('Transaction saved online:', data.id);
+    return data.id;
+  }
+
   async updateTransactionOffline(id: string, updates: Partial<Transaction>): Promise<void> {
+    // If online, update directly in database
+    if (this.isOnline) {
+      return await this.updateTransactionOnline(id, updates);
+    }
+
+    // If offline, use offline queue system
+    if (this.dataCache) {
+      const index = this.dataCache.transactions.findIndex(t => t.id === id);
+      if (index !== -1) {
+        this.dataCache.transactions[index] = { 
+          ...this.dataCache.transactions[index], 
+          ...updates 
+        };
+        await this.saveDataCache();
+      }
+    }
+
+    await this.addToSyncQueue({
+      type: 'UPDATE',
+      table: 'transactions',
+      data: { id, ...updates },
+      status: 'pending'
+    });
+  }
+
+  private async updateTransactionOnline(id: string, updates: Partial<Transaction>): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+
+    const { error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
     // Update local cache
     if (this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
@@ -264,23 +332,22 @@ class EnhancedOfflineManager {
       }
     }
 
-    // Add to sync queue with proper status tracking
-    await this.addToSyncQueue({
-      type: 'UPDATE',
-      table: 'transactions',
-      data: { id, ...updates },
-      status: 'pending'
-    });
+    console.log('Transaction updated online:', id);
   }
 
   async deleteTransactionOffline(id: string): Promise<void> {
-    // Remove from local cache
+    // If online, delete directly from database
+    if (this.isOnline) {
+      return await this.deleteTransactionOnline(id);
+    }
+
+    // If offline, use offline queue system
     if (this.dataCache) {
       this.dataCache.transactions = this.dataCache.transactions.filter(t => t.id !== id);
       await this.saveDataCache();
     }
 
-    // Add to sync queue (only if not a temp ID)
+    // Only queue if not a temp ID
     if (!id.startsWith('temp_')) {
       await this.addToSyncQueue({
         type: 'DELETE',
@@ -295,6 +362,27 @@ class EnhancedOfflineManager {
       );
       await this.saveSyncQueue();
     }
+  }
+
+  private async deleteTransactionOnline(id: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Remove from local cache
+    if (this.dataCache) {
+      this.dataCache.transactions = this.dataCache.transactions.filter(t => t.id !== id);
+      await this.saveDataCache();
+    }
+
+    console.log('Transaction deleted online:', id);
   }
 
   // Enhanced sync queue management with better retry logic

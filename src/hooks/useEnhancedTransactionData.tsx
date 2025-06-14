@@ -29,19 +29,61 @@ export function useEnhancedTransactionData(filter?: {
   } = useQuery({
     queryKey,
     queryFn: async () => {
-      console.log("Fetching transactions with enhanced offline support, filters:", filter);
+      console.log("Fetching transactions with enhanced system, filters:", filter);
       
-      // Always try to get from local cache first for immediate response
-      const cachedTransactions = enhancedOfflineManager.getTransactions(filter);
-      
-      // If online, trigger background sync but return cached data immediately
+      // If online, fetch from database and update cache
       if (navigator.onLine) {
-        enhancedOfflineManager.performFullDataSync().catch(error => {
-          console.error("Background sync failed:", error);
-        });
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('No authenticated user');
+
+          let query = supabase.from("transactions").select("*").eq('user_id', user.id);
+          
+          // Apply filters
+          if (!filter?.includeArchived) {
+            query = query.eq("archived", false);
+          }
+          
+          if (filter) {
+            if (filter.type && filter.type !== "all") {
+              query = query.eq("type", filter.type);
+            }
+            
+            if (filter.startDate) {
+              query = query.gte("date", filter.startDate);
+            }
+            
+            if (filter.endDate) {
+              query = query.lte("date", filter.endDate);
+            }
+            
+            if (filter.category && filter.category !== "All") {
+              query = query.eq("category", filter.category);
+            }
+          }
+          
+          query = query.order("date", { ascending: false });
+          
+          const { data, error } = await query;
+          
+          if (error) throw error;
+          
+          // Update cache with fresh data
+          await enhancedOfflineManager.updateCacheWithFreshData(data || []);
+          
+          return (data || []).map(item => ({
+            ...item,
+            type: item.type as TransactionType
+          }));
+        } catch (fetchError) {
+          console.error("Error fetching from database:", fetchError);
+          // Fallback to cache
+          return enhancedOfflineManager.getTransactions(filter);
+        }
       }
       
-      return cachedTransactions;
+      // If offline, get from cache
+      return enhancedOfflineManager.getTransactions(filter);
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10,   // 10 minutes
@@ -63,26 +105,24 @@ export function useEnhancedTransactionData(filter?: {
         (payload) => {
           console.log('Real-time transaction changes detected:', payload);
           
-          // Trigger a background sync to update local cache
-          enhancedOfflineManager.performFullDataSync().then(() => {
-            queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
-          });
+          // Invalidate queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
           
           const eventType = payload.eventType;
           if (eventType === 'INSERT') {
             toast({
-              title: "Transaction Synced",
-              description: "A new transaction has been synced from the cloud"
+              title: "Transaction Added",
+              description: "A new transaction has been added"
             });
           } else if (eventType === 'UPDATE') {
             toast({
               title: "Transaction Updated", 
-              description: "A transaction has been updated and synced"
+              description: "A transaction has been updated"
             });
           } else if (eventType === 'DELETE') {
             toast({
               title: "Transaction Deleted",
-              description: "A transaction has been deleted and synced"
+              description: "A transaction has been deleted"
             });
           }
         }
@@ -94,15 +134,13 @@ export function useEnhancedTransactionData(filter?: {
     };
   }, [queryClient, toast]);
 
-  // Enhanced add transaction with offline support
+  // Enhanced add transaction - handles online/offline automatically
   const addTransactionOffline = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {
     try {
       const tempId = await enhancedOfflineManager.addTransactionOffline(transactionData);
       
-      // Immediately update the query data to show the new transaction
+      // Immediately update the query data
       queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
-      
-      // Also invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       
