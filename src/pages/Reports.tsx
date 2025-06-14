@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePickerWithRange } from "@/components/DateRangePicker";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction } from "@/types/transactions";
@@ -41,6 +42,7 @@ const Reports = () => {
     to: new Date()
   });
   const [isExporting, setIsExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch transactions data
   const { data: transactions } = useQuery({
@@ -298,6 +300,337 @@ const Reports = () => {
     );
   };
 
+  const tabOptions = [
+    { value: "overview", label: "📊 Overview" },
+    { value: "expenses", label: "💰 Expenses" },
+    { value: "budgets", label: "🎯 Budgets" },
+    { value: "transactions", label: "📝 Transactions" }
+  ];
+
+  const renderTabContent = (tabValue: string) => {
+    switch (tabValue) {
+      case "overview":
+        return (
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Income vs Expenses Over Time</h3>
+              <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={timeSeriesData}
+                    margin={{ 
+                      top: 20, 
+                      right: isMobile ? 10 : 30, 
+                      left: isMobile ? 0 : 20, 
+                      bottom: 5 
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                    <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                    <Bar dataKey="income" name="Income" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="expenses" name="Expenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="savings" name="Savings" fill="#10B981" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            <Separator className="my-8" />
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Expenses by Category</h3>
+                <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expensesByCategory}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={!isMobile ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : false}
+                        outerRadius={isMobile ? 70 : 90}
+                        fill="#8884d8"
+                        dataKey="amount"
+                        nameKey="category"
+                      >
+                        {expensesByCategory.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      {!isMobile && (
+                        <Legend 
+                          wrapperStyle={{ fontSize: 10 }}
+                          layout="vertical"
+                          align="right"
+                          verticalAlign="middle"
+                        />
+                      )}
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {isMobile && expensesByCategory.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                    {expensesByCategory.map((entry, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-sm" 
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        />
+                        <span className="truncate">{entry.category}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Transaction Distribution</h3>
+                <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Income', value: summaryStats.totalIncome },
+                          { name: 'Expenses', value: summaryStats.totalExpenses },
+                          { name: 'Savings', value: summaryStats.totalSavings }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={!isMobile ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : false}
+                        outerRadius={isMobile ? 70 : 90}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        <Cell fill="#3B82F6" />
+                        <Cell fill="#EF4444" />
+                        <Cell fill="#10B981" />
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      {!isMobile && (
+                        <Legend 
+                          wrapperStyle={{ fontSize: 10 }}
+                          layout="vertical"
+                          align="right"
+                          verticalAlign="middle"
+                        />
+                      )}
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {isMobile && (
+                  <div className="mt-4 grid grid-cols-1 gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                      <span>Income</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-sm bg-red-500" />
+                      <span>Expenses</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-sm bg-green-500" />
+                      <span>Savings</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "expenses":
+        return (
+          <div>
+            <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Expense Analysis</h3>
+            
+            <div className="h-[350px] w-full mb-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={expensesByCategory}
+                  layout="vertical"
+                  margin={{ 
+                    top: 5, 
+                    right: isMobile ? 10 : 30, 
+                    left: isMobile ? 70 : 100, 
+                    bottom: 5 
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="category" 
+                    tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }}
+                    width={isMobile ? 70 : 100} 
+                  />
+                  <Tooltip 
+                    formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Bar dataKey="amount" name="Amount" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70">
+              <CardContent className="p-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-700">
+                        <th className="text-left py-3 font-semibold text-slate-700 dark:text-slate-300">Category</th>
+                        <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Amount</th>
+                        <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">% of Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expensesByCategory.sort((a, b) => b.amount - a.amount).map((item, index) => (
+                        <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="py-3 text-slate-800 dark:text-slate-200">{item.category}</td>
+                          <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                            {currency.symbol}{item.amount.toFixed(2)}
+                          </td>
+                          <td className="text-right py-3 text-slate-600 dark:text-slate-400">
+                            {summaryStats.totalExpenses > 0 
+                              ? ((item.amount / summaryStats.totalExpenses) * 100).toFixed(1) 
+                              : 0}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "budgets":
+        return (
+          <div>
+            <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Budget Analysis</h3>
+            
+            <div className="h-[350px] w-full mb-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={budgetVsActual}
+                  margin={{ 
+                    top: 20, 
+                    right: isMobile ? 10 : 30, 
+                    left: isMobile ? 0 : 20, 
+                    bottom: 5 
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="category" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                  <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
+                  <Bar dataKey="budget" name="Budget" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="spent" name="Actual Spending" fill="#10B981" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70">
+              <CardContent className="p-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-700">
+                        <th className="text-left py-3 font-semibold text-slate-700 dark:text-slate-300">Category</th>
+                        <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Budget</th>
+                        <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Spent</th>
+                        <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Remaining</th>
+                        <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">% Used</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {budgetVsActual.map((item, index) => (
+                        <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="py-3 text-slate-800 dark:text-slate-200">{item.category}</td>
+                          <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                            {currency.symbol}{item.budget.toFixed(2)}
+                          </td>
+                          <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                            {currency.symbol}{item.spent.toFixed(2)}
+                          </td>
+                          <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
+                            {currency.symbol}{item.remaining.toFixed(2)}
+                          </td>
+                          <td className={`text-right py-3 font-semibold ${
+                            (item.spent / item.budget) * 100 > 90 
+                              ? "text-red-600" 
+                              : (item.spent / item.budget) * 100 > 75
+                              ? "text-yellow-600"
+                              : "text-green-600"
+                          }`}>
+                            {item.budget > 0 ? ((item.spent / item.budget) * 100).toFixed(1) : 0}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "transactions":
+        return (
+          <TransactionsTable 
+            transactions={filteredTransactions} 
+            currency={currency}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -419,326 +752,42 @@ const Reports = () => {
             </Card>
           </div>
 
-          {/* Analytics Tabs */}
+          {/* Analytics Section */}
           <Card className="border-0 shadow-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
             <CardContent className="p-0">
-              <Tabs defaultValue="overview" className="w-full">
-                <div className="px-6 pt-6">
-                  <TabsList className={`grid w-full ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 lg:grid-cols-4'} bg-slate-100 dark:bg-slate-700 rounded-lg p-1`}>
-                    <TabsTrigger value="overview" className="rounded-md font-medium text-sm">Overview</TabsTrigger>
-                    <TabsTrigger value="expenses" className="rounded-md font-medium text-sm">Expenses</TabsTrigger>
-                    <TabsTrigger value="budgets" className="rounded-md font-medium text-sm">Budgets</TabsTrigger>
-                    <TabsTrigger value="transactions" className="rounded-md font-medium text-sm">Transactions</TabsTrigger>
-                  </TabsList>
+              {/* Mobile-friendly tab navigation */}
+              {isMobile ? (
+                <div className="px-6 pt-6 pb-4">
+                  <Select value={activeTab} onValueChange={setActiveTab}>
+                    <SelectTrigger className="w-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 rounded-lg h-12 text-base font-medium">
+                      <SelectValue placeholder="Select a view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tabOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-base py-3">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                
-                <TabsContent value="overview" className="p-6 space-y-8">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Income vs Expenses Over Time</h3>
-                    <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={timeSeriesData}
-                          margin={{ 
-                            top: 20, 
-                            right: isMobile ? 10 : 30, 
-                            left: isMobile ? 0 : 20, 
-                            bottom: 5 
-                          }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis dataKey="date" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
-                          <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
-                          <Tooltip 
-                            contentStyle={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                              border: 'none',
-                              borderRadius: '8px',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                            }}
-                          />
-                          <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                          <Bar dataKey="income" name="Income" fill="#3B82F6" radius={[2, 2, 0, 0]} />
-                          <Bar dataKey="expenses" name="Expenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
-                          <Bar dataKey="savings" name="Savings" fill="#10B981" radius={[2, 2, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+              ) : (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <div className="px-6 pt-6">
+                    <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                      <TabsTrigger value="overview" className="rounded-md font-medium text-sm">Overview</TabsTrigger>
+                      <TabsTrigger value="expenses" className="rounded-md font-medium text-sm">Expenses</TabsTrigger>
+                      <TabsTrigger value="budgets" className="rounded-md font-medium text-sm">Budgets</TabsTrigger>
+                      <TabsTrigger value="transactions" className="rounded-md font-medium text-sm">Transactions</TabsTrigger>
+                    </TabsList>
                   </div>
-                  
-                  <Separator className="my-8" />
-                  
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                    <div>
-                      <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Expenses by Category</h3>
-                      <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={expensesByCategory}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={!isMobile ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : false}
-                              outerRadius={isMobile ? 70 : 90}
-                              fill="#8884d8"
-                              dataKey="amount"
-                              nameKey="category"
-                            >
-                              {expensesByCategory.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip 
-                              formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
-                              contentStyle={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                border: 'none',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                              }}
-                            />
-                            {!isMobile && (
-                              <Legend 
-                                wrapperStyle={{ fontSize: 10 }}
-                                layout="vertical"
-                                align="right"
-                                verticalAlign="middle"
-                              />
-                            )}
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {isMobile && expensesByCategory.length > 0 && (
-                        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                          {expensesByCategory.map((entry, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div 
-                                className="w-3 h-3 rounded-sm" 
-                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                              />
-                              <span className="truncate">{entry.category}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Transaction Distribution</h3>
-                      <div className="h-[350px] w-full bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={[
-                                { name: 'Income', value: summaryStats.totalIncome },
-                                { name: 'Expenses', value: summaryStats.totalExpenses },
-                                { name: 'Savings', value: summaryStats.totalSavings }
-                              ]}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={!isMobile ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : false}
-                              outerRadius={isMobile ? 70 : 90}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              <Cell fill="#3B82F6" />
-                              <Cell fill="#EF4444" />
-                              <Cell fill="#10B981" />
-                            </Pie>
-                            <Tooltip 
-                              formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
-                              contentStyle={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                border: 'none',
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                              }}
-                            />
-                            {!isMobile && (
-                              <Legend 
-                                wrapperStyle={{ fontSize: 10 }}
-                                layout="vertical"
-                                align="right"
-                                verticalAlign="middle"
-                              />
-                            )}
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {isMobile && (
-                        <div className="mt-4 grid grid-cols-1 gap-2 text-xs">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-sm bg-blue-500" />
-                            <span>Income</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-sm bg-red-500" />
-                            <span>Expenses</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-sm bg-green-500" />
-                            <span>Savings</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="expenses" className="p-6">
-                  <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Expense Analysis</h3>
-                  
-                  <div className="h-[350px] w-full mb-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={expensesByCategory}
-                        layout="vertical"
-                        margin={{ 
-                          top: 5, 
-                          right: isMobile ? 10 : 30, 
-                          left: isMobile ? 70 : 100, 
-                          bottom: 5 
-                        }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
-                        <YAxis 
-                          type="category" 
-                          dataKey="category" 
-                          tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }}
-                          width={isMobile ? 70 : 100} 
-                        />
-                        <Tooltip 
-                          formatter={(value) => `${currency.symbol}${parseFloat(value as string).toFixed(2)}`}
-                          contentStyle={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                          }}
-                        />
-                        <Bar dataKey="amount" name="Amount" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  
-                  <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70">
-                    <CardContent className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-700">
-                              <th className="text-left py-3 font-semibold text-slate-700 dark:text-slate-300">Category</th>
-                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Amount</th>
-                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">% of Total</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {expensesByCategory.sort((a, b) => b.amount - a.amount).map((item, index) => (
-                              <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                <td className="py-3 text-slate-800 dark:text-slate-200">{item.category}</td>
-                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
-                                  {currency.symbol}{item.amount.toFixed(2)}
-                                </td>
-                                <td className="text-right py-3 text-slate-600 dark:text-slate-400">
-                                  {summaryStats.totalExpenses > 0 
-                                    ? ((item.amount / summaryStats.totalExpenses) * 100).toFixed(1) 
-                                    : 0}%
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="budgets" className="p-6">
-                  <h3 className="text-xl font-semibold mb-6 text-slate-800 dark:text-slate-200">Budget Analysis</h3>
-                  
-                  <div className="h-[350px] w-full mb-8 bg-gradient-to-br from-slate-50 to-white dark:from-slate-800 dark:to-slate-700 rounded-xl p-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={budgetVsActual}
-                        margin={{ 
-                          top: 20, 
-                          right: isMobile ? 10 : 30, 
-                          left: isMobile ? 0 : 20, 
-                          bottom: 5 
-                        }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="category" tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
-                        <YAxis tick={{ fontSize: isMobile ? 10 : 12, fill: '#64748b' }} />
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                          }}
-                        />
-                        <Legend wrapperStyle={{ fontSize: isMobile ? 10 : 12 }} />
-                        <Bar dataKey="budget" name="Budget" fill="#3B82F6" radius={[2, 2, 0, 0]} />
-                        <Bar dataKey="spent" name="Actual Spending" fill="#10B981" radius={[2, 2, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  
-                  <Card className="border-0 shadow-lg bg-white/70 dark:bg-slate-800/70">
-                    <CardContent className="p-6">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-700">
-                              <th className="text-left py-3 font-semibold text-slate-700 dark:text-slate-300">Category</th>
-                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Budget</th>
-                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Spent</th>
-                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">Remaining</th>
-                              <th className="text-right py-3 font-semibold text-slate-700 dark:text-slate-300">% Used</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {budgetVsActual.map((item, index) => (
-                              <tr key={index} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                <td className="py-3 text-slate-800 dark:text-slate-200">{item.category}</td>
-                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
-                                  {currency.symbol}{item.budget.toFixed(2)}
-                                </td>
-                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
-                                  {currency.symbol}{item.spent.toFixed(2)}
-                                </td>
-                                <td className="text-right py-3 font-medium text-slate-800 dark:text-slate-200">
-                                  {currency.symbol}{item.remaining.toFixed(2)}
-                                </td>
-                                <td className={`text-right py-3 font-semibold ${
-                                  (item.spent / item.budget) * 100 > 90 
-                                    ? "text-red-600" 
-                                    : (item.spent / item.budget) * 100 > 75
-                                    ? "text-yellow-600"
-                                    : "text-green-600"
-                                }`}>
-                                  {item.budget > 0 ? ((item.spent / item.budget) * 100).toFixed(1) : 0}%
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="transactions" className="p-6">
-                  <TransactionsTable 
-                    transactions={filteredTransactions} 
-                    currency={currency}
-                  />
-                </TabsContent>
-              </Tabs>
+                </Tabs>
+              )}
+
+              {/* Tab Content */}
+              <div className="p-6">
+                {renderTabContent(activeTab)}
+              </div>
             </CardContent>
           </Card>
         </div>
