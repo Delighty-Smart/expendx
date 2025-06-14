@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun } from "lucide-react";
+import { Moon, Search, Sun, Palette, Tags, Archive, HardDrive, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
@@ -17,6 +17,7 @@ import { DebugSection } from "@/components/DebugSection";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import "../components/ui/smoothScroll.css";
 
 const Settings = () => {
@@ -30,6 +31,7 @@ const Settings = () => {
   const { toast } = useToast();
   const { refreshData } = useRefresh();
   const [search, setSearch] = useState("");
+  const [openSection, setOpenSection] = useState<string>("");
   const isMobile = useIsMobile();
   
   // Auto-save search state to localStorage
@@ -38,11 +40,23 @@ const Settings = () => {
     if (savedSearch) {
       setSearch(savedSearch);
     }
+    
+    // Load last opened section
+    const savedSection = localStorage.getItem('settings_open_section');
+    if (savedSection) {
+      setOpenSection(savedSection);
+    }
   }, []);
 
   useEffect(() => {
     localStorage.setItem('settings_currency_search', search);
   }, [search]);
+
+  // Save opened section to localStorage
+  const handleSectionChange = (value: string) => {
+    setOpenSection(value);
+    localStorage.setItem('settings_open_section', value);
+  };
   
   const filteredCurrencies = currencies.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -77,70 +91,135 @@ const Settings = () => {
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
         <div className="space-y-6">
-          <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
+          <div className="flex items-center gap-2">
+            <SettingsIcon className="h-6 w-6" />
+            <h1 className="text-xl md:text-2xl font-bold">Settings</h1>
+          </div>
 
-          <Card className="p-4 md:p-6 space-y-6 glass-card">
-            <div className="space-y-2">
-              <Label className="text-sm md:text-base">Currency</Label>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search currencies..." 
-                    value={search} 
-                    onChange={e => setSearch(e.target.value)} 
-                    className="pl-9 h-9 md:h-10 text-sm"
-                  />
-                </div>
-                <Select value={currency.code} onValueChange={handleCurrencyChange}>
-                  <SelectTrigger className="h-9 md:h-10 text-sm">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent 
-                    className="bg-popover text-popover-foreground backdrop-blur-lg"
-                  >
-                    <ScrollArea className="h-[200px]">
-                      {filteredCurrencies.map(c => (
-                        <SelectItem key={c.code} value={c.code} className="text-sm">
-                          {c.name} ({c.symbol})
-                        </SelectItem>
-                      ))}
-                    </ScrollArea>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <Card className="glass-card">
+            <Accordion 
+              type="single" 
+              collapsible 
+              value={openSection}
+              onValueChange={handleSectionChange}
+              className="w-full"
+            >
+              <AccordionItem value="general" className="border-b">
+                <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <Palette className="h-5 w-5 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">General Settings</div>
+                      <div className="text-sm text-muted-foreground">Currency and theme preferences</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 md:px-6 pb-6">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm md:text-base">Currency</Label>
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input 
+                            placeholder="Search currencies..." 
+                            value={search} 
+                            onChange={e => setSearch(e.target.value)} 
+                            className="pl-9 h-9 md:h-10 text-sm"
+                          />
+                        </div>
+                        <Select value={currency.code} onValueChange={handleCurrencyChange}>
+                          <SelectTrigger className="h-9 md:h-10 text-sm">
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                          <SelectContent 
+                            className="bg-popover text-popover-foreground backdrop-blur-lg"
+                          >
+                            <ScrollArea className="h-[200px]">
+                              {filteredCurrencies.map(c => (
+                                <SelectItem key={c.code} value={c.code} className="text-sm">
+                                  {c.name} ({c.symbol})
+                                </SelectItem>
+                              ))}
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm md:text-base">Theme</Label>
-              <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
-                <Button 
-                  variant={theme === "light" ? "default" : "outline"} 
-                  size={isMobile ? "sm" : "default"}
-                  className="flex items-center gap-2 w-full md:w-auto justify-center"
-                  onClick={() => handleThemeChange("light")}
-                >
-                  <Sun className="h-4 w-4" />
-                  Light Mode
-                </Button>
-                <Button 
-                  variant={theme === "dark" ? "default" : "outline"} 
-                  size={isMobile ? "sm" : "default"}
-                  className="flex items-center gap-2 w-full md:w-auto justify-center"
-                  onClick={() => handleThemeChange("dark")}
-                >
-                  <Moon className="h-4 w-4" />
-                  Dark Mode
-                </Button>
-              </div>
-            </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm md:text-base">Theme</Label>
+                      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
+                        <Button 
+                          variant={theme === "light" ? "default" : "outline"} 
+                          size={isMobile ? "sm" : "default"}
+                          className="flex items-center gap-2 w-full md:w-auto justify-center"
+                          onClick={() => handleThemeChange("light")}
+                        >
+                          <Sun className="h-4 w-4" />
+                          Light Mode
+                        </Button>
+                        <Button 
+                          variant={theme === "dark" ? "default" : "outline"} 
+                          size={isMobile ? "sm" : "default"}
+                          className="flex items-center gap-2 w-full md:w-auto justify-center"
+                          onClick={() => handleThemeChange("dark")}
+                        >
+                          <Moon className="h-4 w-4" />
+                          Dark Mode
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="categories" className="border-b">
+                <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <Tags className="h-5 w-5 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">Manage Categories</div>
+                      <div className="text-sm text-muted-foreground">Create and organize transaction categories</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 md:px-6 pb-6">
+                  <CategoryManagement />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="archive" className="border-b">
+                <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <Archive className="h-5 w-5 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">Archived Transactions</div>
+                      <div className="text-sm text-muted-foreground">View and manage archived data</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 md:px-6 pb-6">
+                  <ArchiveManagement />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="offline" className="border-0">
+                <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <HardDrive className="h-5 w-5 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">Offline and Cache</div>
+                      <div className="text-sm text-muted-foreground">Manage offline data storage and sync settings</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 md:px-6 pb-6">
+                  <DebugSection />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </Card>
-          
-          <CategoryManagement />
-          
-          <ArchiveManagement />
-          
-          <DebugSection />
         </div>
       </PullToRefresh>
     </Layout>
