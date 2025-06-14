@@ -1,5 +1,5 @@
 
-import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield } from "lucide-react";
+import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ const Layout = ({
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
   const {
     theme,
     updateTheme
@@ -47,6 +48,48 @@ const Layout = ({
       }
     };
     updateStreak();
+  }, []);
+
+  useEffect(() => {
+    const fetchUnreadAlerts = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('alerts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('read', false);
+
+        if (error) throw error;
+        setUnreadAlerts(data?.length || 0);
+      } catch (error) {
+        console.error('Error fetching unread alerts:', error);
+      }
+    };
+
+    fetchUnreadAlerts();
+
+    // Set up realtime subscription for alerts
+    const channel = supabase
+      .channel('alerts-count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'alerts'
+        },
+        () => {
+          fetchUnreadAlerts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -115,6 +158,11 @@ const Layout = ({
     label: "Reports",
     icon: BarChart
   }, {
+    path: "/alerts",
+    label: "Alerts",
+    icon: Bell,
+    badge: unreadAlerts > 0 ? unreadAlerts : undefined
+  }, {
     path: "/feedback",
     label: "Feedback",
     icon: MessageSquare
@@ -171,6 +219,7 @@ const Layout = ({
           return <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`} onClick={() => setIsSidebarOpen(false)}>
                 <IconComponent className="h-4 w-4 flex-shrink-0" />
                 <span className="text-sm font-medium">{item.label}</span>
+                {item.badge && <Badge variant="destructive" className="ml-auto text-xs">{item.badge}</Badge>}
                 {item.path === "/feedback" && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full"></div>}
               </Link>;
         })}

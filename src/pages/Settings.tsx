@@ -8,12 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Tags, Archive, HardDrive, Settings as SettingsIcon } from "lucide-react";
+import { Moon, Search, Sun, Palette, Tags, Archive, HardDrive, Settings as SettingsIcon, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
 import { ArchiveManagement } from "@/components/ArchiveManagement";
 import { DebugSection } from "@/components/DebugSection";
+import NotificationPreferences from "@/components/NotificationPreferences";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
@@ -171,6 +172,21 @@ const Settings = () => {
                       </div>
                     </div>
                   </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="notifications" className="border-b">
+                <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <Bell className="h-5 w-5 text-primary" />
+                    <div className="text-left">
+                      <div className="font-medium">Notification Preferences</div>
+                      <div className="text-sm text-muted-foreground">Manage your notification settings</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 md:px-6 pb-6">
+                  <NotificationPreferences />
                 </AccordionContent>
               </AccordionItem>
 

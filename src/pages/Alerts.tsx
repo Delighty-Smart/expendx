@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, Mirror, Settings, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -162,6 +162,30 @@ const Alerts = () => {
 
   const getAlertIcon = (type: string) => {
     switch (type) {
+      case 'weekly_recap':
+        return <Calendar className="text-blue-500" />;
+      case 'budget_nudges':
+        return <Target className="text-yellow-500" />;
+      case 'unusual_activity':
+        return <AlertTriangle className="text-red-500" />;
+      case 'daily_log_reminder':
+        return <Bell className="text-purple-500" />;
+      case 'savings_progress':
+        return <TrendingUp className="text-green-500" />;
+      case 'month_reset_preview':
+        return <Calendar className="text-orange-500" />;
+      case 'recurring_expense_reminder':
+        return <Clock className="text-blue-600" />;
+      case 'night_owl_checkin':
+        return <Moon className="text-indigo-500" />;
+      case 'monthly_snapshot':
+        return <BarChart className="text-emerald-500" />;
+      case 'reflection_prompts':
+        return <Mirror className="text-pink-500" />;
+      case 'custom_goal_reminder':
+        return <Settings className="text-gray-500" />;
+      case 'business_mode_nudges':
+        return <Briefcase className="text-slate-600" />;
       case 'budget_alert':
         return <AlertTriangle className="text-yellow-500" />;
       case 'system':
@@ -182,12 +206,20 @@ const Alerts = () => {
   const getAlertBadgeVariant = (type: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (type) {
       case 'budget_alert':
+      case 'budget_nudges':
+      case 'unusual_activity':
         return "destructive";
       case 'system':
+      case 'weekly_recap':
+      case 'daily_log_reminder':
         return "default";
       case 'feedback_response':
+      case 'savings_progress':
+      case 'monthly_snapshot':
         return "secondary";
       case 'streak':
+      case 'reflection_prompts':
+      case 'custom_goal_reminder':
         return "outline";
       default:
         return "default";
@@ -206,9 +238,6 @@ const Alerts = () => {
       minute: '2-digit'
     }).format(date);
   };
-
-  // Removed unused acceptConnectionRequest and rejectConnectionRequest functions
-  // since connection_requests table doesn't exist
 
   if (isAuthenticated === null) {
     return (
