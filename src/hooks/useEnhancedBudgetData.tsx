@@ -45,7 +45,7 @@ export function useEnhancedBudgetData() {
     gcTime: 1000 * 60 * 10,
   });
 
-  const addBudgetOffline = useCallback(async (budgetData: Omit<Budget, 'id' | 'created_at' | 'updated_at'>) => {
+  const addBudgetOffline = useCallback(async (budgetData: { category: string; monthly_limit: number }) => {
     try {
       // Add to sync queue since budgets aren't fully implemented in offline manager yet
       if (navigator.onLine) {

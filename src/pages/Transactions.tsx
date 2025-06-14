@@ -47,7 +47,8 @@ const TransactionsPage = () => {
     transactions,
     isLoading,
     refetch: refetchTransactions,
-    deleteTransactionOffline
+    deleteTransactionOffline,
+    updateTransactionOffline
   } = useEnhancedTransactionData({
     type: selectedType,
     category: selectedCategory !== "All" ? selectedCategory : undefined
@@ -93,12 +94,9 @@ const TransactionsPage = () => {
 
   const handleArchive = async () => {
     try {
-      // Archive is essentially an update operation
+      // Archive is essentially an update operation using the hook's update function
       for (const transactionId of selectedTransactions) {
-        const transaction = transactions?.find(t => t.id === transactionId);
-        if (transaction) {
-          await transaction.updateTransactionOffline?.(transactionId, { archived: true });
-        }
+        await updateTransactionOffline(transactionId, { archived: true });
       }
 
       // Clear selected transactions and exit selection mode
