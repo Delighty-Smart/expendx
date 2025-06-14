@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,22 +260,26 @@ const FeedbackPage = () => {
                 )}
               </div>
 
-              {/* Contact Permission */}
+              {/* Contact Permission with circular radio button */}
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="contactPermission"
-                  className="h-1 w-1"
-                  checked={contactPermission}
-                  onCheckedChange={(checked) => 
-                    setContactPermission(checked === true)
-                  }
-                />
-                <Label
-                  htmlFor="contactPermission"
-                  className="text-sm text-muted-foreground"
+                <RadioGroup 
+                  value={contactPermission ? "yes" : "no"} 
+                  onValueChange={(value) => setContactPermission(value === "yes")}
                 >
-                  ExpendX team may contact me about this feedback
-                </Label>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem 
+                      value="yes" 
+                      id="contactPermission" 
+                      className="h-3 w-3"
+                    />
+                    <Label
+                      htmlFor="contactPermission"
+                      className="text-sm text-muted-foreground"
+                    >
+                      ExpendX team may contact me about this feedback
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
 
               {/* Submit Button */}
