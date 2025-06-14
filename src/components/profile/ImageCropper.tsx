@@ -1,5 +1,5 @@
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Crop, RotateCcw, Check, X } from "lucide-react";
@@ -14,9 +14,13 @@ interface ImageCropperProps {
 const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number>();
+  
   const [isDragging, setIsDragging] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 });
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const handleImageLoad = useCallback(() => {
     const img = imageRef.current;
@@ -31,34 +35,84 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
     setImageLoaded(true);
   }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    e.preventDefault();
-  };
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !imageRef.current) return;
+  const updateCropPosition = useCallback((clientX: number, clientY: number) => {
+    const img = imageRef.current;
+    const container = containerRef.current;
+    if (!img || !container) return;
     
-    const rect = imageRef.current.getBoundingClientRect();
-    const scaleX = imageRef.current.naturalWidth / rect.width;
-    const scaleY = imageRef.current.naturalHeight / rect.height;
+    const rect = container.getBoundingClientRect();
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
     
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const relativeX = (clientX - rect.left) * scaleX;
+    const relativeY = (clientY - rect.top) * scaleY;
     
-    const maxX = imageRef.current.naturalWidth - cropArea.width;
-    const maxY = imageRef.current.naturalHeight - cropArea.height;
+    const maxX = img.naturalWidth - cropArea.width;
+    const maxY = img.naturalHeight - cropArea.height;
+    
+    const newX = Math.max(0, Math.min(maxX, relativeX - cropArea.width / 2));
+    const newY = Math.max(0, Math.min(maxY, relativeY - cropArea.height / 2));
     
     setCropArea(prev => ({
       ...prev,
-      x: Math.max(0, Math.min(maxX, x - prev.width / 2)),
-      y: Math.max(0, Math.min(maxY, y - prev.height / 2))
+      x: newX,
+      y: newY
     }));
-  }, [isDragging, cropArea.width, cropArea.height]);
+  }, [cropArea.width, cropArea.height]);
 
-  const handleMouseUp = () => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    // Use requestAnimationFrame for smooth updates
+    animationFrameRef.current = requestAnimationFrame(() => {
+      updateCropPosition(e.clientX, e.clientY);
+    });
+  }, [isDragging, updateCropPosition]);
+
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+  }, []);
+
+  // Add global event listeners for smooth dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'grabbing';
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   const handleCrop = async () => {
     const canvas = canvasRef.current;
@@ -98,31 +152,37 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="relative overflow-hidden rounded-lg border bg-muted">
+          <div 
+            ref={containerRef}
+            className="relative overflow-hidden rounded-lg border bg-muted select-none"
+          >
             <img
               ref={imageRef}
               src={image}
               alt="Crop preview"
-              className="max-w-full h-auto"
+              className="max-w-full h-auto pointer-events-none"
               onLoad={handleImageLoad}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+              draggable={false}
             />
             
             {imageLoaded && imageRef.current && (
               <div
-                className="absolute border-2 border-primary bg-primary/20 cursor-move"
+                className="absolute border-2 border-primary bg-primary/20 transition-all duration-75 ease-out"
                 style={{
                   left: `${(cropArea.x / imageRef.current.naturalWidth) * 100}%`,
                   top: `${(cropArea.y / imageRef.current.naturalHeight) * 100}%`,
                   width: `${(cropArea.width / imageRef.current.naturalWidth) * 100}%`,
                   height: `${(cropArea.height / imageRef.current.naturalHeight) * 100}%`,
+                  cursor: isDragging ? 'grabbing' : 'grab',
                 }}
                 onMouseDown={handleMouseDown}
               >
                 <div className="absolute inset-0 border border-white/50" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-6 h-6 bg-primary/80 rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  </div>
+                </div>
               </div>
             )}
           </div>
