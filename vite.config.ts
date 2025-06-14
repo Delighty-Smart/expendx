@@ -13,10 +13,6 @@ export default defineConfig({
   },
   server: {
     port: 8080,
-    // This is the key setting for SPA routing in development
-    historyApiFallback: {
-      index: '/index.html',
-    },
   },
   preview: {
     port: 8080,
