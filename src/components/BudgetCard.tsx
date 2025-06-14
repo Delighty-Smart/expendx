@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Edit, Trash2 } from "lucide-react";
@@ -66,23 +66,23 @@ export function BudgetCard({
   };
 
   return (
-    <Card className={`relative overflow-hidden hover:shadow-md transition-shadow ${isOverBudget ? 'border-destructive' : ''}`}>
+    <GlassCard className={`relative overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-blue-50/40 to-purple-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-blue-200/30 dark:border-slate-600/30 ${isOverBudget ? 'border-destructive/50' : ''}`}>
       {isOverBudget && (
-        <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-bl">
+        <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-bl-lg">
           Over Budget
         </div>
       )}
-      <CardContent className="pt-6 pb-4">
-        <div className="flex justify-between items-start mb-2">
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-3">
           <div className="space-y-1">
-            <h3 className="font-medium text-sm truncate w-36">{category}</h3>
+            <h3 className="font-semibold text-foreground text-sm truncate w-36">{category}</h3>
             <p className="text-lg font-bold">
               {currency.symbol}
               {spent.toLocaleString("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
-              <span className="text-xs text-muted-foreground ml-1">
+              <span className="text-xs text-muted-foreground ml-1 font-medium">
                 / {currency.symbol}
                 {limit.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
@@ -95,7 +95,7 @@ export function BudgetCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-slate-700"
               onClick={onEditClick}
             >
               <Edit className="h-4 w-4" />
@@ -104,7 +104,7 @@ export function BudgetCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 text-destructive"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
               onClick={handleDeleteBudget}
               disabled={isDeleting}
             >
@@ -114,17 +114,17 @@ export function BudgetCard({
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Progress 
             value={percentage} 
             className="h-2" 
-            indicatorClassName={isOverBudget ? 'bg-destructive' : undefined} 
+            indicatorClassName={isOverBudget ? 'bg-destructive' : 'bg-gradient-to-r from-blue-500 to-purple-600'} 
           />
           <div className="flex justify-between text-xs">
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground font-medium">
               {percentage.toFixed(0)}% used (Active only)
             </p>
-            <p className={`${isOverBudget ? 'text-destructive' : 'text-muted-foreground'}`}>
+            <p className={`font-medium ${isOverBudget ? 'text-destructive' : 'text-muted-foreground'}`}>
               {isOverBudget ? 'Over by ' : 'Remaining '}
               {currency.symbol}
               {remaining.toLocaleString("en-US", {
@@ -137,7 +137,7 @@ export function BudgetCard({
             Calculations based on unarchived transactions only
           </p>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </GlassCard>
   );
 }
