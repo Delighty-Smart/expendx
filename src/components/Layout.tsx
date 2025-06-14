@@ -1,4 +1,3 @@
-
 import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -12,7 +11,6 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
 const Layout = ({
   children
 }: {
@@ -34,7 +32,6 @@ const Layout = ({
     toast
   } = useToast();
   const isMobile = useIsMobile();
-
   useEffect(() => {
     const updateStreak = async () => {
       try {
@@ -49,49 +46,39 @@ const Layout = ({
     };
     updateStreak();
   }, []);
-
   useEffect(() => {
     const fetchUnreadAlerts = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (!user) return;
-
-        const { data, error } = await supabase
-          .from('alerts')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('read', false);
-
+        const {
+          data,
+          error
+        } = await supabase.from('alerts').select('id').eq('user_id', user.id).eq('read', false);
         if (error) throw error;
         setUnreadAlerts(data?.length || 0);
       } catch (error) {
         console.error('Error fetching unread alerts:', error);
       }
     };
-
     fetchUnreadAlerts();
 
     // Set up realtime subscription for alerts
-    const channel = supabase
-      .channel('alerts-count')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'alerts'
-        },
-        () => {
-          fetchUnreadAlerts();
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel('alerts-count').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'alerts'
+    }, () => {
+      fetchUnreadAlerts();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
   useEffect(() => {
     if (userStreak) {
       const timer = setTimeout(() => {
@@ -104,7 +91,6 @@ const Layout = ({
       return () => clearTimeout(timer);
     }
   }, [userStreak]);
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -122,21 +108,17 @@ const Layout = ({
       });
     }
   };
-
   const handleStreakClick = () => {
     setShowStreakModal(true);
   };
-
   const handleProfileClick = () => {
     navigate("/profile");
     setIsSidebarOpen(false);
   };
-
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     updateTheme(newTheme);
   };
-
   const menuItems = [{
     path: "/",
     label: "Dashboard",
@@ -171,7 +153,6 @@ const Layout = ({
     label: "Settings",
     icon: Settings
   }];
-
   if (isAdmin) {
     menuItems.push({
       path: "/admin",
@@ -179,7 +160,6 @@ const Layout = ({
       icon: Shield
     });
   }
-
   return <div className="min-h-screen bg-background transition-colors duration-300">
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
@@ -200,14 +180,7 @@ const Layout = ({
       <aside className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col shadow-lg`}>
         {/* Integration Header */}
         <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm"></div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">Integration</p>
-            </div>
-          </div>
+          
           
         </div>
         
@@ -241,13 +214,10 @@ const Layout = ({
               </div>
               <span className="text-sm">Monthly Report</span>
             </Link>
-            <button 
-              onClick={() => {
-                handleStreakClick();
-                setIsSidebarOpen(false);
-              }} 
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left"
-            >
+            <button onClick={() => {
+            handleStreakClick();
+            setIsSidebarOpen(false);
+          }} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left">
               <div className="w-4 h-4 bg-purple-500 rounded-sm flex items-center justify-center">
                 <Flame className="w-2 h-2 text-white" />
               </div>
