@@ -274,9 +274,9 @@ const DeleteAccountSection = () => {
             variant="outline"
             className="h-auto p-4 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/30 text-left justify-start"
           >
-            <div>
+            <div className="w-full">
               <div className="font-medium">Keep account, delete data</div>
-              <div className="text-sm text-red-600 dark:text-red-400 mt-1">
+              <div className="text-sm text-red-600 dark:text-red-400 mt-1 break-words hyphens-auto leading-relaxed">
                 Clear all transactions, budgets, and settings. Start fresh.
               </div>
             </div>
@@ -287,9 +287,9 @@ const DeleteAccountSection = () => {
             variant="outline"
             className="h-auto p-4 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/30 text-left justify-start"
           >
-            <div>
+            <div className="w-full">
               <div className="font-medium">Delete account and data</div>
-              <div className="text-sm text-red-600 dark:text-red-400 mt-1">
+              <div className="text-sm text-red-600 dark:text-red-400 mt-1 break-words hyphens-auto leading-relaxed">
                 Permanently remove your account and all data.
               </div>
             </div>
