@@ -24,7 +24,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 202 100% 50%; /* #00AAFF */
-    --radius: 0.75rem;
+    --radius: 0.5rem;
     
     /* Modal overlay background */
     --modal-overlay: 0 0% 0% / 0.5;
@@ -75,56 +75,68 @@
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Improve typography */
+  /* Typography with Manrope */
   html {
     font-size: 16px;
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     @apply text-base text-foreground leading-normal;
   }
   
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    line-height: 1.5;
+    line-height: 1.4;
     font-weight: 400;
   }
   
-  /* Typography scaling */
+  /* Compact Typography scaling with proper weights */
   h1, .h1 {
-    @apply text-2xl font-semibold leading-tight;
+    @apply text-2xl leading-tight;
+    font-weight: 600;
   }
   
   h2, .h2 {
-    @apply text-xl font-semibold leading-tight;
+    @apply text-xl leading-tight;
+    font-weight: 600;
   }
   
   h3, .h3 {
-    @apply text-lg font-medium leading-snug;
+    @apply text-lg leading-snug;
+    font-weight: 500;
   }
   
   h4, .h4 {
-    @apply text-base font-medium leading-snug;
+    @apply text-base leading-snug;
+    font-weight: 500;
   }
   
   h5, .h5 {
-    @apply text-sm font-medium leading-snug;
+    @apply text-sm leading-snug;
+    font-weight: 500;
   }
   
   p {
-    @apply text-sm mb-4 last:mb-0;
+    @apply text-sm mb-3 last:mb-0;
+    font-weight: 400;
   }
   
   small {
     @apply text-xs;
+    font-weight: 400;
   }
   
   .text-sm {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: 0.8rem;
+    line-height: 1.125rem;
+    font-weight: 400;
   }
   
   .text-xs {
-    @apply text-[0.75rem] leading-[1.25rem];
+    font-size: 0.7rem;
+    line-height: 1rem;
+    font-weight: 400;
   }
   
   /* Enhanced scroll accessibility for all elements */
@@ -152,117 +164,134 @@
   }
 }
 
-/* Responsive typography classes - without using @apply */
+/* Responsive typography classes */
 @media (min-width: 768px) {
   h1, .h1 {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
   }
   
   h2, .h2 {
-    font-size: 1.5rem;
-    line-height: 2rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
   }
   
   h3, .h3 {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
+    font-size: 1.125rem;
+    line-height: 1.625rem;
+    font-weight: 500;
   }
   
   h4, .h4 {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 500;
   }
   
   h5, .h5 {
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.375rem;
+    font-weight: 500;
   }
   
   p {
-    font-size: 1rem;
-    line-height: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.375rem;
+    font-weight: 400;
   }
   
   small, .text-sm {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: 0.8rem;
+    line-height: 1.125rem;
+    font-weight: 400;
   }
 }
 
 @media (min-width: 1024px) {
   h1, .h1 {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 600;
   }
   
   h2, .h2 {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
   }
 }
 
-/* Improved UI Components */
+/* Compact UI Components */
 @layer components {
-  /* Buttons */
+  /* Compact Buttons */
   .btn {
     @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
     disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+    font-weight: 500;
   }
   
   .btn-sm {
-    @apply h-8 px-3 rounded-md text-xs;
+    @apply h-7 px-2.5 rounded text-xs;
+    min-height: 44px; /* Touch-friendly */
   }
   
   .btn-md {
-    @apply h-9 px-4 py-2 rounded-md text-sm;
+    @apply h-8 px-3 py-1.5 rounded text-sm;
+    min-height: 44px; /* Touch-friendly */
   }
   
   .btn-lg {
-    @apply h-10 px-6 rounded-md;
+    @apply h-9 px-4 rounded;
+    min-height: 44px; /* Touch-friendly */
   }
   
-  /* Card Styles */
+  /* Compact Card Styles */
   .card {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
   }
   
   .card-header {
-    @apply flex flex-col space-y-1 p-5 sm:p-6;
+    @apply flex flex-col space-y-1 p-3 sm:p-4;
   }
   
   .card-content {
-    @apply p-5 sm:p-6 pt-0;
+    @apply p-3 sm:p-4 pt-0;
   }
   
   .card-footer {
-    @apply flex items-center p-5 sm:p-6 pt-0;
+    @apply flex items-center p-3 sm:p-4 pt-0;
   }
   
-  /* Form Controls */
+  /* Compact Form Controls */
   .form-control {
-    @apply block w-full px-3 py-2 bg-background border border-input rounded-md text-sm
+    @apply block w-full px-2.5 py-1.5 bg-background border border-input rounded text-sm
     focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
     disabled:cursor-not-allowed disabled:opacity-50;
+    min-height: 44px; /* Touch-friendly */
+    font-weight: 400;
   }
   
   .form-label {
-    @apply text-sm font-medium leading-none mb-2 block;
+    @apply text-sm leading-none mb-1.5 block;
+    font-weight: 500;
   }
   
   .form-helper {
     @apply text-xs text-muted-foreground mt-1;
+    font-weight: 400;
   }
 }
 
-/* Glassmorphism Effects */
+/* Compact Glassmorphism Effects */
 .glass-card {
-  @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-lg;
+  @apply bg-background/80 backdrop-blur-lg border border-border/50 shadow-md;
 }
 
 .glass-effect {
-  @apply backdrop-blur-lg bg-background/80 border border-border/50 shadow-lg;
+  @apply backdrop-blur-lg bg-background/80 border border-border/50 shadow-md;
 }
 
 .dark .glass-card,
@@ -277,9 +306,9 @@
   @apply glass-effect !important;
 }
 
-/* Animated Button Effects */
+/* Compact Animated Button Effects */
 .animated-button {
-  @apply relative overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95;
+  @apply relative overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-95;
 }
 
 .animated-button::after {
@@ -291,9 +320,9 @@
   @apply opacity-100;
 }
 
-/* Card Hover Effects */
+/* Compact Card Hover Effects */
 .hover-card {
-  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  @apply transition-all duration-300 hover:shadow-md hover:-translate-y-0.5;
 }
 
 /* Mobile Optimizations */
@@ -313,7 +342,7 @@
   }
 }
 
-/* Sidebar and Drawer Improvements */
+/* Compact Sidebar and Drawer Improvements */
 .sidebar {
   @apply glass-effect;
 }
@@ -321,7 +350,7 @@
 /* Custom Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
 }
 
 .animate-float {
@@ -340,7 +369,7 @@
 
 /* Animation for charts */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -364,7 +393,7 @@
   color: #6B7280;
 }
 
-/* Toast notification styles */
+/* Compact Toast notification styles */
 .toast-success {
   @apply bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800;
 }
@@ -497,7 +526,7 @@
   
   /* Ensure select dropdown is scrollable for iOS */
   [role="listbox"] {
-    max-height: 200px !important;
+    max-height: 180px !important;
     overflow-y: scroll !important;
   }
 }
@@ -508,14 +537,14 @@
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
   touch-action: pan-y !important;
-  max-height: 200px !important;
+  max-height: 180px !important;
   overflow-y: auto !important;
 }
 
 /* Make scrollbars narrow but visible for better UX */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -538,7 +567,7 @@
 .ContextMenuContent,
 .DialogContent,
 .SheetContent {
-  max-height: 200px !important;
+  max-height: 180px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
@@ -552,7 +581,7 @@
 }
 
 .recharts-tooltip-wrapper {
-  @apply !shadow-lg !rounded-md !border !border-border/50 !bg-popover/95 !backdrop-blur-sm !z-50;
+  @apply !shadow-md !rounded !border !border-border/50 !bg-popover/95 !backdrop-blur-sm !z-50;
 }
 
 .recharts-default-tooltip {
@@ -561,6 +590,7 @@
 
 .recharts-tooltip-label {
   @apply !text-xs !font-medium !text-foreground !mb-1;
+  font-weight: 500;
 }
 
 .recharts-tooltip-item-list {
@@ -569,37 +599,40 @@
 
 .recharts-tooltip-item {
   @apply !text-xs !text-muted-foreground;
+  font-weight: 400;
 }
 
 .recharts-legend-item-text {
   @apply !text-xs;
+  font-weight: 400;
 }
 
 .recharts-cartesian-axis-tick-value {
   font-size: 0.625rem;
   fill: hsl(var(--muted-foreground));
+  font-weight: 400;
 }
 
 @media (min-width: 768px) {
   .recharts-cartesian-axis-tick-value {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 }
 
-/* Form spacing improvements */
+/* Compact Form spacing improvements */
 .form-group + .form-group,
 .space-y-form > * + * {
-  @apply mt-4;
+  @apply mt-3;
 }
 
-/* Section spacings */
+/* Compact Section spacings */
 .section-spacing {
-  @apply my-4 md:my-6 lg:my-8;
+  @apply my-3 md:my-4 lg:my-6;
 }
 
-/* Table improvements - rewritten without nested @apply */
+/* Compact Table improvements */
 .table-container {
-  @apply w-full overflow-x-auto rounded-md border;
+  @apply w-full overflow-x-auto rounded border;
 }
 
 .table-modern {
@@ -607,15 +640,16 @@
 }
 
 .table-modern th {
-  padding: 0.75rem 1rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   text-align: left;
   color: hsl(var(--muted-foreground));
 }
 
 .table-modern td {
-  padding: 0.625rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 400;
   border-top: 1px solid hsl(var(--border));
 }
