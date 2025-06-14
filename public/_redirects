@@ -1,2 +1,4 @@
 
+# Handle client-side routing for SPA
+# This ensures all routes are handled by React Router and not the server
 /*    /index.html   200
