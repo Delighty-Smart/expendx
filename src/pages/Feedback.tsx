@@ -264,7 +264,7 @@ const FeedbackPage = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="contactPermission"
-                  className="h-3 w-3"
+                  className="h-1 w-1"
                   checked={contactPermission}
                   onCheckedChange={(checked) => 
                     setContactPermission(checked === true)
