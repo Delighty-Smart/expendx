@@ -296,7 +296,7 @@ const AddTransactionPage = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">Description</FormLabel>
-                    <Form Control>
+                    <FormControl>
                       <Textarea 
                         placeholder="Enter transaction details..." 
                         {...field}
