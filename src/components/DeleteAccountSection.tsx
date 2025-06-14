@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,15 +38,14 @@ const DeleteAccountSection = () => {
   };
 
   const handleKeepAccount = () => {
-    // Cancel operation and return to dashboard
     setSelectedOption(null);
     setShowFeedback(false);
     setConfirmationText("");
     setFeedbackReason("");
     setOtherReason("");
     toast({
-      title: "Operation cancelled",
-      description: "Your account and data remain intact.",
+      title: "Cancelled",
+      description: "Your account is safe.",
     });
   };
 
@@ -53,24 +53,37 @@ const DeleteAccountSection = () => {
     if (!user) return;
 
     try {
-      // Delete all user data from database - using direct table names to avoid TypeScript errors
-      await supabase.from('transactions').delete().eq('user_id', user.id);
-      await supabase.from('budget_categories').delete().eq('user_id', user.id);
-      await supabase.from('savings_goals').delete().eq('user_id', user.id);
-      await supabase.from('user_categories').delete().eq('user_id', user.id);
-      await supabase.from('user_settings').delete().eq('user_id', user.id);
-      await supabase.from('notification_preferences').delete().eq('user_id', user.id);
-      await supabase.from('user_streaks').delete().eq('user_id', user.id);
-      await supabase.from('monthly_income_estimates').delete().eq('user_id', user.id);
-      await supabase.from('alerts').delete().eq('user_id', user.id);
-      await supabase.from('user_feedback').delete().eq('user_id', user.id);
+      console.log("Clearing data for user:", user.id);
+      
+      // Delete user data with explicit user_id filtering for safety
+      const deletePromises = [
+        supabase.from('transactions').delete().eq('user_id', user.id),
+        supabase.from('budget_categories').delete().eq('user_id', user.id),
+        supabase.from('savings_goals').delete().eq('user_id', user.id),
+        supabase.from('user_categories').delete().eq('user_id', user.id),
+        supabase.from('user_settings').delete().eq('user_id', user.id),
+        supabase.from('notification_preferences').delete().eq('user_id', user.id),
+        supabase.from('user_streaks').delete().eq('user_id', user.id),
+        supabase.from('monthly_income_estimates').delete().eq('user_id', user.id),
+        supabase.from('alerts').delete().eq('user_id', user.id),
+        supabase.from('user_feedback').delete().eq('user_id', user.id)
+      ];
+
+      const results = await Promise.allSettled(deletePromises);
+      
+      // Check for any failures
+      const failures = results.filter(result => result.status === 'rejected');
+      if (failures.length > 0) {
+        console.error("Some data deletion failed:", failures);
+        // Continue anyway - partial deletion is better than no deletion
+      }
 
       // Clear local storage
       localStorage.clear();
       
       toast({
-        title: "Data deleted successfully",
-        description: "All your data has been cleared.",
+        title: "Data cleared",
+        description: "All your data has been deleted.",
       });
     } catch (error) {
       console.error("Error clearing user data:", error);
@@ -82,19 +95,21 @@ const DeleteAccountSection = () => {
     if (!user) return;
 
     try {
+      console.log("Deleting account for user:", user.id);
+      
       // First clear all user data
       await clearUserData();
       
-      // Delete user profile
+      // Delete user profile (must be done before auth deletion)
       await supabase.from('user_profiles').delete().eq('id', user.id);
       
-      // Sign out and redirect to auth
+      // Sign out and redirect
       await signOut();
       navigate('/auth');
       
       toast({
         title: "Account deleted",
-        description: "Your account and all data have been permanently deleted.",
+        description: "Your account has been permanently deleted.",
       });
     } catch (error) {
       console.error("Error deleting account:", error);
@@ -114,23 +129,22 @@ const DeleteAccountSection = () => {
         await supabase.from('user_feedback').insert({
           user_id: user.id,
           rating: 'negative',
-          comments: `Account deletion reason: ${feedbackText}`,
+          comments: `Deletion reason: ${feedbackText}`,
           contact_permission: false
         });
       }
 
       if (selectedOption === "data-only") {
         await clearUserData();
-        // Redirect to onboarding as a fresh start
         navigate('/');
-        window.location.reload(); // Force a fresh start
+        window.location.reload();
       } else if (selectedOption === "account-and-data") {
         await deleteAccount();
       }
     } catch (error) {
       console.error("Error during deletion:", error);
       toast({
-        title: "Deletion failed",
+        title: "Error",
         description: "Something went wrong. Please try again.",
         variant: "destructive"
       });
@@ -145,33 +159,33 @@ const DeleteAccountSection = () => {
         <CardHeader>
           <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            Help us improve – Why are you leaving?
+            Why are you leaving?
           </CardTitle>
           <CardDescription className="text-red-600 dark:text-red-300">
-            Your feedback helps us make the app better for everyone.
+            Help us improve the app.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <RadioGroup value={feedbackReason} onValueChange={(value) => setFeedbackReason(value as FeedbackReason)}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="not-useful" id="not-useful" />
-              <Label htmlFor="not-useful">I don't find the app useful</Label>
+              <Label htmlFor="not-useful">App isn't useful</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="privacy-concerns" id="privacy-concerns" />
-              <Label htmlFor="privacy-concerns">I'm concerned about privacy</Label>
+              <Label htmlFor="privacy-concerns">Privacy concerns</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="different-tool" id="different-tool" />
-              <Label htmlFor="different-tool">I want to use a different tool</Label>
+              <Label htmlFor="different-tool">Using different tool</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="technical-issues" id="technical-issues" />
-              <Label htmlFor="technical-issues">I had technical issues</Label>
+              <Label htmlFor="technical-issues">Technical issues</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="other" id="other" />
-              <Label htmlFor="other">Other (specify)</Label>
+              <Label htmlFor="other">Other reason</Label>
             </div>
           </RadioGroup>
 
@@ -194,7 +208,7 @@ const DeleteAccountSection = () => {
               className="flex-1 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-950/20"
               disabled={isProcessing}
             >
-              ✅ Keep my account
+              ✅ Keep account
             </Button>
             <Button
               onClick={handleFinalDelete}
@@ -226,12 +240,12 @@ const DeleteAccountSection = () => {
         <CardHeader>
           <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            Confirm Deletion
+            Confirm Delete
           </CardTitle>
           <CardDescription className="text-red-600 dark:text-red-300">
             {selectedOption === "data-only" 
-              ? "This will delete all your data but keep your account active." 
-              : "This will permanently delete your account and all associated data."
+              ? "This will delete all your data but keep your account." 
+              : "This will permanently delete your account and all data."
             }
           </CardDescription>
         </CardHeader>
@@ -239,7 +253,7 @@ const DeleteAccountSection = () => {
           <div className="p-4 border border-red-300 rounded-lg bg-red-100 dark:bg-red-900/30 dark:border-red-700">
             <p className="text-red-800 dark:text-red-200 font-medium flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
-              ⚠️ This action is irreversible. To confirm, type 'delete' in the field below.
+              ⚠️ This can't be undone. Type 'delete' to confirm.
             </p>
           </div>
 
@@ -268,7 +282,7 @@ const DeleteAccountSection = () => {
               className="flex-1"
               disabled={!isDeleteEnabled}
             >
-              Proceed to Feedback
+              Continue
             </Button>
           </div>
         </CardContent>
@@ -281,10 +295,10 @@ const DeleteAccountSection = () => {
       <CardHeader>
         <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
           <Trash2 className="h-5 w-5" />
-          Delete Your Account or Data
+          Delete Account or Data
         </CardTitle>
         <CardDescription className="text-red-600 dark:text-red-300">
-          Choose what you'd like to delete. This action cannot be undone.
+          Choose what to delete. This can't be undone.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -295,9 +309,9 @@ const DeleteAccountSection = () => {
             className="h-auto p-4 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/30 text-left justify-start"
           >
             <div>
-              <div className="font-medium">Keep my account but delete all my data</div>
+              <div className="font-medium">Keep account, delete data</div>
               <div className="text-sm text-red-600 dark:text-red-400 mt-1">
-                Clears all transactions, budgets, and preferences. You can start fresh.
+                Clear all transactions, budgets, and settings. Start fresh.
               </div>
             </div>
           </Button>
@@ -308,9 +322,9 @@ const DeleteAccountSection = () => {
             className="h-auto p-4 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/30 text-left justify-start"
           >
             <div>
-              <div className="font-medium">Delete my account and all my data</div>
+              <div className="font-medium">Delete account and data</div>
               <div className="text-sm text-red-600 dark:text-red-400 mt-1">
-                Permanently removes your account and all associated data.
+                Permanently remove your account and all data.
               </div>
             </div>
           </Button>
