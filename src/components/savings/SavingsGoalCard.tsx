@@ -27,6 +27,13 @@ export function SavingsGoalCard({
 }: SavingsGoalCardProps) {
   const isOverTarget = progress.current > progress.target;
 
+  const formatAmount = (amount: number) => {
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   return (
     <GlassCard 
       className={`relative overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-green-50/40 to-emerald-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-green-200/30 dark:border-slate-600/30 ${isOverTarget ? 'border-green-500/50' : ''}`}
@@ -41,17 +48,9 @@ export function SavingsGoalCard({
           <div className="space-y-1">
             <h3 className="font-semibold text-foreground text-sm truncate w-36">{goal.category}</h3>
             <p className="text-lg font-bold">
-              {currency.symbol}
-              {progress.current.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}
+              {currency.symbol}{formatAmount(progress.current)}
               <span className="text-xs text-muted-foreground ml-1 font-medium">
-                / {currency.symbol}
-                {progress.target.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })}
+                / {currency.symbol}{formatAmount(progress.target)}
               </span>
             </p>
           </div>
@@ -90,11 +89,7 @@ export function SavingsGoalCard({
             </p>
             <p className={`font-medium ${isOverTarget ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
               {isOverTarget ? 'Over by ' : 'Remaining '}
-              {currency.symbol}
-              {Math.abs(progress.target - progress.current).toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}
+              {currency.symbol}{formatAmount(Math.abs(progress.target - progress.current))}
             </p>
           </div>
         </div>

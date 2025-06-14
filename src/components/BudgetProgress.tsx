@@ -23,11 +23,18 @@ export function BudgetProgress({ category, limit, spent, currency }: BudgetProgr
     return "bg-primary";
   };
 
+  const formatAmount = (amount: number) => {
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
         <span className="text-xs text-muted-foreground">
-          {currency.symbol}{spent.toFixed(2)} / {currency.symbol}{limit.toFixed(2)}
+          {currency.symbol}{formatAmount(spent)} / {currency.symbol}{formatAmount(limit)}
         </span>
       </div>
       <Progress

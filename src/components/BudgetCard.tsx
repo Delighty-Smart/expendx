@@ -36,6 +36,13 @@ export function BudgetCard({
   const remaining = Math.max(limit - spent, 0);
   const isOverBudget = spent > limit;
 
+  const formatAmount = (amount: number) => {
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   const handleDeleteBudget = async () => {
     try {
       setIsDeleting(true);
@@ -77,17 +84,9 @@ export function BudgetCard({
           <div className="space-y-1">
             <h3 className="font-semibold text-foreground text-sm truncate w-36">{category}</h3>
             <p className="text-lg font-bold">
-              {currency.symbol}
-              {spent.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {currency.symbol}{formatAmount(spent)}
               <span className="text-xs text-muted-foreground ml-1 font-medium">
-                / {currency.symbol}
-                {limit.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                / {currency.symbol}{formatAmount(limit)}
               </span>
             </p>
           </div>
@@ -126,11 +125,7 @@ export function BudgetCard({
             </p>
             <p className={`font-medium ${isOverBudget ? 'text-destructive' : 'text-muted-foreground'}`}>
               {isOverBudget ? 'Over by ' : 'Remaining '}
-              {currency.symbol}
-              {remaining.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {currency.symbol}{formatAmount(remaining)}
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">
