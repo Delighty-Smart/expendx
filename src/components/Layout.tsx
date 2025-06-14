@@ -1,4 +1,3 @@
-
 import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -133,7 +132,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           />
         </div>
         <div className="flex items-center gap-2">
-          <OfflineIndicator />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="animated-button">
@@ -168,9 +166,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               alt="expendX" 
               className="h-full object-contain"
             />
-          </div>
-          <div className="hidden lg:block">
-            <OfflineIndicator />
           </div>
         </div>
         
