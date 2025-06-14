@@ -95,10 +95,13 @@ const Auth = () => {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
-            <span className="text-2xl font-bold text-primary-foreground">E</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
+              alt="ExpendX" 
+              className="h-16 object-contain"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">ExpendX</h1>
           <p className="text-muted-foreground">Your Smart Finance Companion</p>
         </div>
 

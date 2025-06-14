@@ -82,8 +82,12 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       <Card className="relative w-full max-w-lg shadow-2xl border bg-card">
         <CardHeader className="text-center pb-2">
           {/* Logo */}
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-primary rounded-xl mb-4 mx-auto shadow-lg">
-            <span className="text-xl font-bold text-primary-foreground">E</span>
+          <div className="inline-flex items-center justify-center mb-4 mx-auto">
+            <img 
+              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
+              alt="ExpendX" 
+              className="h-12 object-contain"
+            />
           </div>
           
           {/* Progress dots */}
