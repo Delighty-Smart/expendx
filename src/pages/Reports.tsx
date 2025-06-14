@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
+import { Transaction } from "@/types/transactions";
 
 // Define chart data types
 interface ChartDataPoint {
@@ -43,11 +44,13 @@ const ReportsPage = () => {
     endDate: dateTo?.toISOString(),
   });
 
-  // Filter transactions based on selections
+  // Filter transactions based on selections with proper typing
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
     
-    return transactions.filter(transaction => {
+    const typedTransactions = transactions as Transaction[];
+    
+    return typedTransactions.filter(transaction => {
       const categoryMatch = selectedCategory === "all" || transaction.category === selectedCategory;
       const typeMatch = selectedType === "all" || transaction.type === selectedType;
       return categoryMatch && typeMatch;
@@ -57,12 +60,13 @@ const ReportsPage = () => {
   // Get unique categories for filter
   const categories = useMemo(() => {
     if (!transactions) return [];
-    return Array.from(new Set(transactions.map(t => t.category))).sort();
+    const typedTransactions = transactions as Transaction[];
+    return Array.from(new Set(typedTransactions.map(t => t.category))).sort();
   }, [transactions]);
 
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
-    if (!filteredTransactions) return { income: 0, expenses: 0, savings: 0, net: 0 };
+    if (!filteredTransactions || filteredTransactions.length === 0) return { income: 0, expenses: 0, savings: 0, net: 0 };
     
     const income = filteredTransactions
       .filter(t => t.type === 'credit')
@@ -86,7 +90,7 @@ const ReportsPage = () => {
 
   // Prepare chart data with proper typing
   const chartData = useMemo((): ChartDataPoint[] => {
-    if (!filteredTransactions) return [];
+    if (!filteredTransactions || filteredTransactions.length === 0) return [];
     
     const dailyData = filteredTransactions.reduce((acc, transaction) => {
       const date = format(new Date(transaction.date), 'MMM dd');
@@ -95,12 +99,13 @@ const ReportsPage = () => {
         acc[date] = { date, income: 0, expenses: 0, savings: 0 };
       }
       
+      const amount = Number(transaction.amount);
       if (transaction.type === 'credit') {
-        acc[date].income += Number(transaction.amount);
+        acc[date].income += amount;
       } else if (transaction.type === 'debit') {
-        acc[date].expenses += Number(transaction.amount);
+        acc[date].expenses += amount;
       } else if (transaction.type === 'savings') {
-        acc[date].savings += Number(transaction.amount);
+        acc[date].savings += amount;
       }
       
       return acc;
@@ -113,7 +118,7 @@ const ReportsPage = () => {
 
   // Prepare category breakdown with proper typing
   const categoryData = useMemo((): CategoryDataPoint[] => {
-    if (!filteredTransactions) return [];
+    if (!filteredTransactions || filteredTransactions.length === 0) return [];
     
     const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
       if (!acc[transaction.category]) {
