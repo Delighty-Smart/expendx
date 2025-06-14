@@ -1,4 +1,3 @@
-
 import { addDays, differenceInDays, isSameDay, startOfDay, isToday, isYesterday } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,6 +11,13 @@ export interface UserStreak {
   current_title: string;
   created_at: string;
   updated_at: string;
+}
+
+// More flexible interface for status checking
+export interface StreakStatusData {
+  current_streak: number;
+  last_login: string;
+  freeze_count: number;
 }
 
 export const STREAK_MILESTONES = [
@@ -225,8 +231,8 @@ export function canMaintainStreak(lastLogin: string, freezeCount: number): boole
   return daysSince - 1 <= freezeCount; // Can use freeze credits
 }
 
-// Get streak status for UI display
-export function getStreakStatus(streak: UserStreak): {
+// Get streak status for UI display - updated to use flexible interface
+export function getStreakStatus(streak: StreakStatusData): {
   status: 'active' | 'at_risk' | 'broken';
   message: string;
   canRecover: boolean;
