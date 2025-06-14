@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, Flame, User, Moon, Sun, OfflineIndicator } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -130,25 +130,28 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             className="h-full object-contain"
           />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="animated-button">
-              {theme === "dark" ? (
-                <Moon className="h-5 w-5 text-foreground" />
-              ) : (
-                <Sun className="h-5 w-5 text-foreground" />
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover/80 backdrop-blur-md border-border/50">
-            <DropdownMenuItem onClick={() => setThemeOption("light")} className="flex gap-2 text-sm">
-              <Sun className="h-4 w-4" /> Light
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
-              <Moon className="h-4 w-4" /> Dark
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <OfflineIndicator />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="animated-button">
+                {theme === "dark" ? (
+                  <Moon className="h-5 w-5 text-foreground" />
+                ) : (
+                  <Sun className="h-5 w-5 text-foreground" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-popover/80 backdrop-blur-md border-border/50">
+              <DropdownMenuItem onClick={() => setThemeOption("light")} className="flex gap-2 text-sm">
+                <Sun className="h-4 w-4" /> Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
+                <Moon className="h-4 w-4" /> Dark
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </header>
 
       <aside
@@ -156,13 +159,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 flex flex-col`}
       >
-        <div className="h-14 md:h-16 flex items-center px-4 md:px-6 border-b border-border/50">
+        <div className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 border-b border-border/50">
           <div className="h-8 md:h-10">
             <img 
               src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
               alt="expendX" 
               className="h-full object-contain"
             />
+          </div>
+          <div className="hidden lg:block">
+            <OfflineIndicator />
           </div>
         </div>
         

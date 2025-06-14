@@ -1,9 +1,15 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
-import { initializeDB, getAllTransactions, addTransaction, trySync } from "@/services/offlineStorage";
+import { initializeDB, getAllTransactions } from "@/services/offlineStorage";
+import { 
+  initializeEnhancedDB, 
+  addTransactionEnhanced, 
+  batchUpdateTransactionsEnhanced,
+  getTransactionsByDateRange 
+} from "@/services/enhancedOfflineStorage";
+import { syncManager } from "@/services/syncManager";
 import { useToast } from "@/hooks/use-toast";
 
 // Helper to convert raw transaction data to proper Transaction type
@@ -12,60 +18,6 @@ export const convertToTransaction = (transaction: any): Transaction => ({
   type: transaction.type as TransactionType,
   category: transaction.category as TransactionCategory
 });
-
-// Helper function to queue a transaction for sync when offline
-const queueTransactionForSync = async (transaction: any): Promise<void> => {
-  // If IndexedDB is available in the browser
-  if ('indexedDB' in window) {
-    // Open our database
-    const dbRequest = indexedDB.open('expendx_offline', 1);
-    
-    dbRequest.onerror = (event) => {
-      console.error('Error opening offline database:', event);
-    };
-    
-    dbRequest.onsuccess = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      
-      // Start a transaction and get the pending_transactions store
-      try {
-        const tx = db.transaction('pending_transactions', 'readwrite');
-        const store = tx.objectStore('pending_transactions');
-        
-        // Add the transaction to the pending store
-        const request = store.put(transaction);
-        
-        request.onerror = (event) => {
-          console.error('Error queuing transaction for sync:', event);
-        };
-        
-        request.onsuccess = () => {
-          console.log('Transaction queued for sync when online');
-        };
-        
-        // Close the transaction and database when done
-        tx.oncomplete = () => {
-          db.close();
-        };
-      } catch (err) {
-        console.error('Error creating transaction:', err);
-        db.close();
-      }
-    };
-    
-    // If the database doesn't exist, create it with our object stores
-    dbRequest.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      
-      // Create pending_transactions store if it doesn't exist
-      if (!db.objectStoreNames.contains('pending_transactions')) {
-        db.createObjectStore('pending_transactions', { keyPath: 'id' });
-      }
-    };
-  } else {
-    console.warn('IndexedDB not supported in this browser, cannot queue transaction');
-  }
-};
 
 export function useTransactionData(filter?: {
   type?: TransactionType | "all",
@@ -82,7 +34,7 @@ export function useTransactionData(filter?: {
     ? ['transactions', filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
     : ['transactions'];
 
-  // Setup the main query
+  // Setup the main query with enhanced offline support
   const { 
     data: transactions, 
     isLoading, 
@@ -98,7 +50,6 @@ export function useTransactionData(filter?: {
         let query = supabase.from("transactions").select("*");
         
         // ALWAYS exclude archived transactions unless explicitly included
-        // This ensures archived transactions don't affect wallet balance, income, and expenses
         if (!filter?.includeArchived) {
           query = query.eq("archived", false);
         }
@@ -129,16 +80,30 @@ export function useTransactionData(filter?: {
         
         if (error) throw error;
         
+        // Update local cache with fresh data
+        if (data && data.length > 0) {
+          await batchUpdateTransactionsEnhanced(data);
+        }
+        
         // Convert to Transaction type
         return (data || []).map(convertToTransaction);
       } catch (fetchError) {
         console.error("Error fetching transactions from database:", fetchError);
         
-        // If online fetch fails, try from local cache
+        // If online fetch fails, try from enhanced local cache
         try {
-          await initializeDB();
-          const cachedTransactions = await getAllTransactions();
-          console.log("Loaded transactions from cache:", cachedTransactions.length);
+          await initializeEnhancedDB();
+          
+          let cachedTransactions;
+          
+          // Use optimized queries when possible
+          if (filter?.startDate && filter?.endDate) {
+            cachedTransactions = await getTransactionsByDateRange(filter.startDate, filter.endDate);
+          } else {
+            cachedTransactions = await getAllTransactions();
+          }
+          
+          console.log("Loaded transactions from enhanced cache:", cachedTransactions.length);
           
           let filteredTransactions = cachedTransactions;
           
@@ -206,19 +171,16 @@ export function useTransactionData(filter?: {
           const eventType = payload.eventType;
           
           if (eventType === 'INSERT') {
-            // Use toast notification for insert
             toast({
               title: "Transaction Added",
               description: "A new transaction has been added to your account"
             });
           } else if (eventType === 'UPDATE') {
-            // Use toast notification for update
             toast({
-              title: "Transaction Updated",
+              title: "Transaction Updated", 
               description: "A transaction has been updated"
             });
           } else if (eventType === 'DELETE') {
-            // Use toast notification for delete
             toast({
               title: "Transaction Deleted",
               description: "A transaction has been deleted"
@@ -242,37 +204,28 @@ export function useTransactionData(filter?: {
     };
   }, [queryClient, toast]);
 
-  // Initialize offline storage
+  // Initialize enhanced offline storage and sync
   useEffect(() => {
-    const setupOfflineStorage = async () => {
+    const setupEnhancedOfflineStorage = async () => {
       try {
+        // Initialize both storage systems for backward compatibility
         await initializeDB();
-        console.log("Offline storage initialized");
+        await initializeEnhancedDB();
+        console.log("Enhanced offline storage initialized");
         
         // Try to sync any pending transactions
         if (navigator.onLine) {
-          await trySync();
+          await syncManager.performSync();
         }
       } catch (err) {
-        console.error("Failed to initialize offline storage:", err);
+        console.error("Failed to initialize enhanced offline storage:", err);
       }
     };
     
-    setupOfflineStorage();
-    
-    // Set up online/offline event listeners
-    const handleOnline = () => {
-      console.log("App is online, attempting to sync transactions");
-      trySync().catch(err => console.error('Sync failed:', err));
-    };
-    
-    window.addEventListener('online', handleOnline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-    };
+    setupEnhancedOfflineStorage();
   }, []);
 
-  // Function to add transaction with offline support
+  // Function to add transaction with enhanced offline support
   const addTransactionWithCache = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -283,32 +236,41 @@ export function useTransactionData(filter?: {
         user_id: user.id
       };
       
-      // First try to add to database
+      // Always store locally first for immediate UI updates
+      const tempId = await addTransactionEnhanced(transaction);
+      
       if (navigator.onLine) {
-        const { data, error } = await supabase
-          .from('transactions')
-          .insert([transaction])
-          .select()
-          .single();
+        try {
+          // Try to sync immediately if online
+          const { data, error } = await supabase
+            .from('transactions')
+            .insert([transaction])
+            .select()
+            .single();
+            
+          if (error) throw error;
           
-        if (error) throw error;
-        
-        // Also add to local cache for offline access
-        await addTransaction(data);
-        return data;
+          toast({
+            title: "Transaction Added",
+            description: "Transaction saved successfully"
+          });
+          
+          return data;
+        } catch (syncError) {
+          console.log("Immediate sync failed, will retry later:", syncError);
+          toast({
+            title: "Transaction Saved Offline",
+            description: "Transaction saved locally and will sync when online"
+          });
+        }
       } else {
-        // If offline, add to local cache and queue for sync
-        console.log("Device is offline, storing transaction locally", transaction);
-        const tempId = await addTransaction(transaction);
-        await queueTransactionForSync(transaction);
-        
         toast({
           title: "Transaction Saved Offline",
           description: "This transaction will be synced when you're back online"
         });
-        
-        return { ...transaction, id: tempId };
       }
+      
+      return { ...transaction, id: tempId };
     } catch (error: any) {
       console.error("Error adding transaction:", error);
       toast({
