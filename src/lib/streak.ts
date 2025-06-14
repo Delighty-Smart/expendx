@@ -1,9 +1,9 @@
 
-import { addDays, differenceInDays, isSameDay, startOfDay } from "date-fns";
+import { addDays, differenceInDays, isSameDay, startOfDay, isToday, isYesterday } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface UserStreak {
-  id?: string; // Make id optional since it might not be present in all contexts
+  id?: string;
   user_id: string;
   current_streak: number;
   highest_streak: number;
@@ -44,6 +44,9 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       return null;
     }
 
+    const now = new Date();
+    const today = startOfDay(now);
+
     // If no streak data exists yet, create new streak record
     if (!streakData) {
       const { data: newStreak, error: insertError } = await supabase
@@ -54,7 +57,7 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
           highest_streak: 1,
           current_title: "Budget Beginner", 
           freeze_count: MAX_FREEZE_DAYS,
-          last_login: startOfDay(new Date()).toISOString()
+          last_login: today.toISOString()
         }])
         .select()
         .single();
@@ -64,69 +67,90 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
         return null;
       }
       
+      await createStreakAlert(user.id, "Welcome! Your streak journey begins now. Keep logging in daily to build your streak!", "streak");
       return newStreak;
     }
 
-    // Calculate days since last login - use local time (start of day)
     const lastLogin = startOfDay(new Date(streakData.last_login));
-    const today = startOfDay(new Date());
     const daysSinceLastLogin = differenceInDays(today, lastLogin);
 
-    // If same day, don't update streak
+    // If same day, don't update streak but return current data
     if (isSameDay(today, lastLogin)) {
       return streakData;
     }
 
+    // Enhanced streak logic with better consistency
     let newStreak = streakData.current_streak;
     let freezeCount = streakData.freeze_count;
     let currentTitle = streakData.current_title;
     let shouldCreateAlert = false;
     let alertMessage = "";
-    
-    // Update streak based on last login time
+
     if (daysSinceLastLogin === 1) {
-      // Consecutive day login, increment streak
+      // Perfect consecutive day - increment streak and reset freeze count
       newStreak += 1;
-      freezeCount = MAX_FREEZE_DAYS; // Reset freeze count when logging in consecutive days
-      
-      // Check if streak reached a milestone
-      const milestone = STREAK_MILESTONES.find(m => m.days === newStreak);
-      if (milestone) {
-        shouldCreateAlert = true;
-        alertMessage = `Congratulations! You've reached a ${newStreak}-day streak and earned the "${milestone.title}" title!`;
-        currentTitle = milestone.title;
-      }
-    } else if (daysSinceLastLogin > 1 && daysSinceLastLogin <= MAX_FREEZE_DAYS) {
-      // Within freeze window, decrement freeze count but maintain streak
-      freezeCount = Math.max(0, freezeCount - (daysSinceLastLogin - 1));
-      newStreak += 1; // Still increment streak since they logged in within freeze period
-    } else if (daysSinceLastLogin > MAX_FREEZE_DAYS) {
-      // Beyond freeze window, reset streak
-      if (streakData.current_streak >= 7) {
-        shouldCreateAlert = true;
-        alertMessage = `Oh no! Your ${streakData.current_streak}-day streak has been reset because you missed ${daysSinceLastLogin} days.`;
-      }
-      newStreak = 1;
       freezeCount = MAX_FREEZE_DAYS;
+      
+      // Check for milestone achievement
+      const milestone = STREAK_MILESTONES.find(m => m.days === newStreak);
+      if (milestone && milestone.title !== currentTitle) {
+        shouldCreateAlert = true;
+        alertMessage = `🎉 Congratulations! You've achieved a ${newStreak}-day streak and earned the "${milestone.title}" title!`;
+        currentTitle = milestone.title;
+      } else if (newStreak % 7 === 0 && newStreak > 7) {
+        // Celebrate weekly milestones
+        shouldCreateAlert = true;
+        alertMessage = `🔥 Amazing! You've maintained your streak for ${newStreak} days straight! Keep it up!`;
+      }
+    } else if (daysSinceLastLogin > 1) {
+      // Gap in login days
+      if (daysSinceLastLogin <= MAX_FREEZE_DAYS && freezeCount >= (daysSinceLastLogin - 1)) {
+        // Within freeze window and have enough freeze credits
+        const freezeUsed = daysSinceLastLogin - 1;
+        freezeCount = Math.max(0, freezeCount - freezeUsed);
+        newStreak += 1; // Still count as consecutive due to freeze
+        
+        shouldCreateAlert = true;
+        alertMessage = `⚡ Streak saved! You used ${freezeUsed} freeze ${freezeUsed === 1 ? 'credit' : 'credits'}. You have ${freezeCount} remaining.`;
+      } else {
+        // Streak broken - reset
+        const oldStreak = streakData.current_streak;
+        newStreak = 1; // Start fresh with today's login
+        freezeCount = MAX_FREEZE_DAYS;
+        
+        // Reset title if streak was significant
+        if (oldStreak >= 30) {
+          currentTitle = "Budget Beginner";
+          shouldCreateAlert = true;
+          alertMessage = `💔 Your ${oldStreak}-day streak has been reset after ${daysSinceLastLogin} days of inactivity. But don't give up - start building again!`;
+        } else if (oldStreak >= 7) {
+          shouldCreateAlert = true;
+          alertMessage = `😔 Your streak was reset, but every expert was once a beginner. Start your comeback today!`;
+        }
+      }
     }
 
-    // Check if new streak has reached a new milestone
-    if (!shouldCreateAlert) {
-      const newMilestone = determineUserTitle(newStreak);
-      if (getMilestoneRank(newMilestone) > getMilestoneRank(currentTitle)) {
-        currentTitle = newMilestone;
+    // Ensure title matches current streak level
+    const correctTitle = determineUserTitle(newStreak);
+    if (correctTitle !== currentTitle && getMilestoneRank(correctTitle) > getMilestoneRank(currentTitle)) {
+      currentTitle = correctTitle;
+      if (!shouldCreateAlert) {
         shouldCreateAlert = true;
-        alertMessage = `Congratulations! You've earned the "${newMilestone}" title with your ${newStreak}-day streak!`;
+        alertMessage = `🌟 Level up! You've earned the "${correctTitle}" title!`;
       }
     }
+
+    // Calculate highest streak
+    const highestStreak = Math.max(streakData.highest_streak, newStreak);
+    const isNewRecord = highestStreak > streakData.highest_streak;
 
     // Update streak in database
     const { data: updatedStreak, error: updateError } = await supabase
       .from("user_streaks")
       .update({
         current_streak: newStreak,
-        highest_streak: Math.max(streakData.highest_streak, newStreak),
-        last_login: today.toISOString(), // Save as start of day in local time
+        highest_streak: highestStreak,
+        last_login: today.toISOString(),
         freeze_count: freezeCount,
         current_title: currentTitle
       })
@@ -139,19 +163,14 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       return null;
     }
 
-    // Create alert if needed
+    // Create alerts for important events
     if (shouldCreateAlert && alertMessage) {
-      try {
-        await supabase.from('alerts').insert({
-          user_id: user.id,
-          title: 'Streak Update',
-          message: alertMessage,
-          type: 'streak',
-          read: false
-        });
-      } catch (alertError) {
-        console.error("Error creating streak alert:", alertError);
-      }
+      await createStreakAlert(user.id, alertMessage, "streak");
+    }
+
+    // Special alert for new personal records
+    if (isNewRecord && newStreak > 1) {
+      await createStreakAlert(user.id, `🏆 New personal record! ${newStreak} days is your longest streak yet!`, "achievement");
     }
 
     return updatedStreak;
@@ -161,9 +180,23 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
   }
 }
 
+// Helper function to create streak alerts
+async function createStreakAlert(userId: string, message: string, type: string) {
+  try {
+    await supabase.from('alerts').insert({
+      user_id: userId,
+      title: type === 'achievement' ? 'Achievement Unlocked!' : 'Streak Update',
+      message: message,
+      type: type,
+      read: false
+    });
+  } catch (error) {
+    console.error("Error creating streak alert:", error);
+  }
+}
+
 // Helper to determine user title based on current streak
 export function determineUserTitle(dayCount: number): string {
-  // Find the highest milestone that the user has achieved
   const milestone = [...STREAK_MILESTONES]
     .reverse()
     .find(m => dayCount >= m.days);
@@ -180,6 +213,57 @@ function getMilestoneRank(title: string): number {
 // Get formatted streak text
 export function getStreakText(streak: number): string {
   return streak === 1 ? "1 day" : `${streak} days`;
+}
+
+// Enhanced function to check if user can maintain streak
+export function canMaintainStreak(lastLogin: string, freezeCount: number): boolean {
+  const lastLoginDate = startOfDay(new Date(lastLogin));
+  const today = startOfDay(new Date());
+  const daysSince = differenceInDays(today, lastLoginDate);
+  
+  if (daysSince <= 1) return true; // Today or yesterday
+  return daysSince - 1 <= freezeCount; // Can use freeze credits
+}
+
+// Get streak status for UI display
+export function getStreakStatus(streak: UserStreak): {
+  status: 'active' | 'at_risk' | 'broken';
+  message: string;
+  canRecover: boolean;
+} {
+  const lastLogin = startOfDay(new Date(streak.last_login));
+  const today = startOfDay(new Date());
+  const daysSince = differenceInDays(today, lastLogin);
+  
+  if (isToday(lastLogin)) {
+    return {
+      status: 'active',
+      message: 'Streak is active! Keep it up!',
+      canRecover: false
+    };
+  }
+  
+  if (isYesterday(lastLogin)) {
+    return {
+      status: 'at_risk',
+      message: 'Log in today to maintain your streak!',
+      canRecover: true
+    };
+  }
+  
+  if (daysSince <= MAX_FREEZE_DAYS + 1 && streak.freeze_count > 0) {
+    return {
+      status: 'at_risk',
+      message: `You can still save your streak with ${streak.freeze_count} freeze credits!`,
+      canRecover: true
+    };
+  }
+  
+  return {
+    status: 'broken',
+    message: 'Streak broken, but you can start fresh!',
+    canRecover: false
+  };
 }
 
 // Get user profile data including email
