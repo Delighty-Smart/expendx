@@ -26,8 +26,8 @@ const ReportsPage = () => {
   const { refreshData } = useRefresh();
 
   const { transactions, isLoading } = useTransactionData({
-    dateFrom: dateFrom?.toISOString(),
-    dateTo: dateTo?.toISOString(),
+    startDate: dateFrom?.toISOString(),
+    endDate: dateTo?.toISOString(),
   });
 
   // Filter transactions based on selections
@@ -53,15 +53,15 @@ const ReportsPage = () => {
     
     const income = filteredTransactions
       .filter(t => t.type === 'credit')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
     
     const expenses = filteredTransactions
       .filter(t => t.type === 'debit')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
     
     const savings = filteredTransactions
       .filter(t => t.type === 'savings')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
     
     return {
       income,
@@ -83,17 +83,17 @@ const ReportsPage = () => {
       }
       
       if (transaction.type === 'credit') {
-        acc[date].income += transaction.amount;
+        acc[date].income += Number(transaction.amount);
       } else if (transaction.type === 'debit') {
-        acc[date].expenses += transaction.amount;
+        acc[date].expenses += Number(transaction.amount);
       } else if (transaction.type === 'savings') {
-        acc[date].savings += transaction.amount;
+        acc[date].savings += Number(transaction.amount);
       }
       
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, { date: string; income: number; expenses: number; savings: number }>);
     
-    return Object.values(dailyData).sort((a: any, b: any) => 
+    return Object.values(dailyData).sort((a, b) => 
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }, [filteredTransactions]);
@@ -106,7 +106,7 @@ const ReportsPage = () => {
       if (!acc[transaction.category]) {
         acc[transaction.category] = 0;
       }
-      acc[transaction.category] += transaction.amount;
+      acc[transaction.category] += Number(transaction.amount);
       return acc;
     }, {} as Record<string, number>);
     
@@ -356,7 +356,7 @@ const ReportsPage = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                        label={({ category, percent }: { category: string; percent: number }) => `${category} ${(percent * 100).toFixed(0)}%`}
                         outerRadius={80}
                         fill="#8884d8"
                       >
@@ -388,7 +388,7 @@ const ReportsPage = () => {
               <GlassCard className="p-6 bg-gradient-to-br from-white/80 via-slate-50/40 to-gray-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-slate-200/30 dark:border-slate-600/30">
                 <TransactionsTable 
                   transactions={filteredTransactions}
-                  isLoading={isLoading}
+                  currency={currency}
                 />
               </GlassCard>
             </TabsContent>
