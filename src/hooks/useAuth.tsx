@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
 import { safelyUnwrapResponse } from '@/services/supabaseHelpers';
 
 interface AuthContextType {
@@ -19,7 +19,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   // Helper function to cache user ID for offline use
   const cacheUserId = (userId: string | null) => {
@@ -32,6 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error managing cached user ID:", error);
     }
+  };
+
+  // Helper function to show toast notifications safely
+  const showToast = (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => {
+    // Dynamically import and use toast to avoid circular dependencies
+    import('@/hooks/use-toast').then(({ toast }) => {
+      toast(options);
+    }).catch((error) => {
+      console.error('Failed to show toast:', error);
+    });
   };
 
   useEffect(() => {
@@ -82,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) {
         console.error("Sign in error:", error.message);
-        toast({
+        showToast({
           variant: "destructive",
           title: "Login failed",
           description: error.message || "Invalid email or password",
@@ -97,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         cacheUserId(data.user.id);
       }
       
-      toast({
+      showToast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
@@ -128,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("Sign up error details:", error);
-        toast({
+        showToast({
           variant: "destructive",
           title: "Signup failed",
           description: error.message || "An error occurred during signup",
@@ -143,14 +152,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         cacheUserId(data.user.id);
       }
       
-      toast({
+      showToast({
         title: "Account created",
         description: "Your account has been created successfully.",
       });
     } catch (error: any) {
       console.error("Sign up error caught:", error);
       console.error("Error details:", error.message, error.stack);
-      toast({
+      showToast({
         variant: "destructive",
         title: "Signup failed",
         description: error.message || "An error occurred during signup",
@@ -177,13 +186,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cacheUserId(null);
       
       console.log("Sign out successful");
-      toast({
+      showToast({
         title: "Signed out",
         description: "You have been signed out successfully.",
       });
     } catch (error: any) {
       console.error("Sign out error caught:", error);
-      toast({
+      showToast({
         variant: "destructive",
         title: "Error signing out",
         description: error.message || "An error occurred while signing out",
