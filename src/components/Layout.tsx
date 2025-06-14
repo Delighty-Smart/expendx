@@ -11,7 +11,6 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
 const Layout = ({
   children
 }: {
@@ -186,7 +185,7 @@ const Layout = ({
         </div>
         
         {/* Navigation Menu */}
-        <nav className="flex-1 px-3 pt-8 space-y-1">
+        <nav className="flex-1 px-3 pt-8 space-y-1 my-px py-[50px]">
           {menuItems.map(item => {
           const IconComponent = item.icon;
           const isActive = location.pathname === item.path;
