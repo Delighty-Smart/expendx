@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -54,6 +55,17 @@ const IndexPage = () => {
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
+
+  // Utility function for formatting amounts with commas
+  const formatAmount = (amount: number) => {
+    if (hideAmounts) {
+      return "***";
+    }
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
 
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
@@ -344,7 +356,7 @@ const IndexPage = () => {
           {payload.name}
         </text>
         <text x={cx} y={cy + 5} dy={8} textAnchor="middle" fill={fill} fontSize={18} fontWeight="bold">
-          {currency.symbol}{value.toFixed(2)}
+          {currency.symbol}{formatAmount(value)}
         </text>
         <text x={cx} y={cy + 25} dy={8} textAnchor="middle" fill="#888888" fontSize={12}>
           {`${(percent * 100).toFixed(0)}%`}
@@ -370,13 +382,6 @@ const IndexPage = () => {
         />
       </g>
     );
-  };
-
-  const formatAmount = (amount: number) => {
-    if (hideAmounts) {
-      return "***";
-    }
-    return amount.toFixed(2);
   };
 
   // Calculate total amount for percentage calculations
@@ -466,7 +471,7 @@ const IndexPage = () => {
                         ></div>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : monthlyIncome.toFixed(2)}
+                        {progressPercentage.toFixed(0)}% of est. {currency.symbol}{hideAmounts ? "***" : formatAmount(monthlyIncome)}
                       </p>
                     </div>
                   )}
@@ -544,13 +549,13 @@ const IndexPage = () => {
                     />
                     <XAxis 
                       type="number"
-                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
+                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Amount"]}
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`, "Amount"]}
                       contentStyle={{
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
@@ -630,13 +635,13 @@ const IndexPage = () => {
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
                     <YAxis 
-                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
+                      tickFormatter={(value)=> hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, ""]}
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`, ""]}
                       contentStyle={{
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
@@ -698,13 +703,13 @@ const IndexPage = () => {
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
                     <YAxis 
-                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${value}`}
+                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${value.toFixed(2)}`, "Balance"]}
+                      formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`, "Balance"]}
                       contentStyle={{
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
                         backdropFilter: "blur(8px)",
