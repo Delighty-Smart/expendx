@@ -11,6 +11,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 const Layout = ({
   children
 }: {
@@ -31,6 +32,7 @@ const Layout = ({
     toast
   } = useToast();
   const isMobile = useIsMobile();
+
   useEffect(() => {
     const updateStreak = async () => {
       try {
@@ -45,6 +47,7 @@ const Layout = ({
     };
     updateStreak();
   }, []);
+
   useEffect(() => {
     if (userStreak) {
       const timer = setTimeout(() => {
@@ -57,6 +60,7 @@ const Layout = ({
       return () => clearTimeout(timer);
     }
   }, [userStreak]);
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -74,16 +78,21 @@ const Layout = ({
       });
     }
   };
+
   const handleStreakClick = () => {
     setShowStreakModal(true);
   };
+
   const handleProfileClick = () => {
     navigate("/profile");
     setIsSidebarOpen(false);
   };
-  const setThemeOption = (option: "light" | "dark") => {
-    updateTheme(option);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    updateTheme(newTheme);
   };
+
   const menuItems = [{
     path: "/",
     label: "Dashboard",
@@ -113,6 +122,7 @@ const Layout = ({
     label: "Settings",
     icon: Settings
   }];
+
   if (isAdmin) {
     menuItems.push({
       path: "/admin",
@@ -120,6 +130,7 @@ const Layout = ({
       icon: Shield
     });
   }
+
   return <div className="min-h-screen bg-background transition-colors duration-300">
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
@@ -131,21 +142,9 @@ const Layout = ({
           <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-full object-contain" />
         </div>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="animated-button">
-                {theme === "dark" ? <Moon className="h-5 w-5 text-foreground" /> : <Sun className="h-5 w-5 text-foreground" />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover/80 backdrop-blur-md border-border/50">
-              <DropdownMenuItem onClick={() => setThemeOption("light")} className="flex gap-2 text-sm">
-                <Sun className="h-4 w-4" /> Light
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setThemeOption("dark")} className="flex gap-2 text-sm">
-                <Moon className="h-4 w-4" /> Dark
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button variant="ghost" size="icon" className="animated-button" onClick={toggleTheme}>
+            {theme === "dark" ? <Moon className="h-5 w-5 text-foreground" /> : <Sun className="h-5 w-5 text-foreground" />}
+          </Button>
         </div>
       </header>
 
