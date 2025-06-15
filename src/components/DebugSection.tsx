@@ -67,8 +67,8 @@ export const DebugSection = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-0.5 flex-1 min-w-0">
           <Label htmlFor="auto-sync" className="text-sm font-medium">
             Auto-sync when online
           </Label>
@@ -76,11 +76,14 @@ export const DebugSection = () => {
             Automatically sync changes when connected to the internet
           </p>
         </div>
-        <Switch
-          id="auto-sync"
-          checked={autoSync}
-          onCheckedChange={setAutoSync}
-        />
+        <div className="flex-shrink-0">
+          <Switch
+            id="auto-sync"
+            checked={autoSync}
+            onCheckedChange={setAutoSync}
+            className="scale-75 md:scale-100"
+          />
+        </div>
       </div>
 
       <Separator />
