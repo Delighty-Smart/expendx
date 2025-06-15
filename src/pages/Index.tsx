@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -17,6 +16,7 @@ import { updateUserStreak } from "@/lib/streak";
 import { startOfMonth, endOfMonth, addWeeks, subWeeks, eachDayOfInterval, format } from "date-fns";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, PieChart, Pie, Sector, AreaChart as RechartAreaChart, Area, LineChart as RechartLineChart, Line } from "recharts";
 import { cn } from "@/lib/utils";
+import StreakModal from "@/components/StreakModal";
 
 // Transaction types
 interface TransactionData {
@@ -51,7 +51,8 @@ const IndexPage = () => {
   const queryClient = useQueryClient();
   const [hideAmounts, setHideAmounts] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  
+  const [showStreakModal, setShowStreakModal] = useState(false);
+
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
@@ -401,7 +402,16 @@ const IndexPage = () => {
             </Button>
             <div className="flex items-center gap-4">
               {streakData && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg">
+                <div
+                  className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-500 to-red-500 rounded-full text-white shadow-lg cursor-pointer transition hover:scale-105"
+                  onClick={() => setShowStreakModal(true)}
+                  title="View Streak Progress"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === " ") setShowStreakModal(true);
+                  }}
+                >
                   <Flame className="h-5 w-5 animate-pulse text-yellow-200" />
                   <span className="text-sm font-bold">{streakData.current_streak}</span>
                 </div>
@@ -417,6 +427,13 @@ const IndexPage = () => {
               </Button>
             </div>
           </div>
+
+          {/* Streak Modal Popup */}
+          <StreakModal
+            open={showStreakModal}
+            onOpenChange={setShowStreakModal}
+            streak={streakData}
+          />
 
           {/* Cards section */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
