@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Clock, Smartphone } from "lucide-react";
@@ -276,7 +276,7 @@ const NotificationPreferences = () => {
                   <p className="text-xs text-muted-foreground leading-tight">{option.description}</p>
                 </div>
                 <div className="flex-shrink-0 mt-1">
-                  <Switch
+                  <CustomToggle
                     checked={preferences[option.key]}
                     onCheckedChange={(checked) => updatePreference(option.key, checked)}
                     disabled={saving}
