@@ -2,8 +2,22 @@
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { Check } from "lucide-react"
-
 import { cn } from "@/lib/utils"
+
+// Responsive size classes for "sm": smaller for mobile, current for md+
+// "md:" prefix applies styles at 768px and up.
+const sizeClasses = {
+  sm: "h-3 w-3 md:h-3.5 md:w-3.5",
+  md: "h-4 w-4",
+  lg: "h-5 w-5"
+};
+
+// Responsive icon sizes
+const iconSizes = {
+  sm: "h-2 w-2 md:h-2.5 md:w-2.5",
+  md: "h-3 w-3",
+  lg: "h-3.5 w-3.5"
+};
 
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
@@ -11,18 +25,6 @@ const Checkbox = React.forwardRef<
     size?: 'sm' | 'md' | 'lg'
   }
 >(({ className, size = 'sm', ...props }, ref) => {
-  const sizeClasses = {
-    sm: "h-3.5 w-3.5", // Smaller default size
-    md: "h-4 w-4",     // Medium size
-    lg: "h-5 w-5"      // Larger size
-  };
-  
-  const iconSizes = {
-    sm: "h-2.5 w-2.5", // Smaller checkmark
-    md: "h-3 w-3",     // Medium checkmark
-    lg: "h-3.5 w-3.5"  // Larger checkmark
-  };
-  
   return (
     <CheckboxPrimitive.Root
       ref={ref}
