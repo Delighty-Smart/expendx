@@ -11,12 +11,12 @@ export const useRefresh = () => {
     try {
       // Check if queryClient is available
       if (!queryClient) {
-        console.warn("QueryClient not available for refresh");
+        console.warn("QueryClient not available for refresh, falling back to page reload");
         toast({
-          title: "Refresh Failed",
-          description: "Query client not available. Please try again.",
-          variant: "destructive"
+          title: "Refresh",
+          description: "Page refreshed",
         });
+        window.location.reload();
         return;
       }
 
