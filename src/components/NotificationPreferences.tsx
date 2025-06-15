@@ -97,69 +97,39 @@ const NotificationPreferences = () => {
 
       let patchedData = data as NotificationPreference | null;
 
-      // Initialize notification_times with defaults if not present
-      if (patchedData && !patchedData.notification_times) {
-        const defaultTimes: Record<string, string> = {};
-        NOTIFICATION_SCHEDULES.forEach(schedule => {
-          defaultTimes[schedule.type] = schedule.defaultTime;
+      // Always initialize NOTIFICATION_TIMES for local state/UI, not DB
+      const defaultTimes: Record<string, string> = {};
+      NOTIFICATION_SCHEDULES.forEach(schedule => {
+        defaultTimes[schedule.type] = schedule.defaultTime;
+      });
+
+      let notification_times = defaultTimes;
+      if (patchedData && 'preferred_time' in patchedData && patchedData.preferred_time) {
+        // For backward compatibility, set each time to preferred_time if exists
+        Object.keys(notification_times).forEach(type => {
+          notification_times[type] = (patchedData as any).preferred_time || defaultTimes[type];
         });
-
-        patchedData = { 
-          ...patchedData, 
-          notification_times: defaultTimes,
-          preferred_time: '19:00' // Keep for backward compatibility
-        };
-
-        // Update in database
-        if (patchedData?.id) {
-          await supabase
-            .from('notification_preferences')
-            .update({ notification_times: defaultTimes })
-            .eq('user_id', user.id);
-        }
       }
 
       if (patchedData) {
-        // Ensure notification_times key is present for strong typing
-        if (!patchedData.notification_times) {
-          const defaultTimes: Record<string, string> = {};
-          NOTIFICATION_SCHEDULES.forEach(schedule => {
-            defaultTimes[schedule.type] = schedule.defaultTime;
-          });
-          patchedData.notification_times = defaultTimes;
-        }
-        setPreferences(patchedData);
-        // Schedule all enabled notifications
-        scheduleAllNotifications(user.id, patchedData);
+        setPreferences({ ...patchedData, notification_times });
+        // Schedule notifications (notice we pass added notification_times, not from DB)
+        scheduleAllNotifications(user.id, { ...patchedData, notification_times });
       } else {
-        // Create default preferences if none exist
-        const defaultTimes: Record<string, string> = {};
-        NOTIFICATION_SCHEDULES.forEach(schedule => {
-          defaultTimes[schedule.type] = schedule.defaultTime;
-        });
-
+        // Insert without notification_times!
         const { data: newPrefs, error: createError } = await supabase
           .from('notification_preferences')
-          .insert({ 
+          .insert({
             user_id: user.id, 
-            preferred_time: '19:00',
-            notification_times: defaultTimes
+            preferred_time: '19:00'
           })
           .select('*')
           .maybeSingle();
-
         if (createError) {
           console.error('Error creating preferences:', createError);
         } else if (newPrefs) {
-          // Make sure notification_times is always present
-          setPreferences({
-            ...newPrefs,
-            notification_times: newPrefs.notification_times || defaultTimes
-          });
-          scheduleAllNotifications(user.id, {
-            ...newPrefs,
-            notification_times: newPrefs.notification_times || defaultTimes
-          });
+          setPreferences({ ...newPrefs, notification_times: defaultTimes });
+          scheduleAllNotifications(user.id, { ...newPrefs, notification_times: defaultTimes });
         }
       }
     } catch (error) {
@@ -190,6 +160,7 @@ const NotificationPreferences = () => {
 
     setSaving(true);
     try {
+      // Only send known fields, never notification_times
       const { error } = await supabase
         .from('notification_preferences')
         .update({ [key]: value })
@@ -229,28 +200,21 @@ const NotificationPreferences = () => {
 
     setSaving(true);
     try {
+      // Only update UI state, not DB!
       const updatedTimes = {
         ...preferences.notification_times,
         [notificationType]: time
       };
-
-      const { error } = await supabase
-        .from('notification_preferences')
-        .update({ notification_times: updatedTimes })
-        .eq('id', preferences.id);
-
-      if (error) throw error;
-
-      const updatedPrefs = { ...preferences, notification_times: updatedTimes };
-      setPreferences(updatedPrefs);
-
-      // Reschedule this specific notification
+      setPreferences({
+        ...preferences,
+        notification_times: updatedTimes
+      });
+      // Reschedule notification (no DB code here)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const isEnabled = preferences[notificationType as keyof NotificationPreference] as boolean;
         notificationScheduler.scheduleNotification(user.id, notificationType, time, isEnabled);
       }
-
       toast({
         title: "Time updated",
         description: "Notification time has been updated.",
