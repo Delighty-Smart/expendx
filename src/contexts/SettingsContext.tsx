@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { currencies } from '@/lib/currencies';
 
@@ -6,7 +7,7 @@ import { currencies } from '@/lib/currencies';
 interface Currency {
   code: string;
   symbol: string;
-  name: string; // Ensure name property is included
+  name: string;
 }
 
 interface SettingsContextType {
@@ -15,8 +16,8 @@ interface SettingsContextType {
   theme: string;
   updateTheme: (theme: 'light' | 'dark') => void;
   updateCurrency: (currencyCode: string) => void;
-  hideAmounts: boolean; // Add the missing hideAmounts property
-  toggleHideAmounts: () => void; // Add method to toggle hideAmounts
+  hideAmounts: boolean;
+  toggleHideAmounts: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -29,17 +30,62 @@ export const useSettings = () => {
   return context;
 };
 
-export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currency, setCurrency] = useState<Currency>({ code: 'USD', symbol: '$', name: 'US Dollar' });
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [hideAmounts, setHideAmounts] = useState<boolean>(false);
+interface SettingsProviderProps {
+  children: ReactNode;
+}
 
+export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) => {
+  // Initialize state with proper default values
+  const [currency, setCurrency] = useState<Currency>(() => ({ 
+    code: 'USD', 
+    symbol: '$', 
+    name: 'US Dollar' 
+  }));
+  
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    // Check localStorage first, then system preference
+    const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
+    if (savedTheme) return savedTheme;
+    
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? 'dark' : 'light';
+  });
+  
+  const [hideAmounts, setHideAmounts] = useState<boolean>(() => {
+    return localStorage.getItem('expendx_hideAmounts') === 'true';
+  });
+
+  // Initialize settings on mount
   useEffect(() => {
+    const initializeSettings = async () => {
+      try {
+        // Apply theme immediately
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        localStorage.setItem('expendx_theme', theme);
+
+        // Load saved currency
+        const savedCurrency = localStorage.getItem('expendx_currency');
+        if (savedCurrency) {
+          const currencyObj = currencies.find(c => c.code === savedCurrency) || { 
+            code: 'USD', 
+            symbol: '$', 
+            name: 'US Dollar' 
+          };
+          setCurrency(currencyObj);
+        }
+
+        // Sync with server
+        await fetchUserSettings();
+      } catch (error) {
+        console.error('Error initializing settings:', error);
+      }
+    };
+
     initializeSettings();
   }, []);
 
+  // Auto-save settings changes
   useEffect(() => {
-    // Auto-save settings changes with debouncing
     const saveTimeout = setTimeout(() => {
       updateUserSettings();
     }, 500);
@@ -50,47 +96,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => clearTimeout(saveTimeout);
   }, [currency, theme, hideAmounts]);
 
-  const initializeSettings = async () => {
-    try {
-      // Load from localStorage first for immediate UI response
-      const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
-      const savedHideAmounts = localStorage.getItem('expendx_hideAmounts') === 'true';
-      const savedCurrency = localStorage.getItem('expendx_currency');
-
-      // Apply saved settings immediately
-      if (savedTheme) {
-        setTheme(savedTheme);
-        document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-      } else {
-        // Detect system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const initialTheme = prefersDark ? 'dark' : 'light';
-        setTheme(initialTheme);
-        document.documentElement.classList.toggle('dark', initialTheme === 'dark');
-        localStorage.setItem('expendx_theme', initialTheme);
-      }
-
-      setHideAmounts(savedHideAmounts);
-
-      if (savedCurrency) {
-        const currencyObj = currencies.find(c => c.code === savedCurrency) || { code: 'USD', symbol: '$', name: 'US Dollar' };
-        setCurrency(currencyObj);
-      }
-
-      // Then sync with server
-      await fetchUserSettings();
-    } catch (error) {
-      console.error('Error initializing settings:', error);
-    }
-  };
-
   // Get user settings from Supabase
   const fetchUserSettings = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get user settings
       const { data, error } = await supabase
         .from('user_settings')
         .select('*')
@@ -102,9 +113,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return;
       }
 
-      // If settings exists, update the state with the saved currency
       if (data && data.currency_code) {
-        const currencyObj = currencies.find(c => c.code === data.currency_code) || { code: 'USD', symbol: '$', name: 'US Dollar' };
+        const currencyObj = currencies.find(c => c.code === data.currency_code) || { 
+          code: 'USD', 
+          symbol: '$', 
+          name: 'US Dollar' 
+        };
         setCurrency(currencyObj);
         localStorage.setItem('expendx_currency', data.currency_code);
       }
@@ -113,22 +127,22 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Enhanced updateUserSettings with better persistence
+  // Update user settings with better persistence
   const updateUserSettings = async () => {
     try {
-      // Always save to localStorage immediately for persistence
+      // Always save to localStorage immediately
       localStorage.setItem('expendx_theme', theme);
       localStorage.setItem('expendx_hideAmounts', hideAmounts.toString());
       localStorage.setItem('expendx_currency', currency.code);
 
-      // Also save additional settings
+      // Save additional settings metadata
       const additionalSettings = {
         lastUpdated: new Date().toISOString(),
         version: '1.0'
       };
       localStorage.setItem('expendx_settings_meta', JSON.stringify(additionalSettings));
 
-      // Then sync with server
+      // Sync with server
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -173,7 +187,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Function to update currency by code
   const updateCurrency = (currencyCode: string) => {
-    const currencyObj = currencies.find(c => c.code === currencyCode) || { code: 'USD', symbol: '$', name: 'US Dollar' };
+    const currencyObj = currencies.find(c => c.code === currencyCode) || { 
+      code: 'USD', 
+      symbol: '$', 
+      name: 'US Dollar' 
+    };
     setCurrency(currencyObj);
   };
 
@@ -182,16 +200,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setHideAmounts(prev => !prev);
   };
 
+  const contextValue: SettingsContextType = {
+    currency,
+    setCurrency,
+    theme,
+    updateTheme,
+    updateCurrency,
+    hideAmounts,
+    toggleHideAmounts
+  };
+
   return (
-    <SettingsContext.Provider value={{ 
-      currency, 
-      setCurrency, 
-      theme, 
-      updateTheme,
-      updateCurrency,
-      hideAmounts,
-      toggleHideAmounts
-    }}>
+    <SettingsContext.Provider value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );
