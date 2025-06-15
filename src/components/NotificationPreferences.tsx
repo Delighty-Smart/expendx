@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -12,23 +11,25 @@ import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationD
 interface NotificationPreference {
   id: string;
   user_id: string;
-  weekly_recap: boolean;
-  budget_nudges: boolean;
-  unusual_activity: boolean;
-  daily_log_reminder: boolean;
-  savings_progress: boolean;
-  month_reset_preview: boolean;
-  recurring_expense_reminder: boolean;
-  night_owl_checkin: boolean;
-  monthly_snapshot: boolean;
-  reflection_prompts: boolean;
-  custom_goal_reminder: boolean;
-  business_mode_nudges: boolean;
-  streak_milestone_alerts: boolean;
-  streak_freeze_warnings: boolean;
-  streak_recovery_reminders: boolean;
-  streak_breaking_alerts: boolean;
-  preferred_time: string;
+  created_at: string;
+  updated_at?: string;
+  weekly_recap?: boolean;
+  budget_nudges?: boolean;
+  unusual_activity?: boolean;
+  daily_log_reminder?: boolean;
+  savings_progress?: boolean;
+  month_reset_preview?: boolean;
+  recurring_expense_reminder?: boolean;
+  night_owl_checkin?: boolean;
+  monthly_snapshot?: boolean;
+  reflection_prompts?: boolean;
+  custom_goal_reminder?: boolean;
+  business_mode_nudges?: boolean;
+  streak_milestone_alerts?: boolean;
+  streak_freeze_warnings?: boolean;
+  streak_recovery_reminders?: boolean;
+  streak_breaking_alerts?: boolean;
+  preferred_time?: string;
   notification_times?: Record<string, string>;
 }
 
@@ -493,8 +494,8 @@ const NotificationPreferences = () => {
 
                     // Reschedule all notifications if permission was granted
                     if (permission === 'granted' && preferences) {
-                      const { data: { user } } = supabase.auth.getUser().then(({ data }) => {
-                        if (data.user) {
+                      supabase.auth.getUser().then(({ data }) => {
+                        if (data && data.user) {
                           scheduleAllNotifications(data.user.id, preferences);
                         }
                       });
