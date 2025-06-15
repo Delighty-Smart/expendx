@@ -6,20 +6,14 @@ import { useToast } from "@/hooks/use-toast";
 export const useRefresh = () => {
   const { toast } = useToast();
   
-  // Safely get queryClient with proper error handling
-  let queryClient;
-  try {
-    queryClient = useQueryClient();
-  } catch (error) {
-    console.warn("QueryClient not available, falling back to page reload");
-    queryClient = null;
-  }
+  // Always call useQueryClient hook unconditionally
+  const queryClient = useQueryClient();
 
   const refreshData = useCallback(async () => {
     try {
-      // If no queryClient available, fall back to page reload
-      if (!queryClient) {
-        console.warn("QueryClient not available for refresh, falling back to page reload");
+      // Check if queryClient exists and has the invalidateQueries method
+      if (!queryClient || typeof queryClient.invalidateQueries !== 'function') {
+        console.warn("QueryClient not properly initialized, falling back to page reload");
         toast({
           title: "Refresh",
           description: "Page refreshed",
