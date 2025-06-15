@@ -30,7 +30,7 @@ interface NotificationPreference {
   streak_recovery_reminders?: boolean;
   streak_breaking_alerts?: boolean;
   preferred_time?: string;
-  notification_times?: Record<string, string>;
+  notification_times: Record<string, string>;
 }
 
 // Custom Toggle Component
@@ -88,17 +88,17 @@ const NotificationPreferences = () => {
         .from('notification_preferences')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching preferences:', error);
         return;
       }
 
-      let patchedData = data;
+      let patchedData = data as NotificationPreference | null;
 
       // Initialize notification_times with defaults if not present
-      if (!patchedData?.notification_times) {
+      if (patchedData && !patchedData.notification_times) {
         const defaultTimes: Record<string, string> = {};
         NOTIFICATION_SCHEDULES.forEach(schedule => {
           defaultTimes[schedule.type] = schedule.defaultTime;
@@ -120,6 +120,14 @@ const NotificationPreferences = () => {
       }
 
       if (patchedData) {
+        // Ensure notification_times key is present for strong typing
+        if (!patchedData.notification_times) {
+          const defaultTimes: Record<string, string> = {};
+          NOTIFICATION_SCHEDULES.forEach(schedule => {
+            defaultTimes[schedule.type] = schedule.defaultTime;
+          });
+          patchedData.notification_times = defaultTimes;
+        }
         setPreferences(patchedData);
         // Schedule all enabled notifications
         scheduleAllNotifications(user.id, patchedData);
@@ -138,13 +146,20 @@ const NotificationPreferences = () => {
             notification_times: defaultTimes
           })
           .select('*')
-          .single();
+          .maybeSingle();
 
         if (createError) {
           console.error('Error creating preferences:', createError);
-        } else {
-          setPreferences(newPrefs);
-          scheduleAllNotifications(user.id, newPrefs);
+        } else if (newPrefs) {
+          // Make sure notification_times is always present
+          setPreferences({
+            ...newPrefs,
+            notification_times: newPrefs.notification_times || defaultTimes
+          });
+          scheduleAllNotifications(user.id, {
+            ...newPrefs,
+            notification_times: newPrefs.notification_times || defaultTimes
+          });
         }
       }
     } catch (error) {
