@@ -4,12 +4,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 export const useRefresh = () => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Safely get queryClient with proper error handling
+  let queryClient;
+  try {
+    queryClient = useQueryClient();
+  } catch (error) {
+    console.warn("QueryClient not available, falling back to page reload");
+    queryClient = null;
+  }
 
   const refreshData = useCallback(async () => {
     try {
-      // Check if queryClient is available
+      // If no queryClient available, fall back to page reload
       if (!queryClient) {
         console.warn("QueryClient not available for refresh, falling back to page reload");
         toast({
