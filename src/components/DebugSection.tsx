@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,21 +66,20 @@ export const DebugSection = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="space-y-0.5 flex-1 min-w-0">
-          <Label htmlFor="auto-sync" className="text-sm font-medium">
+      <div className="flex items-start justify-between py-2 gap-4">
+        <div className="space-y-1 flex-1 min-w-0">
+          <Label htmlFor="auto-sync" className="text-sm font-medium leading-tight">
             Auto-sync when online
           </Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground leading-tight">
             Automatically sync changes when connected to the internet
           </p>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 mt-1">
           <Switch
             id="auto-sync"
             checked={autoSync}
             onCheckedChange={setAutoSync}
-            className="scale-75 md:scale-100"
           />
         </div>
       </div>
