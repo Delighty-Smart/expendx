@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Clock, Smartphone } from "lucide-react";
+import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationDescription, notificationScheduler } from "@/services/notificationScheduler";
 
 interface NotificationPreference {
   id: string;
@@ -27,6 +29,7 @@ interface NotificationPreference {
   streak_recovery_reminders: boolean;
   streak_breaking_alerts: boolean;
   preferred_time: string;
+  notification_times?: Record<string, string>;
 }
 
 // Custom Toggle Component
@@ -93,25 +96,46 @@ const NotificationPreferences = () => {
 
       let patchedData = data;
 
-      // Ensure preferred_time is set to '19:00' (7pm) if not set
-      if (!patchedData?.preferred_time) {
-        const defaultTime = '19:00'; // 7pm
-        // patch it immediately in supabase and locally
-        await supabase
-          .from('notification_preferences')
-          .update({ preferred_time: defaultTime })
-          .eq('user_id', user.id);
+      // Initialize notification_times with defaults if not present
+      if (!patchedData?.notification_times) {
+        const defaultTimes: Record<string, string> = {};
+        NOTIFICATION_SCHEDULES.forEach(schedule => {
+          defaultTimes[schedule.type] = schedule.defaultTime;
+        });
 
-        patchedData = { ...patchedData, preferred_time: defaultTime }
+        patchedData = { 
+          ...patchedData, 
+          notification_times: defaultTimes,
+          preferred_time: '19:00' // Keep for backward compatibility
+        };
+
+        // Update in database
+        if (patchedData?.id) {
+          await supabase
+            .from('notification_preferences')
+            .update({ notification_times: defaultTimes })
+            .eq('user_id', user.id);
+        }
       }
 
       if (patchedData) {
         setPreferences(patchedData);
+        // Schedule all enabled notifications
+        scheduleAllNotifications(user.id, patchedData);
       } else {
         // Create default preferences if none exist
+        const defaultTimes: Record<string, string> = {};
+        NOTIFICATION_SCHEDULES.forEach(schedule => {
+          defaultTimes[schedule.type] = schedule.defaultTime;
+        });
+
         const { data: newPrefs, error: createError } = await supabase
           .from('notification_preferences')
-          .insert({ user_id: user.id, preferred_time: '19:00' })
+          .insert({ 
+            user_id: user.id, 
+            preferred_time: '19:00',
+            notification_times: defaultTimes
+          })
           .select('*')
           .single();
 
@@ -119,6 +143,7 @@ const NotificationPreferences = () => {
           console.error('Error creating preferences:', createError);
         } else {
           setPreferences(newPrefs);
+          scheduleAllNotifications(user.id, newPrefs);
         }
       }
     } catch (error) {
@@ -126,6 +151,22 @@ const NotificationPreferences = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const scheduleAllNotifications = (userId: string, prefs: NotificationPreference) => {
+    if (!prefs.notification_times) return;
+    
+    NOTIFICATION_SCHEDULES.forEach(schedule => {
+      const isEnabled = prefs[schedule.type as keyof NotificationPreference] as boolean;
+      const preferredTime = prefs.notification_times?.[schedule.type] || schedule.defaultTime;
+      
+      notificationScheduler.scheduleNotification(
+        userId,
+        schedule.type,
+        preferredTime,
+        isEnabled
+      );
+    });
   };
 
   const updatePreference = async (key: keyof NotificationPreference, value: boolean | string) => {
@@ -140,7 +181,17 @@ const NotificationPreferences = () => {
 
       if (error) throw error;
 
-      setPreferences(prev => prev ? { ...prev, [key]: value } : null);
+      const updatedPrefs = { ...preferences, [key]: value };
+      setPreferences(updatedPrefs);
+
+      // Reschedule notifications if this was a toggle change
+      if (typeof value === 'boolean') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          scheduleAllNotifications(user.id, updatedPrefs);
+        }
+      }
+
       toast({
         title: "Preferences updated",
         description: "Your notification preferences have been saved.",
@@ -150,6 +201,49 @@ const NotificationPreferences = () => {
       toast({
         title: "Error",
         description: "Failed to update preferences. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateNotificationTime = async (notificationType: string, time: string) => {
+    if (!preferences) return;
+
+    setSaving(true);
+    try {
+      const updatedTimes = {
+        ...preferences.notification_times,
+        [notificationType]: time
+      };
+
+      const { error } = await supabase
+        .from('notification_preferences')
+        .update({ notification_times: updatedTimes })
+        .eq('id', preferences.id);
+
+      if (error) throw error;
+
+      const updatedPrefs = { ...preferences, notification_times: updatedTimes };
+      setPreferences(updatedPrefs);
+
+      // Reschedule this specific notification
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const isEnabled = preferences[notificationType as keyof NotificationPreference] as boolean;
+        notificationScheduler.scheduleNotification(user.id, notificationType, time, isEnabled);
+      }
+
+      toast({
+        title: "Time updated",
+        description: "Notification time has been updated.",
+      });
+    } catch (error) {
+      console.error('Error updating notification time:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update notification time. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -339,40 +433,41 @@ const NotificationPreferences = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             {notificationOptions.map((option) => (
-              <div key={option.key} className="flex items-start justify-between py-2 gap-4">
-                <div className="space-y-1 flex-1 min-w-0">
-                  <Label className="text-sm font-medium leading-tight">{option.label}</Label>
-                  <p className="text-xs text-muted-foreground leading-tight">{option.description}</p>
+              <div key={option.key} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <Label className="text-sm font-medium leading-tight">{option.label}</Label>
+                    <p className="text-xs text-muted-foreground leading-tight">{option.description}</p>
+                    <p className="text-xs text-blue-600 leading-tight">
+                      {getNotificationDescription(option.key)}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 mt-1">
+                    <CustomToggle
+                      checked={preferences[option.key]}
+                      onCheckedChange={(checked) => updatePreference(option.key, checked)}
+                      disabled={saving}
+                    />
+                  </div>
                 </div>
-                <div className="flex-shrink-0 mt-1">
-                  <CustomToggle
-                    checked={preferences[option.key]}
-                    onCheckedChange={(checked) => updatePreference(option.key, checked)}
-                    disabled={saving}
-                  />
-                </div>
+                
+                {preferences[option.key] && (
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Preferred time:</Label>
+                    <Input
+                      type="time"
+                      value={preferences.notification_times?.[option.key] || getDefaultTimeForNotification(option.key)}
+                      onChange={(e) => updateNotificationTime(option.key, e.target.value)}
+                      className="w-24 h-7 text-xs"
+                      disabled={saving}
+                    />
+                  </div>
+                )}
               </div>
             ))}
-          </div>
-
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="h-4 w-4" />
-              <Label className="text-sm font-medium">Preferred Notification Time</Label>
-            </div>
-            <Input
-              type="time"
-              value={preferences.preferred_time}
-              onChange={(e) => updatePreference('preferred_time', e.target.value)}
-              className="w-40"
-              disabled={saving}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Time for scheduled notifications (like daily log reminders and night owl check-ins).<br />
-              <span className="font-semibold">You'll get a browser notification at this time if permissions are granted, plus reminders in the in-app notification page.</span>
-            </p>
           </div>
 
           <div className="border-t pt-4">
@@ -392,9 +487,18 @@ const NotificationPreferences = () => {
                     toast({
                       title: permission === 'granted' ? "Notifications enabled" : "Notifications blocked",
                       description: permission === 'granted' 
-                        ? "You'll now receive browser notifications"
+                        ? "You'll now receive browser notifications at your preferred times"
                         : "You can enable notifications in your browser settings"
                     });
+
+                    // Reschedule all notifications if permission was granted
+                    if (permission === 'granted' && preferences) {
+                      const { data: { user } } = supabase.auth.getUser().then(({ data }) => {
+                        if (data.user) {
+                          scheduleAllNotifications(data.user.id, preferences);
+                        }
+                      });
+                    }
                   });
                 }
               }}
