@@ -1,7 +1,7 @@
-
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { currencies } from '@/lib/currencies';
+import { notificationService } from '@/services/notificationService';
 
 // Define type for the currency object
 interface Currency {
@@ -81,7 +81,25 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       }
     };
 
+    const askNotification = async () => {
+      if (!notificationService.isSupported()) return;
+      // Only ask if the user hasn't decided
+      if (Notification.permission === 'default' && !localStorage.getItem('expendx_noti_permission_prompted')) {
+        try {
+          const permission = await Notification.requestPermission();
+          localStorage.setItem('expendx_noti_permission_prompted', 'true');
+          if (permission === 'granted') {
+            console.log("Browser notifications enabled");
+          }
+        } catch (e) {
+          console.warn("Unable to request browser notification permission", e);
+        }
+      }
+    };
+    askNotification();
+
     initializeSettings();
+    // eslint-disable-next-line
   }, []);
 
   // Auto-save settings changes
