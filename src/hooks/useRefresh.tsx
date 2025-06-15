@@ -9,6 +9,17 @@ export const useRefresh = () => {
 
   const refreshData = useCallback(async () => {
     try {
+      // Check if queryClient is available
+      if (!queryClient) {
+        console.warn("QueryClient not available for refresh");
+        toast({
+          title: "Refresh Failed",
+          description: "Query client not available. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Invalidate all queries to trigger fresh data fetch
       await queryClient.invalidateQueries();
       

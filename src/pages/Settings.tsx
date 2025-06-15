@@ -31,7 +31,24 @@ const Settings = () => {
   } = useSettings();
   
   const { toast } = useToast();
-  const { refreshData } = useRefresh();
+  
+  // Safely initialize useRefresh with error handling
+  let refreshData;
+  try {
+    const refreshHook = useRefresh();
+    refreshData = refreshHook.refreshData;
+  } catch (error) {
+    console.error("Error initializing refresh hook:", error);
+    // Fallback refresh function
+    refreshData = async () => {
+      toast({
+        title: "Refresh",
+        description: "Page refreshed",
+      });
+      window.location.reload();
+    };
+  }
+  
   const [search, setSearch] = useState("");
   const [openSection, setOpenSection] = useState<string>("");
   const isMobile = useIsMobile();
