@@ -123,21 +123,23 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
   <SelectPrimitive.Item 
     ref={ref} 
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center rounded-md py-2 px-3 text-sm outline-none transition-colors duration-200",
+      // Modern selection styling - no checkmark overlap
+      "hover:bg-accent/50 hover:text-accent-foreground",
+      "focus:bg-accent focus:text-accent-foreground",
+      "data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary data-[state=checked]:font-medium data-[state=checked]:border-l-2 data-[state=checked]:border-primary",
+      "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       // Enhanced for mobile touch targets
-      "py-2.5 px-3 text-base sm:py-1.5 sm:pl-8 sm:pr-2 sm:text-sm",
-      // Better focus states for mobile
-      "focus:outline-none active:bg-accent active:text-accent-foreground",
+      "py-2.5 text-base sm:py-2 sm:text-sm",
       className
     )} 
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    {/* Modern indicator - small dot on the right instead of checkmark on left */}
+    <SelectPrimitive.ItemText className="flex-1">{children}</SelectPrimitive.ItemText>
+    <SelectPrimitive.ItemIndicator className="ml-2 flex h-2 w-2 items-center justify-center">
+      <div className="h-2 w-2 rounded-full bg-primary animate-scale-in" />
+    </SelectPrimitive.ItemIndicator>
   </SelectPrimitive.Item>
 ));
 SelectItem.displayName = SelectPrimitive.Item.displayName;
