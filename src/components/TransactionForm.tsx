@@ -223,7 +223,7 @@ export const TransactionForm = ({
       onOpenChange(open);
     }}>
       <DialogContent 
-        className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[525px]'} mx-auto overflow-hidden max-h-[90vh]`}
+        className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[500px]'} mx-auto overflow-hidden max-h-[90vh]`}
       >
         <ScrollArea 
           className="h-full px-1 overflow-y-auto"
@@ -236,30 +236,30 @@ export const TransactionForm = ({
           }}
         >
           <DialogHeader>
-            <div className="flex items-center gap-2">
-              <DialogTitle className="text-lg">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
+            <div className="flex items-center gap-3">
+              <DialogTitle className="text-xl font-semibold">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
               <PendingSyncIndicator status={syncStatus} />
             </div>
-            <DialogDescription className="text-sm">
+            <DialogDescription className="text-sm leading-relaxed">
               Enter the details of your transaction below.
               {!navigator.onLine && (
-                <span className="block text-orange-600 mt-1 font-medium">
+                <span className="block text-orange-600 dark:text-orange-400 mt-2 font-medium px-3 py-2 bg-orange-50 dark:bg-orange-950/50 rounded-lg border border-orange-200 dark:border-orange-800">
                   You're offline - changes will sync when connection is restored.
                 </span>
               )}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <div className="grid grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
                   name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Date</FormLabel>
+                      <FormLabel className="text-sm font-medium text-foreground">Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="h-9" disabled={loading} />
+                        <Input type="date" {...field} className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors" disabled={loading} />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -270,9 +270,9 @@ export const TransactionForm = ({
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Amount</FormLabel>
+                      <FormLabel className="text-sm font-medium text-foreground">Amount</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-9" disabled={loading} />
+                        <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors" disabled={loading} />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -285,14 +285,14 @@ export const TransactionForm = ({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Type</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground">Type</FormLabel>
                     <Select
                       onValueChange={handleTypeChange}
                       value={transactionType}
                       disabled={loading}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
@@ -312,14 +312,14 @@ export const TransactionForm = ({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Category</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground">Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
                       disabled={loading || categories.length === 0}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors">
                           <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                         </SelectTrigger>
                       </FormControl>
@@ -341,12 +341,12 @@ export const TransactionForm = ({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Description</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground">Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Enter transaction details..." 
                         {...field} 
-                        className="resize-none text-sm"
+                        className="resize-none text-sm rounded-lg border-border/50 focus:border-primary transition-colors min-h-[80px]"
                         disabled={loading}
                         rows={3}
                       />
@@ -364,14 +364,14 @@ export const TransactionForm = ({
                     form.reset();
                     onOpenChange(false);
                   }}
-                  className="h-9 text-sm"
+                  className="h-10 px-6 rounded-lg border-border/50 hover:bg-muted/50 transition-colors"
                   disabled={loading}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
-                  className="h-9 text-sm"
+                  className="h-10 px-6 rounded-lg transition-all hover:scale-105"
                   disabled={loading}
                 >
                   {loading ? "Saving..." : transaction ? 'Update' : 'Add'} Transaction
