@@ -324,13 +324,11 @@ export const TransactionForm = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <ScrollArea className="h-[200px]">
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </ScrollArea>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage className="text-xs" />
