@@ -5,7 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
 import { TransactionType } from "@/types/transactions";
@@ -23,7 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { PendingSyncIndicator } from "@/components/PendingSyncIndicator";
@@ -32,7 +34,7 @@ const TransactionsPage = () => {
   const { currency } = useSettings();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -50,9 +52,14 @@ const TransactionsPage = () => {
     deleteTransactionOffline,
     updateTransactionOffline
   } = useEnhancedTransactionData({
-    type: selectedType,
-    category: selectedCategory !== "All" ? selectedCategory : undefined
+    type: selectedType
   });
+
+  // Get unique categories from transactions
+  const availableCategories = useMemo(() => {
+    if (!transactions) return [];
+    return Array.from(new Set(transactions.map(t => t.category))).sort();
+  }, [transactions]);
 
   const handleRefresh = async () => {
     try {
@@ -184,10 +191,22 @@ const TransactionsPage = () => {
 
   const filteredTransactions = transactions?.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || transaction.category === selectedCategory;
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
     const matchesType = selectedType === "all" || transaction.type === selectedType;
     return matchesSearch && matchesCategory && matchesType;
   });
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+  
+  const clearAllCategories = () => {
+    setSelectedCategories([]);
+  };
 
   // Group transactions by month, then by day
   const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
@@ -306,7 +325,7 @@ const TransactionsPage = () => {
                       setSelectedType(value)
                     }
                   >
-                    <SelectTrigger className="w-[150px] bg-background border-input text-foreground">
+                    <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
@@ -316,6 +335,65 @@ const TransactionsPage = () => {
                       <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
                     </SelectContent>
                   </Select>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-4 w-4" />
+                          Categories
+                        </div>
+                        {selectedCategories.length > 0 && (
+                          <Badge variant="secondary" className="ml-2 h-5 text-xs">
+                            {selectedCategories.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0 bg-popover border-border" align="end">
+                      <div className="p-4 border-b border-border">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-foreground">Filter by Categories</h4>
+                          {selectedCategories.length > 0 && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={clearAllCategories}
+                              className="h-auto p-1 text-muted-foreground hover:text-foreground"
+                            >
+                              Clear all
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto p-2">
+                        {availableCategories.map((category) => (
+                          <div 
+                            key={category} 
+                            className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
+                            onClick={() => toggleCategory(category)}
+                          >
+                            <Checkbox 
+                              checked={selectedCategories.includes(category)}
+                              onChange={() => toggleCategory(category)}
+                              className="pointer-events-none"
+                            />
+                            <label className="flex-1 text-sm text-foreground cursor-pointer">
+                              {category}
+                            </label>
+                          </div>
+                        ))}
+                        {availableCategories.length === 0 && (
+                          <div className="p-4 text-center text-muted-foreground text-sm">
+                            No categories found
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   
                   <Button 
                     variant={selectionMode ? "secondary" : "outline"}
@@ -327,6 +405,24 @@ const TransactionsPage = () => {
                   </Button>
                 </div>
               </div>
+              
+              {selectedCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {selectedCategories.map((category) => (
+                    <Badge 
+                      key={category} 
+                      variant="secondary" 
+                      className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20"
+                    >
+                      {category}
+                      <X 
+                        className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                        onClick={() => toggleCategory(category)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {!navigator.onLine && (

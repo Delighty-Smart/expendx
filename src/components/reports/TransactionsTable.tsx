@@ -1,11 +1,15 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { Currency } from "@/lib/currencies";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ArrowUp, ArrowDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, ArrowUp, ArrowDown, Filter, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -19,13 +23,32 @@ interface TransactionsTableProps {
 const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
+  
+  // Get unique categories
+  const availableCategories = useMemo(() => {
+    return Array.from(new Set(transactions.map(t => t.category))).sort();
+  }, [transactions]);
   
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = searchQuery ? transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) : true;
     const matchesType = selectedType === "all" || transaction.type === selectedType;
-    return matchesSearch && matchesType;
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
+    return matchesSearch && matchesType && matchesCategory;
   });
+  
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+  
+  const clearAllCategories = () => {
+    setSelectedCategories([]);
+  };
 
   const formatAmount = (amount: number) => {
     return amount.toLocaleString('en-US', {
@@ -94,30 +117,109 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search transactions..." 
-            className="pl-9" 
+            className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground" 
             value={searchQuery} 
             onChange={e => setSearchQuery(e.target.value)} 
           />
         </div>
 
-        <Select
-          value={selectedType}
-          onValueChange={(value: "all" | TransactionType) => setSelectedType(value)}
-        >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="credit">Credit (Income)</SelectItem>
-            <SelectItem value="debit">Debit (Expense)</SelectItem>
-            <SelectItem value="savings">Savings</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select
+            value={selectedType}
+            onValueChange={(value: "all" | TransactionType) => setSelectedType(value)}
+          >
+            <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border">
+              <SelectItem value="all" className="text-foreground">All Types</SelectItem>
+              <SelectItem value="credit" className="text-foreground">Income</SelectItem>
+              <SelectItem value="debit" className="text-foreground">Expense</SelectItem>
+              <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
+              >
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Categories
+                </div>
+                {selectedCategories.length > 0 && (
+                  <Badge variant="secondary" className="ml-2 h-5 text-xs">
+                    {selectedCategories.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0 bg-popover border-border" align="end">
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-foreground">Filter by Categories</h4>
+                  {selectedCategories.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={clearAllCategories}
+                      className="h-auto p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      Clear all
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto p-2">
+                {availableCategories.map((category) => (
+                  <div 
+                    key={category} 
+                    className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
+                    onClick={() => toggleCategory(category)}
+                  >
+                    <Checkbox 
+                      checked={selectedCategories.includes(category)}
+                      onChange={() => toggleCategory(category)}
+                      className="pointer-events-none"
+                    />
+                    <label className="flex-1 text-sm text-foreground cursor-pointer">
+                      {category}
+                    </label>
+                  </div>
+                ))}
+                {availableCategories.length === 0 && (
+                  <div className="p-4 text-center text-muted-foreground text-sm">
+                    No categories found
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
+      
+      {selectedCategories.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedCategories.map((category) => (
+            <Badge 
+              key={category} 
+              variant="secondary" 
+              className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20"
+            >
+              {category}
+              <X 
+                className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                onClick={() => toggleCategory(category)}
+              />
+            </Badge>
+          ))}
+        </div>
+      )}
 
       <PullToRefresh 
         onRefresh={handleRefresh} 
