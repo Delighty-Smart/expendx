@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, ArrowUp, ArrowDown, Filter, X } from "lucide-react";
+import { Search, ArrowUp, ArrowDown, Filter, X, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
+import { useCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -26,10 +27,26 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
   
-  // Get unique categories
-  const availableCategories = useMemo(() => {
-    return Array.from(new Set(transactions.map(t => t.category))).sort();
-  }, [transactions]);
+  // Get categories from all transaction types
+  const { categories: expenseCategories } = useCategories('debit');
+  const { categories: incomeCategories } = useCategories('credit');
+  const { categories: savingsCategories } = useCategories('savings');
+  
+  // Combine all categories with type indicators
+  const allCategories = useMemo(() => {
+    const categoriesWithType = [
+      ...expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType })),
+      ...incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType })),
+      ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }))
+    ];
+    
+    // Remove duplicates and sort
+    const uniqueCategories = categoriesWithType.filter((cat, index, arr) => 
+      arr.findIndex(c => c.name === cat.name) === index
+    ).sort((a, b) => a.name.localeCompare(b.name));
+    
+    return uniqueCategories;
+  }, [expenseCategories, incomeCategories, savingsCategories]);
   
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = searchQuery ? transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) : true;
@@ -176,23 +193,41 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                 </div>
               </div>
               <div className="max-h-64 overflow-y-auto p-2">
-                {availableCategories.map((category) => (
-                  <div 
-                    key={category} 
-                    className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md cursor-pointer"
-                    onClick={() => toggleCategory(category)}
-                  >
-                    <Checkbox 
-                      checked={selectedCategories.includes(category)}
-                      onChange={() => toggleCategory(category)}
-                      className="pointer-events-none"
-                    />
-                    <label className="flex-1 text-sm text-foreground cursor-pointer">
-                      {category}
-                    </label>
-                  </div>
-                ))}
-                {availableCategories.length === 0 && (
+                {allCategories.map((categoryItem) => {
+                  const getTypeIcon = (type: TransactionType) => {
+                    switch (type) {
+                      case 'credit':
+                        return <TrendingUp className="h-3.5 w-3.5 text-green-500" />;
+                      case 'debit':
+                        return <TrendingDown className="h-3.5 w-3.5 text-red-500" />;
+                      case 'savings':
+                        return <PiggyBank className="h-3.5 w-3.5 text-blue-500" />;
+                      default:
+                        return null;
+                    }
+                  };
+
+                  return (
+                    <div 
+                      key={categoryItem.name} 
+                      className="flex items-center space-x-3 p-2 hover:bg-accent rounded-md cursor-pointer group"
+                      onClick={() => toggleCategory(categoryItem.name)}
+                    >
+                      <Checkbox 
+                        checked={selectedCategories.includes(categoryItem.name)}
+                        onChange={() => toggleCategory(categoryItem.name)}
+                        className="pointer-events-none"
+                      />
+                      <div className="flex items-center space-x-2 flex-1">
+                        {getTypeIcon(categoryItem.type)}
+                        <label className="text-sm text-foreground cursor-pointer group-hover:text-accent-foreground">
+                          {categoryItem.name}
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
+                {allCategories.length === 0 && (
                   <div className="p-4 text-center text-muted-foreground text-sm">
                     No categories found
                   </div>
