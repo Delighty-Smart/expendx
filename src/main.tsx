@@ -4,6 +4,7 @@ import './index.css'
 import { initializeDB, setupSyncEvents } from './services/offlineStorage'
 import { notificationService } from './services/notificationService'
 import { AuthProvider } from './hooks/useAuth'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import "./components/ui/smoothScroll.css"; 
 
 // Register the service worker for PWA
@@ -37,8 +38,20 @@ notificationService.requestPermission()
     }
   });
 
+// Create a new QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 createRoot(document.getElementById("root")!).render(
-  <AuthProvider>
-    <App />
-  </AuthProvider>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </QueryClientProvider>
 );

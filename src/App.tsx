@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SettingsProvider } from '@/contexts/SettingsContext'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
 
 import IndexPage from '@/pages/Index'
@@ -28,16 +27,6 @@ import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
-
-// Create a new QueryClient instance with proper configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-})
 
 function App() {
   // Initialize enhanced offline manager
@@ -83,37 +72,35 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SettingsProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<IndexPage />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/add-transaction" element={<AddTransaction />} />
-              <Route path="/budgets" element={<Budgets />} />
-              <Route path="/add-budget" element={<AddBudget />} />
-              <Route path="/edit-budget" element={<EditBudget />} />
-              <Route path="/set-income" element={<SetIncome />} />
-              <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
-              <Route path="/savings" element={<Savings />} />
-              <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
-              <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/feedback" element={<AdminFeedback />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-          </BrowserRouter>
-        </SettingsProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <TooltipProvider>
+      <SettingsProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<IndexPage />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/add-transaction" element={<AddTransaction />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/add-budget" element={<AddBudget />} />
+            <Route path="/edit-budget" element={<EditBudget />} />
+            <Route path="/set-income" element={<SetIncome />} />
+            <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
+            <Route path="/savings" element={<Savings />} />
+            <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
+            <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/feedback" element={<AdminFeedback />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
+      </SettingsProvider>
+    </TooltipProvider>
   )
 }
 
