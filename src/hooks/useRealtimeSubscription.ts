@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
@@ -18,17 +18,30 @@ export function useRealtimeSubscription(
   callback: (payload: any) => void,
   filter?: { column?: string; value?: string }
 ) {
+  // Use refs to store stable references and prevent unnecessary re-subscriptions
+  const callbackRef = useRef(callback);
+  const filterRef = useRef(filter);
+  
+  // Update refs when values change
+  callbackRef.current = callback;
+  filterRef.current = filter;
+
+  // Memoize the stable callback to prevent re-subscriptions
+  const stableCallback = useCallback((payload: any) => {
+    callbackRef.current(payload);
+  }, []);
+
   useEffect(() => {
     // Create a unique channel identifier
-    const channelId = `${table}-${event}-${filter?.column || 'all'}-${filter?.value || 'all'}`;
+    const channelId = `${table}-${event}-${filterRef.current?.column || 'all'}-${filterRef.current?.value || 'all'}`;
     
     console.log(`Setting up realtime subscription for ${table} table with event ${event}`);
     
     try {
       // Set up filter configuration if provided
       let filterConfig = {};
-      if (filter?.column && filter?.value) {
-        filterConfig = { [filter.column]: filter.value };
+      if (filterRef.current?.column && filterRef.current?.value) {
+        filterConfig = { [filterRef.current.column]: filterRef.current.value };
       }
 
       // Set up the subscription with the correct type casting
@@ -44,7 +57,7 @@ export function useRealtimeSubscription(
           },
           (payload) => {
             console.log(`Realtime event received for ${table}:`, payload);
-            callback(payload);
+            stableCallback(payload);
           }
         )
         .subscribe((status) => {
@@ -59,5 +72,5 @@ export function useRealtimeSubscription(
     } catch (error) {
       console.error(`Error setting up realtime subscription for ${table}:`, error);
     }
-  }, [table, event, callback, filter]);
+  }, [table, event, stableCallback]); // Removed callback and filter from dependencies
 }
