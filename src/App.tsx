@@ -44,7 +44,7 @@ function App() {
   useEffect(() => {
     const initializeEnhancedOffline = async () => {
       try {
-        // The enhanced offline manager initializes itself
+        // Enhanced offline manager initialized successfully
         console.log('Enhanced offline manager initialized');
       } catch (err) {
         console.error('Failed to initialize enhanced offline manager:', err);
