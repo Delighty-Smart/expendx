@@ -61,21 +61,34 @@ const TransactionsPage = () => {
   const { categories: incomeCategories } = useCategories('credit');
   const { categories: savingsCategories } = useCategories('savings');
   
-  // Combine all categories with type indicators
-  const allCategories = useMemo(() => {
-    const categoriesWithType = [
-      ...expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType })),
-      ...incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType })),
-      ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }))
-    ];
-    
-    // Remove duplicates and sort
-    const uniqueCategories = categoriesWithType.filter((cat, index, arr) => 
-      arr.findIndex(c => c.name === cat.name) === index
-    ).sort((a, b) => a.name.localeCompare(b.name));
-    
-    return uniqueCategories;
-  }, [expenseCategories, incomeCategories, savingsCategories]);
+  // Get categories based on selected transaction type
+  const availableCategories = useMemo(() => {
+    if (selectedType === "all") {
+      const categoriesWithType = [
+        ...expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType })),
+        ...incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType })),
+        ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }))
+      ];
+      
+      // Remove duplicates and sort
+      return categoriesWithType.filter((cat, index, arr) => 
+        arr.findIndex(c => c.name === cat.name) === index
+      ).sort((a, b) => a.name.localeCompare(b.name));
+    } else if (selectedType === "credit") {
+      return incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType }));
+    } else if (selectedType === "debit") {
+      return expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType }));
+    } else if (selectedType === "savings") {
+      return savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }));
+    }
+    return [];
+  }, [selectedType, expenseCategories, incomeCategories, savingsCategories]);
+
+  // Reset selected categories when type changes
+  const handleTypeChange = (value: "all" | TransactionType) => {
+    setSelectedType(value);
+    setSelectedCategories([]);
+  };
 
   const handleRefresh = async () => {
     try {
@@ -206,7 +219,9 @@ const TransactionsPage = () => {
   };
 
   const filteredTransactions = transactions?.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = 
+      transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
     const matchesType = selectedType === "all" || transaction.type === selectedType;
     return matchesSearch && matchesCategory && matchesType;
@@ -335,11 +350,9 @@ const TransactionsPage = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Select
+                   <Select
                     value={selectedType}
-                    onValueChange={(value: "all" | TransactionType) =>
-                      setSelectedType(value)
-                    }
+                    onValueChange={handleTypeChange}
                   >
                     <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
                       <SelectValue placeholder="All Types" />
@@ -385,42 +398,43 @@ const TransactionsPage = () => {
                           )}
                         </div>
                       </div>
-                      <div className="max-h-64 overflow-y-auto p-2">
-                        {allCategories.map((categoryItem) => {
+                      <div className="max-h-64 overflow-y-auto p-1">
+                        {availableCategories.map((categoryItem) => {
                           const getTypeIcon = (type: TransactionType) => {
                             switch (type) {
                               case 'credit':
-                                return <TrendingUp className="h-3.5 w-3.5 text-green-500" />;
+                                return <TrendingUp className="h-4 w-4 text-green-500" />;
                               case 'debit':
-                                return <TrendingDown className="h-3.5 w-3.5 text-red-500" />;
+                                return <TrendingDown className="h-4 w-4 text-red-500" />;
                               case 'savings':
-                                return <PiggyBank className="h-3.5 w-3.5 text-blue-500" />;
+                                return <PiggyBank className="h-4 w-4 text-blue-500" />;
                               default:
                                 return null;
                             }
                           };
 
+                          const isSelected = selectedCategories.includes(categoryItem.name);
+
                           return (
                             <div 
                               key={categoryItem.name} 
-                              className="flex items-center space-x-3 p-2 hover:bg-accent rounded-md cursor-pointer group"
+                              className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
+                                isSelected 
+                                  ? "bg-primary/10 text-primary font-medium" 
+                                  : "hover:bg-muted/50"
+                              }`}
                               onClick={() => toggleCategory(categoryItem.name)}
                             >
-                              <Checkbox 
-                                checked={selectedCategories.includes(categoryItem.name)}
-                                onChange={() => toggleCategory(categoryItem.name)}
-                                className="pointer-events-none"
-                              />
-                              <div className="flex items-center space-x-2 flex-1">
+                              <div className="flex items-center space-x-3 flex-1">
                                 {getTypeIcon(categoryItem.type)}
-                                <label className="text-sm text-foreground cursor-pointer group-hover:text-accent-foreground">
+                                <span className="truncate">
                                   {categoryItem.name}
-                                </label>
+                                </span>
                               </div>
                             </div>
                           );
                         })}
-                        {allCategories.length === 0 && (
+                        {availableCategories.length === 0 && (
                           <div className="p-4 text-center text-muted-foreground text-sm">
                             No categories found
                           </div>

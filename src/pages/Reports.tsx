@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart } from "lucide-react";
+import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Tag } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPi
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 import { Transaction } from "@/types/transactions";
+import { useCategories } from "@/hooks/useCategories";
 
 // Define chart data types
 interface ChartDataPoint {
@@ -33,11 +34,34 @@ interface CategoryDataPoint {
 const ReportsPage = () => {
   const [dateFrom, setDateFrom] = useState<Date>(startOfMonth(new Date()));
   const [dateTo, setDateTo] = useState<Date>(endOfMonth(new Date()));
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
   const { currency } = useSettings();
   const { refreshData } = useRefresh();
+
+  // Get categories based on selected type
+  const { categories: allIncomeCategories } = useCategories('credit');
+  const { categories: allExpenseCategories } = useCategories('debit');
+  const { categories: allSavingsCategories } = useCategories('savings');
+
+  // Get categories based on selected transaction type
+  const availableCategories = useMemo(() => {
+    if (selectedType === "all") {
+      return [...new Set([
+        ...allIncomeCategories,
+        ...allExpenseCategories,
+        ...allSavingsCategories
+      ])];
+    } else if (selectedType === "credit") {
+      return allIncomeCategories;
+    } else if (selectedType === "debit") {
+      return allExpenseCategories;
+    } else if (selectedType === "savings") {
+      return allSavingsCategories;
+    }
+    return [];
+  }, [selectedType, allIncomeCategories, allExpenseCategories, allSavingsCategories]);
 
   const { transactions, isLoading } = useTransactionData({
     startDate: dateFrom?.toISOString(),
@@ -51,18 +75,11 @@ const ReportsPage = () => {
     const typedTransactions = transactions as Transaction[];
     
     return typedTransactions.filter(transaction => {
-      const categoryMatch = selectedCategory === "all" || transaction.category === selectedCategory;
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
       const typeMatch = selectedType === "all" || transaction.type === selectedType;
       return categoryMatch && typeMatch;
     });
-  }, [transactions, selectedCategory, selectedType]);
-
-  // Get unique categories for filter
-  const categories = useMemo(() => {
-    if (!transactions) return [];
-    const typedTransactions = transactions as Transaction[];
-    return Array.from(new Set(typedTransactions.map(t => t.category))).sort();
-  }, [transactions]);
+  }, [transactions, selectedCategories, selectedType]);
 
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
@@ -259,20 +276,63 @@ const ReportsPage = () => {
 
                   {/* Category Filter */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Category</label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium text-muted-foreground">Categories</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="h-11 px-3 border-border text-left justify-between w-full"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Tag className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate text-sm">
+                              {selectedCategories.length > 0 
+                                ? `Categories (${selectedCategories.length})` 
+                                : "All Categories"
+                              }
+                            </span>
+                          </div>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-0 z-50 bg-popover border shadow-lg" align="start">
+                        <div className="p-3">
+                          <h4 className="font-medium mb-3">Select Categories</h4>
+                          <div className="space-y-1 max-h-48 overflow-y-auto">
+                            {availableCategories.map((category) => (
+                              <div 
+                                key={category} 
+                                className={cn(
+                                  "flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm",
+                                  selectedCategories.includes(category)
+                                    ? "bg-primary/10 text-primary font-medium"
+                                    : "hover:bg-muted/50"
+                                )}
+                                onClick={() => {
+                                  if (selectedCategories.includes(category)) {
+                                    setSelectedCategories(prev => prev.filter(c => c !== category));
+                                  } else {
+                                    setSelectedCategories(prev => [...prev, category]);
+                                  }
+                                }}
+                              >
+                                <Tag className="h-3 w-3 mr-2 flex-shrink-0" />
+                                <span className="truncate">{category}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {selectedCategories.length > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-3"
+                              onClick={() => setSelectedCategories([])}
+                            >
+                              Clear All
+                            </Button>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Type Filter */}
