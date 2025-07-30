@@ -364,14 +364,14 @@ export const TransactionForm = ({
                     form.reset();
                     onOpenChange(false);
                   }}
-                  className="h-10 px-6 rounded-lg border-border/50 hover:bg-muted/50 transition-colors"
+                  className="mobile-button rounded-lg border-border/50 hover:bg-muted/50 transition-colors touch-manipulation"
                   disabled={loading}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
-                  className="h-10 px-6 rounded-lg transition-all hover:scale-105"
+                  className="mobile-button rounded-lg transition-all hover:scale-105 touch-manipulation"
                   disabled={loading}
                 >
                   {loading ? "Saving..." : transaction ? 'Update' : 'Add'} Transaction

@@ -312,10 +312,10 @@ const TransactionsPage = () => {
                 </>
               )}
               <Button
-                className="flex items-center gap-2"
+                className="mobile-button flex items-center gap-2 touch-manipulation"
                 onClick={() => navigate("/add-transaction")}
               >
-                <PlusCircle className="h-4 w-4" />
+                <PlusCircle className="mobile-icon-sm" />
                 Add
               </Button>
             </div>

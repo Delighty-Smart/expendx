@@ -92,22 +92,22 @@ export function BudgetCard({
           </div>
           <div className="flex gap-1.5">
             <Button
-              size="sm"
+              size="icon"
               variant="ghost"
-              className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-slate-700"
+              className="h-10 w-10 p-0 hover:bg-blue-100 dark:hover:bg-slate-700 touch-manipulation md:h-8 md:w-8"
               onClick={onEditClick}
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-5 w-5 md:h-4 md:w-4" />
               <span className="sr-only">Edit</span>
             </Button>
             <Button
-              size="sm"
+              size="icon"
               variant="ghost"
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
+              className="h-10 w-10 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20 touch-manipulation md:h-8 md:w-8"
               onClick={handleDeleteBudget}
               disabled={isDeleting}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-5 w-5 md:h-4 md:w-4" />
               <span className="sr-only">Delete</span>
             </Button>
           </div>

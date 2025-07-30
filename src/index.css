@@ -80,6 +80,8 @@
     font-size: 16px;
     font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     @apply text-base text-foreground leading-normal;
+    /* Prevent zoom on focus in iOS */
+    -webkit-text-size-adjust: 100%;
   }
   
   body {
@@ -89,6 +91,8 @@
     overscroll-behavior-y: contain;
     line-height: 1.4;
     font-weight: 400;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
   }
   
   /* Compact Typography scaling with proper weights */
@@ -652,4 +656,77 @@
   font-size: 0.8rem;
   font-weight: 400;
   border-top: 1px solid hsl(var(--border));
+}
+
+/* Mobile Touch Optimizations */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  .touch-friendly {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .mobile-icon {
+    @apply h-6 w-6 md:h-5 md:w-5;
+  }
+  
+  .mobile-icon-sm {
+    @apply h-5 w-5 md:h-4 md:w-4;
+  }
+  
+  .mobile-icon-lg {
+    @apply h-7 w-7 md:h-6 md:w-6;
+  }
+  
+  .mobile-button {
+    @apply h-12 px-4 text-base md:h-10 md:px-3 md:text-sm;
+    min-height: 44px;
+  }
+  
+  .mobile-button-sm {
+    @apply h-10 px-3 text-sm md:h-9 md:px-2 md:text-xs;
+    min-height: 40px;
+  }
+  
+  .mobile-touch-target {
+    @apply p-3 md:p-2;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* iOS Safari Specific Fixes */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"],
+  input[type="email"], 
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevent zoom on focus */
+  }
+  
+  /* Fix for iOS sticky hover states */
+  .hover\:bg-accent:hover {
+    background-color: hsl(var(--accent)) !important;
+  }
+  
+  @media (hover: none) and (pointer: coarse) {
+    .hover\:bg-accent:hover {
+      background-color: transparent !important;
+    }
+    
+    .hover\:scale-105:hover {
+      transform: none !important;
+    }
+  }
 }

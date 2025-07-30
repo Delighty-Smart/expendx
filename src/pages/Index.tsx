@@ -394,11 +394,12 @@ const IndexPage = () => {
         <div className="space-y-6 pb-6">
           <div className="flex flex-wrap gap-4 justify-between">
             <Button
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200"
+              className="mobile-button flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 touch-manipulation"
               onClick={() => navigate('/add-transaction')}
             >
-              <PlusCircle className="h-4 w-4" />
-              Add Transaction
+              <PlusCircle className="mobile-icon-sm" />
+              <span className="hidden sm:inline">Add Transaction</span>
+              <span className="sm:hidden">Add</span>
             </Button>
             <div className="flex items-center gap-4">
               {streakData && (

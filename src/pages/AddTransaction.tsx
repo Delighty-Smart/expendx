@@ -32,13 +32,13 @@ const AddTransactionPage = () => {
           <div className="flex items-center gap-3">
             <Button 
               variant="ghost" 
-              className="mr-2" 
+              className="mobile-button-sm mr-2 touch-manipulation" 
               onClick={() => navigate("/transactions")}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mobile-icon-sm mr-2" />
               Back
             </Button>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-xl md:text-2xl font-bold">
               {isEditing ? 'Edit Transaction' : 'Add Transaction'}
             </h1>
           </div>
