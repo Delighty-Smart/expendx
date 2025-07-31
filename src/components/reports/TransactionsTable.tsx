@@ -27,29 +27,36 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
   
-  // Get categories from all transaction types
+  // Get categories based on selected transaction type
   const { categories: expenseCategories } = useCategories('debit');
   const { categories: incomeCategories } = useCategories('credit');
   const { categories: savingsCategories } = useCategories('savings');
   
-  // Combine all categories with type indicators
-  const allCategories = useMemo(() => {
-    const categoriesWithType = [
-      ...expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType })),
-      ...incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType })),
-      ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }))
-    ];
+  // Get available categories based on selected type
+  const availableCategories = useMemo(() => {
+    let categories: string[] = [];
     
-    // Remove duplicates and sort
-    const uniqueCategories = categoriesWithType.filter((cat, index, arr) => 
-      arr.findIndex(c => c.name === cat.name) === index
-    ).sort((a, b) => a.name.localeCompare(b.name));
+    if (selectedType === "all") {
+      // Combine all categories and remove duplicates
+      const allCats = [...expenseCategories, ...incomeCategories, ...savingsCategories];
+      categories = [...new Set(allCats)];
+    } else if (selectedType === "debit") {
+      categories = expenseCategories;
+    } else if (selectedType === "credit") {
+      categories = incomeCategories;
+    } else if (selectedType === "savings") {
+      categories = savingsCategories;
+    }
     
-    return uniqueCategories;
-  }, [expenseCategories, incomeCategories, savingsCategories]);
+    return categories.sort();
+  }, [selectedType, expenseCategories, incomeCategories, savingsCategories]);
   
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = searchQuery ? transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) : true;
+    // Enhanced search that includes category matching
+    const matchesSearch = searchQuery ? 
+      transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
     const matchesType = selectedType === "all" || transaction.type === selectedType;
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
     return matchesSearch && matchesType && matchesCategory;
@@ -117,11 +124,11 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const renderTransactionIcon = (type: TransactionType) => {
     switch (type) {
       case 'credit':
-        return <ArrowDown className="h-4 w-4 text-green-500" />;
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
       case 'debit':
-        return <ArrowUp className="h-4 w-4 text-red-500" />;
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
       case 'savings':
-        return <div className="h-3.5 w-3.5 rounded-full bg-blue-400"></div>;
+        return <PiggyBank className="h-4 w-4 text-blue-600" />;
       default:
         return null;
     }
@@ -163,20 +170,20 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
+                className="min-w-[120px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent touch-manipulation"
               >
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Categories
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <Filter className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate text-sm sm:text-base">Categories</span>
                 </div>
                 {selectedCategories.length > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 text-xs">
+                  <Badge variant="secondary" className="ml-1 h-5 text-xs flex-shrink-0">
                     {selectedCategories.length}
                   </Badge>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 bg-popover border-border" align="end">
+            <PopoverContent className="w-80 p-0 bg-popover border-border shadow-lg z-50" align="end">
               <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-foreground">Filter by Categories</h4>
@@ -185,7 +192,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                       variant="ghost" 
                       size="sm" 
                       onClick={clearAllCategories}
-                      className="h-auto p-1 text-muted-foreground hover:text-foreground"
+                      className="h-auto p-1 text-muted-foreground hover:text-foreground touch-manipulation"
                     >
                       Clear all
                     </Button>
@@ -193,41 +200,31 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                 </div>
               </div>
               <div className="max-h-64 overflow-y-auto p-2">
-                {allCategories.map((categoryItem) => {
-                  const getTypeIcon = (type: TransactionType) => {
-                    switch (type) {
-                      case 'credit':
-                        return <TrendingUp className="h-3.5 w-3.5 text-green-500" />;
-                      case 'debit':
-                        return <TrendingDown className="h-3.5 w-3.5 text-red-500" />;
-                      case 'savings':
-                        return <PiggyBank className="h-3.5 w-3.5 text-blue-500" />;
-                      default:
-                        return null;
-                    }
-                  };
-
+                {availableCategories.map((category) => {
+                  const isSelected = selectedCategories.includes(category);
+                  
                   return (
                     <div 
-                      key={categoryItem.name} 
-                      className="flex items-center space-x-3 p-2 hover:bg-accent rounded-md cursor-pointer group"
-                      onClick={() => toggleCategory(categoryItem.name)}
+                      key={category} 
+                      className={`flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors touch-manipulation ${
+                        isSelected 
+                          ? 'bg-primary/10 border border-primary/20' 
+                          : 'hover:bg-accent/50'
+                      }`}
+                      onClick={() => toggleCategory(category)}
                     >
-                      <Checkbox 
-                        checked={selectedCategories.includes(categoryItem.name)}
-                        onChange={() => toggleCategory(categoryItem.name)}
-                        className="pointer-events-none"
-                      />
                       <div className="flex items-center space-x-2 flex-1">
-                        {getTypeIcon(categoryItem.type)}
-                        <label className="text-sm text-foreground cursor-pointer group-hover:text-accent-foreground">
-                          {categoryItem.name}
+                        <div className="h-2 w-2 rounded-full bg-primary/60 flex-shrink-0"></div>
+                        <label className={`text-sm cursor-pointer select-none transition-colors ${
+                          isSelected ? 'text-primary font-medium' : 'text-foreground'
+                        }`}>
+                          {category}
                         </label>
                       </div>
                     </div>
                   );
                 })}
-                {allCategories.length === 0 && (
+                {availableCategories.length === 0 && (
                   <div className="p-4 text-center text-muted-foreground text-sm">
                     No categories found
                   </div>
