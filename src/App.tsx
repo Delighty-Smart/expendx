@@ -24,6 +24,7 @@ import Feedback from '@/pages/Feedback'
 import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
+import Subscriptions from '@/pages/Subscriptions'
 
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
@@ -88,6 +89,7 @@ function App() {
             <Route path="/savings" element={<Savings />} />
             <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
             <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/alerts" element={<Alerts />} />

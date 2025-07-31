@@ -53,6 +53,7 @@ const DEFAULT_CATEGORIES = {
     "Groceries",
     "Rent/Mortgage",
     "Insurance",
+    "Subscriptions",
     "Other Expenses"
   ],
   savings: [

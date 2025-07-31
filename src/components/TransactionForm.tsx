@@ -5,7 +5,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionIntegration } from "@/hooks/useSubscriptionIntegration";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -44,6 +46,8 @@ export const TransactionForm = ({
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<string>("");
+  const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { getTransactionSyncStatus } = useEnhancedOfflineSync();
@@ -169,6 +173,11 @@ export const TransactionForm = ({
       };
 
       console.log("Saving transaction with enhanced offline support:", transactionData);
+
+      // If this is a subscription transaction, update the subscription status
+      if (selectedSubscription && values.category === 'Subscriptions') {
+        await updateSubscriptionStatus(selectedSubscription, transactionData.amount);
+      }
 
       if (transaction) {
         // Update existing transaction
@@ -335,6 +344,29 @@ export const TransactionForm = ({
                   </FormItem>
                 )}
               />
+
+              {/* Subscription Selection - only show when Subscriptions category is selected */}
+              {form.watch('category') === 'Subscriptions' && subscriptionOptions.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium text-foreground">Select Subscription</Label>
+                  <Select
+                    value={selectedSubscription}
+                    onValueChange={setSelectedSubscription}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors mt-2">
+                      <SelectValue placeholder="Choose a subscription" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subscriptionOptions.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <FormField
                 control={form.control}

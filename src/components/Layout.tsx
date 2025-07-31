@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell, X } from "lucide-react";
+import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell, X, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -136,6 +136,10 @@ const Layout = ({
     path: "/savings",
     label: "Savings",
     icon: PiggyBank
+  }, {
+    path: "/subscriptions",
+    label: "Subscriptions",
+    icon: CreditCard
   }, {
     path: "/reports",
     label: "Reports",
