@@ -21,11 +21,19 @@ export function useSubscriptions() {
           schema: 'public',
           table: 'subscriptions'
         },
-        () => {
+        (payload) => {
+          console.log('Subscription change detected:', payload);
           fetchSubscriptions();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status for transactions:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to subscription changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Error subscribing to subscription changes');
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

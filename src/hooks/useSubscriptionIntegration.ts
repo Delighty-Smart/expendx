@@ -26,7 +26,10 @@ export function useSubscriptionIntegration() {
   const updateSubscriptionStatus = async (subscriptionId: string, amount: number) => {
     try {
       const subscription = subscriptions.find(sub => sub.id === subscriptionId);
-      if (!subscription) return;
+      if (!subscription) {
+        console.error('Subscription not found:', subscriptionId);
+        return;
+      }
 
       // Calculate next billing date
       const today = new Date();
@@ -35,7 +38,7 @@ export function useSubscriptionIntegration() {
         : addYears(today, 1);
 
       // Update subscription to active status
-      await supabase
+      const { error } = await supabase
         .from('subscriptions')
         .update({
           status: 'active',
@@ -44,8 +47,15 @@ export function useSubscriptionIntegration() {
         })
         .eq('id', subscriptionId);
 
+      if (error) {
+        console.error('Database error updating subscription:', error);
+        throw error;
+      }
+
+      console.log('Subscription status updated successfully:', subscriptionId);
     } catch (error) {
       console.error('Error updating subscription status:', error);
+      throw error;
     }
   };
 
