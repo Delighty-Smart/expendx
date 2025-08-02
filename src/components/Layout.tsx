@@ -75,7 +75,11 @@ const Layout = ({
       table: 'alerts'
     }, () => {
       fetchUnreadAlerts();
-    }).subscribe();
+      // Dispatch event to notify Alerts page to refresh
+      window.dispatchEvent(new CustomEvent('alerts-updated'));
+    }).subscribe((status) => {
+      console.log('Subscription status for alerts:', status);
+    });
     return () => {
       supabase.removeChannel(channel);
     };

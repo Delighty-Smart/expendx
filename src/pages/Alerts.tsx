@@ -9,7 +9,6 @@ import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calend
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 type Alert = {
   id: string;
@@ -31,11 +30,20 @@ const Alerts = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Set up realtime subscription to alerts
-  useRealtimeSubscription('alerts', '*', () => {
-    console.log("Alerts updated, refreshing list");
-    fetchAlerts();
-  });
+  // Note: We rely on Layout.tsx for realtime alerts updates to avoid duplicate subscriptions
+
+  // Set up real-time alerts refresh via window events (from Layout.tsx)
+  useEffect(() => {
+    const handleAlertsUpdate = () => {
+      console.log("Alerts updated via window event, refreshing list");
+      fetchAlerts();
+    };
+
+    window.addEventListener('alerts-updated', handleAlertsUpdate);
+    return () => {
+      window.removeEventListener('alerts-updated', handleAlertsUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

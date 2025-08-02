@@ -143,17 +143,34 @@ export function useEnhancedTransactionData(filter?: {
       
       // Check if this transaction matches any subscription and update status
       if (transactionData.category === 'Subscriptions' && transactionData.type === 'debit') {
-        const matchingSubscription = subscriptionOptions.find(option => 
-          Math.abs(parseFloat(option.subscription.amount.toString()) - transactionData.amount) < 0.01
-        );
+        console.log('Transaction is subscription type, checking for matches:', {
+          category: transactionData.category,
+          type: transactionData.type,
+          amount: transactionData.amount,
+          availableSubscriptions: subscriptionOptions.length
+        });
+        
+        const matchingSubscription = subscriptionOptions.find(option => {
+          const amountMatch = Math.abs(parseFloat(option.subscription.amount.toString()) - transactionData.amount) < 0.01;
+          console.log('Checking subscription match:', {
+            subscriptionId: option.subscription.id,
+            subscriptionAmount: option.subscription.amount,
+            transactionAmount: transactionData.amount,
+            amountMatch
+          });
+          return amountMatch;
+        });
         
         if (matchingSubscription) {
+          console.log('Found matching subscription, updating status:', matchingSubscription.subscription.id);
           try {
             await updateSubscriptionStatus(matchingSubscription.subscription.id, transactionData.amount);
           } catch (subscriptionError) {
             console.error('Error updating subscription status:', subscriptionError);
             // Don't throw here as the transaction was still added successfully
           }
+        } else {
+          console.log('No matching subscription found for amount:', transactionData.amount);
         }
       }
       

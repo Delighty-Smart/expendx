@@ -24,6 +24,7 @@ export function useSubscriptionIntegration() {
   }, [subscriptions]);
 
   const updateSubscriptionStatus = async (subscriptionId: string, amount: number) => {
+    console.log('updateSubscriptionStatus called with:', { subscriptionId, amount });
     try {
       const subscription = subscriptions.find(sub => sub.id === subscriptionId);
       if (!subscription) {
@@ -31,11 +32,19 @@ export function useSubscriptionIntegration() {
         return;
       }
 
+      console.log('Found subscription:', subscription);
+
       // Calculate next billing date
       const today = new Date();
       const nextBillingDate = subscription.subscription_type === 'monthly'
         ? addDays(today, 30)
         : addYears(today, 1);
+
+      console.log('Updating subscription with:', {
+        status: 'active',
+        last_transaction_date: today.toISOString().split('T')[0],
+        next_billing_date: nextBillingDate.toISOString().split('T')[0]
+      });
 
       // Update subscription to active status
       const { error } = await supabase
