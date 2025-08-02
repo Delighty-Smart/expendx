@@ -5,14 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionIntegration } from './useSubscriptionIntegration';
 
-export function useEnhancedTransactionData(filter?: {
-  type?: TransactionType | "all",
-  startDate?: string,
-  endDate?: string,
-  category?: string,
+export function useEnhancedTransactionData(filter?: { 
+  type?: TransactionType | "all", 
+  startDate?: string, 
+  endDate?: string, 
+  category?: string, 
   includeArchived?: boolean,
 }) {
+  const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -139,6 +141,22 @@ export function useEnhancedTransactionData(filter?: {
     try {
       const tempId = await enhancedOfflineManager.addTransactionOffline(transactionData);
       
+      // Check if this transaction matches any subscription and update status
+      if (transactionData.category === 'Subscriptions' && transactionData.type === 'debit') {
+        const matchingSubscription = subscriptionOptions.find(option => 
+          Math.abs(parseFloat(option.subscription.amount.toString()) - transactionData.amount) < 0.01
+        );
+        
+        if (matchingSubscription) {
+          try {
+            await updateSubscriptionStatus(matchingSubscription.subscription.id, transactionData.amount);
+          } catch (subscriptionError) {
+            console.error('Error updating subscription status:', subscriptionError);
+            // Don't throw here as the transaction was still added successfully
+          }
+        }
+      }
+      
       // Immediately update the query data
       queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
@@ -162,7 +180,7 @@ export function useEnhancedTransactionData(filter?: {
       });
       throw error;
     }
-  }, [toast, queryClient]);
+  }, [toast, queryClient, subscriptionOptions, updateSubscriptionStatus]);
 
   const updateTransactionOffline = useCallback(async (id: string, updates: Partial<Transaction>) => {
     try {

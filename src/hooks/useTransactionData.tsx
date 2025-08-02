@@ -11,6 +11,7 @@ import {
 } from "@/services/enhancedOfflineStorage";
 import { syncManager } from "@/services/syncManager";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionIntegration } from './useSubscriptionIntegration';
 
 // Helper to convert raw transaction data to proper Transaction type
 export const convertToTransaction = (transaction: any): Transaction => ({
@@ -28,6 +29,7 @@ export function useTransactionData(filter?: {
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
   
   // Create query key based on filters
   const queryKey = filter 
@@ -239,6 +241,22 @@ export function useTransactionData(filter?: {
       // Always store locally first for immediate UI updates
       const tempId = await addTransactionEnhanced(transaction);
       
+      // Check if this transaction matches any subscription and update status
+      if (transactionData.category === 'Subscriptions' && transactionData.type === 'debit') {
+        const matchingSubscription = subscriptionOptions.find(option => 
+          Math.abs(parseFloat(option.subscription.amount.toString()) - transactionData.amount) < 0.01
+        );
+        
+        if (matchingSubscription) {
+          try {
+            await updateSubscriptionStatus(matchingSubscription.subscription.id, transactionData.amount);
+          } catch (subscriptionError) {
+            console.error('Error updating subscription status:', subscriptionError);
+            // Don't throw here as the transaction was still added successfully
+          }
+        }
+      }
+      
       if (navigator.onLine) {
         try {
           // Try to sync immediately if online
@@ -280,7 +298,7 @@ export function useTransactionData(filter?: {
       });
       throw error;
     }
-  }, [toast]);
+  }, [toast, subscriptionOptions, updateSubscriptionStatus]);
   
   return {
     transactions,
