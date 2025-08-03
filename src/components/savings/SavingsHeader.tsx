@@ -15,7 +15,8 @@ export function SavingsHeader({ onAddGoalClick }: SavingsHeaderProps) {
       <h1 className="text-2xl font-bold">Savings</h1>
       <div className="flex flex-wrap gap-2">
         <Button 
-          className="mobile-button flex items-center gap-2 touch-manipulation" 
+          size="compact"
+          className="flex items-center gap-2 touch-manipulation" 
           onClick={() => navigate("/savings-withdrawal")}
         >
           <ArrowDownToLine className="mobile-icon-sm" />
@@ -23,7 +24,8 @@ export function SavingsHeader({ onAddGoalClick }: SavingsHeaderProps) {
           <span className="sm:hidden">Withdraw</span>
         </Button>
         <Button 
-          className="mobile-button flex items-center gap-2 touch-manipulation" 
+          size="compact"
+          className="flex items-center gap-2 touch-manipulation" 
           onClick={onAddGoalClick}
         >
           <PlusCircle className="mobile-icon-sm" />

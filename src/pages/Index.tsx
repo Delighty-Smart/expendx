@@ -394,7 +394,8 @@ const IndexPage = () => {
         <div className="space-y-6 pb-6">
           <div className="flex flex-wrap gap-4 justify-between">
             <Button
-              className="mobile-button flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 touch-manipulation"
+              size="compact"
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 touch-manipulation"
               onClick={() => navigate('/add-transaction')}
             >
               <PlusCircle className="mobile-icon-sm" />

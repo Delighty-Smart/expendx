@@ -327,7 +327,8 @@ const TransactionsPage = () => {
                 </>
               )}
               <Button
-                className="mobile-button flex items-center gap-2 touch-manipulation"
+                size="compact"
+                className="flex items-center gap-2 touch-manipulation"
                 onClick={() => navigate("/add-transaction")}
               >
                 <PlusCircle className="mobile-icon-sm" />
@@ -349,12 +350,12 @@ const TransactionsPage = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                    <Select
                     value={selectedType}
                     onValueChange={handleTypeChange}
                   >
-                    <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
+                    <SelectTrigger className="w-full min-w-[100px] sm:w-[140px] bg-background border-input text-foreground">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
@@ -369,7 +370,8 @@ const TransactionsPage = () => {
                     <PopoverTrigger asChild>
                       <Button 
                         variant="outline" 
-                        className="w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
+                        size="compact"
+                        className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
                       >
                         <div className="flex items-center gap-2">
                           <Filter className="h-4 w-4" />
@@ -387,9 +389,9 @@ const TransactionsPage = () => {
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-foreground">Filter by Categories</h4>
                           {selectedCategories.length > 0 && (
-                            <Button 
+                              <Button 
                               variant="ghost" 
-                              size="sm" 
+                              size="xs" 
                               onClick={clearAllCategories}
                               className="h-auto p-1 text-muted-foreground hover:text-foreground"
                             >

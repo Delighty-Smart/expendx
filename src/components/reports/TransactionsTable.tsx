@@ -150,12 +150,12 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select
             value={selectedType}
             onValueChange={(value: "all" | TransactionType) => setSelectedType(value)}
           >
-            <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
+            <SelectTrigger className="w-full min-w-[100px] sm:w-[140px] bg-background border-input text-foreground">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border">
@@ -170,7 +170,8 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
-                className="min-w-[120px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent touch-manipulation"
+                size="compact"
+                className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent touch-manipulation"
               >
                 <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                   <Filter className="h-4 w-4 flex-shrink-0" />
