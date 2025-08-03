@@ -384,8 +384,8 @@ const TransactionsPage = () => {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0 bg-popover border-border z-50" align="end">
-                      <div className="p-4 border-b border-border bg-popover">
+                    <PopoverContent className="w-80 p-0 bg-popover border-border z-50 max-h-[400px] overflow-hidden" align="end">
+                      <div className="p-4 border-b border-border bg-popover flex-shrink-0">
                         <h4 className="font-medium text-foreground mb-2">Categories</h4>
                         <div className="flex items-center justify-between">
                           <div 
@@ -412,34 +412,38 @@ const TransactionsPage = () => {
                         </div>
                       </div>
                       
-                      <div className="p-4 bg-popover">
-                        <h5 className="text-sm font-medium text-muted-foreground mb-3">Select Categories</h5>
-                        <div className="max-h-64 overflow-y-auto space-y-1">
-                          {availableCategories.map((categoryItem) => {
-                            const isSelected = selectedCategories.includes(categoryItem.name);
+                      <div className="flex-1 overflow-hidden">
+                        <div className="p-4 pb-2 bg-popover flex-shrink-0">
+                          <h5 className="text-sm font-medium text-muted-foreground">Select Categories</h5>
+                        </div>
+                        <div className="px-4 pb-4 overflow-y-auto max-h-[280px]">
+                          <div className="space-y-1">
+                            {availableCategories.map((categoryItem) => {
+                              const isSelected = selectedCategories.includes(categoryItem.name);
 
-                            return (
-                              <div 
-                                key={categoryItem.name} 
-                                className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
-                                  isSelected 
-                                    ? "bg-primary/10 text-primary font-medium" 
-                                    : "hover:bg-muted/50 text-foreground"
-                                }`}
-                                onClick={() => toggleCategory(categoryItem.name)}
-                              >
-                                <Tag className="h-4 w-4 mr-3 text-muted-foreground" />
-                                <span className="truncate flex-1">
-                                  {categoryItem.name}
-                                </span>
+                              return (
+                                <div 
+                                  key={categoryItem.name} 
+                                  className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
+                                    isSelected 
+                                      ? "bg-primary/10 text-primary font-medium" 
+                                      : "hover:bg-muted/50 text-foreground"
+                                  }`}
+                                  onClick={() => toggleCategory(categoryItem.name)}
+                                >
+                                  <Tag className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                  <span className="truncate flex-1">
+                                    {categoryItem.name}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                            {availableCategories.length === 0 && (
+                              <div className="p-4 text-center text-muted-foreground text-sm">
+                                No categories found
                               </div>
-                            );
-                          })}
-                          {availableCategories.length === 0 && (
-                            <div className="p-4 text-center text-muted-foreground text-sm">
-                              No categories found
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </PopoverContent>
