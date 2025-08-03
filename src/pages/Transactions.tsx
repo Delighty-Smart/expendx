@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter, X, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
+import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter, X, TrendingUp, TrendingDown, PiggyBank, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
 import { TransactionType } from "@/types/transactions";
@@ -384,12 +384,23 @@ const TransactionsPage = () => {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0 bg-popover border-border" align="end">
-                      <div className="p-4 border-b border-border">
+                    <PopoverContent className="w-80 p-0 bg-popover border-border z-50" align="end">
+                      <div className="p-4 border-b border-border bg-popover">
+                        <h4 className="font-medium text-foreground mb-2">Categories</h4>
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-foreground">Filter by Categories</h4>
+                          <div 
+                            className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
+                              selectedCategories.length === 0 
+                                ? "bg-primary/10 text-primary font-medium" 
+                                : "hover:bg-muted/50 text-muted-foreground"
+                            }`}
+                            onClick={clearAllCategories}
+                          >
+                            <Tag className="h-4 w-4 mr-3" />
+                            <span>All Categories</span>
+                          </div>
                           {selectedCategories.length > 0 && (
-                              <Button 
+                            <Button 
                               variant="ghost" 
                               size="xs" 
                               onClick={clearAllCategories}
@@ -400,47 +411,36 @@ const TransactionsPage = () => {
                           )}
                         </div>
                       </div>
-                      <div className="max-h-64 overflow-y-auto p-1">
-                        {availableCategories.map((categoryItem) => {
-                          const getTypeIcon = (type: TransactionType) => {
-                            switch (type) {
-                              case 'credit':
-                                return <TrendingUp className="h-4 w-4 text-green-500" />;
-                              case 'debit':
-                                return <TrendingDown className="h-4 w-4 text-red-500" />;
-                              case 'savings':
-                                return <PiggyBank className="h-4 w-4 text-blue-500" />;
-                              default:
-                                return null;
-                            }
-                          };
+                      
+                      <div className="p-4 bg-popover">
+                        <h5 className="text-sm font-medium text-muted-foreground mb-3">Select Categories</h5>
+                        <div className="max-h-64 overflow-y-auto space-y-1">
+                          {availableCategories.map((categoryItem) => {
+                            const isSelected = selectedCategories.includes(categoryItem.name);
 
-                          const isSelected = selectedCategories.includes(categoryItem.name);
-
-                          return (
-                            <div 
-                              key={categoryItem.name} 
-                              className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
-                                isSelected 
-                                  ? "bg-primary/10 text-primary font-medium" 
-                                  : "hover:bg-muted/50"
-                              }`}
-                              onClick={() => toggleCategory(categoryItem.name)}
-                            >
-                              <div className="flex items-center space-x-3 flex-1">
-                                {getTypeIcon(categoryItem.type)}
-                                <span className="truncate">
+                            return (
+                              <div 
+                                key={categoryItem.name} 
+                                className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
+                                  isSelected 
+                                    ? "bg-primary/10 text-primary font-medium" 
+                                    : "hover:bg-muted/50 text-foreground"
+                                }`}
+                                onClick={() => toggleCategory(categoryItem.name)}
+                              >
+                                <Tag className="h-4 w-4 mr-3 text-muted-foreground" />
+                                <span className="truncate flex-1">
                                   {categoryItem.name}
                                 </span>
                               </div>
+                            );
+                          })}
+                          {availableCategories.length === 0 && (
+                            <div className="p-4 text-center text-muted-foreground text-sm">
+                              No categories found
                             </div>
-                          );
-                        })}
-                        {availableCategories.length === 0 && (
-                          <div className="p-4 text-center text-muted-foreground text-sm">
-                            No categories found
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </PopoverContent>
                   </Popover>
