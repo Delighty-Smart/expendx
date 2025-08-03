@@ -1,8 +1,8 @@
+import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SettingsProvider } from '@/contexts/SettingsContext'
-import { useEffect } from 'react'
 
 import IndexPage from '@/pages/Index'
 import Auth from '@/pages/Auth'
