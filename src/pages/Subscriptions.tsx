@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -96,16 +97,19 @@ export default function Subscriptions() {
   return (
     <Layout>
       <div className="container mx-auto p-4 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Subscriptions</h1>
-            <p className="text-muted-foreground">Manage your recurring subscriptions</p>
-          </div>
-          <Button onClick={() => setShowForm(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Subscription
-          </Button>
-        </div>
+        <PageHeader
+          title={
+            <>
+              Subscriptions
+            </>
+          }
+          actions={
+            <Button onClick={() => setShowForm(true)} className="gap-2 flex-none whitespace-nowrap">
+              <Plus className="h-4 w-4" />
+              Add Subscription
+            </Button>
+          }
+        />
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/ui/page-header";
 import { PlusCircle, Edit, Trash2, TrendingUp } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -180,13 +181,15 @@ const BudgetsPage = () => {
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Budgets</h1>
-            <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Add Budget
-            </Button>
-          </div>
+          <PageHeader
+            title="Budgets"
+            actions={
+              <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2 flex-none whitespace-nowrap">
+                <PlusCircle className="h-4 w-4" />
+                Add Budget
+              </Button>
+            }
+          />
 
           <GlassCard className="p-6 bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10 border-orange-200/30 dark:border-orange-800/30">
             <div className="flex items-center gap-6">

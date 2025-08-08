@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import PageHeader from "@/components/ui/page-header";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -326,55 +327,57 @@ const Alerts = () => {
   return (
     <Layout>
       <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Alerts & Notifications</h1>
-          
-          <div className="flex items-center gap-2">
-            {selectionMode ? (
-              <>
-                {someSelected && (
-                  <Button 
-                    variant="destructive" 
-                    onClick={handleDeleteSelected}
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Selected ({selectedAlerts.size})
-                  </Button>
-                )}
-                
-                <Button 
-                  variant="outline" 
-                  onClick={toggleSelectionMode}
-                  className="flex items-center gap-2"
-                >
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                {alerts.length > 0 && (
+        <PageHeader
+          className="mb-6"
+          title="Alerts & Notifications"
+          actions={
+            <>
+              {selectionMode ? (
+                <>
+                  {someSelected && (
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteSelected}
+                      className="flex items-center gap-2 flex-none whitespace-nowrap"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Selected ({selectedAlerts.size})
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     onClick={toggleSelectionMode}
+                    className="flex items-center gap-2 flex-none whitespace-nowrap"
                   >
-                    Select
+                    <X className="h-4 w-4" />
+                    Cancel
                   </Button>
-                )}
-                
-                <Button 
-                  variant="outline" 
-                  onClick={handleMarkAllAsRead}
-                  disabled={alerts.every(alert => alert.read) || alerts.length === 0}
-                >
-                  <CheckCheck className="mr-2 h-4 w-4" />
-                  <span>Mark All as Read</span>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+                </>
+              ) : (
+                <>
+                  {alerts.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      onClick={toggleSelectionMode}
+                      className="flex-none whitespace-nowrap"
+                    >
+                      Select
+                    </Button>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={handleMarkAllAsRead}
+                    disabled={alerts.every(alert => alert.read) || alerts.length === 0}
+                    className="flex-none whitespace-nowrap"
+                  >
+                    <CheckCheck className="mr-2 h-4 w-4" />
+                    <span>Mark All as Read</span>
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        />
 
         {selectionMode && alerts.length > 0 && (
           <div className="mb-4 p-3 bg-muted/50 rounded-lg">
