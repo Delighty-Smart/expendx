@@ -231,63 +231,6 @@ const NotificationPreferences = () => {
     }
   };
 
-  useEffect(() => {
-    if (!preferences) return;
-    // Only for browser notifications
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== "granted") return;
-    // Only schedule if the daily_log_reminder toggle is ON
-    if (!preferences.daily_log_reminder) return;
-
-    // Cancel any scheduled timeout first
-    let timerId: ReturnType<typeof setTimeout> | null = null;
-
-    // Calculate when the next 7pm (or preferred time) occurs.
-    function scheduleDailyReminder() {
-      // Parse preferred_time as "HH:mm"
-      const [hour, minute] = preferences.preferred_time?.split(':').map(s => parseInt(s, 10)) ?? [19, 0];
-      const now = new Date();
-      const nextReminder = new Date();
-      nextReminder.setHours(hour, minute, 0, 0);
-      if (nextReminder <= now) {
-        // If now past today's reminder, schedule for tomorrow
-        nextReminder.setDate(nextReminder.getDate() + 1);
-      }
-      const msUntil = nextReminder.getTime() - now.getTime();
-
-      timerId = setTimeout(async () => {
-        // Show system notification
-        if (Notification.permission === "granted") {
-          new Notification("🧾 Daily Log Reminder", {
-            body: "Your wallet's waiting for your say-so. Quick 5-sec log?",
-            icon: '/icons/icon-192x192.png'
-          });
-        }
-        // Make sure it's also in the app notification feed
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase.from('alerts').insert({
-              user_id: user.id,
-              title: "🧾 Daily Log Reminder",
-              message: "Your wallet's waiting for your say-so. Quick 5-sec log?",
-              type: "daily_log_reminder"
-            });
-          }
-        } catch (e) {
-          console.warn("Could not save reminder to alerts table", e);
-        }
-        // Schedule next one (for continuous daily reminders)
-        scheduleDailyReminder();
-      }, msUntil);
-    }
-    scheduleDailyReminder();
-
-    return () => {
-      // Cancel timer if component unmounts or dependencies change
-      if (timerId) clearTimeout(timerId);
-    };
-  }, [preferences]);
 
   if (loading) {
     return (

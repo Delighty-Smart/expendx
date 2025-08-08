@@ -36,11 +36,22 @@ interface SettingsProviderProps {
 
 export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) => {
   // Initialize state with proper default values
-  const [currency, setCurrency] = useState<Currency>(() => ({ 
-    code: 'USD', 
-    symbol: '$', 
-    name: 'US Dollar' 
-  }));
+  const [currency, setCurrency] = useState<Currency>(() => {
+    const saved = localStorage.getItem('expendx_currency');
+    if (saved) {
+      const currencyObj = currencies.find(c => c.code === saved) || { 
+        code: 'USD', 
+        symbol: '$', 
+        name: 'US Dollar' 
+      };
+      return currencyObj;
+    }
+    return { 
+      code: 'USD', 
+      symbol: '$', 
+      name: 'US Dollar' 
+    };
+  });
   
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage first, then system preference
@@ -131,7 +142,27 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         return;
       }
 
-      if (data && data.currency_code) {
+      const savedCurrencyLS = localStorage.getItem('expendx_currency');
+      if (savedCurrencyLS) {
+        const savedObj = currencies.find(c => c.code === savedCurrencyLS) || { 
+          code: 'USD', 
+          symbol: '$', 
+          name: 'US Dollar' 
+        };
+        setCurrency(savedObj);
+        if (data) {
+          if (data.currency_code !== savedCurrencyLS) {
+            await supabase
+              .from('user_settings')
+              .update({ currency_code: savedCurrencyLS })
+              .eq('user_id', user.id);
+          }
+        } else {
+          await supabase
+            .from('user_settings')
+            .insert({ user_id: user.id, currency_code: savedCurrencyLS });
+        }
+      } else if (data && data.currency_code) {
         const currencyObj = currencies.find(c => c.code === data.currency_code) || { 
           code: 'USD', 
           symbol: '$', 
@@ -211,6 +242,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       name: 'US Dollar' 
     };
     setCurrency(currencyObj);
+    localStorage.setItem('expendx_currency', currencyObj.code);
   };
 
   // Function to toggle hideAmounts
