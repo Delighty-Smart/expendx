@@ -62,16 +62,19 @@ class NotificationManager {
         return false;
       }
 
-      // Create alert in database
+      // Create alert in database (deduped by unique index)
       const { error: alertError } = await supabase
         .from('alerts')
-        .insert({
-          user_id: userId,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          read: false
-        });
+        .upsert(
+          {
+            user_id: userId,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            read: false
+          },
+          { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
+        );
 
       if (alertError) {
         console.error('Error creating alert:', alertError);

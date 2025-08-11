@@ -178,13 +178,18 @@ class NotificationScheduler {
         });
       }
 
-      // Save to app alerts
-      await supabase.from('alerts').insert({
-        user_id: userId,
-        title: notificationData.title,
-        message: notificationData.message,
-        type: notificationType
-      });
+      // Save to app alerts with deduplication via unique index
+      await supabase
+        .from('alerts')
+        .upsert(
+          {
+            user_id: userId,
+            title: notificationData.title,
+            message: notificationData.message,
+            type: notificationType
+          },
+          { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
+        );
 
     } catch (error) {
       console.error('Error triggering notification:', error);

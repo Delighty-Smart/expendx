@@ -214,13 +214,18 @@ async function createStreakAlert(userId: string, message: string, type: string) 
     }
     
     // Create the alert if no duplicate exists
-    const { error: insertError } = await supabase.from('alerts').insert({
-      user_id: userId,
-      title: type === 'achievement' ? 'Achievement Unlocked!' : 'Streak Update',
-      message: message,
-      type: type,
-      read: false
-    });
+    const { error: insertError } = await supabase
+      .from('alerts')
+      .upsert(
+        {
+          user_id: userId,
+          title: type === 'achievement' ? 'Achievement Unlocked!' : 'Streak Update',
+          message: message,
+          type: type,
+          read: false
+        },
+        { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
+      );
     
     if (insertError) {
       console.error("Error creating streak alert:", insertError);
