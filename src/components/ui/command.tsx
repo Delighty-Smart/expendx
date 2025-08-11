@@ -61,8 +61,9 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden scrollable-container", className)}
+    className={cn("max-h-[70vh] overflow-y-auto overflow-x-hidden scrollable-container", className)}
     style={{
+      maxHeight: 'min(70vh, 480px)',
       scrollBehavior: 'smooth',
       WebkitOverflowScrolling: 'touch',
       overscrollBehavior: 'contain'
