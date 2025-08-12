@@ -1,15 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard as Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Image, Send, Upload, Check, ThumbsUp, ThumbsDown, MessageCircle, AlertCircle } from "lucide-react";
+import { Send, Upload, ThumbsUp, ThumbsDown, MessageCircle, AlertCircle } from "lucide-react";
 import FeedbackSuccess from "@/components/FeedbackSuccess";
 
 const ratingOptions = [
@@ -30,6 +30,18 @@ const FeedbackPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Feedback | ExpendX";
+    const desc = "Share quick feedback to help improve ExpendX.";
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", desc);
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -169,20 +181,20 @@ const FeedbackPage = () => {
 
   return (
     <Layout>
-      <div className="container max-w-3xl animate-fadeIn">
-        <h1 className="text-2xl font-bold mb-6">Share Your Feedback</h1>
+      <main className="container max-w-3xl animate-fade-in">
+        <h1 className="text-2xl font-bold mb-6">Feedback</h1>
         <Card>
           <CardHeader>
-            <CardTitle>We Value Your Input</CardTitle>
+            <CardTitle>Quick Feedback</CardTitle>
             <CardDescription>
-              Help us improve ExpendX by sharing your thoughts, suggestions, or reporting issues.
+              Takes less than 30 seconds.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Rating Selection */}
               <div className="space-y-2">
-                <Label>How would you rate your experience?</Label>
+                <Label>How was it?</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {ratingOptions.map((option) => (
                     <Button
@@ -190,7 +202,7 @@ const FeedbackPage = () => {
                       type="button"
                       onClick={() => handleRatingSelect(option.value)}
                       variant={selectedRating === option.value ? "default" : "outline"}
-                      className="h-auto py-3 px-4 flex flex-col items-center gap-2"
+                      className="h-auto py-3 px-4 flex flex-col items-center gap-2 rounded-xl hover-scale"
                     >
                       <option.icon className="h-5 w-5" />
                       <span>{option.label}</span>
@@ -201,10 +213,10 @@ const FeedbackPage = () => {
 
               {/* Comments */}
               <div className="space-y-2">
-                <Label htmlFor="comments">Tell us more (optional)</Label>
+                <Label htmlFor="comments">Comments (optional)</Label>
                 <Textarea
                   id="comments"
-                  placeholder="Share any specific details, suggestions, or issues..."
+                  placeholder="Anything to add?"
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
                   rows={4}
@@ -214,7 +226,7 @@ const FeedbackPage = () => {
 
               {/* Screenshot Upload */}
               <div className="space-y-2">
-                <Label>Attach a Screenshot (optional)</Label>
+                <Label>Screenshot (optional)</Label>
                 <div className="flex items-center gap-4">
                   <Button
                     type="button"
@@ -223,7 +235,7 @@ const FeedbackPage = () => {
                     className="flex gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    Upload Image
+                    Add image
                   </Button>
                   <input
                     type="file"
@@ -233,7 +245,7 @@ const FeedbackPage = () => {
                     className="hidden"
                   />
                   <span className="text-sm text-muted-foreground">
-                    {screenshot ? screenshot.name : "No file selected"}
+                    {screenshot ? screenshot.name : "None"}
                   </span>
                 </div>
 
@@ -248,12 +260,12 @@ const FeedbackPage = () => {
                       />
                       <Button
                         type="button"
-                        variant="destructive"
+                        variant="secondary"
                         size="sm"
                         className="absolute top-2 right-2"
                         onClick={handleRemoveScreenshot}
                       >
-                        Remove
+                        Clear
                       </Button>
                     </div>
                   </div>
@@ -273,7 +285,7 @@ const FeedbackPage = () => {
                   htmlFor="contactPermission"
                   className="text-sm text-muted-foreground cursor-pointer leading-relaxed"
                 >
-                  ExpendX team may contact me about this feedback
+                  You can contact me about this.
                 </Label>
               </div>
 
@@ -286,19 +298,19 @@ const FeedbackPage = () => {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                    <span>Submitting...</span>
+                    <span>Sending...</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Send className="h-4 w-4" />
-                    <span>Submit Feedback</span>
+                    <span>Send feedback</span>
                   </div>
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
-      </div>
+        </main>
     </Layout>
   );
 };
