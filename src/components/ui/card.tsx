@@ -10,7 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "rounded-2xl border border-border/50 bg-card/80 text-card-foreground shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5",
       className
     )}
     {...props}
@@ -25,7 +25,7 @@ const GlassCard = React.forwardRef<
   <Card
     ref={ref}
     className={cn(
-      "backdrop-blur-xl bg-white/5 dark:bg-black/20 border border-white/10 dark:border-white/5 shadow-md",
+      "backdrop-blur-xl bg-card/60 border border-border/40 text-card-foreground shadow-md transition-all duration-300 hover:shadow-lg",
       className
     )}
     {...props}
