@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Budget {
   id: string;
@@ -25,14 +26,15 @@ interface Budget {
 const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (budget: Budget) => void; onDelete: (budget: Budget) => void }) => {
   const { currency } = useSettings();
 
-  // Query to get current month spending for this category
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+  const { user } = useAuth();
   const { data: currentSpending = 0 } = useQuery({
-    queryKey: ['category-spending', budget.category],
+    queryKey: ['category-spending', budget.category, user?.id, monthKey],
+    enabled: !!user,
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return 0;
 
-      const now = new Date();
       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
 
@@ -105,13 +107,17 @@ const BudgetsPage = () => {
   const { currency } = useSettings();
   const { toast } = useToast();
   const { refreshData } = useRefresh();
+  const { user } = useAuth();
 
   const { data: budgets, isLoading, isError } = useQuery({
-    queryKey: ['budgets'],
+    queryKey: ['budgets', user?.id],
+    enabled: !!user,
     queryFn: async () => {
+      if (!user) return [] as Budget[];
       const { data, error } = await supabase
         .from('budget_categories')
         .select('*')
+        .eq('user_id', user.id)
         .order('category');
 
       if (error) {

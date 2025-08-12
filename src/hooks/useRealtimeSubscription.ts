@@ -38,10 +38,11 @@ export function useRealtimeSubscription(
     console.log(`Setting up realtime subscription for ${table} table with event ${event}`);
     
     try {
-      // Set up filter configuration if provided
-      let filterConfig = {};
+      // Build filter string if provided
+      let filterString: string | undefined;
       if (filterRef.current?.column && filterRef.current?.value) {
-        filterConfig = { [filterRef.current.column]: filterRef.current.value };
+        // Supabase expects filter in the form: column=eq.value
+        filterString = `${filterRef.current.column}=eq.${filterRef.current.value}`;
       }
 
       // Set up the subscription with the correct type casting
@@ -53,7 +54,7 @@ export function useRealtimeSubscription(
             event: event === '*' ? undefined : event,
             schema: 'public',
             table: table,
-            ...(Object.keys(filterConfig).length > 0 ? { filter: filterConfig } : {})
+            ...(filterString ? { filter: filterString } : {})
           },
           (payload) => {
             console.log(`Realtime event received for ${table}:`, payload);

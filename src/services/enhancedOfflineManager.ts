@@ -35,10 +35,24 @@ class EnhancedOfflineManager {
   private isSyncing = false;
   private syncStatusCallbacks: ((status: any) => void)[] = [];
   private dataCache: CachedData | null = null;
+  private cachedUserId: string | null = null;
 
   constructor() {
     this.initializeManager();
     this.setupNetworkListeners();
+
+    // Keep cached user id in sync with auth state
+    supabase.auth.onAuthStateChange((_event, session) => {
+      this.cachedUserId = session?.user?.id ?? null;
+      try {
+        if (this.cachedUserId) {
+          localStorage.setItem('cached_user_id', this.cachedUserId);
+        } else {
+          localStorage.removeItem('cached_user_id');
+        }
+      } catch {}
+    });
+
     this.startPeriodicSync();
   }
 
@@ -74,6 +88,22 @@ class EnhancedOfflineManager {
     }, 30000); // Sync every 30 seconds
   }
 
+  private async getCurrentUserId(): Promise<string> {
+    if (this.cachedUserId) return this.cachedUserId;
+    try {
+      const cached = localStorage.getItem('cached_user_id');
+      if (cached) {
+        this.cachedUserId = cached;
+        return cached;
+      }
+    } catch {}
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+    this.cachedUserId = user.id;
+    try { localStorage.setItem('cached_user_id', user.id); } catch {}
+    return user.id;
+  }
+
   // Full data download and caching
   async performFullDataSync(): Promise<void> {
     if (!this.isOnline || this.isSyncing) return;
@@ -82,18 +112,17 @@ class EnhancedOfflineManager {
     this.notifyStatusChange();
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
+      const userId = await this.getCurrentUserId();
 
-      console.log('Starting full data sync for user:', user.id);
+      console.log('Starting full data sync for user:', userId);
 
       // Fetch all user data in parallel
       const [transactions, budgets, savings, profile, settings] = await Promise.all([
-        this.fetchTransactions(user.id),
-        this.fetchBudgets(user.id),
-        this.fetchSavings(user.id),
-        this.fetchProfile(user.id),
-        this.fetchSettings(user.id)
+        this.fetchTransactions(userId),
+        this.fetchBudgets(userId),
+        this.fetchSavings(userId),
+        this.fetchProfile(userId),
+        this.fetchSettings(userId)
       ]);
 
       // Update local cache with properly typed transactions
@@ -257,12 +286,11 @@ class EnhancedOfflineManager {
   }
 
   private async addTransactionOnline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('No authenticated user');
+    const userId = await this.getCurrentUserId();
 
     const { data, error } = await supabase
       .from('transactions')
-      .insert({ ...transactionData, user_id: user.id })
+      .insert({ ...transactionData, user_id: userId })
       .select()
       .single();
 
@@ -309,14 +337,13 @@ class EnhancedOfflineManager {
   }
 
   private async updateTransactionOnline(id: string, updates: Partial<Transaction>): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('No authenticated user');
+    const userId = await this.getCurrentUserId();
 
     const { error } = await supabase
       .from('transactions')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) throw error;
 
@@ -365,14 +392,13 @@ class EnhancedOfflineManager {
   }
 
   private async deleteTransactionOnline(id: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('No authenticated user');
+    const userId = await this.getCurrentUserId();
 
     const { error } = await supabase
       .from('transactions')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) throw error;
 
@@ -463,14 +489,13 @@ class EnhancedOfflineManager {
   }
 
   private async syncTransaction(type: string, data: any, item: SyncQueueItem): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('No authenticated user');
+    const userId = await this.getCurrentUserId();
 
     switch (type) {
       case 'INSERT':
         const { data: insertedData, error: insertError } = await supabase
           .from('transactions')
-          .insert({ ...data, user_id: user.id })
+          .insert({ ...data, user_id: userId })
           .select()
           .single();
         
@@ -494,7 +519,7 @@ class EnhancedOfflineManager {
           .from('transactions')
           .update(data)
           .eq('id', data.id)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         
         if (updateError) throw updateError;
         break;
@@ -504,7 +529,7 @@ class EnhancedOfflineManager {
           .from('transactions')
           .delete()
           .eq('id', data.id)
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
         
         if (deleteError) throw deleteError;
         break;
