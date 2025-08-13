@@ -1,5 +1,6 @@
 
-import { CloudOff, Clock, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { CloudOff, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -33,7 +34,7 @@ export const PendingSyncIndicator = ({
         };
       case 'syncing':
         return {
-          icon: <Loader2 className={`${iconSize} mr-1 animate-spin`} />,
+          icon: <LoadingSpinner size={size === 'sm' ? 'xs' : 'sm'} className="mr-1" />,
           text: size === 'md' ? "Syncing..." : "",
           variant: "secondary" as const,
           className: "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200",

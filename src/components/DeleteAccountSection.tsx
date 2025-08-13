@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Trash2 } from "lucide-react";
+import { ButtonLoading } from "@/components/ui/loading-state";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -212,17 +213,15 @@ const DeleteAccountSection = () => {
               className="flex-1"
               disabled={isProcessing}
             >
-              {isProcessing ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                  <span>Processing...</span>
-                </div>
-              ) : (
+              <ButtonLoading 
+                isLoading={isProcessing} 
+                loadingText="Processing..."
+              >
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </>
-              )}
+              </ButtonLoading>
             </Button>
           </div>
         </CardContent>

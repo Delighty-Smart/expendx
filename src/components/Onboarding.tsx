@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Loader2, Wallet, PieChart, Cloud, Shield, ChevronRight } from "lucide-react";
+import { Wallet, PieChart, Cloud, Shield, ChevronRight } from "lucide-react";
+import { ButtonLoading } from "@/components/ui/loading-state";
 
 interface OnboardingProps {
   onComplete: () => Promise<void>;
@@ -135,17 +136,15 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               disabled={isProcessing}
               className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Setting up...
-                </>
-              ) : (
+              <ButtonLoading 
+                isLoading={isProcessing} 
+                loadingText="Setting up..."
+              >
                 <>
                   {activeStep < steps.length - 1 ? "Next" : "Get Started"}
                   <ChevronRight className="h-4 w-4" />
                 </>
-              )}
+              </ButtonLoading>
             </Button>
           </div>
           

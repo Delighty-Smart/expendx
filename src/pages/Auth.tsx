@@ -5,7 +5,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { Toaster } from "@/components/ui/toaster";
 import { Onboarding } from "@/components/Onboarding";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { LoadingState } from "@/components/ui/loading-state";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -72,9 +72,8 @@ const Auth = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-lg font-medium text-foreground">Loading...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingState size="lg" message="Loading..." />
       </div>
     );
   }

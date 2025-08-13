@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter, X, TrendingUp, TrendingDown, PiggyBank, Tag } from "lucide-react";
+import { LoadingState } from "@/components/ui/loading-state";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
 import { TransactionType } from "@/types/transactions";
@@ -488,9 +489,8 @@ const TransactionsPage = () => {
             )}
 
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 bg-card">
-                <RefreshCcw className="h-8 w-8 text-primary animate-spin" />
-                <p className="mt-4 text-muted-foreground">Loading transactions...</p>
+              <div className="bg-card rounded-lg">
+                <LoadingState size="lg" message="Loading transactions..." />
               </div>
             ) : Object.keys(groupedTransactions).length > 0 ? (
               <div className="divide-y divide-border">

@@ -1,5 +1,6 @@
 
-import { Wifi, WifiOff, CloudOff, Cloud, Loader2, Database } from "lucide-react";
+import { Wifi, WifiOff, CloudOff, Cloud, Database } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
@@ -14,7 +15,7 @@ export const OfflineIndicator = () => {
     }
     
     if (syncStatus.isSyncing) {
-      return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+      return <LoadingSpinner size="sm" className="text-blue-500" />;
     }
     
     if (syncStatus.queueCount > 0) {

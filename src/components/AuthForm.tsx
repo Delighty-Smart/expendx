@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User } from "lucide-react";
+import { ButtonLoading } from "@/components/ui/loading-state";
 
 interface AuthFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -120,14 +121,12 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                   className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isDisabled}
                 >
-                  {isDisabled ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing In...
-                    </>
-                  ) : (
-                    "Sign In"
-                  )}
+                  <ButtonLoading 
+                    isLoading={isDisabled} 
+                    loadingText="Signing In..."
+                  >
+                    Sign In
+                  </ButtonLoading>
                 </Button>
               </form>
             </CardContent>
@@ -214,14 +213,12 @@ export const AuthForm = ({ onLogin, onSignup, isProcessing = false }: AuthFormPr
                   className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isDisabled}
                 >
-                  {isDisabled ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    "Create Account"
-                  )}
+                  <ButtonLoading 
+                    isLoading={isDisabled} 
+                    loadingText="Creating Account..."
+                  >
+                    Create Account
+                  </ButtonLoading>
                 </Button>
                 </form>
             </CardContent>
