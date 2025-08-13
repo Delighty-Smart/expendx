@@ -45,8 +45,24 @@ export default function Subscriptions() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = SUBSCRIPTION_STATUSES.find(s => s.value === status);
+    
+    const getStatusClasses = () => {
+      switch (status) {
+        case 'active':
+          return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800';
+        case 'inactive':
+          return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800';
+        case 'canceled':
+          return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800';
+        case 'expired':
+          return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800';
+        default:
+          return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800';
+      }
+    };
+    
     return (
-      <Badge variant={status === 'active' ? 'default' : 'secondary'} className={statusConfig?.color}>
+      <Badge variant="outline" className={`${getStatusClasses()} font-medium`}>
         {statusConfig?.label}
       </Badge>
     );
@@ -87,8 +103,58 @@ export default function Subscriptions() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-muted-foreground">Loading subscriptions...</div>
+        <div className="container mx-auto p-4">
+          <PageHeader
+            title="Subscriptions"
+            actions={
+              <Button disabled className="gap-2 flex-none whitespace-nowrap opacity-50">
+                <Plus className="h-4 w-4" />
+                Add Subscription
+              </Button>
+            }
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="h-4 bg-muted rounded w-24"></div>
+                  <div className="h-4 w-4 bg-muted rounded"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 bg-muted rounded w-16"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-6 bg-muted rounded w-32"></div>
+                        <div className="h-5 bg-muted rounded w-16"></div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4].map((j) => (
+                          <div key={j} className="h-4 bg-muted rounded w-full"></div>
+                        ))}
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <div className="h-3 bg-muted rounded w-24"></div>
+                          <div className="h-3 bg-muted rounded w-20"></div>
+                        </div>
+                        <div className="h-2 bg-muted rounded w-full"></div>
+                      </div>
+                    </div>
+                    <div className="h-8 w-8 bg-muted rounded"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </Layout>
     );
