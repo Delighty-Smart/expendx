@@ -176,7 +176,57 @@ const BudgetsPage = () => {
   };
 
   if (isLoading) {
-    return <Layout><div>Loading budgets...</div></Layout>;
+    return (
+      <Layout>
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="h-8 bg-muted rounded animate-skeleton-pulse w-32"></div>
+            <div className="h-10 bg-muted rounded animate-skeleton-pulse w-28"></div>
+          </div>
+          
+          <div className="animate-skeleton-pulse">
+            <div className="p-6 bg-muted/50 rounded-lg border">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-2xl bg-muted"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-24"></div>
+                  <div className="h-8 bg-muted rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-skeleton-pulse">
+                <div className="p-4 bg-muted/50 rounded-lg border space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="h-6 bg-muted rounded w-24"></div>
+                    <div className="flex gap-1">
+                      <div className="h-8 w-8 bg-muted rounded"></div>
+                      <div className="h-8 w-8 bg-muted rounded"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <div className="h-4 bg-muted rounded w-16"></div>
+                      <div className="h-4 bg-muted rounded w-20"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <div className="h-3 bg-muted rounded w-12"></div>
+                        <div className="h-3 bg-muted rounded w-16"></div>
+                      </div>
+                      <div className="h-2 bg-muted rounded w-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   if (isError) {

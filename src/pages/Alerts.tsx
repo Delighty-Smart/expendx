@@ -397,8 +397,24 @@ const Alerts = () => {
         )}
         
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-pulse text-muted-foreground">Loading alerts...</div>
+          <div className="space-y-4 animate-skeleton-pulse">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-5 h-5 bg-muted rounded"></div>
+                  <div className="h-5 bg-muted rounded flex-1"></div>
+                  <div className="h-6 w-20 bg-muted rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                </div>
+                <div className="flex justify-between items-center mt-3">
+                  <div className="h-5 w-16 bg-muted rounded"></div>
+                  <div className="h-4 w-24 bg-muted rounded"></div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : alerts.length > 0 ? (
           <div className="space-y-4">

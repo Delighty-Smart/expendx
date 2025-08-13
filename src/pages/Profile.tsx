@@ -159,8 +159,42 @@ const Profile = () => {
         <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
 
         {loading ? (
-          <div className="h-64 flex items-center justify-center">
-            <div className="animate-pulse text-muted-foreground">Loading profile...</div>
+          <div className="space-y-6 animate-skeleton-pulse">
+            <div className="border rounded-lg">
+              <div className="p-6 border-b">
+                <div className="h-6 bg-muted rounded w-40"></div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-24"></div>
+                  <div className="h-10 bg-muted rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-20"></div>
+                  <div className="h-10 bg-muted rounded"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-16"></div>
+                  <div className="h-20 bg-muted rounded"></div>
+                </div>
+                <div className="h-10 bg-muted rounded w-24"></div>
+              </div>
+            </div>
+            <div className="border rounded-lg p-6">
+              <div className="space-y-4">
+                <div className="h-6 bg-muted rounded w-32"></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted rounded w-20"></div>
+                    <div className="h-8 bg-muted rounded"></div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted rounded w-24"></div>
+                    <div className="h-8 bg-muted rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
