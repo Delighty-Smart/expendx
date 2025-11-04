@@ -189,7 +189,7 @@ const ReportsPage = () => {
           <div className="container mx-auto px-4 py-6 space-y-6">
             
             {/* Header Section */}
-            <div className="text-center space-y-4">
+            <div className="sticky top-14 lg:top-0 z-20 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pb-4 mb-4 border-b border-border/50 text-center space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="text-center sm:text-left">
                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

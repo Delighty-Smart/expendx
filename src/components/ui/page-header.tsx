@@ -9,7 +9,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, actions, className }: PageHeaderProps) {
   return (
-    <header className={"w-full " + (className ?? "")}> 
+    <header className={"sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 " + (className ?? "")}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold leading-tight truncate">{title}</h1>

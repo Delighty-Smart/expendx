@@ -301,7 +301,7 @@ const TransactionsPage = () => {
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
               <OfflineIndicator />

@@ -392,7 +392,7 @@ const IndexPage = () => {
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
         <div className="space-y-6 pb-6">
-          <div className="flex flex-wrap gap-4 justify-between">
+          <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-wrap gap-4 justify-between">
             <Button
               size="compact"
               className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all duration-200 touch-manipulation"
