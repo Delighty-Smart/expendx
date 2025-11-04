@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, Filter, X, TrendingUp, TrendingDown, PiggyBank, Tag } from "lucide-react";
+import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, SlidersHorizontal, X, TrendingUp, TrendingDown, PiggyBank, Shapes } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
@@ -375,7 +375,7 @@ const TransactionsPage = () => {
                         className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
                       >
                         <div className="flex items-center gap-2">
-                          <Filter className="h-4 w-4" />
+                          <SlidersHorizontal className="h-4 w-4" />
                           Categories
                         </div>
                         {selectedCategories.length > 0 && (
@@ -397,7 +397,7 @@ const TransactionsPage = () => {
                             }`}
                             onClick={clearAllCategories}
                           >
-                            <Tag className="h-4 w-4 mr-3" />
+                            <Shapes className="h-4 w-4 mr-3" />
                             <span>All Categories</span>
                           </div>
                           {selectedCategories.length > 0 && (
@@ -432,7 +432,7 @@ const TransactionsPage = () => {
                                   }`}
                                   onClick={() => toggleCategory(categoryItem.name)}
                                 >
-                                  <Tag className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+                                  <Shapes className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
                                   <span className="truncate flex-1">
                                     {categoryItem.name}
                                   </span>

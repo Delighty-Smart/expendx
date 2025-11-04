@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, ArrowUp, ArrowDown, Filter, X, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
+import { Search, ArrowUp, ArrowDown, SlidersHorizontal, X, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
@@ -174,7 +174,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                 className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent touch-manipulation"
               >
                 <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <Filter className="h-4 w-4 flex-shrink-0" />
+                  <SlidersHorizontal className="h-4 w-4 flex-shrink-0" />
                   <span className="truncate text-sm sm:text-base">Categories</span>
                 </div>
                 {selectedCategories.length > 0 && (

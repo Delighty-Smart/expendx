@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Tags, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2 } from "lucide-react";
+import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
@@ -200,7 +200,7 @@ const Settings = () => {
               <AccordionItem value="categories" className="border-b">
                 <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline">
                   <div className="flex items-center gap-3">
-                    <Tags className="h-5 w-5 text-primary" />
+                    <Shapes className="h-5 w-5 text-primary" />
                     <div className="text-left">
                       <div className="font-medium">Manage Categories</div>
                       <div className="text-sm text-muted-foreground">Create and organize transaction categories</div>

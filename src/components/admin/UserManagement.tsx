@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Send, UserPlus, Edit, Eye, EyeOff } from "lucide-react";
+import { Search, SlidersHorizontal, Send, UserPlus, Edit, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
@@ -372,7 +372,7 @@ const UserManagement = () => {
         }}>
             <SelectTrigger className="w-40">
               <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
                 <span>Role</span>
               </div>
             </SelectTrigger>
@@ -394,7 +394,7 @@ const UserManagement = () => {
         }}>
             <SelectTrigger className="w-40">
               <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
                 <span>Country</span>
               </div>
             </SelectTrigger>
@@ -413,7 +413,7 @@ const UserManagement = () => {
         }}>
             <SelectTrigger className="w-40">
               <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
                 <span>Continent</span>
               </div>
             </SelectTrigger>

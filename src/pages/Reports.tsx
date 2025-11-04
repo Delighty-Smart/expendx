@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Tag } from "lucide-react";
+import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Shapes } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -284,7 +284,7 @@ const ReportsPage = () => {
                           className="h-11 px-3 border-border text-left justify-between w-full"
                         >
                           <div className="flex items-center gap-2">
-                            <Tag className="h-4 w-4 flex-shrink-0" />
+                            <Shapes className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate text-sm">
                               {selectedCategories.length > 0 
                                 ? `Categories (${selectedCategories.length})` 
@@ -315,7 +315,7 @@ const ReportsPage = () => {
                                   }
                                 }}
                               >
-                                <Tag className="h-3 w-3 mr-2 flex-shrink-0" />
+                                <Shapes className="h-3 w-3 mr-2 flex-shrink-0" />
                                 <span className="truncate">{category}</span>
                               </div>
                             ))}
