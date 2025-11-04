@@ -191,10 +191,9 @@ const Layout = ({
       </header>
 
       <aside className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col shadow-lg`}>
-        {/* Integration Header */}
-        <div className="p-4 border-b border-border">
-          
-          
+        {/* Logo Header */}
+        <div className="p-4 border-b border-border flex items-center justify-center">
+          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
         </div>
         
         {/* Navigation Menu */}
