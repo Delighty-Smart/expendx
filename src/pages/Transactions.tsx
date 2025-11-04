@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, SlidersHorizontal, X, TrendingUp, TrendingDown, PiggyBank, Shapes } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
 import { TransactionType } from "@/types/transactions";
@@ -553,7 +554,7 @@ const TransactionsPage = () => {
                                   return (
                                     <div
                                       key={transaction.id}
-                                      className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 ${selectionMode ? 'cursor-pointer' : ''}`}
+                                      className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
                                       onClick={() => selectionMode 
                                         ? toggleTransactionSelection(transaction.id) 
                                         : handleEdit(transaction)
@@ -614,17 +615,13 @@ const TransactionsPage = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground bg-card">
-                <p className="mb-4">No transactions found for the selected filters</p>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("/add-transaction")}
-                  className="flex items-center gap-2 bg-background border-input text-foreground hover:bg-accent"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Add your first transaction
-                </Button>
-              </div>
+              <EmptyState
+                icon={PlusCircle}
+                title="No transactions found"
+                description="Start tracking your finances by adding your first transaction. You can add income, expenses, or savings."
+                actionLabel="Add your first transaction"
+                onAction={() => navigate("/add-transaction")}
+              />
             )}
           </Card>
         </div>

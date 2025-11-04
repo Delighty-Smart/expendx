@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownRight, PlusCircle, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTransactionData } from "@/hooks/useTransactionData";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -391,7 +391,16 @@ const IndexPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
-        <div className="space-y-6 pb-6">
+        <div className="space-y-6 pb-20">
+          {/* Floating Action Button */}
+          <button
+            onClick={() => navigate("/add-transaction")}
+            className="fixed bottom-20 right-6 lg:bottom-6 lg:right-6 z-30 w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/50 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 touch-manipulation animate-fade-in"
+            aria-label="Add transaction"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+
           <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-wrap gap-4 justify-between">
             <Button
               size="compact"

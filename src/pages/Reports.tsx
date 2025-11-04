@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Shapes } from "lucide-react";
+import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Shapes, FileSpreadsheet } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 import { Transaction } from "@/types/transactions";
 import { useCategories } from "@/hooks/useCategories";
+import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
 
 // Define chart data types
 interface ChartDataPoint {
@@ -150,6 +152,8 @@ const ReportsPage = () => {
       .sort((a, b) => b.amount - a.amount);
   }, [filteredTransactions]);
 
+  const { toast } = useToast();
+
   const formatAmount = (amount: number) => {
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
@@ -176,7 +180,87 @@ const ReportsPage = () => {
     a.download = `financial-report-${format(dateFrom, 'yyyy-MM-dd')}-to-${format(dateTo, 'yyyy-MM-dd')}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Report Exported",
+      description: "Your financial report has been downloaded as CSV.",
+    });
   };
+
+  const exportToPDF = async () => {
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPosition = margin;
+
+      // Title
+      pdf.setFontSize(20);
+      pdf.setTextColor(59, 130, 246); // blue-500
+      pdf.text("Financial Report", margin, yPosition);
+      yPosition += 10;
+
+      // Date range
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128); // gray-500
+      pdf.text(
+        `Period: ${format(dateFrom, 'MMM dd, yyyy')} - ${format(dateTo, 'MMM dd, yyyy')}`,
+        margin,
+        yPosition
+      );
+      yPosition += 10;
+
+      // Summary metrics
+      pdf.setFontSize(14);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("Summary", margin, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(10);
+      pdf.text(`Total Income: ${currency.symbol}${formatAmount(summaryMetrics.income)}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Total Expenses: ${currency.symbol}${formatAmount(summaryMetrics.expenses)}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Total Savings: ${currency.symbol}${formatAmount(summaryMetrics.savings)}`, margin, yPosition);
+      yPosition += 6;
+      pdf.text(`Net Balance: ${currency.symbol}${formatAmount(summaryMetrics.net)}`, margin, yPosition);
+      yPosition += 12;
+
+      // Category breakdown
+      pdf.setFontSize(14);
+      pdf.text("Category Breakdown", margin, yPosition);
+      yPosition += 8;
+
+      pdf.setFontSize(10);
+      categoryData.slice(0, 10).forEach((cat) => {
+        pdf.text(
+          `${cat.category}: ${currency.symbol}${formatAmount(cat.amount)}`,
+          margin,
+          yPosition
+        );
+        yPosition += 6;
+        if (yPosition > 280) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+      });
+
+      pdf.save(`financial-report-${format(dateFrom, 'yyyy-MM-dd')}.pdf`);
+      
+      toast({
+        title: "PDF Exported",
+        description: "Your financial report has been downloaded as PDF.",
+      });
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
 
@@ -199,9 +283,13 @@ const ReportsPage = () => {
                     Comprehensive analysis of your financial data
                   </p>
                 </div>
-                <Button onClick={exportData} size="lg" className="flex items-center gap-2 shadow-lg">
-                  <Download className="h-4 w-4" />
+                <Button onClick={exportData} variant="outline" size="lg" className="flex items-center gap-2 shadow-md">
+                  <FileSpreadsheet className="h-4 w-4" />
                   Export CSV
+                </Button>
+                <Button onClick={exportToPDF} size="lg" className="flex items-center gap-2 shadow-lg">
+                  <FileText className="h-4 w-4" />
+                  Export PDF
                 </Button>
               </div>
             </div>
