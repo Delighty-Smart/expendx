@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
+import { useBudgetAlerts } from "@/hooks/useBudgetAlerts";
 import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign } from "lucide-react";
@@ -43,6 +44,9 @@ const IndexPage = () => {
   const { currency } = useSettings();
   const navigate = useNavigate();
   const { refreshData } = useRefresh();
+  
+  // Enable smart budget alerts
+  useBudgetAlerts();
   
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);

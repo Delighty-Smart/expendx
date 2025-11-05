@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -235,6 +235,45 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["notification_type"] | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      recurring_templates: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string
+          frequency: string
+          id: string
+          name: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          description: string
+          frequency: string
+          id?: string
+          name: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          frequency?: string
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -576,22 +615,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_subscriptions_category: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      add_subscriptions_category: { Args: never; Returns: undefined }
       delete_user_account: {
         Args: { target_user_id: string }
         Returns: boolean
       }
-      delete_user_data: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      delete_user_data: { Args: { target_user_id: string }; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       notification_type: "blog_post" | "form_submission" | "system"

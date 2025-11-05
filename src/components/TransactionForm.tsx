@@ -20,6 +20,9 @@ import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PendingSyncIndicator } from "./PendingSyncIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
+import { useSmartCategorization } from "@/hooks/useSmartCategorization";
+import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
+import { Badge } from "@/components/ui/badge";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -62,6 +65,10 @@ export const TransactionForm = ({
       description: transaction?.description || ""
     }
   });
+
+  // Smart categorization - watch description after form is created
+  const description = form.watch("description") || "";
+  const { suggestions } = useSmartCategorization(description, transactionType);
 
   // Helper function to get cached user ID for offline use
   const getCachedUserId = (): string | null => {
@@ -322,6 +329,20 @@ export const TransactionForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-foreground">Category</FormLabel>
+                    {suggestions.length > 0 && !field.value && (
+                      <div className="flex gap-2 mb-2 flex-wrap">
+                        {suggestions.map((suggestion) => (
+                          <Badge
+                            key={suggestion.category}
+                            variant="outline"
+                            className="cursor-pointer hover:bg-primary/10"
+                            onClick={() => field.onChange(suggestion.category)}
+                          >
+                            ✨ {suggestion.category} ({Math.round(suggestion.confidence * 100)}%)
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
@@ -343,6 +364,19 @@ export const TransactionForm = ({
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )}
+              />
+
+              {/* Recurring Template Selector */}
+              <RecurringTemplateSelector
+                transactionType={transactionType}
+                disabled={loading}
+                onSelect={(template) => {
+                  if (template) {
+                    form.setValue('amount', template.amount.toString());
+                    form.setValue('category', template.category);
+                    form.setValue('description', template.description);
+                  }
+                }}
               />
 
               {/* Subscription Selection - only show when Subscriptions category is selected */}
