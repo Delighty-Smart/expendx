@@ -22,6 +22,7 @@ import { PendingSyncIndicator } from "./PendingSyncIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { useSmartCategorization } from "@/hooks/useSmartCategorization";
 import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
+import { ReceiptScanner } from "./ReceiptScanner";
 import { Badge } from "@/components/ui/badge";
 
 const transactionSchema = z.object({
@@ -69,6 +70,22 @@ export const TransactionForm = ({
   // Smart categorization - watch description after form is created
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
+
+  const handleReceiptData = useCallback((data: {
+    amount: number;
+    date?: string;
+    description: string;
+    category?: string;
+  }) => {
+    form.setValue('amount', data.amount.toString());
+    form.setValue('description', data.description);
+    if (data.date) {
+      form.setValue('date', data.date);
+    }
+    if (data.category) {
+      form.setValue('category', data.category);
+    }
+  }, [form]);
 
   // Helper function to get cached user ID for offline use
   const getCachedUserId = (): string | null => {
@@ -267,6 +284,8 @@ export const TransactionForm = ({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <ReceiptScanner onDataExtracted={handleReceiptData} />
+              
               <div className="grid grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
