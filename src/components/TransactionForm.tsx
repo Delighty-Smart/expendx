@@ -22,7 +22,6 @@ import { PendingSyncIndicator } from "./PendingSyncIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { useSmartCategorization } from "@/hooks/useSmartCategorization";
 import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
-import { ReceiptScanner } from "./ReceiptScanner";
 import { Badge } from "@/components/ui/badge";
 
 const transactionSchema = z.object({
@@ -38,20 +37,13 @@ interface TransactionFormProps {
   onOpenChange: (open: boolean) => void;
   onTransactionAdded?: () => void;
   transaction?: Transaction | null;
-  onReceiptScanComplete?: (data: {
-    amount: number;
-    date?: string;
-    description: string;
-    category?: string;
-  }) => void;
 }
 
 export const TransactionForm = ({
   open,
   onOpenChange,
   onTransactionAdded,
-  transaction,
-  onReceiptScanComplete
+  transaction
 }: TransactionFormProps) => {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
@@ -275,10 +267,6 @@ export const TransactionForm = ({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {onReceiptScanComplete && (
-                <ReceiptScanner onScanComplete={onReceiptScanComplete} />
-              )}
-              
               <div className="grid grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
