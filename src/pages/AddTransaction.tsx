@@ -1,9 +1,8 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { TransactionForm } from "@/components/TransactionForm";
-import { ReceiptReviewDialog } from "@/components/ReceiptReviewDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -12,6 +11,9 @@ import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { TransactionType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+
+// Lazy load the receipt review dialog to prevent React context issues
+const ReceiptReviewDialog = lazy(() => import("@/components/ReceiptReviewDialog").then(m => ({ default: m.ReceiptReviewDialog })));
 
 const AddTransactionPage = () => {
   const location = useLocation();
@@ -204,14 +206,18 @@ const AddTransactionPage = () => {
           onReceiptScanComplete={handleReceiptScanComplete}
         />
 
-        <ReceiptReviewDialog
-          open={showReceiptReview}
-          onOpenChange={setShowReceiptReview}
-          extractedData={scannedReceiptData || { amount: 0, description: "" }}
-          categories={allCategories.map(name => ({ id: name, name }))}
-          onConfirmSingle={handleConfirmSingleTransaction}
-          onConfirmMultiple={handleConfirmMultipleTransactions}
-        />
+        {showReceiptReview && (
+          <Suspense fallback={null}>
+            <ReceiptReviewDialog
+              open={showReceiptReview}
+              onOpenChange={setShowReceiptReview}
+              extractedData={scannedReceiptData || { amount: 0, description: "" }}
+              categories={allCategories.map(name => ({ id: name, name }))}
+              onConfirmSingle={handleConfirmSingleTransaction}
+              onConfirmMultiple={handleConfirmMultipleTransactions}
+            />
+          </Suspense>
+        )}
       </div>
     </Layout>
   );
