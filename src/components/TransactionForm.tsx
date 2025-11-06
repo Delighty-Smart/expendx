@@ -23,6 +23,7 @@ import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { useSmartCategorization } from "@/hooks/useSmartCategorization";
 import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
 import { ReceiptScanner } from "./ReceiptScanner";
+import { ReceiptReviewDialog } from "./ReceiptReviewDialog";
 import { Badge } from "@/components/ui/badge";
 
 const transactionSchema = z.object({
@@ -51,6 +52,8 @@ export const TransactionForm = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<string>("");
+  const [showReceiptReview, setShowReceiptReview] = useState(false);
+  const [scannedReceiptData, setScannedReceiptData] = useState<any>(null);
   const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -71,21 +74,100 @@ export const TransactionForm = ({
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
 
-  const handleReceiptData = useCallback((data: {
+  const handleReceiptScanComplete = useCallback((data: {
     amount: number;
     date?: string;
     description: string;
     category?: string;
   }) => {
-    form.setValue('amount', data.amount.toString());
-    form.setValue('description', data.description);
-    if (data.date) {
-      form.setValue('date', data.date);
-    }
-    if (data.category) {
-      form.setValue('category', data.category);
-    }
+    setScannedReceiptData(data);
+    setShowReceiptReview(true);
+  }, []);
+
+  const handleConfirmSingleTransaction = useCallback(async (data: {
+    amount: number;
+    date: string;
+    description: string;
+    category: string;
+    type: "expense" | "income";
+  }) => {
+    form.setValue("amount", data.amount.toString());
+    form.setValue("date", data.date);
+    form.setValue("description", data.description);
+    form.setValue("category", data.category);
+    form.setValue("type", data.type === "expense" ? "debit" : "credit");
+    
+    // Wait a tick for form values to update, then submit
+    setTimeout(() => {
+      const formData = form.getValues();
+      onSubmit({
+        date: formData.date,
+        amount: formData.amount,
+        type: formData.type,
+        category: formData.category,
+        description: formData.description
+      });
+    }, 0);
   }, [form]);
+
+  const handleConfirmMultipleTransactions = useCallback(async (items: Array<{
+    amount: number;
+    date: string;
+    description: string;
+    category: string;
+    type: "expense" | "income";
+  }>) => {
+    try {
+      setLoading(true);
+      
+      let userId = getCachedUserId();
+      if (!userId && navigator.onLine) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userId = user.id;
+          cacheUserId(userId);
+        }
+      }
+
+      if (!userId) {
+        throw new Error("Unable to determine user ID. Please try again when online.");
+      }
+
+      // Add each transaction separately
+      for (const item of items) {
+        const transactionData = {
+          amount: item.amount,
+          date: item.date,
+          description: item.description,
+          category: item.category,
+          type: (item.type === "expense" ? "debit" : "credit") as TransactionType,
+          user_id: userId
+        };
+
+        await enhancedOfflineManager.addTransactionOffline(transactionData);
+      }
+
+      toast({
+        title: "Success",
+        description: `Successfully added ${items.length} transactions`
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["enhanced_transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      
+      onOpenChange(false);
+      onTransactionAdded?.();
+    } catch (error: any) {
+      console.error("Error adding multiple transactions:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast, queryClient, onOpenChange, onTransactionAdded]);
 
   // Helper function to get cached user ID for offline use
   const getCachedUserId = (): string | null => {
@@ -284,7 +366,7 @@ export const TransactionForm = ({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <ReceiptScanner onDataExtracted={handleReceiptData} />
+              <ReceiptScanner onScanComplete={handleReceiptScanComplete} />
               
               <div className="grid grid-cols-2 gap-5">
                 <FormField
@@ -464,6 +546,15 @@ export const TransactionForm = ({
               </DialogFooter>
             </form>
           </Form>
+
+          <ReceiptReviewDialog
+            open={showReceiptReview}
+            onOpenChange={setShowReceiptReview}
+            extractedData={scannedReceiptData || { amount: 0, description: "" }}
+            categories={categories.map(name => ({ id: name, name }))}
+            onConfirmSingle={handleConfirmSingleTransaction}
+            onConfirmMultiple={handleConfirmMultipleTransactions}
+          />
         </ScrollArea>
       </DialogContent>
     </Dialog>
