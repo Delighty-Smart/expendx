@@ -198,18 +198,19 @@ const Layout = ({
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 px-3 pt-10 space-y-1 my-px py-[50px]">
+      <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">
         {menuItems.map(item => {
           const IconComponent = item.icon;
           const isActive = location.pathname === item.path;
-          return <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group touch-manipulation ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`} onClick={() => setIsSidebarOpen(false)}>
+          return <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group touch-manipulation ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`} onClick={() => setIsSidebarOpen(false)}>
             <IconComponent className="h-5 w-5 flex-shrink-0 md:h-5 md:w-5" strokeWidth={1.5} />
-            <span className="text-base font-medium">{item.label}</span>
+            <span className="text-sm font-medium">{item.label}</span>
             {item.badge && <Badge variant="destructive" className="ml-auto text-xs">{item.badge}</Badge>}
             {item.path === "/feedback" && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full"></div>}
           </Link>;
         })}
       </nav>
+
 
       {/* Shortcuts Section */}
       <div className="px-3 py-2">
@@ -219,14 +220,16 @@ const Layout = ({
             <div className="w-5 h-5 bg-blue-500 rounded-sm flex items-center justify-center md:w-5 md:h-5">
               <div className="w-2.5 h-2.5 bg-white rounded-full md:w-2.5 md:h-2.5"></div>
             </div>
-            <span className="text-base">Add Transaction</span>
+            <span className="text-sm">Add Transaction</span>
           </Link>
+
           <Link to="/reports" className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors touch-manipulation" onClick={() => setIsSidebarOpen(false)}>
             <div className="w-5 h-5 bg-orange-500 rounded-sm flex items-center justify-center md:w-5 md:h-5">
               <div className="w-2.5 h-2.5 bg-white rounded-full md:w-2.5 md:h-2.5"></div>
             </div>
-            <span className="text-base">Monthly Report</span>
+            <span className="text-sm">Monthly Report</span>
           </Link>
+
           <button onClick={() => {
             handleStreakClick();
             setIsSidebarOpen(false);
@@ -234,8 +237,9 @@ const Layout = ({
             <div className="w-5 h-5 bg-purple-500 rounded-sm flex items-center justify-center md:w-5 md:h-5">
               <Flame className="w-3 h-3 text-white md:w-3 md:h-3" strokeWidth={1.5} />
             </div>
-            <span className="text-base">Streak Progress</span>
+            <span className="text-sm">Streak Progress</span>
           </button>
+
         </div>
       </div>
 

@@ -152,31 +152,30 @@
 
   /* Typography with Inter */
   html {
-    font-size: 16px;
+    font-size: 14px;
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     @apply text-base text-foreground leading-normal;
     /* Prevent zoom on focus in iOS */
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Compact Typography scaling with proper weights */
   h1,
   .h1 {
-    @apply text-2xl leading-tight;
+    @apply text-xl leading-tight;
     font-weight: 600;
     letter-spacing: -0.5px;
   }
 
   h2,
   .h2 {
-    @apply text-xl leading-tight;
+    @apply text-lg leading-tight;
     font-weight: 600;
     letter-spacing: -0.5px;
   }
 
   h3,
   .h3 {
-    @apply text-lg leading-snug;
+    @apply text-base leading-snug;
     font-weight: 500;
     letter-spacing: -0.02em;
   }
@@ -194,10 +193,11 @@
   }
 
   p {
-    @apply text-base mb-3 last:mb-0;
+    @apply text-sm mb-3 last:mb-0;
     font-weight: 400;
     letter-spacing: -0.01em;
   }
+
 
   small {
     @apply text-xs;
