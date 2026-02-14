@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import { TransactionsTable } from "@/components/reports/TransactionsTable";
-import { useTransactionData } from "@/hooks/useTransactionData";
+import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -76,7 +76,13 @@ const ReportsPage = () => {
     return [];
   }, [selectedType, allIncomeCategories, allExpenseCategories, allSavingsCategories]);
 
-  const { transactions, isLoading } = useTransactionData({
+  const {
+    transactions,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useEnhancedTransactionData({
     startDate: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
     endDate: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
   });
@@ -787,9 +793,11 @@ const ReportsPage = () => {
                 <AccordionContent className="px-6 pb-6">
 
                   <TransactionsTable
-
                     transactions={filteredTransactions}
                     currency={currency}
+                    fetchNextPage={fetchNextPage}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
                   />
                 </AccordionContent>
               </Card>

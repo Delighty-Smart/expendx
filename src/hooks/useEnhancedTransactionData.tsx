@@ -54,10 +54,12 @@ export function useEnhancedTransactionData(filter?: {
       // If online, fetch from database and update cache
       if (navigator.onLine) {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.user) throw new Error('No authenticated user');
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('No authenticated user');
 
-          let query = supabase.from("transactions").select("*", { count: 'exact' });
+          let query = supabase.from("transactions")
+            .select("*", { count: 'exact' })
+            .eq("user_id", user.id);
 
 
           // Apply filters

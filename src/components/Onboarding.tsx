@@ -14,7 +14,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const steps = [
     {
       icon: <Wallet className="w-16 h-16 text-primary" />,
@@ -41,7 +41,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       gradient: "from-green-500/10 to-green-500/5 dark:from-green-500/20 dark:to-green-500/10"
     }
   ];
-  
+
   const handleNext = async () => {
     if (activeStep < steps.length - 1) {
       setActiveStep(activeStep + 1);
@@ -49,7 +49,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       setIsProcessing(true);
       try {
         toast({
-          title: "Welcome to ExpendX! 🎉",
+          title: "Welcome to expendX! 🎉",
           description: "You're all set to start your financial journey.",
         });
         await onComplete();
@@ -60,7 +60,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       }
     }
   };
-  
+
   const handleSkip = async () => {
     setIsProcessing(true);
     try {
@@ -71,7 +71,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       setIsProcessing(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       {/* Background decoration */}
@@ -84,42 +84,41 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
         <CardHeader className="text-center pb-2">
           {/* Logo */}
           <div className="inline-flex items-center justify-center mb-4 mx-auto">
-            <img 
-              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
-              alt="ExpendX" 
+            <img
+              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
+              alt="ExpendX"
               className="h-12 object-contain"
             />
           </div>
-          
+
           {/* Progress dots */}
           <div className="flex justify-center space-x-2 mb-6">
             {steps.map((_, index) => (
               <div
                 key={index}
-                className={`h-2 w-2 rounded-full transition-all duration-300 ${
-                  index <= activeStep ? "bg-primary scale-125" : "bg-muted"
-                }`}
+                className={`h-2 w-2 rounded-full transition-all duration-300 ${index <= activeStep ? "bg-primary scale-125" : "bg-muted"
+                  }`}
               />
             ))}
           </div>
         </CardHeader>
-        
+
         <CardContent className="px-8 pb-8">
           {/* Current step content */}
           <div className={`text-center mb-8 p-6 rounded-2xl bg-gradient-to-br ${steps[activeStep].gradient} border border-border/50`}>
             <div className="flex justify-center mb-4">
               {steps[activeStep].icon}
             </div>
-            
+
             <h2 className="text-2xl font-bold text-foreground mb-4">
               {steps[activeStep].title}
             </h2>
-            
+
             <p className="text-muted-foreground text-base leading-relaxed">
               {steps[activeStep].description}
             </p>
           </div>
-          
+
           {/* Action buttons */}
           <div className="flex justify-between items-center gap-4">
             <Button
@@ -130,14 +129,14 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
             >
               Skip for now
             </Button>
-            
-            <Button 
+
+            <Button
               onClick={handleNext}
               disabled={isProcessing}
               className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
             >
-              <ButtonLoading 
-                isLoading={isProcessing} 
+              <ButtonLoading
+                isLoading={isProcessing}
                 loadingText="Setting up..."
               >
                 <>
@@ -147,7 +146,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               </ButtonLoading>
             </Button>
           </div>
-          
+
           {/* Step indicator */}
           <div className="text-center mt-4">
             <p className="text-sm text-muted-foreground">

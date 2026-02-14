@@ -71,7 +71,7 @@ export default {
           gray: {
             light: "#f4f4f6",
             medium: "#6e6e73",
-            dark: "#111111"
+            dark: "#222222"
           }
         },
       },

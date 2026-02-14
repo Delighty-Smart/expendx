@@ -79,11 +79,12 @@ const IndexPage = () => {
   useEffect(() => {
     const fetchUnreadAlerts = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
         const { data, error } = await supabase
           .from('alerts')
           .select('id')
+          .eq('user_id', user.id)
           .eq('read', false);
 
         if (error) throw error;
@@ -108,16 +109,24 @@ const IndexPage = () => {
     });
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
     queryKey: ["monthly_income_estimate"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
 
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
+        .eq("user_id", user.id)
         .maybeSingle();
 
 
@@ -133,14 +142,15 @@ const IndexPage = () => {
   const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
     queryKey: ["user_streak"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
 
       await updateUserStreak();
 
       const { data, error } = await supabase
         .from("user_streaks")
         .select("*")
+        .eq("user_id", user.id)
         .maybeSingle();
 
 
@@ -163,12 +173,13 @@ const IndexPage = () => {
     queryFn: async () => {
       console.log("Dashboard: Fetching UNARCHIVED transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return [];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
+        .eq("user_id", user.id)
         .eq("archived", false) // ONLY unarchived transactions
         .gte("date", firstDayOfMonth)
         .lte("date", lastDayOfMonth)
@@ -186,12 +197,13 @@ const IndexPage = () => {
     queryFn: async () => {
       console.log("Dashboard: Fetching ALL UNARCHIVED transactions for wallet balance");
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return [];
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
+        .eq("user_id", user.id)
         .eq("archived", false) // ONLY unarchived transactions
         .order("date", { ascending: false });
 
@@ -437,11 +449,13 @@ const IndexPage = () => {
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
-        <div className="space-y-8 pb-20 px-4 md:px-0">
+        <div className="space-y-6 pb-20 px-4 md:px-0">
           {/* Header Area */}
-          <div className="flex items-center justify-between py-6">
+          <div className="flex items-center justify-between pt-4 pb-2">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                {getGreeting()}, {userProfile?.first_name || userProfile?.username || "there"}
+              </h1>
               <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
             </div>
             <div className="flex items-center gap-3">

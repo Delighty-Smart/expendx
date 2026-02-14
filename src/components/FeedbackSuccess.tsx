@@ -26,7 +26,7 @@ const FeedbackSuccess = ({ onClose }: FeedbackSuccessProps) => {
         </h2>
 
         <p className="text-lg text-muted-foreground leading-relaxed font-medium px-4">
-          Thank you for helping us shape the future of <span className="text-primary font-bold">ExpendX</span>. Your insights are already on their way to our development team.
+          Thank you for helping us shape the future of <span className="text-primary font-bold">expendX</span>. Your insights are already on their way to our development team.
         </p>
 
         <div className="glass-card rounded-3xl p-6 border border-white/10 bg-muted/20 backdrop-blur-sm">

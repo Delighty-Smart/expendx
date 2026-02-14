@@ -1,6 +1,5 @@
-
 {
-  "name": "expendX - Budget Tracker",
+  "name": "expendX",
   "short_name": "expendX",
   "description": "Track expenses, manage budgets and achieve financial goals",
   "start_url": "/",
@@ -9,13 +8,13 @@
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "/lovable-uploads/09511e39-6eb7-4e59-b94d-a5db1bb33a3c.png",
+      "src": "/lovable-uploads/467823f6-4919-4813-9a3b-9e4ec8f9d6c4.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/lovable-uploads/09511e39-6eb7-4e59-b94d-a5db1bb33a3c.png",
+      "src": "/lovable-uploads/467823f6-4919-4813-9a3b-9e4ec8f9d6c4.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

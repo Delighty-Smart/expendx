@@ -54,10 +54,12 @@ export function useTransactionData(filter?: {
       console.log("Fetching transactions with filters:", { ...filter, startDate: normalizedStartDate, endDate: normalizedEndDate });
 
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) throw new Error("User not authenticated");
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
 
-        let query = supabase.from("transactions").select("*");
+        let query = supabase.from("transactions")
+          .select("*")
+          .eq("user_id", user.id);
 
         // ALWAYS exclude archived transactions unless explicitly included
         if (!filter?.includeArchived) {

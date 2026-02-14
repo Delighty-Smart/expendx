@@ -1,5 +1,5 @@
 ﻿
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { Currency } from "@/lib/currencies";
 import { format } from "date-fns";
@@ -19,13 +19,49 @@ interface TransactionsTableProps {
   transactions: Transaction[];
   currency: Currency;
   onRefresh?: () => Promise<void>;
+  fetchNextPage?: () => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
 }
 
-const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTableProps) => {
+const TransactionsTable = ({
+  transactions,
+  currency,
+  onRefresh,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage
+}: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  // Setup intersection observer for infinite scrolling
+  useEffect(() => {
+    if (!fetchNextPage || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = observerRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 
 
@@ -111,24 +147,32 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     return groups;
   }, {} as Record<string, Record<string, Transaction[]>>);
 
+  // Calculate total for each day
+  const getDayTotals = (dayTransactions: Transaction[]) => {
+    let income = 0;
+    let expense = 0;
+
+    dayTransactions.forEach(transaction => {
+      if (transaction.type === 'credit') {
+        income += transaction.amount;
+      } else if (transaction.type === 'debit') {
+        expense += transaction.amount;
+      }
+    });
+
+    return { income, expense };
+  };
+
   // Calculate total for each month
   const getMonthlyTotals = (month: string) => {
     let income = 0;
     let expense = 0;
 
-
-
     Object.values(groupedTransactions[month]).forEach(dayTransactions => {
-      dayTransactions.forEach(transaction => {
-        if (transaction.type === 'credit') {
-          income += transaction.amount;
-        } else if (transaction.type === 'debit') {
-          expense += transaction.amount;
-        }
-      });
+      const dayTotals = getDayTotals(dayTransactions);
+      income += dayTotals.income;
+      expense += dayTotals.expense;
     });
-
-
 
     return { income, expense };
   };
@@ -298,9 +342,9 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
 
 
               return (
-                <Card key={month} className="transaction-month-group overflow-hidden">
+                <Card key={month} className="transaction-month-group overflow-hidden border-border/40 bg-card">
                   {/* Month header */}
-                  <div className="bg-gray-50 p-3 border-b">
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 border-b border-border/10">
                     <div className="flex flex-col">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-sm">{month}</span>
@@ -317,63 +361,80 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                   </div>
 
                   {/* Days and transactions */}
-                  <div className="divide-y">
+                  <div className="space-y-6">
                     {Object.entries(days)
                       .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
-                      .map(([day, dayTransactions]) => (
-                        <div key={day} className="transaction-day-group">
+                      .map(([day, dayTransactions]) => {
+                        const { income, expense } = getDayTotals(dayTransactions);
 
-                          <div className="px-3 py-2 bg-gray-50/50 border-t text-sm font-medium text-muted-foreground">
-                            {format(new Date(day), "EEEE, MMM d")}
+                        return (
+                          <div key={day} className="transaction-day-group overflow-hidden">
+                            {/* Summary Header */}
+                            <div className="bg-white dark:bg-slate-900 rounded-t-[24px] px-6 py-4 flex justify-between items-center border-b border-border/5 shadow-sm">
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                                In: <span className="ml-1 text-slate-500 dark:text-slate-400">{currencySymbol}{formatAmount(income)}</span>
+                              </span>
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                                Out: <span className="ml-1 text-slate-500 dark:text-slate-400">{currencySymbol}{formatAmount(expense)}</span>
+                              </span>
+                            </div>
+
+                            {/* Date Header */}
+                            <div className="px-6 py-2.5 bg-slate-400 dark:bg-slate-700 text-[10px] font-bold text-slate-50 dark:text-slate-300 uppercase tracking-[0.15em]">
+                              <span>{format(new Date(day + 'T12:00:00'), "EEEE, MMM d")}</span>
+                            </div>
+
+                            {/* Transaction List Container */}
+                            <div className="bg-white dark:bg-slate-900/40 divide-y divide-border/20 rounded-b-[24px]">
+                              {dayTransactions.map((transaction) => (
+                                <div
+                                  key={transaction.id}
+                                  className="transaction-row p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                                >
+                                  <div className="flex-shrink-0">
+                                    {renderTransactionIcon(transaction.type)}
+                                  </div>
+
+                                  <div className="flex-1 flex flex-col min-w-0">
+                                    <p className="font-semibold text-[15px] leading-tight text-foreground truncate">
+                                      {transaction.description}
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground/80 leading-none mt-1 font-medium">
+                                      {transaction.category}
+                                    </p>
+                                  </div>
+
+                                  <div className={`text-right ${transaction.type === "credit"
+                                    ? "text-emerald-500"
+                                    : transaction.type === "debit"
+                                      ? "text-red-500"
+                                      : "text-blue-500"
+                                    }`}>
+                                    <p className="font-bold text-[15px] leading-tight">
+                                      {transaction.type === "debit" ? "-" : transaction.type === "credit" ? "+" : ""}
+                                      {currencySymbol}{formatAmount(transaction.amount)}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400/80 leading-none mt-1 font-medium">
+                                      {format(new Date(transaction.date), "HH:mm")}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-
-                          <div className="divide-y">
-                            {dayTransactions.map((transaction) => (
-                              <div
-                                key={transaction.id}
-
-                                className="transaction-row p-3 flex items-center gap-3"
-                              >
-                                <div className="flex-shrink-0">
-                                  {renderTransactionIcon(transaction.type)}
-                                </div>
-
-
-
-                                <div className="flex-1 flex flex-col">
-                                  <p className="font-medium text-sm leading-tight">
-                                    {transaction.description}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground leading-none mt-1">
-                                    {transaction.category}
-                                  </p>
-                                </div>
-
-
-                                <div className={`text-right ${transaction.type === "credit"
-                                  ? "text-green-600"
-                                  : transaction.type === "debit"
-                                    ? "text-red-600"
-                                    : "text-blue-600"
-                                  }`}>
-
-                                  <p className="font-medium text-sm leading-tight">
-                                    {transaction.type === "debit" ? "-" : "+"}
-                                    {currencySymbol}{formatAmount(transaction.amount)}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground leading-none mt-1">
-                                    {format(new Date(transaction.date), "HH:mm")}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                   </div>
                 </Card>
               );
             })}
+
+            {/* Infinite Scroll Trigger */}
+            <div ref={observerRef} className="h-10 flex items-center justify-center">
+              {isFetchingNextPage && (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
