@@ -15,6 +15,11 @@ import { useRefresh } from "@/hooks/useRefresh";
 import { SavingsHeader } from "@/components/savings/SavingsHeader";
 import { SavingsTotalCard } from "@/components/savings/SavingsTotalCard";
 import { SavingsGoalsList } from "@/components/savings/SavingsGoalsList";
+<<<<<<< HEAD
+import { Button } from "@/components/ui/button";
+import { Plus, Target, TrendingUp } from "lucide-react";
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 
 const SavingsPage = () => {
   const { currency } = useSettings();
@@ -82,12 +87,20 @@ const SavingsPage = () => {
         .delete()
         .eq("id", goal.id);
       if (error) throw error;
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       toast({
         title: "Success",
         description: "Savings goal deleted successfully"
       });
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
       setDeletingGoal(null);
     } catch (error: any) {
@@ -108,10 +121,52 @@ const SavingsPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+<<<<<<< HEAD
+        <div className="space-y-6 pb-24">
+          <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
+
+          <SavingsTotalCard totalSavings={totalSavings} currency={currency} />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Savings Goals</h1>
+              <p className="text-sm text-muted-foreground mt-1">Track your progress towards financial goals</p>
+            </div>
+            <Button onClick={() => setIsAddGoalOpen(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" strokeWidth={1.5} />
+              New Goal
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            {/* Stats Cards - Added for better dashboard feel */}
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <Target className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Goals</p>
+                  <p className="text-2xl font-bold">{savingsGoals?.length || 0}</p>
+                </div>
+              </div>
+              <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
+                <div className="p-3 bg-green-500/10 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-green-500" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Saved</p>
+                  <p className="text-2xl font-bold">{currency.symbol}{(totalSavings || 0).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+=======
         <div className="space-y-6">
           <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
 
           <SavingsTotalCard totalSavings={totalSavings} currency={currency} />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 
           <SavingsGoalsList
             savingsGoals={savingsGoals}
@@ -122,16 +177,27 @@ const SavingsPage = () => {
           />
 
           {/* Add/Edit Savings Goal Modal */}
+<<<<<<< HEAD
+          <SavingsGoalForm
+            open={isAddGoalOpen || !!editingGoal}
+=======
           <SavingsGoalForm 
             open={isAddGoalOpen || !!editingGoal} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
             onOpenChange={open => {
               if (!open) {
                 setIsAddGoalOpen(false);
                 setEditingGoal(null);
               }
+<<<<<<< HEAD
+            }}
+            onSavingsGoalAdded={handleGoalSaved}
+            savingsGoalId={editingGoal?.id}
+=======
             }} 
             onSavingsGoalAdded={handleGoalSaved} 
             savingsGoalId={editingGoal?.id} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
           />
 
           {/* Delete Confirmation Dialog */}
@@ -140,14 +206,23 @@ const SavingsPage = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Savings Goal</AlertDialogTitle>
                 <AlertDialogDescription>
+<<<<<<< HEAD
+                  Are you sure you want to delete the savings goal for "{deletingGoal?.category}"?
+=======
                   Are you sure you want to delete the savings goal for "{deletingGoal?.category}"? 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
+<<<<<<< HEAD
+                <AlertDialogAction
+                  onClick={() => deletingGoal && handleDeleteGoal(deletingGoal)}
+=======
                 <AlertDialogAction 
                   onClick={() => deletingGoal && handleDeleteGoal(deletingGoal)} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete

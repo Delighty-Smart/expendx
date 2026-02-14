@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface ReceiptScannerProps {
-  onScanComplete: (data: {
+  onDataExtracted: (data: {
     amount: number;
     date?: string;
     description: string;
@@ -14,7 +14,7 @@ interface ReceiptScannerProps {
   }) => void;
 }
 
-export function ReceiptScanner({ onScanComplete }: ReceiptScannerProps) {
+export function ReceiptScanner({ onDataExtracted }: ReceiptScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +46,7 @@ export function ReceiptScanner({ onScanComplete }: ReceiptScannerProps) {
       if (error) throw error;
 
       if (data?.success && data?.data) {
-        onScanComplete(data.data);
+        onDataExtracted(data.data);
         toast.success("Receipt scanned successfully!");
         setPreviewImage(null);
       } else {

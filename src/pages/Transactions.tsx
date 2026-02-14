@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+=======
 import { useState, useMemo, useCallback } from "react";
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -52,17 +56,53 @@ const TransactionsPage = () => {
     transactions,
     isLoading,
     refetch: refetchTransactions,
+<<<<<<< HEAD
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     deleteTransactionOffline,
     updateTransactionOffline
   } = useEnhancedTransactionData({
     type: selectedType
   });
 
+<<<<<<< HEAD
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [observerTarget, hasNextPage, fetchNextPage]);
+
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   // Get categories from all transaction types
   const { categories: expenseCategories } = useCategories('debit');
   const { categories: incomeCategories } = useCategories('credit');
   const { categories: savingsCategories } = useCategories('savings');
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   // Get categories based on selected transaction type
   const availableCategories = useMemo(() => {
     if (selectedType === "all") {
@@ -71,9 +111,15 @@ const TransactionsPage = () => {
         ...incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType })),
         ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }))
       ];
+<<<<<<< HEAD
+
+      // Remove duplicates and sort
+      return categoriesWithType.filter((cat, index, arr) =>
+=======
       
       // Remove duplicates and sort
       return categoriesWithType.filter((cat, index, arr) => 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
         arr.findIndex(c => c.name === cat.name) === index
       ).sort((a, b) => a.name.localeCompare(b.name));
     } else if (selectedType === "credit") {
@@ -118,7 +164,11 @@ const TransactionsPage = () => {
       // Clear selected transactions and exit selection mode
       setSelectedTransactions([]);
       setSelectionMode(false);
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       setConfirmDeleteOpen(false);
     } catch (error: any) {
       toast({
@@ -140,12 +190,20 @@ const TransactionsPage = () => {
       // Clear selected transactions and exit selection mode
       setSelectedTransactions([]);
       setSelectionMode(false);
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       toast({
         title: "Success",
         description: `${selectedTransactions.length} transaction(s) archived successfully`
       });
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       setConfirmArchiveOpen(false);
     } catch (error: any) {
       toast({
@@ -164,7 +222,11 @@ const TransactionsPage = () => {
       });
     }
   };
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   const toggleSelectionMode = () => {
     setSelectionMode(!selectionMode);
     setSelectedTransactions([]);
@@ -172,9 +234,15 @@ const TransactionsPage = () => {
 
   const toggleTransactionSelection = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+<<<<<<< HEAD
+
+    if (selectionMode) {
+      setSelectedTransactions(prev =>
+=======
     
     if (selectionMode) {
       setSelectedTransactions(prev => 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
         prev.includes(id) ? prev.filter(transId => transId !== id) : [...prev, id]
       );
     }
@@ -183,10 +251,17 @@ const TransactionsPage = () => {
   const selectAllInDay = (dayTransactions: any[], e: React.MouseEvent) => {
     e.stopPropagation();
     if (!selectionMode) return;
+<<<<<<< HEAD
+
+    const dayIds = dayTransactions.map(t => t.id);
+    const allSelected = dayIds.every(id => selectedTransactions.includes(id));
+
+=======
     
     const dayIds = dayTransactions.map(t => t.id);
     const allSelected = dayIds.every(id => selectedTransactions.includes(id));
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     if (allSelected) {
       setSelectedTransactions(prev => prev.filter(id => !dayIds.includes(id)));
     } else {
@@ -199,6 +274,16 @@ const TransactionsPage = () => {
       setSelectedTransactions(newSelected);
     }
   };
+<<<<<<< HEAD
+
+  const selectAllInMonth = (monthTransactions: any[], e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectionMode) return;
+
+    const monthIds = monthTransactions.flat().map(t => t.id);
+    const allSelected = monthIds.every(id => selectedTransactions.includes(id));
+
+=======
   
   const selectAllInMonth = (monthTransactions: any[], e: React.MouseEvent) => {
     e.stopPropagation();
@@ -207,6 +292,7 @@ const TransactionsPage = () => {
     const monthIds = monthTransactions.flat().map(t => t.id);
     const allSelected = monthIds.every(id => selectedTransactions.includes(id));
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     if (allSelected) {
       setSelectedTransactions(prev => prev.filter(id => !monthIds.includes(id)));
     } else {
@@ -221,7 +307,11 @@ const TransactionsPage = () => {
   };
 
   const filteredTransactions = transactions?.filter(transaction => {
+<<<<<<< HEAD
+    const matchesSearch =
+=======
     const matchesSearch = 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
@@ -230,13 +320,22 @@ const TransactionsPage = () => {
   });
 
   const toggleCategory = (category: string) => {
+<<<<<<< HEAD
+    setSelectedCategories(prev =>
+      prev.includes(category)
+=======
     setSelectedCategories(prev => 
       prev.includes(category) 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
   };
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   const clearAllCategories = () => {
     setSelectedCategories([]);
   };
@@ -286,9 +385,15 @@ const TransactionsPage = () => {
   const renderTransactionIcon = (type: TransactionType) => {
     switch (type) {
       case 'credit':
+<<<<<<< HEAD
+        return <ArrowDown className="h-4 w-4 text-green-500" strokeWidth={1.5} />;
+      case 'debit':
+        return <ArrowUp className="h-4 w-4 text-red-500" strokeWidth={1.5} />;
+=======
         return <ArrowDown className="h-4 w-4 text-green-500" />;
       case 'debit':
         return <ArrowUp className="h-4 w-4 text-red-500" />;
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       case 'savings':
         return <div className="h-3.5 w-3.5 rounded-full bg-blue-400"></div>;
       default:
@@ -300,8 +405,13 @@ const TransactionsPage = () => {
 
   return (
     <Layout>
+<<<<<<< HEAD
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="space-y-6 pb-24">
+=======
       <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
         <div className="space-y-6">
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
           <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
@@ -315,7 +425,11 @@ const TransactionsPage = () => {
                     className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-950"
                     onClick={() => setConfirmArchiveOpen(true)}
                   >
+<<<<<<< HEAD
+                    <Archive className="h-4 w-4" strokeWidth={1.5} />
+=======
                     <Archive className="h-4 w-4" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     Archive ({selectedTransactions.length})
                   </Button>
                   <Button
@@ -323,7 +437,11 @@ const TransactionsPage = () => {
                     className="flex items-center gap-2"
                     onClick={() => setConfirmDeleteOpen(true)}
                   >
+<<<<<<< HEAD
+                    <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+=======
                     <Trash2 className="h-4 w-4" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     Delete ({selectedTransactions.length})
                   </Button>
                 </>
@@ -333,17 +451,29 @@ const TransactionsPage = () => {
                 className="flex items-center gap-2 touch-manipulation"
                 onClick={() => navigate("/add-transaction")}
               >
+<<<<<<< HEAD
+                <PlusCircle className="mobile-icon-sm" strokeWidth={1.5} />
+=======
                 <PlusCircle className="mobile-icon-sm" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 Add
               </Button>
             </div>
           </div>
 
+<<<<<<< HEAD
+          <Card className="p-0 bg-card border-border">
+            <div className="p-4 border-b border-border bg-card">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+=======
           <Card className="overflow-hidden p-0 bg-card border-border">
             <div className="p-4 border-b border-border bg-card">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   <Input
                     placeholder="Search transactions..."
                     className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground"
@@ -353,7 +483,11 @@ const TransactionsPage = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+<<<<<<< HEAD
+                  <Select
+=======
                    <Select
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     value={selectedType}
                     onValueChange={handleTypeChange}
                   >
@@ -367,16 +501,28 @@ const TransactionsPage = () => {
                       <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
                     </SelectContent>
                   </Select>
+<<<<<<< HEAD
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+=======
                   
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button 
                         variant="outline" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                         size="compact"
                         className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
                       >
                         <div className="flex items-center gap-2">
+<<<<<<< HEAD
+                          <SlidersHorizontal className="h-4 w-4" strokeWidth={1.5} />
+=======
                           <SlidersHorizontal className="h-4 w-4" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                           Categories
                         </div>
                         {selectedCategories.length > 0 && (
@@ -390,6 +536,22 @@ const TransactionsPage = () => {
                       <div className="p-4 border-b border-border bg-popover flex-shrink-0">
                         <h4 className="font-medium text-foreground mb-2">Categories</h4>
                         <div className="flex items-center justify-between">
+<<<<<<< HEAD
+                          <div
+                            className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${selectedCategories.length === 0
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "hover:bg-muted/50 text-muted-foreground"
+                              }`}
+                            onClick={clearAllCategories}
+                          >
+                            <Shapes className="h-4 w-4 mr-3" strokeWidth={1.5} />
+                            <span>All Categories</span>
+                          </div>
+                          {selectedCategories.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="xs"
+=======
                           <div 
                             className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
                               selectedCategories.length === 0 
@@ -405,6 +567,7 @@ const TransactionsPage = () => {
                             <Button 
                               variant="ghost" 
                               size="xs" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                               onClick={clearAllCategories}
                               className="h-auto p-1 text-muted-foreground hover:text-foreground"
                             >
@@ -413,7 +576,11 @@ const TransactionsPage = () => {
                           )}
                         </div>
                       </div>
+<<<<<<< HEAD
+
+=======
                       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       <div className="flex flex-col flex-1 min-h-0">
                         <div className="p-4 pb-2 bg-popover flex-shrink-0">
                           <h5 className="text-sm font-medium text-muted-foreground">Select Categories</h5>
@@ -424,6 +591,17 @@ const TransactionsPage = () => {
                               const isSelected = selectedCategories.includes(categoryItem.name);
 
                               return (
+<<<<<<< HEAD
+                                <div
+                                  key={categoryItem.name}
+                                  className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${isSelected
+                                    ? "bg-primary/10 text-primary font-medium"
+                                    : "hover:bg-muted/50 text-foreground"
+                                    }`}
+                                  onClick={() => toggleCategory(categoryItem.name)}
+                                >
+                                  <Shapes className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" strokeWidth={1.5} />
+=======
                                 <div 
                                   key={categoryItem.name} 
                                   className={`flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm ${
@@ -434,6 +612,7 @@ const TransactionsPage = () => {
                                   onClick={() => toggleCategory(categoryItem.name)}
                                 >
                                   <Shapes className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                   <span className="truncate flex-1">
                                     {categoryItem.name}
                                   </span>
@@ -450,8 +629,13 @@ const TransactionsPage = () => {
                       </div>
                     </PopoverContent>
                   </Popover>
+<<<<<<< HEAD
+
+                  <Button
+=======
                   
                   <Button 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     variant={selectionMode ? "secondary" : "outline"}
                     onClick={toggleSelectionMode}
                     size="sm"
@@ -461,6 +645,22 @@ const TransactionsPage = () => {
                   </Button>
                 </div>
               </div>
+<<<<<<< HEAD
+
+              {selectedCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {selectedCategories.map((category) => (
+                    <Badge
+                      key={category}
+                      variant="secondary"
+                      className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20"
+                    >
+                      {category}
+                      <X
+                        className="h-3 w-3 cursor-pointer hover:text-destructive"
+                        onClick={() => toggleCategory(category)}
+                        strokeWidth={1.5}
+=======
               
               {selectedCategories.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
@@ -474,6 +674,7 @@ const TransactionsPage = () => {
                       <X 
                         className="h-3 w-3 cursor-pointer hover:text-destructive" 
                         onClick={() => toggleCategory(category)}
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       />
                     </Badge>
                   ))}
@@ -498,10 +699,17 @@ const TransactionsPage = () => {
                 {Object.entries(groupedTransactions).map(([month, days]) => {
                   const { income, expense } = getMonthlyTotals(month);
                   const allDayTransactions = Object.values(days).flat();
+<<<<<<< HEAD
+
+                  return (
+                    <div key={month} className="transaction-month-group">
+                      <div
+=======
                   
                   return (
                     <div key={month} className="transaction-month-group">
                       <div 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                         className={`bg-muted/50 dark:bg-muted/20 p-4 border-b border-border ${selectionMode ? 'cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30' : ''}`}
                         onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
                       >
@@ -509,6 +717,14 @@ const TransactionsPage = () => {
                           <div className="flex justify-between items-center">
                             <span className="font-medium text-foreground">{month}</span>
                             {selectionMode && (
+<<<<<<< HEAD
+                              <div className={`h-4 w-4 rounded-sm border-2 border-primary ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                                ? 'bg-primary'
+                                : allDayTransactions.some(t => selectedTransactions.includes(t.id))
+                                  ? 'bg-primary/30'
+                                  : 'bg-background'
+                                }`}></div>
+=======
                               <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
                                 allDayTransactions.every(t => selectedTransactions.includes(t.id))
                                   ? 'bg-primary'
@@ -516,6 +732,7 @@ const TransactionsPage = () => {
                                   ? 'bg-primary/30'
                                   : 'bg-background'
                               }`}></div>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                             )}
                           </div>
                           <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
@@ -530,11 +747,25 @@ const TransactionsPage = () => {
                           .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
                           .map(([day, dayTransactions]) => (
                             <div key={day} className="transaction-day-group">
+<<<<<<< HEAD
+                              <div
+=======
                               <div 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 className={`px-4 py-2 bg-muted/30 dark:bg-muted/10 border-b border-border text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/20' : ''}`}
                                 onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
                               >
                                 <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
+<<<<<<< HEAD
+
+                                {selectionMode && (
+                                  <div className={`h-4 w-4 rounded-sm border-2 border-primary ${dayTransactions.every(t => selectedTransactions.includes(t.id))
+                                    ? 'bg-primary'
+                                    : dayTransactions.some(t => selectedTransactions.includes(t.id))
+                                      ? 'bg-primary/30'
+                                      : 'bg-background'
+                                    }`}></div>
+=======
                                 
                                 {selectionMode && (
                                   <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
@@ -544,12 +775,22 @@ const TransactionsPage = () => {
                                       ? 'bg-primary/30'
                                       : 'bg-background'
                                   }`}></div>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 )}
                               </div>
 
                               <div className="divide-y divide-border">
                                 {dayTransactions.map((transaction) => {
                                   const syncStatus = getTransactionSyncStatus(transaction.id);
+<<<<<<< HEAD
+
+                                  return (
+                                    <div
+                                      key={transaction.id}
+                                      className={`transaction-row p-4 flex items-center gap-4 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
+                                      onClick={() => selectionMode
+                                        ? toggleTransactionSelection(transaction.id)
+=======
                                   
                                   return (
                                     <div
@@ -557,14 +798,21 @@ const TransactionsPage = () => {
                                       className={`transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
                                       onClick={() => selectionMode 
                                         ? toggleTransactionSelection(transaction.id) 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                         : handleEdit(transaction)
                                       }
                                     >
                                       {selectionMode && (
+<<<<<<< HEAD
+                                        <div
+                                          className={`h-5 w-5 shrink-0 rounded-sm border-2 border-primary ${selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
+                                            }`}
+=======
                                         <div 
                                           className={`h-4 w-4 shrink-0 rounded-sm border-2 border-primary ${
                                             selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
                                           }`}
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                         />
                                       )}
 
@@ -572,19 +820,44 @@ const TransactionsPage = () => {
                                         {renderTransactionIcon(transaction.type as TransactionType)}
                                       </div>
 
+<<<<<<< HEAD
+                                      <div className="flex-1 flex flex-col gap-0.5">
+                                        <div className="flex items-center gap-2">
+                                          <p className="font-semibold text-base leading-tight text-foreground">
+=======
                                       <div className="flex-1 flex flex-col">
                                         <div className="flex items-center gap-2">
                                           <p className="font-medium text-sm leading-tight text-foreground">
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                             {transaction.description}
                                           </p>
                                           <PendingSyncIndicator status={syncStatus} size="sm" />
                                         </div>
+<<<<<<< HEAD
+                                        <p className="text-sm text-muted-foreground leading-none">
+=======
                                         <p className="text-xs text-muted-foreground leading-none mt-1">
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                           {transaction.category}
                                         </p>
                                       </div>
 
                                       <div
+<<<<<<< HEAD
+                                        className={`text-right ${transaction.type === "credit"
+                                          ? "text-green-600 dark:text-green-400"
+                                          : transaction.type === "debit"
+                                            ? "text-red-600 dark:text-red-400"
+                                            : "text-blue-600 dark:text-blue-400"
+                                          }`}
+                                      >
+                                        <p className="font-semibold text-base leading-tight">
+                                          {transaction.type === "credit"
+                                            ? "+"
+                                            : transaction.type === "debit"
+                                              ? "-"
+                                              : ""}
+=======
                                         className={`text-right ${
                                           transaction.type === "credit"
                                             ? "text-green-600 dark:text-green-400"
@@ -599,6 +872,7 @@ const TransactionsPage = () => {
                                             : transaction.type === "debit"
                                             ? "-"
                                             : ""}
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                           {currencySymbol}
                                           {formatAmount(transaction.amount)}
                                         </p>
@@ -623,6 +897,14 @@ const TransactionsPage = () => {
                 onAction={() => navigate("/add-transaction")}
               />
             )}
+<<<<<<< HEAD
+
+            {/* Infinite scroll loader */}
+            <div ref={observerTarget} className="h-10 flex items-center justify-center p-4">
+              {isFetchingNextPage && <LoadingState size="sm" message="Loading more..." />}
+            </div>
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
           </Card>
         </div>
 
@@ -631,7 +913,11 @@ const TransactionsPage = () => {
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground">Confirm Deletion</AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
+<<<<<<< HEAD
+                Are you sure you want to delete {selectedTransactions.length} transaction(s)?
+=======
                 Are you sure you want to delete {selectedTransactions.length} transaction(s)? 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -649,7 +935,11 @@ const TransactionsPage = () => {
             <AlertDialogHeader>
               <AlertDialogTitle className="text-foreground">Confirm Archive</AlertDialogTitle>
               <AlertDialogDescription className="text-muted-foreground">
+<<<<<<< HEAD
+                Are you sure you want to archive {selectedTransactions.length} transaction(s)?
+=======
                 Are you sure you want to archive {selectedTransactions.length} transaction(s)? 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 Archived transactions can be restored from the Settings page.
               </AlertDialogDescription>
             </AlertDialogHeader>

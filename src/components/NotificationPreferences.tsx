@@ -33,6 +33,8 @@ interface NotificationPreference {
   notification_times: Record<string, string>;
 }
 
+<<<<<<< HEAD
+=======
 // Custom Toggle Component
 const CustomToggle = ({ 
   checked, 
@@ -69,6 +71,7 @@ const CustomToggle = ({
   );
 };
 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,7 +123,11 @@ const NotificationPreferences = () => {
         const { data: newPrefs, error: createError } = await supabase
           .from('notification_preferences')
           .insert({
+<<<<<<< HEAD
+            user_id: user.id,
+=======
             user_id: user.id, 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
             preferred_time: '19:00'
           })
           .select('*')
@@ -141,11 +148,19 @@ const NotificationPreferences = () => {
 
   const scheduleAllNotifications = (userId: string, prefs: NotificationPreference) => {
     if (!prefs.notification_times) return;
+<<<<<<< HEAD
+
+    NOTIFICATION_SCHEDULES.forEach(schedule => {
+      const isEnabled = prefs[schedule.type as keyof NotificationPreference] as boolean;
+      const preferredTime = prefs.notification_times?.[schedule.type] || schedule.defaultTime;
+
+=======
     
     NOTIFICATION_SCHEDULES.forEach(schedule => {
       const isEnabled = prefs[schedule.type as keyof NotificationPreference] as boolean;
       const preferredTime = prefs.notification_times?.[schedule.type] || schedule.defaultTime;
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       notificationScheduler.scheduleNotification(
         userId,
         schedule.type,
@@ -368,14 +383,22 @@ const NotificationPreferences = () => {
                     </p>
                   </div>
                   <div className="flex-shrink-0 mt-1">
+<<<<<<< HEAD
+                    <Switch
+=======
                     <CustomToggle
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       checked={preferences[option.key]}
                       onCheckedChange={(checked) => updatePreference(option.key, checked)}
                       disabled={saving}
                     />
                   </div>
                 </div>
+<<<<<<< HEAD
+
+=======
                 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 {preferences[option.key] && (
                   <div className="flex items-center gap-2 pt-2 border-t">
                     <Clock className="h-3 w-3 text-muted-foreground" />
@@ -401,15 +424,24 @@ const NotificationPreferences = () => {
             <p className="text-xs text-muted-foreground mb-3">
               Enable browser notifications to receive alerts even when the app is not open.
             </p>
+<<<<<<< HEAD
+            <Button
+              variant="outline"
+=======
             <Button 
               variant="outline" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
               size="sm"
               onClick={() => {
                 if ('Notification' in window) {
                   Notification.requestPermission().then((permission) => {
                     toast({
                       title: permission === 'granted' ? "Notifications enabled" : "Notifications blocked",
+<<<<<<< HEAD
+                      description: permission === 'granted'
+=======
                       description: permission === 'granted' 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                         ? "You'll now receive browser notifications at your preferred times"
                         : "You can enable notifications in your browser settings"
                     });

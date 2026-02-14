@@ -1,64 +1,105 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 202 100% 50%; /* #00AAFF */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 84 70% 47%; /* #A3CE22 */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 84 70% 47%; /* #A3CE22 */
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Base Colors from Design Brief */
+    --bg-primary: 240 8% 96%;
+    /* #f4f4f6 */
+    --bg-surface: 0 0% 100%;
+    /* #ffffff */
+    --bg-muted: 240 6% 94%;
+    /* #f0f0f2 */
+    --bg-dark-surface: 0 0% 7%;
+    /* #111111 */
+
+    --text-primary: 0 0% 7%;
+    /* #111111 */
+    --text-secondary: 247 3% 44%;
+    /* #6e6e73 */
+
+    --accent-primary: 74 100% 45%;
+    /* #b6e600 - Lime */
+
+    /* Shadcn Mapping */
+    --background: var(--bg-primary);
+    --foreground: var(--text-primary);
+
+    --card: var(--bg-surface);
+    --card-foreground: var(--text-primary);
+
+    --popover: var(--bg-surface);
+    --popover-foreground: var(--text-primary);
+
+    --primary: var(--accent-primary);
+    --primary-foreground: 0 0% 7%;
+    /* Black text on lime */
+
+    --secondary: var(--bg-muted);
+    --secondary-foreground: var(--text-primary);
+
+    --muted: var(--bg-muted);
+    --muted-foreground: var(--text-secondary);
+
+    --accent: var(--accent-primary);
+    --accent-foreground: 0 0% 7%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 202 100% 50%; /* #00AAFF */
-    --radius: 0.5rem;
-    
+
+    /* Subtle Grey Border (approx #e4e4e7) */
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: var(--accent-primary);
+
+    --radius: 1.75rem;
+    /* 28px approx, for cards. Buttons will be full rounded */
+
     /* Modal overlay background */
     --modal-overlay: 0 0% 0% / 0.5;
-    
+
     /* Glass effect variables */
     --glass-background: 255 255 255 / 0.8;
     --glass-border: 255 255 255 / 0.3;
     --glass-blur: 12px;
   }
- 
+
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 240 6% 6%;
+    /* Dark layout bg */
     --foreground: 210 40% 98%;
-    --card: 217.2 32.6% 17.5%;
+
+    --card: 240 5% 10%;
+    /* Dark card bg */
     --card-foreground: 210 40% 98%;
-    --popover: 217.2 32.6% 17.5%;
+
+    --popover: 240 5% 10%;
     --popover-foreground: 210 40% 98%;
-    --primary: 202 100% 50%; /* #00AAFF */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 84 70% 47%; /* #A3CE22 */
+
+    --primary: 74 100% 45%;
+    /* #b6e600 */
+    --primary-foreground: 0 0% 7%;
+
+    --secondary: 240 4% 16%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 74 100% 45%;
     --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 202 100% 50%; /* #00AAFF */
-    
+
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 74 100% 45%;
+
     /* Modal overlay background */
     --modal-overlay: 0 0% 0% / 0.7;
-    
+
     /* Glass effect variables */
     --glass-background: 0 0 0 / 0.4;
     --glass-border: 255 255 255 / 0.1;
@@ -74,19 +115,17 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-overflow-scrolling: touch;
   }
-  
-  /* Typography with Manrope */
-  html {
-    font-size: 16px;
-    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-    @apply text-base text-foreground leading-normal;
-    /* Prevent zoom on focus in iOS */
-    -webkit-text-size-adjust: 100%;
-  }
-  
+
+  /* Background Pattern & Body Style */
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    @apply text-base text-foreground antialiased;
+
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     line-height: 1.4;
@@ -94,55 +133,89 @@
     /* Prevent horizontal scroll on mobile */
     overflow-x: hidden;
   }
-  
+
+  /* Desktop Mobile-Container */
+  .app-container {
+    @apply w-full;
+  }
+
+  @media (min-width: 768px) {
+    .app-container {
+      max-width: 100%;
+      margin: 0 auto;
+      border-radius: 0;
+      min-height: 100vh;
+      background-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  /* Typography with Inter */
+  html {
+    font-size: 16px;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    @apply text-base text-foreground leading-normal;
+    /* Prevent zoom on focus in iOS */
+    -webkit-text-size-adjust: 100%;
+  }
+
   /* Compact Typography scaling with proper weights */
-  h1, .h1 {
+  h1,
+  .h1 {
     @apply text-2xl leading-tight;
     font-weight: 600;
+    letter-spacing: -0.5px;
   }
-  
-  h2, .h2 {
+
+  h2,
+  .h2 {
     @apply text-xl leading-tight;
     font-weight: 600;
+    letter-spacing: -0.5px;
   }
-  
-  h3, .h3 {
+
+  h3,
+  .h3 {
     @apply text-lg leading-snug;
     font-weight: 500;
+    letter-spacing: -0.02em;
   }
-  
-  h4, .h4 {
+
+  h4,
+  .h4 {
     @apply text-base leading-snug;
     font-weight: 500;
   }
-  
-  h5, .h5 {
+
+  h5,
+  .h5 {
     @apply text-sm leading-snug;
     font-weight: 500;
   }
-  
+
   p {
-    @apply text-sm mb-3 last:mb-0;
+    @apply text-base mb-3 last:mb-0;
     font-weight: 400;
+    letter-spacing: -0.01em;
   }
-  
+
   small {
     @apply text-xs;
     font-weight: 400;
   }
-  
+
   .text-sm {
     font-size: 0.8rem;
     line-height: 1.125rem;
     font-weight: 400;
   }
-  
+
   .text-xs {
     font-size: 0.7rem;
     line-height: 1rem;
     font-weight: 400;
   }
-  
+
   /* Enhanced scroll accessibility for all elements */
   *[style*="overflow: auto"],
   *[style*="overflow-y: auto"],
@@ -170,57 +243,67 @@
 
 /* Responsive typography classes */
 @media (min-width: 768px) {
-  h1, .h1 {
+
+  h1,
+  .h1 {
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 600;
   }
-  
-  h2, .h2 {
+
+  h2,
+  .h2 {
     font-size: 1.25rem;
     line-height: 1.75rem;
     font-weight: 600;
   }
-  
-  h3, .h3 {
+
+  h3,
+  .h3 {
     font-size: 1.125rem;
     line-height: 1.625rem;
     font-weight: 500;
   }
-  
-  h4, .h4 {
+
+  h4,
+  .h4 {
     font-size: 1rem;
     line-height: 1.5rem;
     font-weight: 500;
   }
-  
-  h5, .h5 {
+
+  h5,
+  .h5 {
     font-size: 0.9rem;
     line-height: 1.375rem;
     font-weight: 500;
   }
-  
+
   p {
     font-size: 0.9rem;
     line-height: 1.375rem;
     font-weight: 400;
   }
-  
-  small, .text-sm {
-    font-size: 0.8rem;
-    line-height: 1.125rem;
+
+  small,
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
     font-weight: 400;
   }
 }
 
 @media (min-width: 1024px) {
-  h1, .h1 {
+
+  h1,
+  .h1 {
     font-size: 1.875rem;
     line-height: 2.25rem;
     font-weight: 600;
   }
-  
-  h2, .h2 {
+
+  h2,
+  .h2 {
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 600;
@@ -229,60 +312,61 @@
 
 /* Compact UI Components */
 @layer components {
+
   /* Compact Buttons */
   .btn {
-    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors 
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-    disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
     font-weight: 500;
   }
-  
+
   .btn-sm {
     @apply h-7 px-2.5 rounded text-xs;
-    min-height: 44px; /* Touch-friendly */
+    min-height: 44px;
+    /* Touch-friendly */
   }
-  
+
   .btn-md {
     @apply h-8 px-3 py-1.5 rounded text-sm;
-    min-height: 44px; /* Touch-friendly */
+    min-height: 44px;
+    /* Touch-friendly */
   }
-  
+
   .btn-lg {
     @apply h-9 px-4 rounded;
-    min-height: 44px; /* Touch-friendly */
+    min-height: 44px;
+    /* Touch-friendly */
   }
-  
+
   /* Compact Card Styles */
   .card {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
   }
-  
+
   .card-header {
     @apply flex flex-col space-y-1 p-3 sm:p-4;
   }
-  
+
   .card-content {
     @apply p-3 sm:p-4 pt-0;
   }
-  
+
   .card-footer {
     @apply flex items-center p-3 sm:p-4 pt-0;
   }
-  
+
   /* Compact Form Controls */
   .form-control {
-    @apply block w-full px-2.5 py-1.5 bg-background border border-input rounded text-sm
-    focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring
-    disabled:cursor-not-allowed disabled:opacity-50;
-    min-height: 44px; /* Touch-friendly */
+    @apply block w-full px-2.5 py-1.5 bg-background border border-input rounded text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+    min-height: 44px;
+    /* Touch-friendly */
     font-weight: 400;
   }
-  
+
   .form-label {
     @apply text-sm leading-none mb-1.5 block;
     font-weight: 500;
   }
-  
+
   .form-helper {
     @apply text-xs text-muted-foreground mt-1;
     font-weight: 400;
@@ -334,9 +418,9 @@
   .container {
     @apply px-3;
   }
-  
+
   /* Improved touch scrolling for mobile */
-  .overflow-auto, 
+  .overflow-auto,
   .overflow-y-auto,
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
@@ -353,8 +437,15 @@
 
 /* Custom Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .animate-float {
@@ -365,15 +456,19 @@
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
 }
 
 @keyframes skeleton-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -385,8 +480,13 @@
 
 /* Progress Bar Animation */
 @keyframes progress {
-  from { stroke-dashoffset: var(--circumference); }
-  to { stroke-dashoffset: var(--dash); }
+  from {
+    stroke-dashoffset: var(--circumference);
+  }
+
+  to {
+    stroke-dashoffset: var(--dash);
+  }
 }
 
 .animate-progress {
@@ -395,8 +495,15 @@
 
 /* Animation for charts */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
@@ -446,12 +553,12 @@
   background-color: hsl(217.2 32.6% 20%);
 }
 
-.dark .transaction-month-group > div:first-child {
+.dark .transaction-month-group>div:first-child {
   background-color: hsl(217.2 32.6% 15%);
   border-color: hsl(217.2 32.6% 22%);
 }
 
-.dark .transaction-day-group > div:first-child {
+.dark .transaction-day-group>div:first-child {
   background-color: hsl(217.2 32.6% 12%);
   border-color: hsl(217.2 32.6% 20%);
   color: hsl(210 40% 98%);
@@ -462,13 +569,17 @@
   border-color: hsl(217.2 32.6% 22%);
 }
 
-.dark input, .dark select, .dark textarea {
+.dark input,
+.dark select,
+.dark textarea {
   background-color: hsl(217.2 32.6% 15%);
   border-color: hsl(217.2 32.6% 22%);
   color: hsl(210 40% 98%);
 }
 
-.dark input:focus, .dark select:focus, .dark textarea:focus {
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
   border-color: hsl(202 100% 50%);
   box-shadow: 0 0 0 1px hsl(202 100% 50%);
 }
@@ -510,7 +621,7 @@
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent !important;
   scroll-padding: 0.5rem !important;
   touch-action: pan-y !important;
-  -ms-overflow-style: auto !important; 
+  -ms-overflow-style: auto !important;
 }
 
 .horizontal-scroll {
@@ -529,6 +640,7 @@
 
 /* Force inertia scrolling for iOS and Android devices */
 @supports (-webkit-touch-callout: none) {
+
   /* iOS devices */
   .scrollable-container,
   .horizontal-scroll,
@@ -549,7 +661,7 @@
     touch-action: pan-y !important;
     overflow-y: auto !important;
   }
-  
+
   /* Ensure select dropdown is scrollable for iOS */
   [role="listbox"] {
     max-height: 180px !important;
@@ -646,8 +758,8 @@
 }
 
 /* Compact Form spacing improvements */
-.form-group + .form-group,
-.space-y-form > * + * {
+.form-group+.form-group,
+.space-y-form>*+* {
   @apply mt-3;
 }
 
@@ -690,34 +802,34 @@
     -ms-user-select: none;
     user-select: none;
   }
-  
+
   .touch-friendly {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   .mobile-icon {
     @apply h-6 w-6 md:h-5 md:w-5;
   }
-  
+
   .mobile-icon-sm {
     @apply h-5 w-5 md:h-4 md:w-4;
   }
-  
+
   .mobile-icon-lg {
     @apply h-7 w-7 md:h-6 md:w-6;
   }
-  
+
   .mobile-button {
     @apply h-12 px-4 text-base md:h-10 md:px-3 md:text-sm;
     min-height: 44px;
   }
-  
+
   .mobile-button-sm {
     @apply h-10 px-3 text-sm md:h-9 md:px-2 md:text-xs;
     min-height: 40px;
   }
-  
+
   .mobile-touch-target {
     @apply p-3 md:p-2;
     min-height: 44px;
@@ -727,26 +839,28 @@
 
 /* iOS Safari Specific Fixes */
 @supports (-webkit-touch-callout: none) {
+
   input[type="text"],
-  input[type="email"], 
+  input[type="email"],
   input[type="password"],
   input[type="number"],
   input[type="date"],
   select,
   textarea {
-    font-size: 16px !important; /* Prevent zoom on focus */
+    font-size: 16px !important;
+    /* Prevent zoom on focus */
   }
-  
+
   /* Fix for iOS sticky hover states */
   .hover\:bg-accent:hover {
     background-color: hsl(var(--accent)) !important;
   }
-  
+
   @media (hover: none) and (pointer: coarse) {
     .hover\:bg-accent:hover {
       background-color: transparent !important;
     }
-    
+
     .hover\:scale-105:hover {
       transform: none !important;
     }

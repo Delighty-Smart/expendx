@@ -40,7 +40,7 @@ function App() {
         console.error('Failed to initialize enhanced offline manager:', err);
       }
     };
-    
+
     initializeEnhancedOffline();
 
     // Enable native pull-to-refresh by setting appropriate meta tags
@@ -76,29 +76,31 @@ function App() {
     <TooltipProvider>
       <SettingsProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<IndexPage />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/add-transaction" element={<AddTransaction />} />
-            <Route path="/budgets" element={<Budgets />} />
-            <Route path="/add-budget" element={<AddBudget />} />
-            <Route path="/edit-budget" element={<EditBudget />} />
-            <Route path="/set-income" element={<SetIncome />} />
-            <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
-            <Route path="/savings" element={<Savings />} />
-            <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
-            <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/feedback" element={<AdminFeedback />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="app-container">
+            <Routes>
+              <Route path="/" element={<IndexPage />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/add-transaction" element={<AddTransaction />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/add-budget" element={<AddBudget />} />
+              <Route path="/edit-budget" element={<EditBudget />} />
+              <Route path="/set-income" element={<SetIncome />} />
+              <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
+              <Route path="/savings" element={<Savings />} />
+              <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
+              <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/feedback" element={<Feedback />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/feedback" element={<AdminFeedback />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
           <Toaster />
         </BrowserRouter>
       </SettingsProvider>

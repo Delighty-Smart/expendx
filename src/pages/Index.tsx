@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+<<<<<<< HEAD
+import { createPortal } from "react-dom";
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useBudgetAlerts } from "@/hooks/useBudgetAlerts";
 import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
+import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell } from "lucide-react";
+=======
 import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign } from "lucide-react";
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTransactionData } from "@/hooks/useTransactionData";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -44,10 +52,17 @@ const IndexPage = () => {
   const { currency } = useSettings();
   const navigate = useNavigate();
   const { refreshData } = useRefresh();
+<<<<<<< HEAD
+
+  // Enable smart budget alerts
+  useBudgetAlerts();
+
+=======
   
   // Enable smart budget alerts
   useBudgetAlerts();
   
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
@@ -56,11 +71,40 @@ const IndexPage = () => {
   const [hideAmounts, setHideAmounts] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [showStreakModal, setShowStreakModal] = useState(false);
+<<<<<<< HEAD
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 
   const today = new Date();
   const firstDayOfMonth = startOfMonth(today).toISOString();
   const lastDayOfMonth = endOfMonth(today).toISOString();
 
+<<<<<<< HEAD
+  // Fetch unread alerts
+  useEffect(() => {
+    const fetchUnreadAlerts = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data, error } = await supabase
+          .from('alerts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('read', false);
+
+        if (error) throw error;
+        setUnreadAlerts(data?.length || 0);
+      } catch (error) {
+        console.error('Error fetching unread alerts:', error);
+      }
+    };
+
+    fetchUnreadAlerts();
+  }, []);
+
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   // Utility function for formatting amounts with commas
   const formatAmount = (amount: number) => {
     if (hideAmounts) {
@@ -78,13 +122,21 @@ const IndexPage = () => {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+<<<<<<< HEAD
+
+=======
         
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       if (error) throw error;
       return data?.amount || 0;
     },
@@ -98,7 +150,11 @@ const IndexPage = () => {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       await updateUserStreak();
 
       const { data, error } = await supabase
@@ -106,7 +162,11 @@ const IndexPage = () => {
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+<<<<<<< HEAD
+
+=======
         
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       if (error) throw error;
       return data;
     },
@@ -117,7 +177,11 @@ const IndexPage = () => {
     queryKey: ["transactions", "monthly", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
       console.log("Dashboard: Fetching UNARCHIVED transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
@@ -141,7 +205,11 @@ const IndexPage = () => {
     queryKey: ["all_transactions", "unarchived"],
     queryFn: async () => {
       console.log("Dashboard: Fetching ALL UNARCHIVED transactions for wallet balance");
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
@@ -232,6 +300,15 @@ const IndexPage = () => {
   const monthlyIncomeTotal = calculateMonthlyIncome();
   const monthlyExpenses = calculateMonthlyExpenses();
   const monthlySavings = calculateMonthlySavings();
+<<<<<<< HEAD
+
+  // Calculate wallet balance based on all-time UNARCHIVED transactions only
+  // Wallet Balance = Total Income (unarchived) - Total Expenses (unarchived) - Total Savings (unarchived)
+  const currentBalance = calculateTotalIncome() - calculateTotalExpenses() - calculateTotalSavings();
+
+  const progressPercentage = monthlyIncome > 0
+    ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
+=======
   
   // Calculate wallet balance based on all-time UNARCHIVED transactions only
   // Wallet Balance = Total Income (unarchived) - Total Expenses (unarchived) - Total Savings (unarchived)
@@ -239,6 +316,7 @@ const IndexPage = () => {
   
   const progressPercentage = monthlyIncome > 0 
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100) 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     : 0;
 
   // Spending by category calculation - only unarchived transactions
@@ -263,6 +341,22 @@ const IndexPage = () => {
 
     const startDate = currentWeekStart;
     const endDate = addWeeks(startDate, 1);
+<<<<<<< HEAD
+
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+    return days.map(day => {
+      const dayStr = format(day, 'yyyy-MM-dd');
+
+      const dayIncomes = transactions
+        .filter(t => t.type === 'credit' && t.date.startsWith(dayStr))
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const dayExpenses = transactions
+        .filter(t => t.type === 'debit' && t.date.startsWith(dayStr))
+        .reduce((sum, t) => sum + t.amount, 0);
+
+=======
     
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     
@@ -277,6 +371,7 @@ const IndexPage = () => {
         .filter(t => t.type === 'debit' && t.date.startsWith(dayStr))
         .reduce((sum, t) => sum + t.amount, 0);
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       return {
         date: format(day, 'dd'),
         fullDate: format(day, 'MMM dd'),
@@ -306,6 +401,31 @@ const IndexPage = () => {
     const today = new Date();
     const startDate = startOfMonth(today);
     const endDate = endOfMonth(today);
+<<<<<<< HEAD
+
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+    let runningBalance = 0;
+
+    return days.map(day => {
+      const dayStr = format(day, 'yyyy-MM-dd');
+
+      const dayTransactions = transactions.filter(t => t.date.startsWith(dayStr));
+
+      const dayIncome = dayTransactions
+        .filter(t => t.type === 'credit')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const dayExpense = dayTransactions
+        .filter(t => t.type === 'debit')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const daySavings = dayTransactions
+        .filter(t => t.type === 'savings')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      runningBalance += dayIncome - dayExpense - daySavings;
+
+=======
     
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     let runningBalance = 0;
@@ -329,6 +449,7 @@ const IndexPage = () => {
       
       runningBalance += dayIncome - dayExpense - daySavings;
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       return {
         date: format(day, 'dd'),
         balance: runningBalance
@@ -354,7 +475,11 @@ const IndexPage = () => {
 
   const renderActiveShape = (props: any) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     return (
       <g>
         <text x={cx} y={cy - 15} dy={8} textAnchor="middle" fill="#888888" fontSize={12}>
@@ -395,6 +520,146 @@ const IndexPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+<<<<<<< HEAD
+        <div className="space-y-8 pb-20 px-4 md:px-0">
+          {/* Header Area */}
+          <div className="flex items-center justify-between py-6">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+              <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none"
+                onClick={() => navigate('/profile')}
+              >
+                <User className="h-5 w-5" strokeWidth={1.5} />
+              </Button>
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none"
+                  onClick={() => navigate('/alerts')}
+                >
+                  <Bell className="h-5 w-5" strokeWidth={1.5} />
+                  {unreadAlerts > 0 && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-accent rounded-full border-2 border-background" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Balance</p>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                onClick={() => setHideAmounts(!hideAmounts)}
+              >
+                {hideAmounts ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-[36px] font-semibold tracking-[-0.5px] text-foreground">
+                {currency.symbol}{formatAmount(currentBalance).split('.')[0]}
+              </span>
+              <span className="text-xl font-medium text-muted-foreground">
+                .{formatAmount(currentBalance).split('.')[1]}
+              </span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-medium text-foreground">
+              {monthlyIncome > 0 ? (
+                <>
+                  <TrendingUp className="h-3 w-3 text-accent" strokeWidth={1.5} />
+                  <span>{progressPercentage.toFixed(0)}% of monthly target</span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">No monthly target set</span>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+
+          {/* Floating Action Button (FAB) */}
+          {/* Floating Action Button (FAB) - Portaled to escape Layout transforms */}
+          {createPortal(
+            <Button
+              onClick={() => navigate("/add-transaction")}
+              className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+              size="icon"
+            >
+              <Plus className="h-6 w-6" strokeWidth={1.5} />
+            </Button>,
+            document.body
+          )}
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Monthly Income */}
+            <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Income</p>
+                <p className="text-lg font-bold tracking-tight text-foreground">
+                  <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
+                  {formatAmount(monthlyIncomeTotal)}
+                </p>
+              </div>
+              <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors">
+                <ArrowUpRight className="w-4 h-4 text-green-600 dark:text-green-400" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* Monthly Expenses */}
+            <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
+                <p className="text-lg font-bold tracking-tight text-foreground">
+                  <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
+                  {formatAmount(monthlyExpenses)}
+                </p>
+              </div>
+              <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
+                <ArrowDownRight className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* Total Income */}
+            <div className="p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/20 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">Total In</p>
+                <p className="text-lg font-bold tracking-tight text-emerald-700 dark:text-emerald-300">
+                  <span className="text-xs font-normal opacity-70 mr-0.5">{currency.symbol}</span>
+                  {formatAmount(calculateTotalIncome())}
+                </p>
+              </div>
+              <div className="p-2 bg-emerald-500/10 rounded-full group-hover:bg-emerald-500/20 transition-colors">
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* Total Expenses */}
+            <div className="p-3 rounded-2xl bg-red-50/50 dark:bg-red-950/10 border border-red-100/50 dark:border-red-900/20 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <p className="text-xs font-medium text-red-600/80 dark:text-red-400/80 uppercase tracking-wider">Total Out</p>
+                <p className="text-lg font-bold tracking-tight text-red-700 dark:text-red-300">
+                  <span className="text-xs font-normal opacity-70 mr-0.5">{currency.symbol}</span>
+                  {formatAmount(calculateTotalExpenses())}
+                </p>
+              </div>
+              <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
+                <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
+              </div>
+            </div>
+=======
         <div className="space-y-6 pb-20">
           {/* Floating Action Button */}
           <button
@@ -544,6 +809,7 @@ const IndexPage = () => {
                 </div>
               </div>
             </GlassCard>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
           </div>
 
           {/* Charts section - All using glass card style */}
@@ -551,13 +817,22 @@ const IndexPage = () => {
             {/* Spending by Category Chart */}
             <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
+<<<<<<< HEAD
+                <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
+=======
                 <BarChart3 className="h-5 w-5 text-primary" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 Spending by Category
               </h3>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
+<<<<<<< HEAD
+                  <BarChart
+                    data={spendingData}
+=======
                   <BarChart 
                     data={spendingData} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
                     barSize={50}
                     layout="vertical"
@@ -571,22 +846,35 @@ const IndexPage = () => {
                       ))}
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
+<<<<<<< HEAD
+                    <YAxis
+                      dataKey="name"
+=======
                     <YAxis 
                       dataKey="name" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       type="category"
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                       width={120}
                     />
+<<<<<<< HEAD
+                    <XAxis
+=======
                     <XAxis 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       type="number"
                       tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
+<<<<<<< HEAD
+                    <Tooltip
+=======
                     <Tooltip 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`, "Amount"]}
                       contentStyle={{
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -597,15 +885,25 @@ const IndexPage = () => {
                       }}
                       cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
                     />
+<<<<<<< HEAD
+                    <Bar
+                      dataKey="amount"
+=======
                     <Bar 
                       dataKey="amount" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       animationDuration={1500}
                       animationEasing="ease-out"
                       radius={[0, 4, 4, 0]}
                     >
                       {spendingData.map((entry, index) => (
+<<<<<<< HEAD
+                        <Cell
+                          key={`cell-${index}`}
+=======
                         <Cell 
                           key={`cell-${index}`} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                           fill={`url(#bar-gradient-${index % COLORS.length})`}
                           stroke={COLORS[index % COLORS.length]}
                           strokeWidth={1}
@@ -620,11 +918,34 @@ const IndexPage = () => {
             {/* Daily Income & Expenses Chart */}
             <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-blue-500/5 to-blue-500/10 dark:from-blue-500/10 dark:to-blue-500/20 border border-border/50">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
+<<<<<<< HEAD
+                <AreaChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
+=======
                 <AreaChart className="h-5 w-5 text-primary" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 Daily Income & Expenses
               </h3>
               <div className="h-[300px] relative">
                 <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
+<<<<<<< HEAD
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={scrollToPreviousWeek}
+                    className="h-8 w-8 p-0"
+                    aria-label="Previous Week"
+                  >
+                    <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={scrollToNextWeek}
+                    className="h-8 w-8 p-0"
+                    aria-label="Next Week"
+                  >
+                    <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
+=======
                   <Button 
                     size="sm" 
                     variant="ghost" 
@@ -642,6 +963,7 @@ const IndexPage = () => {
                     aria-label="Next Week"
                   >
                     <ChevronRight className="h-5 w-5" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   </Button>
                 </div>
                 <div className="text-center text-sm text-muted-foreground mt-2">
@@ -651,6 +973,19 @@ const IndexPage = () => {
                   <RechartAreaChart data={dailyData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
                     <defs>
                       <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
+<<<<<<< HEAD
+                        <stop offset="5%" stopColor="#A3CE22" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#A3CE22" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="expense-gradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#00AAFF" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#00AAFF" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis
+                      dataKey="fullDate"
+=======
                         <stop offset="5%" stopColor="#A3CE22" stopOpacity={0.8}/>
                         <stop offset="95%" stopColor="#A3CE22" stopOpacity={0}/>
                       </linearGradient>
@@ -662,17 +997,27 @@ const IndexPage = () => {
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                     <XAxis 
                       dataKey="fullDate" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
+<<<<<<< HEAD
+                    <YAxis
+                      tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
+=======
                     <YAxis 
                       tickFormatter={(value)=> hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
+<<<<<<< HEAD
+                    <Tooltip
+=======
                     <Tooltip 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`, ""]}
                       contentStyle={{
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -682,30 +1027,53 @@ const IndexPage = () => {
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                       }}
                     />
+<<<<<<< HEAD
+                    <Legend
+                      verticalAlign="top"
+=======
                     <Legend 
                       verticalAlign="top" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       height={36}
                       iconType="circle"
                       iconSize={8}
                     />
+<<<<<<< HEAD
+                    <Area
+                      type="monotone"
+                      dataKey="income"
+                      name="Income"
+                      stroke="#A3CE22"
+                      fillOpacity={1}
+=======
                     <Area 
                       type="monotone" 
                       dataKey="income" 
                       name="Income"
                       stroke="#A3CE22" 
                       fillOpacity={1} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       fill="url(#income-gradient)"
                       strokeWidth={2}
                       activeDot={{ r: 6, stroke: "#A3CE22", strokeWidth: 2, fill: "white" }}
                       animationDuration={1500}
                       animationEasing="ease-out"
                     />
+<<<<<<< HEAD
+                    <Area
+                      type="monotone"
+                      dataKey="expense"
+                      name="Expense"
+                      stroke="#00AAFF"
+                      fillOpacity={1}
+=======
                     <Area 
                       type="monotone" 
                       dataKey="expense" 
                       name="Expense"
                       stroke="#00AAFF" 
                       fillOpacity={1} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       fill="url(#expense-gradient)"
                       strokeWidth={2}
                       activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
@@ -721,26 +1089,43 @@ const IndexPage = () => {
             {/* Balance Trend Chart */}
             <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-green-500/5 to-green-500/10 dark:from-green-500/10 dark:to-green-500/20 border border-border/50">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
+<<<<<<< HEAD
+                <LineChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
+=======
                 <LineChart className="h-5 w-5 text-primary" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 Balance Trend
               </h3>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartLineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+<<<<<<< HEAD
+                    <XAxis
+                      dataKey="date"
+=======
                     <XAxis 
                       dataKey="date" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
+<<<<<<< HEAD
+                    <YAxis
+=======
                     <YAxis 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       tickFormatter={(value) => hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`}
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
                     />
+<<<<<<< HEAD
+                    <Tooltip
+=======
                     <Tooltip 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       formatter={(value: number) => [hideAmounts ? '***' : `${currency.symbol}${formatAmount(value)}`, "Balance"]}
                       contentStyle={{
                         backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -750,10 +1135,17 @@ const IndexPage = () => {
                         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                       }}
                     />
+<<<<<<< HEAD
+                    <Line
+                      type="monotone"
+                      dataKey="balance"
+                      stroke="#00AAFF"
+=======
                     <Line 
                       type="monotone" 
                       dataKey="balance" 
                       stroke="#00AAFF" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       strokeWidth={3}
                       connectNulls={true}
                       dot={false}
@@ -769,7 +1161,11 @@ const IndexPage = () => {
             {/* Expense Distribution Chart */}
             <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-purple-500/5 to-purple-500/10 dark:from-purple-500/10 dark:to-purple-500/20 border border-border/50">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-foreground">
+<<<<<<< HEAD
+                <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
+=======
                 <BarChart3 className="h-5 w-5 text-primary" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 Expense Distribution
               </h3>
               <div className="space-y-4">
@@ -797,7 +1193,11 @@ const IndexPage = () => {
                         animationEasing="ease-out"
                       >
                         {spendingData.map((entry, index) => (
+<<<<<<< HEAD
+                          <Cell
+=======
                           <Cell 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                             key={`cell-${index}`}
                             fill={`url(#pie-gradient-${index % COLORS.length})`}
                             stroke="#FFFFFF"
@@ -837,7 +1237,11 @@ const IndexPage = () => {
                         onMouseLeave={() => setHoveredLegendItem(null)}
                       >
                         <div className="flex items-center gap-3">
+<<<<<<< HEAD
+                          <div
+=======
                           <div 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                             className="w-4 h-4 rounded-full"
                             style={{ backgroundColor: COLORS[index % COLORS.length] }}
                           />

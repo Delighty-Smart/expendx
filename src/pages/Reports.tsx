@@ -3,6 +3,10 @@ import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+<<<<<<< HEAD
+import { Input } from "@/components/ui/input";
+=======
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -73,9 +77,15 @@ const ReportsPage = () => {
   // Filter transactions based on selections with proper typing
   const filteredTransactions = useMemo((): Transaction[] => {
     if (!transactions) return [];
+<<<<<<< HEAD
+
+    const typedTransactions = transactions as Transaction[];
+
+=======
     
     const typedTransactions = transactions as Transaction[];
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     return typedTransactions.filter(transaction => {
       const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
       const typeMatch = selectedType === "all" || transaction.type === selectedType;
@@ -86,6 +96,21 @@ const ReportsPage = () => {
   // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
     if (!filteredTransactions || filteredTransactions.length === 0) return { income: 0, expenses: 0, savings: 0, net: 0 };
+<<<<<<< HEAD
+
+    const income = filteredTransactions
+      .filter(t => t.type === 'credit')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const expenses = filteredTransactions
+      .filter(t => t.type === 'debit')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const savings = filteredTransactions
+      .filter(t => t.type === 'savings')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+=======
     
     const income = filteredTransactions
       .filter(t => t.type === 'credit')
@@ -99,6 +124,7 @@ const ReportsPage = () => {
       .filter(t => t.type === 'savings')
       .reduce((sum, t) => sum + Number(t.amount), 0);
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     return {
       income,
       expenses,
@@ -110,6 +136,16 @@ const ReportsPage = () => {
   // Prepare chart data with proper typing
   const chartData = useMemo((): ChartDataPoint[] => {
     if (!filteredTransactions || filteredTransactions.length === 0) return [];
+<<<<<<< HEAD
+
+    const dailyData = filteredTransactions.reduce((acc, transaction) => {
+      const date = format(new Date(transaction.date), 'MMM dd');
+
+      if (!acc[date]) {
+        acc[date] = { date, income: 0, expenses: 0, savings: 0 };
+      }
+
+=======
     
     const dailyData = filteredTransactions.reduce((acc, transaction) => {
       const date = format(new Date(transaction.date), 'MMM dd');
@@ -118,6 +154,7 @@ const ReportsPage = () => {
         acc[date] = { date, income: 0, expenses: 0, savings: 0 };
       }
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       const amount = Number(transaction.amount);
       if (transaction.type === 'credit') {
         acc[date].income += amount;
@@ -126,11 +163,19 @@ const ReportsPage = () => {
       } else if (transaction.type === 'savings') {
         acc[date].savings += amount;
       }
+<<<<<<< HEAD
+
+      return acc;
+    }, {} as Record<string, ChartDataPoint>);
+
+    return Object.values(dailyData).sort((a, b) =>
+=======
       
       return acc;
     }, {} as Record<string, ChartDataPoint>);
     
     return Object.values(dailyData).sort((a, b) => 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }, [filteredTransactions]);
@@ -138,7 +183,11 @@ const ReportsPage = () => {
   // Prepare category breakdown with proper typing
   const categoryData = useMemo((): CategoryDataPoint[] => {
     if (!filteredTransactions || filteredTransactions.length === 0) return [];
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
       if (!acc[transaction.category]) {
         acc[transaction.category] = 0;
@@ -146,7 +195,11 @@ const ReportsPage = () => {
       acc[transaction.category] += Number(transaction.amount);
       return acc;
     }, {} as Record<string, number>);
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     return Object.entries(categoryTotals)
       .map(([category, amount]) => ({ category, amount }))
       .sort((a, b) => b.amount - a.amount);
@@ -172,7 +225,11 @@ const ReportsPage = () => {
         t.description || ''
       ])
     ].map(row => row.join(',')).join('\n');
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -180,7 +237,11 @@ const ReportsPage = () => {
     a.download = `financial-report-${format(dateFrom, 'yyyy-MM-dd')}-to-${format(dateTo, 'yyyy-MM-dd')}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     toast({
       title: "Report Exported",
       description: "Your financial report has been downloaded as CSV.",
@@ -246,7 +307,11 @@ const ReportsPage = () => {
       });
 
       pdf.save(`financial-report-${format(dateFrom, 'yyyy-MM-dd')}.pdf`);
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       toast({
         title: "PDF Exported",
         description: "Your financial report has been downloaded as PDF.",
@@ -269,9 +334,15 @@ const ReportsPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+<<<<<<< HEAD
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pb-24">
+          <div className="container mx-auto px-4 py-6 space-y-6">
+
+=======
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
           <div className="container mx-auto px-4 py-6 space-y-6">
             
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
             {/* Header Section */}
             <div className="sticky top-14 lg:top-0 z-20 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pb-4 mb-4 border-b border-border/50 text-center space-y-4">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -295,6 +366,15 @@ const ReportsPage = () => {
             </div>
 
             {/* Filters Card */}
+<<<<<<< HEAD
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-blue-50/50 dark:from-slate-800/95 dark:to-slate-700/50 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl font-semibold">
+                  <Calendar className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                  Filter Options
+                </CardTitle>
+                <CardDescription className="text-base">
+=======
             <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-blue-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -302,10 +382,26 @@ const ReportsPage = () => {
                   Filter Options
                 </CardTitle>
                 <CardDescription>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   Customize your report view with date range and category filters
                 </CardDescription>
               </CardHeader>
               <CardContent>
+<<<<<<< HEAD
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                  {/* Date From */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Calendar className="h-4 w-4" strokeWidth={1.5} /> From Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={dateFrom ? format(dateFrom, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => e.target.value && setDateFrom(new Date(e.target.value + 'T00:00:00'))}
+                      className="bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700"
+                    />
+=======
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   
                   {/* Date From */}
@@ -333,10 +429,22 @@ const ReportsPage = () => {
                         />
                       </PopoverContent>
                     </Popover>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   </div>
 
                   {/* Date To */}
                   <div className="space-y-2">
+<<<<<<< HEAD
+                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Calendar className="h-4 w-4" strokeWidth={1.5} /> To Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={dateTo ? format(dateTo, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => e.target.value && setDateTo(new Date(e.target.value + 'T00:00:00'))}
+                      className="bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700"
+                    />
+=======
                     <label className="text-sm font-medium text-muted-foreground">To Date</label>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -360,6 +468,7 @@ const ReportsPage = () => {
                         />
                       </PopoverContent>
                     </Popover>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                   </div>
 
                   {/* Category Filter */}
@@ -367,15 +476,25 @@ const ReportsPage = () => {
                     <label className="text-sm font-medium text-muted-foreground">Categories</label>
                     <Popover>
                       <PopoverTrigger asChild>
+<<<<<<< HEAD
+                        <Button
+                          variant="outline"
+=======
                         <Button 
                           variant="outline" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                           className="h-11 px-3 border-border text-left justify-between w-full"
                         >
                           <div className="flex items-center gap-2">
                             <Shapes className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate text-sm">
+<<<<<<< HEAD
+                              {selectedCategories.length > 0
+                                ? `Categories (${selectedCategories.length})`
+=======
                               {selectedCategories.length > 0 
                                 ? `Categories (${selectedCategories.length})` 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 : "All Categories"
                               }
                             </span>
@@ -387,8 +506,13 @@ const ReportsPage = () => {
                           <h4 className="font-medium mb-3">Select Categories</h4>
                           <div className="space-y-1 max-h-48 overflow-y-auto">
                             {availableCategories.map((category) => (
+<<<<<<< HEAD
+                              <div
+                                key={category}
+=======
                               <div 
                                 key={category} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 className={cn(
                                   "flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm",
                                   selectedCategories.includes(category)
@@ -445,13 +569,21 @@ const ReportsPage = () => {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<<<<<<< HEAD
+
+=======
               
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
               {/* Income Card */}
               <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50/90 to-emerald-50/70 dark:from-green-950/40 dark:to-emerald-950/30">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
+<<<<<<< HEAD
+                      <TrendingUp className="h-6 w-6 text-white" strokeWidth={1.5} />
+=======
                       <TrendingUp className="h-6 w-6 text-white" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-muted-foreground font-medium mb-1">Total Income</p>
@@ -468,7 +600,11 @@ const ReportsPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-400 dark:to-rose-500 flex items-center justify-center shadow-lg">
+<<<<<<< HEAD
+                      <TrendingDown className="h-6 w-6 text-white" strokeWidth={1.5} />
+=======
                       <TrendingDown className="h-6 w-6 text-white" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-muted-foreground font-medium mb-1">Total Expenses</p>
@@ -485,7 +621,11 @@ const ReportsPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-400 dark:to-indigo-500 flex items-center justify-center shadow-lg">
+<<<<<<< HEAD
+                      <DollarSign className="h-6 w-6 text-white" strokeWidth={1.5} />
+=======
                       <DollarSign className="h-6 w-6 text-white" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-muted-foreground font-medium mb-1">Total Savings</p>
@@ -502,7 +642,11 @@ const ReportsPage = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 dark:from-purple-400 dark:to-violet-500 flex items-center justify-center shadow-lg">
+<<<<<<< HEAD
+                      <BarChart3 className="h-6 w-6 text-white" strokeWidth={1.5} />
+=======
                       <BarChart3 className="h-6 w-6 text-white" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-muted-foreground font-medium mb-1">Net Balance</p>
@@ -518,14 +662,22 @@ const ReportsPage = () => {
 
             {/* Accordion Sections - Changed to single select */}
             <Accordion type="single" defaultValue="overview" collapsible className="space-y-4">
+<<<<<<< HEAD
+
+=======
               
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
               {/* Financial Overview Section */}
               <AccordionItem value="overview">
                 <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-slate-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
                   <AccordionTrigger className="px-6 py-4 hover:no-underline">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+<<<<<<< HEAD
+                        <BarChart3 className="h-4 w-4 text-white" strokeWidth={1.5} />
+=======
                         <BarChart3 className="h-4 w-4 text-white" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       </div>
                       <div className="text-left">
                         <h3 className="font-semibold">Daily Financial Overview</h3>
@@ -539,6 +691,18 @@ const ReportsPage = () => {
                         <AreaChart data={chartData}>
                           <defs>
                             <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+<<<<<<< HEAD
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+                            </linearGradient>
+                            <linearGradient id="expensesGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
+                            </linearGradient>
+                            <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
+=======
                               <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
                               <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
                             </linearGradient>
@@ -549,11 +713,21 @@ const ReportsPage = () => {
                             <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
                               <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                           <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                           <YAxis tick={{ fontSize: 12 }} />
+<<<<<<< HEAD
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+=======
                           <Tooltip 
                             contentStyle={{ 
                               backgroundColor: 'rgba(255, 255, 255, 0.95)', 
@@ -561,6 +735,7 @@ const ReportsPage = () => {
                               borderRadius: '8px',
                               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                             }} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                           />
                           <Legend />
                           <Area type="monotone" dataKey="income" stackId="1" stroke="#10b981" fill="url(#incomeGradient)" name="Income" />
@@ -594,6 +769,15 @@ const ReportsPage = () => {
                           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                           <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                           <YAxis tick={{ fontSize: 12 }} />
+<<<<<<< HEAD
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+=======
                           <Tooltip 
                             contentStyle={{ 
                               backgroundColor: 'rgba(255, 255, 255, 0.95)', 
@@ -601,6 +785,7 @@ const ReportsPage = () => {
                               borderRadius: '8px',
                               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                             }} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                           />
                           <Legend />
                           <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} name="Income" />
@@ -619,7 +804,11 @@ const ReportsPage = () => {
                   <AccordionTrigger className="px-6 py-4 hover:no-underline">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+<<<<<<< HEAD
+                        <PieChart className="h-4 w-4 text-white" strokeWidth={1.5} />
+=======
                         <PieChart className="h-4 w-4 text-white" />
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       </div>
                       <div className="text-left">
                         <h3 className="font-semibold">Category Analysis</h3>
@@ -629,7 +818,11 @@ const ReportsPage = () => {
                   </AccordionTrigger>
                   <AccordionContent className="px-6 pb-6">
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<<<<<<< HEAD
+
+=======
                       
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       {/* Interactive Pie Chart */}
                       <Card className="border-0 bg-gradient-to-br from-white/80 to-slate-50/40 dark:from-slate-700/80 dark:to-slate-600/40">
                         <CardHeader>
@@ -650,8 +843,13 @@ const ReportsPage = () => {
                                     fill="#8884d8"
                                   >
                                     {categoryData.map((entry: CategoryDataPoint, index: number) => (
+<<<<<<< HEAD
+                                      <Cell
+                                        key={`cell-${index}`}
+=======
                                       <Cell 
                                         key={`cell-${index}`} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                         fill={COLORS[index % COLORS.length]}
                                         opacity={hoveredLegendItem === null || hoveredLegendItem === entry.category ? 1 : 0.3}
                                         stroke={hoveredLegendItem === entry.category ? "#333" : "none"}
@@ -659,6 +857,16 @@ const ReportsPage = () => {
                                       />
                                     ))}
                                   </Pie>
+<<<<<<< HEAD
+                                  <Tooltip
+                                    formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
+                                    contentStyle={{
+                                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                      border: 'none',
+                                      borderRadius: '8px',
+                                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                    }}
+=======
                                   <Tooltip 
                                     formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
                                     contentStyle={{ 
@@ -667,6 +875,7 @@ const ReportsPage = () => {
                                       borderRadius: '8px',
                                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                                     }} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                   />
                                 </RechartsPieChart>
                               </ResponsiveContainer>
@@ -688,7 +897,11 @@ const ReportsPage = () => {
                                     onMouseLeave={() => setHoveredLegendItem(null)}
                                   >
                                     <div className="flex items-center gap-3">
+<<<<<<< HEAD
+                                      <div
+=======
                                       <div 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                         className="w-4 h-4 rounded-full"
                                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                                       />
@@ -721,6 +934,17 @@ const ReportsPage = () => {
                               <BarChart data={categoryData.slice(0, 8)} layout="horizontal">
                                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis type="number" tick={{ fontSize: 12 }} />
+<<<<<<< HEAD
+                                <YAxis dataKey="category" type="category" tick={{ fontSize: 10 }} />
+                                <Tooltip
+                                  formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
+                                  contentStyle={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                  }}
+=======
                                 <YAxis dataKey="category" type="category"  tick={{ fontSize: 10 }} />
                                 <Tooltip 
                                   formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
@@ -730,6 +954,7 @@ const ReportsPage = () => {
                                     borderRadius: '8px',
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                                   }} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 />
                                 <Bar dataKey="amount" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                               </BarChart>
@@ -758,7 +983,11 @@ const ReportsPage = () => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 pb-6">
+<<<<<<< HEAD
+                    <TransactionsTable
+=======
                     <TransactionsTable 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       transactions={filteredTransactions}
                       currency={currency}
                     />
@@ -768,10 +997,17 @@ const ReportsPage = () => {
 
             </Accordion>
 
+<<<<<<< HEAD
+          </div >
+        </div >
+      </PullToRefresh >
+    </Layout >
+=======
           </div>
         </div>
       </PullToRefresh>
     </Layout>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   );
 };
 

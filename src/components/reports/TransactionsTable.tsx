@@ -26,16 +26,28 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const isMobile = useIsMobile();
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   // Get categories based on selected transaction type
   const { categories: expenseCategories } = useCategories('debit');
   const { categories: incomeCategories } = useCategories('credit');
   const { categories: savingsCategories } = useCategories('savings');
+<<<<<<< HEAD
+
+  // Get available categories based on selected type
+  const availableCategories = useMemo(() => {
+    let categories: string[] = [];
+
+=======
   
   // Get available categories based on selected type
   const availableCategories = useMemo(() => {
     let categories: string[] = [];
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     if (selectedType === "all") {
       // Combine all categories and remove duplicates
       const allCats = [...expenseCategories, ...incomeCategories, ...savingsCategories];
@@ -47,6 +59,15 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     } else if (selectedType === "savings") {
       categories = savingsCategories;
     }
+<<<<<<< HEAD
+
+    return categories.sort();
+  }, [selectedType, expenseCategories, incomeCategories, savingsCategories]);
+
+  const filteredTransactions = transactions.filter(transaction => {
+    // Enhanced search that includes category matching
+    const matchesSearch = searchQuery ?
+=======
     
     return categories.sort();
   }, [selectedType, expenseCategories, incomeCategories, savingsCategories]);
@@ -54,6 +75,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const filteredTransactions = transactions.filter(transaction => {
     // Enhanced search that includes category matching
     const matchesSearch = searchQuery ? 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
@@ -61,15 +83,26 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
     return matchesSearch && matchesType && matchesCategory;
   });
+<<<<<<< HEAD
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(category)
+=======
   
   const toggleCategory = (category: string) => {
     setSelectedCategories(prev => 
       prev.includes(category) 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
   };
+<<<<<<< HEAD
+
+=======
   
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
   const clearAllCategories = () => {
     setSelectedCategories([]);
   };
@@ -87,12 +120,20 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
     if (!groups[month]) {
       groups[month] = {};
     }
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     const day = format(new Date(transaction.date), "yyyy-MM-dd");
     if (!groups[month][day]) {
       groups[month][day] = [];
     }
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     groups[month][day].push(transaction);
     return groups;
   }, {} as Record<string, Record<string, Transaction[]>>);
@@ -101,7 +142,11 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const getMonthlyTotals = (month: string) => {
     let income = 0;
     let expense = 0;
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     Object.values(groupedTransactions[month]).forEach(dayTransactions => {
       dayTransactions.forEach(transaction => {
         if (transaction.type === 'credit') {
@@ -111,7 +156,11 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
         }
       });
     });
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
     return { income, expense };
   };
 
@@ -124,11 +173,19 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
   const renderTransactionIcon = (type: TransactionType) => {
     switch (type) {
       case 'credit':
+<<<<<<< HEAD
+        return <ArrowDown className="h-4 w-4 text-green-500" strokeWidth={1.5} />;
+      case 'debit':
+        return <ArrowUp className="h-4 w-4 text-red-500" strokeWidth={1.5} />;
+      case 'savings':
+        return <PiggyBank className="h-4 w-4 text-blue-600" strokeWidth={1.5} />;
+=======
         return <TrendingUp className="h-4 w-4 text-green-600" />;
       case 'debit':
         return <TrendingDown className="h-4 w-4 text-red-600" />;
       case 'savings':
         return <PiggyBank className="h-4 w-4 text-blue-600" />;
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
       default:
         return null;
     }
@@ -142,11 +199,19 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+<<<<<<< HEAD
+          <Input
+            placeholder="Search transactions..."
+            className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+=======
           <Input 
             placeholder="Search transactions..." 
             className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground" 
             value={searchQuery} 
             onChange={e => setSearchQuery(e.target.value)} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
           />
         </div>
 
@@ -165,11 +230,19 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
               <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
             </SelectContent>
           </Select>
+<<<<<<< HEAD
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+=======
           
           <Popover>
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 size="compact"
                 className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent touch-manipulation"
               >
@@ -189,9 +262,15 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-foreground">Filter by Categories</h4>
                   {selectedCategories.length > 0 && (
+<<<<<<< HEAD
+                    <Button
+                      variant="ghost"
+                      size="sm"
+=======
                     <Button 
                       variant="ghost" 
                       size="sm" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       onClick={clearAllCategories}
                       className="h-auto p-1 text-muted-foreground hover:text-foreground touch-manipulation"
                     >
@@ -203,6 +282,16 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
               <div className="max-h-64 overflow-y-auto p-2">
                 {availableCategories.map((category) => {
                   const isSelected = selectedCategories.includes(category);
+<<<<<<< HEAD
+
+                  return (
+                    <div
+                      key={category}
+                      className={`flex items-center space-x-3 p-3 rounded-md cursor-pointer transition-colors touch-manipulation ${isSelected
+                        ? 'bg-primary/10 border border-primary/20'
+                        : 'hover:bg-accent/50'
+                        }`}
+=======
                   
                   return (
                     <div 
@@ -212,13 +301,19 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                           ? 'bg-primary/10 border border-primary/20' 
                           : 'hover:bg-accent/50'
                       }`}
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                       onClick={() => toggleCategory(category)}
                     >
                       <div className="flex items-center space-x-2 flex-1">
                         <div className="h-2 w-2 rounded-full bg-primary/60 flex-shrink-0"></div>
+<<<<<<< HEAD
+                        <label className={`text-sm cursor-pointer select-none transition-colors ${isSelected ? 'text-primary font-medium' : 'text-foreground'
+                          }`}>
+=======
                         <label className={`text-sm cursor-pointer select-none transition-colors ${
                           isSelected ? 'text-primary font-medium' : 'text-foreground'
                         }`}>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                           {category}
                         </label>
                       </div>
@@ -235,6 +330,20 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
           </Popover>
         </div>
       </div>
+<<<<<<< HEAD
+
+      {selectedCategories.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedCategories.map((category) => (
+            <Badge
+              key={category}
+              variant="secondary"
+              className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20"
+            >
+              {category}
+              <X
+                className="h-3 w-3 cursor-pointer hover:text-destructive"
+=======
       
       {selectedCategories.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -247,6 +356,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
               {category}
               <X 
                 className="h-3 w-3 cursor-pointer hover:text-destructive" 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                 onClick={() => toggleCategory(category)}
               />
             </Badge>
@@ -254,15 +364,24 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
         </div>
       )}
 
+<<<<<<< HEAD
+      <PullToRefresh
+        onRefresh={handleRefresh}
+=======
       <PullToRefresh 
         onRefresh={handleRefresh} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
         containerClassName="transactions-container"
       >
         {Object.keys(groupedTransactions).length > 0 ? (
           <div className="space-y-4">
             {Object.entries(groupedTransactions).map(([month, days]) => {
               const { income, expense } = getMonthlyTotals(month);
+<<<<<<< HEAD
+
+=======
               
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
               return (
                 <Card key={month} className="transaction-month-group overflow-hidden">
                   {/* Month header */}
@@ -288,6 +407,16 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                       .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
                       .map(([day, dayTransactions]) => (
                         <div key={day} className="transaction-day-group">
+<<<<<<< HEAD
+                          <div className="px-3 py-2 bg-gray-50/50 border-t text-sm font-medium text-muted-foreground">
+                            {format(new Date(day), "EEEE, MMM d")}
+                          </div>
+
+                          <div className="divide-y">
+                            {dayTransactions.map((transaction) => (
+                              <div
+                                key={transaction.id}
+=======
                           <div className="px-3 py-2 bg-gray-50/50 border-t text-xs text-muted-foreground">
                             {format(new Date(day), "EEEE, MMM d")}
                           </div>
@@ -296,12 +425,17 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                             {dayTransactions.map((transaction) => (
                               <div 
                                 key={transaction.id} 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 className="transaction-row p-3 flex items-center gap-3"
                               >
                                 <div className="flex-shrink-0">
                                   {renderTransactionIcon(transaction.type)}
                                 </div>
+<<<<<<< HEAD
+
+=======
                                 
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                 <div className="flex-1 flex flex-col">
                                   <p className="font-medium text-sm leading-tight">
                                     {transaction.description}
@@ -310,6 +444,15 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                     {transaction.category}
                                   </p>
                                 </div>
+<<<<<<< HEAD
+
+                                <div className={`text-right ${transaction.type === "credit"
+                                  ? "text-green-600"
+                                  : transaction.type === "debit"
+                                    ? "text-red-600"
+                                    : "text-blue-600"
+                                  }`}>
+=======
                                 
                                 <div className={`text-right ${
                                   transaction.type === "credit" 
@@ -318,6 +461,7 @@ const TransactionsTable = ({ transactions, currency, onRefresh }: TransactionsTa
                                     ? "text-red-600"
                                     : "text-blue-600"
                                 }`}>
+>>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
                                   <p className="font-medium text-sm leading-tight">
                                     {transaction.type === "debit" ? "-" : "+"}
                                     {currencySymbol}{formatAmount(transaction.amount)}
