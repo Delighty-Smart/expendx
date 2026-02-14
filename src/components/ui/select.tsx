@@ -1,4 +1,4 @@
-
+﻿
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
@@ -13,23 +13,18 @@ const SelectTrigger = React.forwardRef<React.ElementRef<typeof SelectPrimitive.T
   children,
   ...props
 }, ref) => (
-<<<<<<< HEAD
+
   <SelectPrimitive.Trigger
     ref={ref}
-=======
-  <SelectPrimitive.Trigger 
-    ref={ref} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       // Enhanced for mobile
       "active:outline-none focus:outline-none",
       className
-<<<<<<< HEAD
+
     )}
-=======
-    )} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     {...props}
   >
     {children}
@@ -45,13 +40,10 @@ const SelectScrollUpButton = React.forwardRef<React.ElementRef<typeof SelectPrim
   className,
   ...props
 }, ref) => (
-<<<<<<< HEAD
+
   <SelectPrimitive.ScrollUpButton
     ref={ref}
-=======
-  <SelectPrimitive.ScrollUpButton 
-    ref={ref} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     className="hidden" // Completely hide
     {...props}
   />
@@ -62,13 +54,10 @@ const SelectScrollDownButton = React.forwardRef<React.ElementRef<typeof SelectPr
   className,
   ...props
 }, ref) => (
-<<<<<<< HEAD
+
   <SelectPrimitive.ScrollDownButton
     ref={ref}
-=======
-  <SelectPrimitive.ScrollDownButton 
-    ref={ref} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     className="hidden" // Completely hide
     {...props}
   />
@@ -82,7 +71,7 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
   ...props
 }, ref) => (
   <SelectPrimitive.Portal>
-<<<<<<< HEAD
+
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
@@ -91,25 +80,14 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
         // Non-transparent background + larger mobile height
         className
       )}
-=======
-    <SelectPrimitive.Content 
-      ref={ref} 
-      className={cn(
-        "relative z-[200] min-w-[8rem] overflow-hidden rounded-md border bg-background text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:translate-x-1 data-[side=right]:slide-in-from-left-2 data-[side=top]:-translate-y-1 data-[side=top]:slide-in-from-bottom-2",
-        position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1",
-        // Non-transparent background + larger mobile height
-        className
-      )} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       position={position}
       {...props}
     >
       {/* No scroll buttons needed with enhanced natural scrolling */}
-<<<<<<< HEAD
+
       <SelectPrimitive.Viewport
-=======
-      <SelectPrimitive.Viewport 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
         className={cn(
           "p-1",
           position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
@@ -137,7 +115,7 @@ const SelectLabel = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Lab
   className,
   ...props
 }, ref) => (
-<<<<<<< HEAD
+
   <SelectPrimitive.Label
     ref={ref}
     className={cn(
@@ -145,15 +123,7 @@ const SelectLabel = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Lab
       className
     )}
     {...props}
-=======
-  <SelectPrimitive.Label 
-    ref={ref} 
-    className={cn(
-      "py-1.5 pl-8 pr-2 text-sm font-semibold",
-      className
-    )} 
-    {...props} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
   />
 ));
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
@@ -163,13 +133,10 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
   children,
   ...props
 }, ref) => (
-<<<<<<< HEAD
+
   <SelectPrimitive.Item
     ref={ref}
-=======
-  <SelectPrimitive.Item 
-    ref={ref} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-md py-2 px-3 text-sm outline-none transition-colors duration-200",
       // Modern selection styling - no checkmark overlap
@@ -180,11 +147,9 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
       // Enhanced for mobile touch targets
       "py-2.5 text-base sm:py-2 sm:text-sm",
       className
-<<<<<<< HEAD
+
     )}
-=======
-    )} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     {...props}
   >
     {/* Modern indicator - small dot on the right instead of checkmark on left */}
@@ -200,7 +165,7 @@ const SelectSeparator = React.forwardRef<React.ElementRef<typeof SelectPrimitive
   className,
   ...props
 }, ref) => (
-<<<<<<< HEAD
+
   <SelectPrimitive.Separator
     ref={ref}
     className={cn(
@@ -208,20 +173,12 @@ const SelectSeparator = React.forwardRef<React.ElementRef<typeof SelectPrimitive
       className
     )}
     {...props}
-=======
-  <SelectPrimitive.Separator 
-    ref={ref} 
-    className={cn(
-      "-mx-1 my-1 h-px bg-muted",
-      className
-    )} 
-    {...props} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
   />
 ));
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 
-<<<<<<< HEAD
+
 export {
   Select,
   SelectGroup,
@@ -233,17 +190,6 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton
-=======
-export { 
-  Select, 
-  SelectGroup, 
-  SelectValue, 
-  SelectTrigger, 
-  SelectContent, 
-  SelectLabel, 
-  SelectItem, 
-  SelectSeparator, 
-  SelectScrollUpButton, 
-  SelectScrollDownButton 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
 };
+

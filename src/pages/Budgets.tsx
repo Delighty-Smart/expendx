@@ -1,14 +1,13 @@
-
+﻿
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, GlassCard } from "@/components/ui/card";
-<<<<<<< HEAD
+
 import { startOfMonth, endOfMonth } from "date-fns";
 import { useCategories } from "@/hooks/useCategories";
 import { useTransactionData } from "@/hooks/useTransactionData";
-=======
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/ui/page-header";
 import { PlusCircle, Edit, Trash2, TrendingUp } from "lucide-react";
@@ -33,7 +32,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
   const { currency } = useSettings();
 
   const now = new Date();
-<<<<<<< HEAD
+
   const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
   const { categories: expenseCategories } = useCategories('debit');
   const { transactions } = useTransactionData({
@@ -41,9 +40,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
     startDate: startOfMonth(new Date()).toISOString(),
     endDate: endOfMonth(new Date()).toISOString()
   });
-=======
-  const monthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
   const { user } = useAuth();
   const { data: currentSpending = 0 } = useQuery({
     queryKey: ['category-spending', budget.category, user?.id, monthKey],
@@ -77,15 +74,11 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
   };
 
   return (
-<<<<<<< HEAD
+
     <GlassCard className="p-4 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-orange-50/40 to-red-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-orange-200/30 dark:border-slate-600/30 transition-all duration-300">
       <div className="flex justify-between items-start mb-3">
         <h3 className="font-semibold text-lg text-foreground">{budget.category}</h3>
-=======
-    <GlassCard className="p-4 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-orange-50/40 to-red-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-orange-200/30 dark:border-slate-600/30">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-semibold text-foreground">{budget.category}</h3>
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
         <div className="flex gap-1">
           <Button
             variant="ghost"
@@ -93,11 +86,9 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
             className="h-8 w-8 p-0 hover:bg-orange-100 dark:hover:bg-slate-700"
             onClick={() => onEdit(budget)}
           >
-<<<<<<< HEAD
+
             <Edit className="h-4 w-4" />
-=======
-            <Edit className="h-3 w-3" />
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
           </Button>
           <Button
             variant="ghost"
@@ -105,7 +96,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
             onClick={() => onDelete(budget)}
           >
-<<<<<<< HEAD
+
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -118,20 +109,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
         <BudgetProgress
           category={budget.category}
           limit={budget.monthly_limit}
-=======
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-      <div className="space-y-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground font-medium">Budget:</span>
-          <span className="font-semibold text-foreground">{currency.symbol}{formatAmount(budget.monthly_limit)}</span>
-        </div>
-        <BudgetProgress 
-          category={budget.category} 
-          limit={budget.monthly_limit} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
           spent={currentSpending}
           currency={currency}
         />
@@ -224,11 +202,9 @@ const BudgetsPage = () => {
             <div className="h-8 bg-muted rounded animate-skeleton-pulse w-32"></div>
             <div className="h-10 bg-muted rounded animate-skeleton-pulse w-28"></div>
           </div>
-<<<<<<< HEAD
 
-=======
-          
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
           <div className="animate-skeleton-pulse">
             <div className="p-6 bg-muted/50 rounded-lg border">
               <div className="flex items-center gap-6">
@@ -281,11 +257,9 @@ const BudgetsPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
-<<<<<<< HEAD
+
         <div className="space-y-6 pb-24">
-=======
-        <div className="space-y-6">
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
           <PageHeader
             title="Budgets"
             actions={
@@ -345,3 +319,4 @@ const BudgetsPage = () => {
 };
 
 export default BudgetsPage;
+

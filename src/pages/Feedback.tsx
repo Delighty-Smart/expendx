@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { GlassCard as Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,11 +71,9 @@ const FeedbackPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
     if (!selectedRating) {
       toast({
         title: "Rating required",
@@ -87,17 +85,12 @@ const FeedbackPage = () => {
 
     try {
       setIsSubmitting(true);
-<<<<<<< HEAD
+
 
       // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
 
-=======
-      
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       if (!user) {
         toast({
           title: "Authentication error",
@@ -107,22 +100,18 @@ const FeedbackPage = () => {
         setIsSubmitting(false);
         return;
       }
-<<<<<<< HEAD
+
 
       let screenshotUrl = null;
 
-=======
-      
-      let screenshotUrl = null;
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       // Upload screenshot if there is one
       if (screenshot) {
         try {
           // Upload the file to Supabase Storage
           const fileExt = screenshot.name.split('.').pop();
           const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-<<<<<<< HEAD
+
 
           const { error: uploadError, data } = await supabase.storage
             .from('feedback-images')
@@ -130,24 +119,14 @@ const FeedbackPage = () => {
 
           if (uploadError) throw uploadError;
 
-=======
-          
-          const { error: uploadError, data } = await supabase.storage
-            .from('feedback-images')
-            .upload(fileName, screenshot);
-          
-          if (uploadError) throw uploadError;
-          
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
           // Get the public URL
           const { data: { publicUrl } } = supabase.storage
             .from('feedback-images')
             .getPublicUrl(fileName);
-<<<<<<< HEAD
 
-=======
-          
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
           screenshotUrl = publicUrl;
         } catch (uploadError) {
           console.error("Screenshot upload error:", uploadError);
@@ -158,11 +137,9 @@ const FeedbackPage = () => {
           });
         }
       }
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
       // Save feedback to database
       const { error } = await supabase
         .from('user_feedback')
@@ -173,26 +150,19 @@ const FeedbackPage = () => {
           contact_permission: contactPermission,
           screenshot_url: screenshotUrl
         });
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
       if (error) {
         console.error("Database insert error:", error);
         throw error;
       }
-<<<<<<< HEAD
+
 
       // Show success state
       setIsSuccess(true);
 
-=======
-      
-      // Show success state
-      setIsSuccess(true);
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       // Reset form
       setTimeout(() => {
         setSelectedRating(null);
@@ -213,11 +183,9 @@ const FeedbackPage = () => {
       setIsSubmitting(false);
     }
   };
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
   if (isSuccess) {
     return (
       <Layout>
@@ -252,18 +220,13 @@ const FeedbackPage = () => {
                       type="button"
                       onClick={() => handleRatingSelect(option.value)}
                       variant={selectedRating === option.value ? "default" : "outline"}
-<<<<<<< HEAD
+
                       className={`h-auto py-4 px-4 flex flex-col items-center gap-3 rounded-xl transition-all duration-300 ${selectedRating === option.value ? 'scale-[1.02] shadow-md' : 'hover:scale-[1.02] hover:bg-muted/50'
                         }`}
                     >
                       <option.icon className={`h-6 w-6 ${selectedRating === option.value ? '' : 'text-muted-foreground'}`} />
                       <span className="font-medium">{option.label}</span>
-=======
-                      className="h-auto py-3 px-4 flex flex-col items-center gap-2 rounded-xl hover-scale"
-                    >
-                      <option.icon className="h-5 w-5" />
-                      <span>{option.label}</span>
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                     </Button>
                   ))}
                 </div>
@@ -332,11 +295,9 @@ const FeedbackPage = () => {
 
               {/* Contact Permission with smaller checkbox */}
               <div className="flex items-start space-x-3">
-<<<<<<< HEAD
+
                 <Checkbox
-=======
-                <Checkbox 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                   id="contactPermission"
                   checked={contactPermission}
                   onCheckedChange={(checked) => setContactPermission(checked as boolean)}
@@ -372,13 +333,12 @@ const FeedbackPage = () => {
             </form>
           </CardContent>
         </Card>
-<<<<<<< HEAD
+
       </main>
-=======
-        </main>
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
     </Layout>
   );
 };
 
 export default FeedbackPage;
+

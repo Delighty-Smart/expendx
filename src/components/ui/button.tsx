@@ -1,4 +1,4 @@
-
+﻿
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -10,7 +10,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-<<<<<<< HEAD
+
         default: "bg-black text-white hover:bg-black/90 active:scale-95 shadow-lg shadow-black/20 rounded-[24px]", // Primary CTA
         action: "bg-white text-black border border-transparent shadow-[0_6px_16px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)] rounded-full", // Action Button
         destructive:
@@ -29,25 +29,7 @@ const buttonVariants = cva(
         icon: "h-12 w-12 min-h-[48px] min-w-[48px] [&_svg]:size-5",
         xs: "h-8 px-3 text-xs min-h-[36px] [&_svg]:size-3.5",
         compact: "h-10 px-4 text-sm min-h-[40px] [&_svg]:size-4",
-=======
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80", 
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
-        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-3 sm:px-4 py-2 min-h-[44px] text-sm [&_svg]:size-4 md:[&_svg]:size-4",
-        sm: "h-9 rounded-lg px-2 sm:px-3 py-1 min-h-[40px] text-sm [&_svg]:size-3.5 md:[&_svg]:size-4",
-        lg: "h-12 rounded-xl px-4 sm:px-6 py-2 min-h-[48px] text-base [&_svg]:size-5 md:[&_svg]:size-5", 
-        icon: "h-11 w-11 min-h-[44px] min-w-[44px] [&_svg]:size-5 md:h-10 md:w-10 md:min-h-[40px] md:min-w-[40px] md:[&_svg]:size-4",
-        xs: "h-8 px-2 py-1 text-xs min-h-[36px] [&_svg]:size-3",
-        compact: "h-9 px-2 sm:px-3 py-1 text-xs sm:text-sm min-h-[36px] [&_svg]:size-3.5",
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       },
     },
     defaultVariants: {
@@ -59,11 +41,9 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-<<<<<<< HEAD
+
   VariantProps<typeof buttonVariants> {
-=======
-    VariantProps<typeof buttonVariants> {
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
   asChild?: boolean
 }
 
@@ -82,3 +62,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
+

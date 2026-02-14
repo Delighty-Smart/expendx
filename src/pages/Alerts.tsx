@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -115,11 +115,9 @@ const Alerts = () => {
       if (error) throw error;
 
       // Update local state
-<<<<<<< HEAD
+
       setAlerts(alerts.map(alert =>
-=======
-      setAlerts(alerts.map(alert => 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
         alert.id === alertId ? { ...alert, read: true } : alert
       ));
 
@@ -304,19 +302,13 @@ const Alerts = () => {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Unknown date';
-<<<<<<< HEAD
+
 
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
-=======
-    
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -347,13 +339,10 @@ const Alerts = () => {
               {selectionMode ? (
                 <>
                   {someSelected && (
-<<<<<<< HEAD
+
                     <Button
                       variant="destructive"
-=======
-                    <Button 
-                      variant="destructive" 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                       onClick={handleDeleteSelected}
                       className="flex items-center gap-2 flex-none whitespace-nowrap"
                     >
@@ -361,13 +350,10 @@ const Alerts = () => {
                       Delete Selected ({selectedAlerts.size})
                     </Button>
                   )}
-<<<<<<< HEAD
+
                   <Button
                     variant="outline"
-=======
-                  <Button 
-                    variant="outline" 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                     onClick={toggleSelectionMode}
                     className="flex items-center gap-2 flex-none whitespace-nowrap"
                   >
@@ -378,26 +364,20 @@ const Alerts = () => {
               ) : (
                 <>
                   {alerts.length > 0 && (
-<<<<<<< HEAD
+
                     <Button
                       variant="outline"
-=======
-                    <Button 
-                      variant="outline" 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                       onClick={toggleSelectionMode}
                       className="flex-none whitespace-nowrap"
                     >
                       Select
                     </Button>
                   )}
-<<<<<<< HEAD
+
                   <Button
                     variant="outline"
-=======
-                  <Button 
-                    variant="outline" 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                     onClick={handleMarkAllAsRead}
                     disabled={alerts.every(alert => alert.read) || alerts.length === 0}
                     className="flex-none whitespace-nowrap"
@@ -421,21 +401,17 @@ const Alerts = () => {
                 className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
               />
               <span className="text-sm font-medium">
-<<<<<<< HEAD
+
                 {allSelected ? 'Deselect All' : 'Select All'}
-=======
-                {allSelected ? 'Deselect All' : 'Select All'} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                 {someSelected && !allSelected && ` (${selectedAlerts.size} selected)`}
               </span>
             </div>
           </div>
         )}
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
         {loading ? (
           <div className="space-y-4 animate-skeleton-pulse">
             {[1, 2, 3].map((i) => (
@@ -459,7 +435,7 @@ const Alerts = () => {
         ) : alerts.length > 0 ? (
           <div className="space-y-4">
             {alerts.map((alert) => (
-<<<<<<< HEAD
+
               <Card
                 key={alert.id}
                 className={`transition-all duration-300 hover:shadow-md ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : 'bg-card/50'}`}
@@ -467,15 +443,7 @@ const Alerts = () => {
                 {/* Header with Checkbox (if in selection mode), Icon and Title */}
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
-=======
-              <Card 
-                key={alert.id} 
-                className={`transition-all ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : ''}`}
-              >
-                {/* Header with Checkbox (if in selection mode), Icon and Title */}
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                     {selectionMode && (
                       <Checkbox
                         size="sm"
@@ -487,22 +455,17 @@ const Alerts = () => {
                     <div className="flex-shrink-0">
                       {getAlertIcon(alert.type)}
                     </div>
-<<<<<<< HEAD
+
                     <CardTitle className="text-lg font-semibold flex-1 min-w-0 leading-tight">
-=======
-                    <CardTitle className="text-lg font-semibold flex-1 min-w-0">
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                       {alert.title}
                     </CardTitle>
                     {!alert.read && (
                       <div className="ml-auto flex-shrink-0">
-<<<<<<< HEAD
+
                         <Button
                           variant="ghost"
-=======
-                        <Button 
-                          variant="ghost" 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                           size="sm"
                           onClick={() => handleMarkAsRead(alert.id)}
                           className="text-xs px-2 py-1 h-auto"
@@ -553,3 +516,4 @@ const Alerts = () => {
 };
 
 export default Alerts;
+

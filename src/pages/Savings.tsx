@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
@@ -15,11 +15,10 @@ import { useRefresh } from "@/hooks/useRefresh";
 import { SavingsHeader } from "@/components/savings/SavingsHeader";
 import { SavingsTotalCard } from "@/components/savings/SavingsTotalCard";
 import { SavingsGoalsList } from "@/components/savings/SavingsGoalsList";
-<<<<<<< HEAD
+
 import { Button } from "@/components/ui/button";
 import { Plus, Target, TrendingUp } from "lucide-react";
-=======
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
 
 const SavingsPage = () => {
   const { currency } = useSettings();
@@ -87,20 +86,16 @@ const SavingsPage = () => {
         .delete()
         .eq("id", goal.id);
       if (error) throw error;
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
       toast({
         title: "Success",
         description: "Savings goal deleted successfully"
       });
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
       queryClient.invalidateQueries({ queryKey: ["savings_goals"] });
       setDeletingGoal(null);
     } catch (error: any) {
@@ -121,7 +116,7 @@ const SavingsPage = () => {
   return (
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
-<<<<<<< HEAD
+
         <div className="space-y-6 pb-24">
           <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
 
@@ -161,12 +156,7 @@ const SavingsPage = () => {
               </div>
             </div>
           </div>
-=======
-        <div className="space-y-6">
-          <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
 
-          <SavingsTotalCard totalSavings={totalSavings} currency={currency} />
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 
           <SavingsGoalsList
             savingsGoals={savingsGoals}
@@ -177,27 +167,20 @@ const SavingsPage = () => {
           />
 
           {/* Add/Edit Savings Goal Modal */}
-<<<<<<< HEAD
+
           <SavingsGoalForm
             open={isAddGoalOpen || !!editingGoal}
-=======
-          <SavingsGoalForm 
-            open={isAddGoalOpen || !!editingGoal} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
             onOpenChange={open => {
               if (!open) {
                 setIsAddGoalOpen(false);
                 setEditingGoal(null);
               }
-<<<<<<< HEAD
+
             }}
             onSavingsGoalAdded={handleGoalSaved}
             savingsGoalId={editingGoal?.id}
-=======
-            }} 
-            onSavingsGoalAdded={handleGoalSaved} 
-            savingsGoalId={editingGoal?.id} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
           />
 
           {/* Delete Confirmation Dialog */}
@@ -206,23 +189,18 @@ const SavingsPage = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Savings Goal</AlertDialogTitle>
                 <AlertDialogDescription>
-<<<<<<< HEAD
+
                   Are you sure you want to delete the savings goal for "{deletingGoal?.category}"?
-=======
-                  Are you sure you want to delete the savings goal for "{deletingGoal?.category}"? 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                   This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-<<<<<<< HEAD
+
                 <AlertDialogAction
                   onClick={() => deletingGoal && handleDeleteGoal(deletingGoal)}
-=======
-                <AlertDialogAction 
-                  onClick={() => deletingGoal && handleDeleteGoal(deletingGoal)} 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Delete
@@ -237,3 +215,4 @@ const SavingsPage = () => {
 };
 
 export default SavingsPage;
+

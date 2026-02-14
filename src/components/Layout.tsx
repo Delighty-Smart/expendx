@@ -1,4 +1,4 @@
-import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell, X, CreditCard } from "lucide-react";
+﻿import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell, X, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -170,7 +170,7 @@ const Layout = ({
     });
   }
   return <div className="min-h-screen bg-background transition-colors duration-300">
-<<<<<<< HEAD
+
     <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
     <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 flex items-center justify-between px-3 z-50">
@@ -274,110 +274,7 @@ const Layout = ({
 
     {isSidebarOpen && <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
   </div>;
-=======
-      <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 flex items-center justify-between px-3 z-50">
-        <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="animated-button touch-manipulation">
-          {isSidebarOpen ? (
-            <X className="h-6 w-6 text-foreground md:h-5 md:w-5" />
-          ) : (
-            <Menu className="h-6 w-6 text-foreground md:h-5 md:w-5" />
-          )}
-        </Button>
-        <div className="h-8 md:h-9">
-          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-full object-contain" />
-        </div>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="animated-button touch-manipulation" onClick={toggleTheme}>
-            {theme === "dark" ? <Moon className="h-6 w-6 text-foreground md:h-5 md:w-5" /> : <Sun className="h-6 w-6 text-foreground md:h-5 md:w-5" />}
-          </Button>
-        </div>
-      </header>
-
-      <aside className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col shadow-lg`}>
-        {/* Logo Header */}
-        <div className="p-4 border-b border-border flex items-center justify-center">
-          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
-        </div>
-        
-        {/* Navigation Menu */}
-        <nav className="flex-1 px-3 pt-10 space-y-1 my-px py-[50px]">
-          {menuItems.map(item => {
-          const IconComponent = item.icon;
-          const isActive = location.pathname === item.path;
-          return <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group touch-manipulation ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`} onClick={() => setIsSidebarOpen(false)}>
-                <IconComponent className="h-5 w-5 flex-shrink-0 md:h-4 md:w-4" />
-                <span className="text-sm font-medium">{item.label}</span>
-                {item.badge && <Badge variant="destructive" className="ml-auto text-xs">{item.badge}</Badge>}
-                {item.path === "/feedback" && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full"></div>}
-              </Link>;
-        })}
-        </nav>
-
-        {/* Shortcuts Section */}
-        <div className="px-3 py-2">
-          <p className="text-xs font-medium text-muted-foreground mb-2 px-3">SHORTCUTS</p>
-          <div className="space-y-1">
-            <Link to="/add-transaction" className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors touch-manipulation" onClick={() => setIsSidebarOpen(false)}>
-              <div className="w-5 h-5 bg-blue-500 rounded-sm flex items-center justify-center md:w-4 md:h-4">
-                <div className="w-2.5 h-2.5 bg-white rounded-full md:w-2 md:h-2"></div>
-              </div>
-              <span className="text-sm">Add Transaction</span>
-            </Link>
-            <Link to="/reports" className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors touch-manipulation" onClick={() => setIsSidebarOpen(false)}>
-              <div className="w-5 h-5 bg-orange-500 rounded-sm flex items-center justify-center md:w-4 md:h-4">
-                <div className="w-2.5 h-2.5 bg-white rounded-full md:w-2 md:h-2"></div>
-              </div>
-              <span className="text-sm">Monthly Report</span>
-            </Link>
-            <button onClick={() => {
-            handleStreakClick();
-            setIsSidebarOpen(false);
-          }} className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left touch-manipulation">
-              <div className="w-5 h-5 bg-purple-500 rounded-sm flex items-center justify-center md:w-4 md:h-4">
-                <Flame className="w-3 h-3 text-white md:w-2 md:h-2" />
-              </div>
-              <span className="text-sm">Streak Progress</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Usage Stats */}
-        
-
-        {/* User Profile */}
-        <div className="border-t border-border p-3">
-          <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors touch-manipulation" onClick={handleProfileClick}>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden md:w-8 md:h-8">
-              {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-primary md:h-4 md:w-4" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
-                {userProfile?.username || userProfile?.email || "User"}
-              </p>
-              {userStreak && <p className="text-xs text-muted-foreground truncate">
-                  {userStreak.current_title}
-                </p>}
-            </div>
-            <Button variant="ghost" size="icon" onClick={e => {
-            e.stopPropagation();
-            handleLogout();
-          }} className="touch-manipulation">
-              <LogOut className="h-5 w-5 md:h-4 md:w-4" />
-            </Button>
-          </div>
-        </div>
-      </aside>
-
-      <main className={`pt-14 lg:pt-0 lg:pl-64 min-h-screen transition-all duration-300 ${isSidebarOpen ? "brightness-50 lg:brightness-100" : ""}`} onClick={() => isSidebarOpen && setIsSidebarOpen(false)}>
-        <div className="container mx-auto p-3 md:p-4 lg:p-6 animate-fadeIn">
-          {children}
-        </div>
-      </main>
-
-      {isSidebarOpen && <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
-    </div>;
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
 };
 export default Layout;
+

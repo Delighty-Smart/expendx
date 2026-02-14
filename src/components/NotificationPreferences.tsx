@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -33,45 +33,8 @@ interface NotificationPreference {
   notification_times: Record<string, string>;
 }
 
-<<<<<<< HEAD
-=======
-// Custom Toggle Component
-const CustomToggle = ({ 
-  checked, 
-  onCheckedChange, 
-  disabled 
-}: { 
-  checked: boolean; 
-  onCheckedChange: (checked: boolean) => void; 
-  disabled?: boolean; 
-}) => {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onCheckedChange(!checked)}
-      className={`
-        relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-        transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        ${checked ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-      `}
-      style={{ minWidth: '44px', minHeight: '24px' }}
-    >
-      <span
-        className={`
-          pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 
-          transition duration-200 ease-in-out
-          ${checked ? 'translate-x-5' : 'translate-x-0'}
-        `}
-      />
-    </button>
-  );
-};
 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
 const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,11 +86,9 @@ const NotificationPreferences = () => {
         const { data: newPrefs, error: createError } = await supabase
           .from('notification_preferences')
           .insert({
-<<<<<<< HEAD
+
             user_id: user.id,
-=======
-            user_id: user.id, 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
             preferred_time: '19:00'
           })
           .select('*')
@@ -148,19 +109,13 @@ const NotificationPreferences = () => {
 
   const scheduleAllNotifications = (userId: string, prefs: NotificationPreference) => {
     if (!prefs.notification_times) return;
-<<<<<<< HEAD
+
 
     NOTIFICATION_SCHEDULES.forEach(schedule => {
       const isEnabled = prefs[schedule.type as keyof NotificationPreference] as boolean;
       const preferredTime = prefs.notification_times?.[schedule.type] || schedule.defaultTime;
 
-=======
-    
-    NOTIFICATION_SCHEDULES.forEach(schedule => {
-      const isEnabled = prefs[schedule.type as keyof NotificationPreference] as boolean;
-      const preferredTime = prefs.notification_times?.[schedule.type] || schedule.defaultTime;
-      
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
       notificationScheduler.scheduleNotification(
         userId,
         schedule.type,
@@ -281,82 +236,82 @@ const NotificationPreferences = () => {
   const notificationOptions = [
     {
       key: 'weekly_recap' as const,
-      label: '📅 Weekly Wallet Recap',
+      label: 'ðŸ“… Weekly Wallet Recap',
       description: 'Get a weekly summary of your financial activity'
     },
     {
       key: 'budget_nudges' as const,
-      label: '🎯 Budget Nudges',
+      label: 'ðŸŽ¯ Budget Nudges',
       description: 'Gentle reminders when you approach budget limits'
     },
     {
       key: 'unusual_activity' as const,
-      label: '💸 Unusual Activity Alerts',
+      label: 'ðŸ’¸ Unusual Activity Alerts',
       description: 'Get notified about unexpected spending patterns'
     },
     {
       key: 'daily_log_reminder' as const,
-      label: '🧾 Daily Log Reminders',
+      label: 'ðŸ§¾ Daily Log Reminders',
       description: 'Reminders to log your daily transactions'
     },
     {
       key: 'savings_progress' as const,
-      label: '🪙 Savings Progress Updates',
+      label: 'ðŸª™ Savings Progress Updates',
       description: 'Celebrate milestones in your savings goals'
     },
     {
       key: 'month_reset_preview' as const,
-      label: '🔄 Month Reset Preview',
+      label: 'ðŸ”„ Month Reset Preview',
       description: 'End-of-month budget review reminders'
     },
     {
       key: 'recurring_expense_reminder' as const,
-      label: '🔁 Recurring Expense Reminders',
+      label: 'ðŸ” Recurring Expense Reminders',
       description: 'Never miss your recurring bills and payments'
     },
     {
       key: 'night_owl_checkin' as const,
-      label: '🌙 Night Owl Check-ins',
+      label: 'ðŸŒ™ Night Owl Check-ins',
       description: 'Late night spending review prompts'
     },
     {
       key: 'monthly_snapshot' as const,
-      label: '📈 Monthly Financial Snapshots',
+      label: 'ðŸ“ˆ Monthly Financial Snapshots',
       description: 'Monthly overview of your financial health'
     },
     {
       key: 'reflection_prompts' as const,
-      label: '🪞 Reflection Prompts',
+      label: 'ðŸªž Reflection Prompts',
       description: 'Mindful spending reflection questions'
     },
     {
       key: 'custom_goal_reminder' as const,
-      label: '⚙️ Custom Goal Reminders',
+      label: 'âš™ï¸ Custom Goal Reminders',
       description: 'Updates on your custom savings goals'
     },
     {
       key: 'business_mode_nudges' as const,
-      label: '💼 Business Mode Nudges',
+      label: 'ðŸ’¼ Business Mode Nudges',
       description: 'Reminders for business expense tracking'
     },
     {
       key: 'streak_milestone_alerts' as const,
-      label: '🏆 Streak Milestone Alerts',
+      label: 'ðŸ† Streak Milestone Alerts',
       description: 'Celebrate when you reach logging streak milestones'
     },
     {
       key: 'streak_freeze_warnings' as const,
-      label: '❄️ Streak Freeze Warnings',
+      label: 'â„ï¸ Streak Freeze Warnings',
       description: 'Alerts when your streak freeze is about to expire'
     },
     {
       key: 'streak_recovery_reminders' as const,
-      label: '🔄 Streak Recovery Reminders',
+      label: 'ðŸ”„ Streak Recovery Reminders',
       description: 'Gentle nudges to help you get back on track'
     },
     {
       key: 'streak_breaking_alerts' as const,
-      label: '⚠️ Streak Breaking Alerts',
+      label: 'âš ï¸ Streak Breaking Alerts',
       description: 'Urgent alerts when your streak is at risk'
     }
   ];
@@ -383,22 +338,18 @@ const NotificationPreferences = () => {
                     </p>
                   </div>
                   <div className="flex-shrink-0 mt-1">
-<<<<<<< HEAD
+
                     <Switch
-=======
-                    <CustomToggle
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                       checked={preferences[option.key]}
                       onCheckedChange={(checked) => updatePreference(option.key, checked)}
                       disabled={saving}
                     />
                   </div>
                 </div>
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
+
                 {preferences[option.key] && (
                   <div className="flex items-center gap-2 pt-2 border-t">
                     <Clock className="h-3 w-3 text-muted-foreground" />
@@ -424,24 +375,19 @@ const NotificationPreferences = () => {
             <p className="text-xs text-muted-foreground mb-3">
               Enable browser notifications to receive alerts even when the app is not open.
             </p>
-<<<<<<< HEAD
+
             <Button
               variant="outline"
-=======
-            <Button 
-              variant="outline" 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
               size="sm"
               onClick={() => {
                 if ('Notification' in window) {
                   Notification.requestPermission().then((permission) => {
                     toast({
                       title: permission === 'granted' ? "Notifications enabled" : "Notifications blocked",
-<<<<<<< HEAD
+
                       description: permission === 'granted'
-=======
-                      description: permission === 'granted' 
->>>>>>> d5c355c5198d435bc3f48173568d7a0262962315
+
                         ? "You'll now receive browser notifications at your preferred times"
                         : "You can enable notifications in your browser settings"
                     });
@@ -468,3 +414,4 @@ const NotificationPreferences = () => {
 };
 
 export default NotificationPreferences;
+
