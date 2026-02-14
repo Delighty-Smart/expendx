@@ -16,7 +16,7 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
-  
+
   const [isDragging, setIsDragging] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 200, height: 200 });
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -167,16 +167,17 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-2xl overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Crop className="h-5 w-5" />
             Crop Your Avatar
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
-          <div 
+          <div
             ref={containerRef}
             className="relative overflow-hidden rounded-lg border bg-muted select-none touch-none"
           >
@@ -188,7 +189,7 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
               onLoad={handleImageLoad}
               draggable={false}
             />
-            
+
             {imageLoaded && imageRef.current && (
               <div
                 className="absolute border-2 border-primary bg-primary/20 transition-all duration-75 ease-out"
@@ -215,7 +216,7 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
               </div>
             )}
           </div>
-          
+
           <p className="text-sm text-muted-foreground text-center">
             Drag the crop area to position your avatar
           </p>
@@ -231,7 +232,7 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
             Apply Crop
           </Button>
         </DialogFooter>
-        
+
         <canvas ref={canvasRef} className="hidden" />
       </DialogContent>
     </Dialog>

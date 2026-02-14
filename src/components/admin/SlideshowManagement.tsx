@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
+import {
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow
 } from "@/components/ui/table";
-import { 
-  Dialog, DialogContent, DialogDescription, 
-  DialogFooter, DialogHeader, DialogTitle, DialogTrigger 
+import {
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ const SlideshowManagement = () => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from('slideshow_banners')
         .select('*')
@@ -75,7 +75,7 @@ const SlideshowManagement = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImageFile(file);
-      
+
       const reader = new FileReader();
       reader.onload = () => {
         setImagePreview(reader.result as string);
@@ -89,13 +89,13 @@ const SlideshowManagement = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('banner_images')
         .upload(filePath, file);
-      
+
       if (uploadError) throw uploadError;
-      
+
       return filePath;
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -124,7 +124,7 @@ const SlideshowManagement = () => {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast({
           title: "Authentication error",
@@ -147,8 +147,8 @@ const SlideshowManagement = () => {
       if (formData.visible_to.premium) visibleToArray.push('premium');
 
       // Get highest display order
-      const highestOrder = banners.length > 0 
-        ? Math.max(...banners.map(b => b.display_order)) 
+      const highestOrder = banners.length > 0
+        ? Math.max(...banners.map(b => b.display_order))
         : -1;
 
       const { error } = await supabase
@@ -303,15 +303,15 @@ const SlideshowManagement = () => {
     try {
       const currentIndex = banners.findIndex(b => b.id === bannerId);
       if (currentIndex === -1) return;
-      
+
       if (direction === 'up' && currentIndex === 0) return;
       if (direction === 'down' && currentIndex === banners.length - 1) return;
-      
+
       const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      
+
       const currentBanner = banners[currentIndex];
       const swapBanner = banners[swapIndex];
-      
+
       // Swap display orders
       const { error: error1 } = await supabase
         .from('slideshow_banners')
@@ -320,9 +320,9 @@ const SlideshowManagement = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', currentBanner.id);
-      
+
       if (error1) throw error1;
-      
+
       const { error: error2 } = await supabase
         .from('slideshow_banners')
         .update({
@@ -330,11 +330,11 @@ const SlideshowManagement = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', swapBanner.id);
-      
+
       if (error2) throw error2;
-      
+
       fetchBanners();
-      
+
     } catch (error) {
       console.error('Error changing banner order:', error);
       toast({
@@ -382,7 +382,8 @@ const SlideshowManagement = () => {
               Create Banner
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-2xl overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
             <DialogHeader>
               <DialogTitle>Create Banner</DialogTitle>
               <DialogDescription>
@@ -397,7 +398,7 @@ const SlideshowManagement = () => {
                     <Input
                       id="title"
                       value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Banner title"
                     />
                   </div>
@@ -406,7 +407,7 @@ const SlideshowManagement = () => {
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Optional banner description"
                       rows={3}
                     />
@@ -416,7 +417,7 @@ const SlideshowManagement = () => {
                     <Input
                       id="link_url"
                       value={formData.link_url}
-                      onChange={(e) => setFormData({...formData, link_url: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                       placeholder="https://example.com"
                     />
                   </div>
@@ -424,7 +425,7 @@ const SlideshowManagement = () => {
                     <Switch
                       id="active"
                       checked={formData.active}
-                      onCheckedChange={(checked) => setFormData({...formData, active: checked})}
+                      onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                     />
                     <Label htmlFor="active">Active</Label>
                   </div>
@@ -435,10 +436,10 @@ const SlideshowManagement = () => {
                         <Checkbox
                           id="free"
                           checked={formData.visible_to.free}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             setFormData({
-                              ...formData, 
-                              visible_to: {...formData.visible_to, free: !!checked}
+                              ...formData,
+                              visible_to: { ...formData.visible_to, free: !!checked }
                             })
                           }
                         />
@@ -448,10 +449,10 @@ const SlideshowManagement = () => {
                         <Checkbox
                           id="pro"
                           checked={formData.visible_to.pro}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             setFormData({
-                              ...formData, 
-                              visible_to: {...formData.visible_to, pro: !!checked}
+                              ...formData,
+                              visible_to: { ...formData.visible_to, pro: !!checked }
                             })
                           }
                         />
@@ -461,10 +462,10 @@ const SlideshowManagement = () => {
                         <Checkbox
                           id="premium"
                           checked={formData.visible_to.premium}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             setFormData({
-                              ...formData, 
-                              visible_to: {...formData.visible_to, premium: !!checked}
+                              ...formData,
+                              visible_to: { ...formData.visible_to, premium: !!checked }
                             })
                           }
                         />
@@ -479,9 +480,9 @@ const SlideshowManagement = () => {
                     <div className="border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => document.getElementById('image-upload')?.click()}>
                       {imagePreview ? (
                         <div className="relative">
-                          <img 
-                            src={imagePreview} 
-                            alt="Banner preview" 
+                          <img
+                            src={imagePreview}
+                            alt="Banner preview"
                             className="mx-auto rounded-md max-h-52 object-contain"
                           />
                           <div className="mt-2 text-sm text-muted-foreground">Click to change image</div>
@@ -519,7 +520,7 @@ const SlideshowManagement = () => {
           </DialogContent>
         </Dialog>
       </div>
-      
+
       {loading ? (
         <div className="flex justify-center py-8">
           <div className="animate-pulse text-muted-foreground">Loading banners...</div>
@@ -570,8 +571,8 @@ const SlideshowManagement = () => {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-16 bg-muted rounded-md overflow-hidden">
-                        <img 
-                          src={banner.image_url} 
+                        <img
+                          src={banner.image_url}
                           alt={banner.title}
                           className="h-full w-full object-cover"
                         />
@@ -644,7 +645,8 @@ const SlideshowManagement = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
+                        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-2xl overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
                           <DialogHeader>
                             <DialogTitle>Edit Banner</DialogTitle>
                             <DialogDescription>
@@ -659,7 +661,7 @@ const SlideshowManagement = () => {
                                   <Input
                                     id="edit-title"
                                     value={formData.title}
-                                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="Banner title"
                                   />
                                 </div>
@@ -668,7 +670,7 @@ const SlideshowManagement = () => {
                                   <Textarea
                                     id="edit-description"
                                     value={formData.description}
-                                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     placeholder="Optional banner description"
                                     rows={3}
                                   />
@@ -678,7 +680,7 @@ const SlideshowManagement = () => {
                                   <Input
                                     id="edit-link_url"
                                     value={formData.link_url}
-                                    onChange={(e) => setFormData({...formData, link_url: e.target.value})}
+                                    onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                                     placeholder="https://example.com"
                                   />
                                 </div>
@@ -686,7 +688,7 @@ const SlideshowManagement = () => {
                                   <Switch
                                     id="edit-active"
                                     checked={formData.active}
-                                    onCheckedChange={(checked) => setFormData({...formData, active: checked})}
+                                    onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                                   />
                                   <Label htmlFor="edit-active">Active</Label>
                                 </div>
@@ -697,10 +699,10 @@ const SlideshowManagement = () => {
                                       <Checkbox
                                         id="edit-free"
                                         checked={formData.visible_to.free}
-                                        onCheckedChange={(checked) => 
+                                        onCheckedChange={(checked) =>
                                           setFormData({
-                                            ...formData, 
-                                            visible_to: {...formData.visible_to, free: !!checked}
+                                            ...formData,
+                                            visible_to: { ...formData.visible_to, free: !!checked }
                                           })
                                         }
                                       />
@@ -710,10 +712,10 @@ const SlideshowManagement = () => {
                                       <Checkbox
                                         id="edit-pro"
                                         checked={formData.visible_to.pro}
-                                        onCheckedChange={(checked) => 
+                                        onCheckedChange={(checked) =>
                                           setFormData({
-                                            ...formData, 
-                                            visible_to: {...formData.visible_to, pro: !!checked}
+                                            ...formData,
+                                            visible_to: { ...formData.visible_to, pro: !!checked }
                                           })
                                         }
                                       />
@@ -723,10 +725,10 @@ const SlideshowManagement = () => {
                                       <Checkbox
                                         id="edit-premium"
                                         checked={formData.visible_to.premium}
-                                        onCheckedChange={(checked) => 
+                                        onCheckedChange={(checked) =>
                                           setFormData({
-                                            ...formData, 
-                                            visible_to: {...formData.visible_to, premium: !!checked}
+                                            ...formData,
+                                            visible_to: { ...formData.visible_to, premium: !!checked }
                                           })
                                         }
                                       />
@@ -741,18 +743,18 @@ const SlideshowManagement = () => {
                                   <div className="border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => document.getElementById('edit-image-upload')?.click()}>
                                     {imagePreview ? (
                                       <div className="relative">
-                                        <img 
-                                          src={imagePreview} 
-                                          alt="Banner preview" 
+                                        <img
+                                          src={imagePreview}
+                                          alt="Banner preview"
                                           className="mx-auto rounded-md max-h-52 object-contain"
                                         />
                                         <div className="mt-2 text-sm text-muted-foreground">Click to change image</div>
                                       </div>
                                     ) : (
                                       <div className="relative">
-                                        <img 
-                                          src={formData.image_url} 
-                                          alt="Current banner" 
+                                        <img
+                                          src={formData.image_url}
+                                          alt="Current banner"
                                           className="mx-auto rounded-md max-h-52 object-contain"
                                         />
                                         <div className="mt-2 text-sm text-muted-foreground">Click to change image</div>
@@ -774,8 +776,8 @@ const SlideshowManagement = () => {
                             </div>
                           </div>
                           <DialogFooter>
-                            <Button 
-                              variant="destructive" 
+                            <Button
+                              variant="destructive"
                               onClick={() => {
                                 if (window.confirm('Are you sure you want to delete this banner?')) {
                                   handleDelete(selectedBanner.id);

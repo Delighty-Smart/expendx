@@ -7,10 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, GlassCard } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import { TransactionsTable } from "@/components/reports/TransactionsTable";
 import { useTransactionData } from "@/hooks/useTransactionData";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -291,475 +299,387 @@ const ReportsPage = () => {
     <Layout>
       <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pb-24">
-          <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="space-y-6 pb-24">
+          <PageHeader
+            title="Financial Reports"
+            subtitle="Comprehensive analysis of your financial data"
+            actions={
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="compact" className="flex items-center gap-2">
+                    <Download className="mobile-icon-sm" />
+                    <span>Download</span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem onClick={exportData} className="flex items-center gap-2 cursor-pointer">
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>Export CSV</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportToPDF} className="flex items-center gap-2 cursor-pointer">
+                    <FileText className="h-4 w-4" />
+                    <span>Export PDF</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            }
+          />
 
+          {/* Filters Card */}
 
-            {/* Header Section */}
-            <div className="sticky top-14 lg:top-0 z-20 bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pb-4 mb-4 border-b border-border/50 text-center space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-center sm:text-left">
-                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Financial Reports
-                  </h1>
-                  <p className="text-muted-foreground mt-2">
-                    Comprehensive analysis of your financial data
-                  </p>
+          <Card className="border-border bg-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Calendar className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                {/* Date From */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground/70 px-1 uppercase tracking-wider">
+                    From Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={dateFrom ? format(dateFrom, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => e.target.value && setDateFrom(new Date(e.target.value + 'T00:00:00'))}
+                    className="h-10 bg-transparent border-border focus:border-primary/50 transition-colors"
+                  />
                 </div>
-                <Button onClick={exportData} variant="outline" size="lg" className="flex items-center gap-2 shadow-md">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  Export CSV
-                </Button>
-                <Button onClick={exportToPDF} size="lg" className="flex items-center gap-2 shadow-lg">
-                  <FileText className="h-4 w-4" />
-                  Export PDF
-                </Button>
-              </div>
-            </div>
 
-            {/* Filters Card */}
+                {/* Date To */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground/70 px-1 uppercase tracking-wider">
+                    To Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={dateTo ? format(dateTo, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => e.target.value && setDateTo(new Date(e.target.value + 'T00:00:00'))}
+                    className="h-10 bg-transparent border-border focus:border-primary/50 transition-colors"
+                  />
+                </div>
 
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-blue-50/50 dark:from-slate-800/95 dark:to-slate-700/50 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl font-semibold">
-                  <Calendar className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                  Filter Options
-                </CardTitle>
-                <CardDescription className="text-base">
+                {/* Category Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground/70 px-1 uppercase tracking-wider">Categories</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-10 px-3 border-border text-left justify-between w-full bg-transparent hover:bg-accent/50 transition-colors"
+                      >
+                        <span className="truncate text-sm font-normal">
+                          {selectedCategories.length > 0
+                            ? `${selectedCategories.length} Selected`
+                            : "All Categories"
+                          }
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-0 z-50 bg-popover border shadow-lg" align="start">
+                      <div className="p-3">
+                        <h4 className="font-medium mb-3">Select Categories</h4>
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {availableCategories.map((category) => (
 
-                  Customize your report view with date range and category filters
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                            <div
+                              key={category}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                  {/* Date From */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <Calendar className="h-4 w-4" strokeWidth={1.5} /> From Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={dateFrom ? format(dateFrom, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => e.target.value && setDateFrom(new Date(e.target.value + 'T00:00:00'))}
-                      className="bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700"
-                    />
-
-                  </div>
-
-                  {/* Date To */}
-                  <div className="space-y-2">
-
-                    <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <Calendar className="h-4 w-4" strokeWidth={1.5} /> To Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={dateTo ? format(dateTo, 'yyyy-MM-dd') : ''}
-                      onChange={(e) => e.target.value && setDateTo(new Date(e.target.value + 'T00:00:00'))}
-                      className="bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700"
-                    />
-
-                  </div>
-
-                  {/* Category Filter */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Categories</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-
-                        <Button
-                          variant="outline"
-
-                          className="h-11 px-3 border-border text-left justify-between w-full"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Shapes className="h-4 w-4 flex-shrink-0" />
-                            <span className="truncate text-sm">
-
-                              {selectedCategories.length > 0
-                                ? `Categories (${selectedCategories.length})`
-
-                                : "All Categories"
-                              }
-                            </span>
-                          </div>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-0 z-50 bg-popover border shadow-lg" align="start">
-                        <div className="p-3">
-                          <h4 className="font-medium mb-3">Select Categories</h4>
-                          <div className="space-y-1 max-h-48 overflow-y-auto">
-                            {availableCategories.map((category) => (
-
-                              <div
-                                key={category}
-
-                                className={cn(
-                                  "flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm",
-                                  selectedCategories.includes(category)
-                                    ? "bg-primary/10 text-primary font-medium"
-                                    : "hover:bg-muted/50"
-                                )}
-                                onClick={() => {
-                                  if (selectedCategories.includes(category)) {
-                                    setSelectedCategories(prev => prev.filter(c => c !== category));
-                                  } else {
-                                    setSelectedCategories(prev => [...prev, category]);
-                                  }
-                                }}
-                              >
-                                <Shapes className="h-3 w-3 mr-2 flex-shrink-0" />
-                                <span className="truncate">{category}</span>
-                              </div>
-                            ))}
-                          </div>
-                          {selectedCategories.length > 0 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-3"
-                              onClick={() => setSelectedCategories([])}
+                              className={cn(
+                                "flex items-center p-2 rounded-md cursor-pointer transition-colors text-sm",
+                                selectedCategories.includes(category)
+                                  ? "bg-primary/10 text-primary font-medium"
+                                  : "hover:bg-muted/50"
+                              )}
+                              onClick={() => {
+                                if (selectedCategories.includes(category)) {
+                                  setSelectedCategories(prev => prev.filter(c => c !== category));
+                                } else {
+                                  setSelectedCategories(prev => [...prev, category]);
+                                }
+                              }}
                             >
-                              Clear All
-                            </Button>
-                          )}
+                              <Shapes className="h-3 w-3 mr-2 flex-shrink-0" />
+                              <span className="truncate">{category}</span>
+                            </div>
+                          ))}
                         </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                        {selectedCategories.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-3"
+                            onClick={() => setSelectedCategories([])}
+                          >
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-                  {/* Type Filter */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Type</label>
-                    <Select value={selectedType} onValueChange={setSelectedType}>
-                      <SelectTrigger className="h-11">
-                        <SelectValue placeholder="All Types" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="credit">Income</SelectItem>
-                        <SelectItem value="debit">Expenses</SelectItem>
-                        <SelectItem value="savings">Savings</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Type Filter */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground/70 px-1 uppercase tracking-wider">Type</label>
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="h-10 bg-transparent border-border focus:border-primary/50 transition-colors">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="credit">Income</SelectItem>
+                      <SelectItem value="debit">Expenses</SelectItem>
+                      <SelectItem value="savings">Savings</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+
+
+            {/* Income Card */}
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground font-medium">Income</p>
+                    <p className="text-lg font-bold text-foreground truncate">
+                      {currency.symbol}{formatAmount(summaryMetrics.income)}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Expenses Card */}
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground font-medium">Expenses</p>
+                    <p className="text-lg font-bold text-foreground truncate">
+                      {currency.symbol}{formatAmount(summaryMetrics.expenses)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Savings Card */}
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground font-medium">Savings</p>
+                    <p className="text-lg font-bold text-foreground truncate">
+                      {currency.symbol}{formatAmount(summaryMetrics.savings)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Net Balance Card */}
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground font-medium">Net Balance</p>
+                    <p className={`text-lg font-bold truncate ${summaryMetrics.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {currency.symbol}{formatAmount(summaryMetrics.net)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+          </div>
+
+          {/* Accordion Sections - Changed to single select */}
+          <Accordion type="single" defaultValue="overview" collapsible className="space-y-4">
 
 
 
-              {/* Income Card */}
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50/90 to-emerald-50/70 dark:from-green-950/40 dark:to-emerald-950/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
+            {/* Financial Overview Section */}
+            <AccordionItem value="overview">
+              <Card className="border-border bg-card">
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
 
-                      <TrendingUp className="h-6 w-6 text-white" strokeWidth={1.5} />
+                      <BarChart3 className="h-4 w-4 text-white" strokeWidth={1.5} />
 
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Total Income</p>
-                      <p className="text-xl font-bold text-green-600 dark:text-green-400 truncate">
-                        {currency.symbol}{formatAmount(summaryMetrics.income)}
-                      </p>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Daily Financial Overview</h3>
+                      <p className="text-sm text-muted-foreground">Income, expenses, and savings trends</p>
                     </div>
                   </div>
-                </CardContent>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
+                          </linearGradient>
+                          <linearGradient id="expensesGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
+                          </linearGradient>
+                          <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
+
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+
+                        />
+                        <Legend />
+                        <Area type="monotone" dataKey="income" stackId="1" stroke="#10b981" fill="url(#incomeGradient)" name="Income" />
+                        <Area type="monotone" dataKey="expenses" stackId="2" stroke="#ef4444" fill="url(#expensesGradient)" name="Expenses" />
+                        <Area type="monotone" dataKey="savings" stackId="3" stroke="#3b82f6" fill="url(#savingsGradient)" name="Savings" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </AccordionContent>
               </Card>
+            </AccordionItem>
 
-              {/* Expenses Card */}
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50/90 to-rose-50/70 dark:from-red-950/40 dark:to-rose-950/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 dark:from-red-400 dark:to-rose-500 flex items-center justify-center shadow-lg">
-
-                      <TrendingDown className="h-6 w-6 text-white" strokeWidth={1.5} />
-
+            {/* Trends Analysis Section */}
+            <AccordionItem value="trends">
+              <Card className="border-border bg-card">
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                      <TrendingUp className="h-4 w-4 text-white" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Total Expenses</p>
-                      <p className="text-xl font-bold text-red-600 dark:text-red-400 truncate">
-                        {currency.symbol}{formatAmount(summaryMetrics.expenses)}
-                      </p>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Financial Trends Analysis</h3>
+                      <p className="text-sm text-muted-foreground">Line chart view of your financial patterns</p>
                     </div>
                   </div>
-                </CardContent>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+
+                        />
+                        <Legend />
+                        <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} name="Income" />
+                        <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} name="Expenses" />
+                        <Line type="monotone" dataKey="savings" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} name="Savings" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </AccordionContent>
               </Card>
+            </AccordionItem>
 
-              {/* Savings Card */}
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50/90 to-indigo-50/70 dark:from-blue-950/40 dark:to-indigo-950/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-400 dark:to-indigo-500 flex items-center justify-center shadow-lg">
+            {/* Category Analysis Section with Interactive Legend */}
+            <AccordionItem value="categories">
+              <Card className="border-border bg-card">
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
 
-                      <DollarSign className="h-6 w-6 text-white" strokeWidth={1.5} />
+                      <PieChart className="h-4 w-4 text-white" strokeWidth={1.5} />
 
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Total Savings</p>
-                      <p className="text-xl font-bold text-blue-600 dark:text-blue-400 truncate">
-                        {currency.symbol}{formatAmount(summaryMetrics.savings)}
-                      </p>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Category Analysis</h3>
+                      <p className="text-sm text-muted-foreground">Breakdown by spending categories</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Net Balance Card */}
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50/90 to-violet-50/70 dark:from-purple-950/40 dark:to-violet-950/30">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 dark:from-purple-400 dark:to-violet-500 flex items-center justify-center shadow-lg">
-
-                      <BarChart3 className="h-6 w-6 text-white" strokeWidth={1.5} />
-
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-muted-foreground font-medium mb-1">Net Balance</p>
-                      <p className={`text-xl font-bold truncate ${summaryMetrics.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {currency.symbol}{formatAmount(summaryMetrics.net)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-            </div>
-
-            {/* Accordion Sections - Changed to single select */}
-            <Accordion type="single" defaultValue="overview" collapsible className="space-y-4">
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
 
 
-              {/* Financial Overview Section */}
-              <AccordionItem value="overview">
-                <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-slate-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-
-                        <BarChart3 className="h-4 w-4 text-white" strokeWidth={1.5} />
-
-                      </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold">Daily Financial Overview</h3>
-                        <p className="text-sm text-muted-foreground">Income, expenses, and savings trends</p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                          <defs>
-                            <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
-                            </linearGradient>
-                            <linearGradient id="expensesGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
-                            </linearGradient>
-                            <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
-
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                          <YAxis tick={{ fontSize: 12 }} />
-
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                              border: 'none',
-                              borderRadius: '8px',
-                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                            }}
-
-                          />
-                          <Legend />
-                          <Area type="monotone" dataKey="income" stackId="1" stroke="#10b981" fill="url(#incomeGradient)" name="Income" />
-                          <Area type="monotone" dataKey="expenses" stackId="2" stroke="#ef4444" fill="url(#expensesGradient)" name="Expenses" />
-                          <Area type="monotone" dataKey="savings" stackId="3" stroke="#3b82f6" fill="url(#savingsGradient)" name="Savings" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
-
-              {/* Trends Analysis Section */}
-              <AccordionItem value="trends">
-                <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-slate-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                        <TrendingUp className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold">Financial Trends Analysis</h3>
-                        <p className="text-sm text-muted-foreground">Line chart view of your financial patterns</p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-6">
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                          <YAxis tick={{ fontSize: 12 }} />
-
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                              border: 'none',
-                              borderRadius: '8px',
-                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                            }}
-
-                          />
-                          <Legend />
-                          <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} name="Income" />
-                          <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} name="Expenses" />
-                          <Line type="monotone" dataKey="savings" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} name="Savings" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
-
-              {/* Category Analysis Section with Interactive Legend */}
-              <AccordionItem value="categories">
-                <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-slate-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
-
-                        <PieChart className="h-4 w-4 text-white" strokeWidth={1.5} />
-
-                      </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold">Category Analysis</h3>
-                        <p className="text-sm text-muted-foreground">Breakdown by spending categories</p>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-6">
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-
-
-                      {/* Interactive Pie Chart */}
-                      <Card className="border-0 bg-gradient-to-br from-white/80 to-slate-50/40 dark:from-slate-700/80 dark:to-slate-600/40">
-                        <CardHeader>
-                          <CardTitle className="text-lg">Category Distribution</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            {/* Pie Chart */}
-                            <div className="h-64">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <RechartsPieChart>
-                                  <Pie
-                                    dataKey="amount"
-                                    data={categoryData}
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                  >
-                                    {categoryData.map((entry: CategoryDataPoint, index: number) => (
-
-                                      <Cell
-                                        key={`cell-${index}`}
-
-                                        fill={COLORS[index % COLORS.length]}
-                                        opacity={hoveredLegendItem === null || hoveredLegendItem === entry.category ? 1 : 0.3}
-                                        stroke={hoveredLegendItem === entry.category ? "#333" : "none"}
-                                        strokeWidth={hoveredLegendItem === entry.category ? 2 : 0}
-                                      />
-                                    ))}
-                                  </Pie>
-
-                                  <Tooltip
-                                    formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
-                                    contentStyle={{
-                                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                      border: 'none',
-                                      borderRadius: '8px',
-                                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                    }}
-
-                                  />
-                                </RechartsPieChart>
-                              </ResponsiveContainer>
-                            </div>
-
-                            {/* Interactive Legend */}
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                              {categoryData.map((entry: CategoryDataPoint, index: number) => {
-                                const percentage = totalAmount > 0 ? ((entry.amount / totalAmount) * 100).toFixed(1) : '0';
-                                return (
-                                  <div
-                                    key={entry.category}
-                                    className={cn(
-                                      "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200",
-                                      "hover:bg-slate-100 dark:hover:bg-slate-700",
-                                      hoveredLegendItem === entry.category && "bg-slate-100 dark:bg-slate-700 shadow-sm"
-                                    )}
-                                    onMouseEnter={() => setHoveredLegendItem(entry.category)}
-                                    onMouseLeave={() => setHoveredLegendItem(null)}
-                                  >
-                                    <div className="flex items-center gap-3">
-
-                                      <div
-
-                                        className="w-4 h-4 rounded-full"
-                                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                                      />
-                                      <span className="font-medium text-sm">{entry.category}</span>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="font-semibold text-sm">
-                                        {currency.symbol}{formatAmount(entry.amount)}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground">
-                                        {percentage}%
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Bar Chart */}
-                      <Card className="border-0 bg-gradient-to-br from-white/80 to-slate-50/40 dark:from-slate-700/80 dark:to-slate-600/40">
-                        <CardHeader>
-                          <CardTitle className="text-lg">Top Categories by Amount</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-80">
+                    {/* Interactive Pie Chart */}
+                    <Card className="border-0 bg-gradient-to-br from-white/80 to-slate-50/40 dark:from-slate-700/80 dark:to-slate-600/40">
+                      <CardHeader>
+                        <CardTitle className="text-lg">Category Distribution</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {/* Pie Chart */}
+                          <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={categoryData.slice(0, 8)} layout="horizontal">
-                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                                <XAxis type="number" tick={{ fontSize: 12 }} />
+                              <RechartsPieChart>
+                                <Pie
+                                  dataKey="amount"
+                                  data={categoryData}
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={80}
+                                  fill="#8884d8"
+                                >
+                                  {categoryData.map((entry: CategoryDataPoint, index: number) => (
 
-                                <YAxis dataKey="category" type="category" tick={{ fontSize: 10 }} />
+                                    <Cell
+                                      key={`cell-${index}`}
+
+                                      fill={COLORS[index % COLORS.length]}
+                                      opacity={hoveredLegendItem === null || hoveredLegendItem === entry.category ? 1 : 0.3}
+                                      stroke={hoveredLegendItem === entry.category ? "#333" : "none"}
+                                      strokeWidth={hoveredLegendItem === entry.category ? 2 : 0}
+                                    />
+                                  ))}
+                                </Pie>
+
                                 <Tooltip
                                   formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
                                   contentStyle={{
@@ -770,51 +690,114 @@ const ReportsPage = () => {
                                   }}
 
                                 />
-                                <Bar dataKey="amount" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                              </BarChart>
+                              </RechartsPieChart>
                             </ResponsiveContainer>
                           </div>
-                        </CardContent>
-                      </Card>
 
+                          {/* Interactive Legend */}
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {categoryData.map((entry: CategoryDataPoint, index: number) => {
+                              const percentage = totalAmount > 0 ? ((entry.amount / totalAmount) * 100).toFixed(1) : '0';
+                              return (
+                                <div
+                                  key={entry.category}
+                                  className={cn(
+                                    "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200",
+                                    "hover:bg-slate-100 dark:hover:bg-slate-700",
+                                    hoveredLegendItem === entry.category && "bg-slate-100 dark:bg-slate-700 shadow-sm"
+                                  )}
+                                  onMouseEnter={() => setHoveredLegendItem(entry.category)}
+                                  onMouseLeave={() => setHoveredLegendItem(null)}
+                                >
+                                  <div className="flex items-center gap-3">
+
+                                    <div
+
+                                      className="w-4 h-4 rounded-full"
+                                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                    />
+                                    <span className="font-medium text-sm">{entry.category}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-semibold text-sm">
+                                      {currency.symbol}{formatAmount(entry.amount)}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {percentage}%
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Bar Chart */}
+                    <Card className="border-0 bg-gradient-to-br from-white/80 to-slate-50/40 dark:from-slate-700/80 dark:to-slate-600/40">
+                      <CardHeader>
+                        <CardTitle className="text-lg">Top Categories by Amount</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-80">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={categoryData.slice(0, 8)} layout="horizontal">
+                              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                              <XAxis type="number" tick={{ fontSize: 12 }} />
+
+                              <YAxis dataKey="category" type="category" tick={{ fontSize: 10 }} />
+                              <Tooltip
+                                formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
+                                contentStyle={{
+                                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                }}
+
+                              />
+                              <Bar dataKey="amount" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                  </div>
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
+
+            {/* Transaction Details Section */}
+            <AccordionItem value="transactions">
+              <Card className="border-border bg-card">
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-white" />
                     </div>
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
-
-              {/* Transaction Details Section */}
-              <AccordionItem value="transactions">
-                <Card className="shadow-lg border-0 bg-gradient-to-br from-white/95 to-slate-50/50 dark:from-slate-800/95 dark:to-slate-700/50">
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                        <FileText className="h-4 w-4 text-white" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold">Transaction Details</h3>
-                        <p className="text-sm text-muted-foreground">Complete list of filtered transactions</p>
-                      </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold">Transaction Details</h3>
+                      <p className="text-sm text-muted-foreground">Complete list of filtered transactions</p>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-6">
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
 
-                    <TransactionsTable
+                  <TransactionsTable
 
-                      transactions={filteredTransactions}
-                      currency={currency}
-                    />
-                  </AccordionContent>
-                </Card>
-              </AccordionItem>
+                    transactions={filteredTransactions}
+                    currency={currency}
+                  />
+                </AccordionContent>
+              </Card>
+            </AccordionItem>
 
-            </Accordion>
-
-
-          </div >
-        </div >
-      </PullToRefresh >
-    </Layout >
-
+          </Accordion>
+        </div>
+      </PullToRefresh>
+    </Layout>
   );
 };
 

@@ -54,7 +54,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.service_provider || !formData.card_type || !formData.last_four_digits || !formData.amount) {
       toast({
         title: "Error",
@@ -84,7 +84,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
     }
 
     setLoading(true);
-    
+
     try {
       // Calculate next billing date if not provided and status is active
       let nextBillingDate = formData.next_billing_date;
@@ -105,7 +105,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
         next_billing_date: nextBillingDate || undefined,
         last_transaction_date: formData.status === 'active' ? new Date().toISOString().split('T')[0] : undefined
       });
-      
+
       onOpenChange(false);
     } catch (error) {
       // Error is handled in the parent component
@@ -116,13 +116,14 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
         <DialogHeader>
           <DialogTitle>
             {subscription ? 'Edit Subscription' : 'Add New Subscription'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="service_provider">Service Provider</Label>
@@ -181,7 +182,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
             <Label htmlFor="subscription_type">Subscription Type</Label>
             <Select
               value={formData.subscription_type}
-              onValueChange={(value: 'monthly' | 'annual') => 
+              onValueChange={(value: 'monthly' | 'annual') =>
                 setFormData(prev => ({ ...prev, subscription_type: value }))
               }
             >
@@ -214,7 +215,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
             <Label htmlFor="status">Status</Label>
             <Select
               value={formData.status}
-              onValueChange={(value: 'inactive' | 'active' | 'canceled' | 'expired') => 
+              onValueChange={(value: 'inactive' | 'active' | 'canceled' | 'expired') =>
                 setFormData(prev => ({ ...prev, status: value }))
               }
             >

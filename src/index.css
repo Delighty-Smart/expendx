@@ -227,15 +227,11 @@
   .scrollable-container,
   .overflow-auto,
   .overflow-y-auto,
-  .overflow-x-auto,
-  [class*="overflow-"],
-  [role="dialog"],
-  [role="listbox"],
-  [role="menu"] {
+  .overflow-x-auto {
     overflow-y: auto !important;
     scroll-behavior: smooth !important;
     -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
+    overscroll-behavior: auto !important;
     scroll-padding: 0.5rem !important;
     scrollbar-width: thin !important;
   }
@@ -415,10 +411,6 @@
 
 /* Mobile Optimizations */
 @media (max-width: 640px) {
-  .container {
-    @apply px-3;
-  }
-
   /* Improved touch scrolling for mobile */
   .overflow-auto,
   .overflow-y-auto,
@@ -544,24 +536,9 @@
 }
 
 /* Dark mode improvements - rewritten without nested @apply */
-.dark .transaction-row {
-  background-color: hsl(217.2 32.6% 17.5%);
-  border-color: hsl(217.2 32.6% 22%);
-}
-
-.dark .transaction-row:hover {
-  background-color: hsl(217.2 32.6% 20%);
-}
-
-.dark .transaction-month-group>div:first-child {
-  background-color: hsl(217.2 32.6% 15%);
-  border-color: hsl(217.2 32.6% 22%);
-}
-
-.dark .transaction-day-group>div:first-child {
-  background-color: hsl(217.2 32.6% 12%);
-  border-color: hsl(217.2 32.6% 20%);
-  color: hsl(210 40% 98%);
+/* Dark mode improvements - simplified for minimalism */
+.dark .text-muted-foreground {
+  color: hsl(215 20.2% 70%);
 }
 
 .dark .card {
@@ -606,8 +583,8 @@
 .scroll-smooth {
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior: contain !important;
-  touch-action: pan-y !important;
+  overscroll-behavior: auto !important;
+  touch-action: auto !important;
   scrollbar-width: thin !important;
 }
 
@@ -616,11 +593,11 @@
   overflow-x: hidden !important;
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
+  overscroll-behavior-y: auto !important;
   scrollbar-width: thin !important;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent !important;
   scroll-padding: 0.5rem !important;
-  touch-action: pan-y !important;
+  touch-action: auto !important;
   -ms-overflow-style: auto !important;
 }
 
@@ -658,7 +635,7 @@
   .dropdown-content,
   .popover-content {
     -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
+    touch-action: auto !important;
     overflow-y: auto !important;
   }
 

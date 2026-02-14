@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
+import {
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Dialog, DialogContent, DialogDescription, 
-  DialogFooter, DialogHeader, DialogTitle 
+import {
+  Dialog, DialogContent, DialogDescription,
+  DialogFooter, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -51,13 +51,13 @@ const FeedbackManagement = () => {
     response: "",
     userEmail: "",
   });
-  
+
   const { toast } = useToast();
 
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch user feedback without trying to join with user_profiles
       const { data, error } = await supabase
         .from('user_feedback')
@@ -65,7 +65,7 @@ const FeedbackManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       console.log('Fetched feedbacks:', data);
 
       // Now fetch user details separately for each feedback
@@ -107,7 +107,7 @@ const FeedbackManagement = () => {
           }
         })
       );
-      
+
       setFeedbacks(processedData);
     } catch (error) {
       console.error('Error fetching feedback:', error);
@@ -145,7 +145,7 @@ const FeedbackManagement = () => {
     try {
       // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         toast({
           title: "Authentication Error",
@@ -177,7 +177,7 @@ const FeedbackManagement = () => {
         response: "",
         userEmail: "",
       });
-      
+
       // Refresh feedbacks
       fetchFeedbacks();
     } catch (error: any) {
@@ -224,8 +224,8 @@ const FeedbackManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">User Feedback</h2>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           onClick={toggleCommentsVisibility}
           className="flex items-center gap-2"
@@ -243,7 +243,7 @@ const FeedbackManagement = () => {
           )}
         </Button>
       </div>
-      
+
       {loading ? (
         <div className="flex justify-center py-8">
           <div className="animate-pulse text-muted-foreground">Loading feedback...</div>
@@ -291,8 +291,8 @@ const FeedbackManagement = () => {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => openResponseDialog(feedback)}
                     >
@@ -306,35 +306,36 @@ const FeedbackManagement = () => {
         </div>
       )}
 
-      <Dialog 
-        open={responseDialog.isOpen} 
-        onOpenChange={(open) => 
+      <Dialog
+        open={responseDialog.isOpen}
+        onOpenChange={(open) =>
           setResponseDialog(prev => ({ ...prev, isOpen: open }))
         }
       >
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-lg overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
           <DialogHeader>
             <DialogTitle>Respond to Feedback</DialogTitle>
             <DialogDescription>
               Send a response to {responseDialog.userEmail}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <Textarea
               value={responseDialog.response}
-              onChange={(e) => 
+              onChange={(e) =>
                 setResponseDialog(prev => ({ ...prev, response: e.target.value }))
               }
               placeholder="Type your response here..."
               className="min-h-[150px]"
             />
           </div>
-          
+
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => 
+              onClick={() =>
                 setResponseDialog(prev => ({ ...prev, isOpen: false }))
               }
             >

@@ -35,7 +35,7 @@ export function SavingsGoalForm({
   const { toast } = useToast();
   const { currency } = useSettings();
   const [loading, setLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof savingsGoalSchema>>({
     resolver: zodResolver(savingsGoalSchema),
     defaultValues: {
@@ -55,12 +55,12 @@ export function SavingsGoalForm({
             .select("*")
             .eq("id", savingsGoalId)
             .single();
-            
+
           if (error) {
             console.error("Error fetching savings goal:", error);
             return;
           }
-          
+
           if (data) {
             const goalData = data as unknown as SavingsGoal;
             form.reset({
@@ -72,7 +72,7 @@ export function SavingsGoalForm({
           console.error("Failed to fetch savings goal:", error);
         }
       };
-      
+
       fetchSavingsGoal();
     } else if (open) {
       form.reset({
@@ -87,7 +87,7 @@ export function SavingsGoalForm({
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-      
+
       const savingsGoalData = {
         category: values.category,
         target_amount: parseFloat(values.target_amount),
@@ -100,12 +100,12 @@ export function SavingsGoalForm({
           .from("savings_goals" as any)
           .update(savingsGoalData)
           .eq('id', savingsGoalId);
-          
+
         if (error) {
           console.error("Update error:", error);
           throw error;
         }
-        
+
         toast({
           title: "Success",
           description: "Savings goal updated successfully"
@@ -118,12 +118,12 @@ export function SavingsGoalForm({
           .eq('category', values.category)
           .eq('user_id', user.id)
           .maybeSingle();
-          
+
         if (checkError) {
           console.error("Check error:", checkError);
           throw checkError;
         }
-        
+
         if (existingGoal && 'id' in existingGoal) {
           // Update the existing goal instead of creating a new one
           const { error } = await supabase
@@ -132,12 +132,12 @@ export function SavingsGoalForm({
               target_amount: parseFloat(values.target_amount)
             })
             .eq('id', existingGoal.id);
-            
+
           if (error) {
             console.error("Update error:", error);
             throw error;
           }
-          
+
           toast({
             title: "Success",
             description: "Savings goal updated successfully"
@@ -147,12 +147,12 @@ export function SavingsGoalForm({
           const { error } = await supabase
             .from("savings_goals" as any)
             .insert([savingsGoalData]);
-            
+
           if (error) {
             console.error("Insert error:", error);
             throw error;
           }
-          
+
           toast({
             title: "Success",
             description: "Savings goal added successfully"
@@ -161,7 +161,7 @@ export function SavingsGoalForm({
       }
 
       onOpenChange(false);
-      
+
       if (onSavingsGoalAdded) {
         onSavingsGoalAdded();
       }
@@ -183,7 +183,8 @@ export function SavingsGoalForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-[425px] w-[95%] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit' : 'Add'} Savings Goal</DialogTitle>
           <DialogDescription>

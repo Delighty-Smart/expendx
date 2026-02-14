@@ -87,7 +87,8 @@ export function MonthlyIncomeForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
         <DialogHeader>
           <DialogTitle>Set Monthly Income</DialogTitle>
           <DialogDescription>

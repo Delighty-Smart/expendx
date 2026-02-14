@@ -10,7 +10,7 @@ export function useSubscriptions() {
 
   useEffect(() => {
     fetchSubscriptions();
-    
+
     // Set up real-time subscription
     const channel = supabase
       .channel('subscriptions-changes')
@@ -61,12 +61,7 @@ export function useSubscriptions() {
         status: item.status as 'inactive' | 'active' | 'canceled' | 'expired'
       })));
     } catch (error) {
-      console.error('Error fetching subscriptions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load subscriptions",
-        variant: "destructive"
-      });
+      console.warn('Silent failure: Could not load subscriptions for integration:', error);
     } finally {
       setLoading(false);
     }

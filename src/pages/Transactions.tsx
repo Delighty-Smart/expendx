@@ -359,7 +359,7 @@ const TransactionsPage = () => {
   return (
     <Layout>
 
-      <PullToRefresh onRefresh={handleRefresh}>
+      <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
         <div className="space-y-6 pb-24">
 
           <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -406,7 +406,7 @@ const TransactionsPage = () => {
           </div>
 
 
-          <Card className="p-0 bg-card border-border">
+          <Card className="bg-card border-border">
             <div className="p-4 border-b border-border bg-card">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
@@ -577,22 +577,21 @@ const TransactionsPage = () => {
                 <LoadingState size="lg" message="Loading transactions..." />
               </div>
             ) : Object.keys(groupedTransactions).length > 0 ? (
-              <div className="divide-y divide-border">
+              <div className="space-y-4">
                 {Object.entries(groupedTransactions).map(([month, days]) => {
                   const { income, expense } = getMonthlyTotals(month);
                   const allDayTransactions = Object.values(days).flat();
 
 
                   return (
-                    <div key={month} className="transaction-month-group">
+                    <div key={month} className="transaction-month-group border-t border-border/50 first:border-t-0">
                       <div
-
-                        className={`bg-muted/50 dark:bg-muted/20 p-4 border-b border-border ${selectionMode ? 'cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30' : ''}`}
+                        className={`px-6 pt-6 pb-2 ${selectionMode ? 'cursor-pointer' : ''}`}
                         onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
                       >
                         <div className="flex flex-col">
                           <div className="flex justify-between items-center">
-                            <span className="font-medium text-foreground">{month}</span>
+                            <span className="text-sm font-semibold text-foreground uppercase tracking-wider">{month}</span>
                             {selectionMode && (
 
                               <div className={`h-4 w-4 rounded-sm border-2 border-primary ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
@@ -604,26 +603,26 @@ const TransactionsPage = () => {
 
                             )}
                           </div>
-                          <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
-                            <div>In: {currencySymbol}{formatAmount(income)}</div>
-                            <div>Out: {currencySymbol}{formatAmount(expense)}</div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mt-0.5">
+                            <div className="flex gap-4">
+                              <span>In: {currencySymbol}{formatAmount(income)}</span>
+                              <span>Out: {currencySymbol}{formatAmount(expense)}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="divide-y divide-border">
+                      <div className="space-y-4">
                         {Object.entries(days)
                           .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
                           .map(([day, dayTransactions]) => (
                             <div key={day} className="transaction-day-group">
 
                               <div
-
-                                className={`px-4 py-2 bg-muted/30 dark:bg-muted/10 border-b border-border text-sm text-muted-foreground flex items-center justify-between ${selectionMode ? 'cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/20' : ''}`}
+                                className={`px-6 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between ${selectionMode ? 'cursor-pointer' : ''}`}
                                 onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
                               >
-                                <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
-
+                                <span>{format(new Date(day), "EEEE, MMM d")}</span>
 
                                 {selectionMode && (
                                   <div className={`h-4 w-4 rounded-sm border-2 border-primary ${dayTransactions.every(t => selectedTransactions.includes(t.id))
@@ -636,7 +635,7 @@ const TransactionsPage = () => {
                                 )}
                               </div>
 
-                              <div className="divide-y divide-border">
+                              <div className="space-y-1">
                                 {dayTransactions.map((transaction) => {
                                   const syncStatus = getTransactionSyncStatus(transaction.id);
 
@@ -644,7 +643,7 @@ const TransactionsPage = () => {
                                   return (
                                     <div
                                       key={transaction.id}
-                                      className={`transaction-row p-4 flex items-center gap-4 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
+                                      className={`transaction-row py-3 px-6 flex items-center gap-4 bg-transparent hover:bg-accent/10 transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
                                       onClick={() => selectionMode
                                         ? toggleTransactionSelection(transaction.id)
 
@@ -660,21 +659,17 @@ const TransactionsPage = () => {
                                         />
                                       )}
 
-                                      <div className="flex-shrink-0">
-                                        {renderTransactionIcon(transaction.type as TransactionType)}
-                                      </div>
-
 
                                       <div className="flex-1 flex flex-col gap-0.5">
                                         <div className="flex items-center gap-2">
-                                          <p className="font-semibold text-base leading-tight text-foreground">
+                                          <p className="font-medium text-[15px] leading-tight text-foreground">
 
                                             {transaction.description}
                                           </p>
                                           <PendingSyncIndicator status={syncStatus} size="sm" />
                                         </div>
 
-                                        <p className="text-sm text-muted-foreground leading-none">
+                                        <p className="text-xs text-muted-foreground/70 leading-none">
 
                                           {transaction.category}
                                         </p>
@@ -689,7 +684,7 @@ const TransactionsPage = () => {
                                             : "text-blue-600 dark:text-blue-400"
                                           }`}
                                       >
-                                        <p className="font-semibold text-base leading-tight">
+                                        <p className="font-medium text-[15px] leading-tight">
                                           {transaction.type === "credit"
                                             ? "+"
                                             : transaction.type === "debit"
@@ -723,7 +718,7 @@ const TransactionsPage = () => {
 
 
             {/* Infinite scroll loader */}
-            <div ref={observerTarget} className="h-10 flex items-center justify-center p-4">
+            <div ref={observerTarget} className="h-20 flex flex-col items-center justify-center p-6 pb-12">
               {isFetchingNextPage && <LoadingState size="sm" message="Loading more..." />}
             </div>
 
@@ -770,7 +765,7 @@ const TransactionsPage = () => {
           </AlertDialogContent>
         </AlertDialog>
       </PullToRefresh>
-    </Layout>
+    </Layout >
   );
 };
 

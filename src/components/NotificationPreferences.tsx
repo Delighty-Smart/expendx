@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, Clock, Smartphone } from "lucide-react";
 import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationDescription, notificationScheduler } from "@/services/notificationScheduler";
+import { Switch } from "@/components/ui/switch";
 
 interface NotificationPreference {
   id: string;

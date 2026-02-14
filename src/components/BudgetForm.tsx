@@ -56,7 +56,7 @@ export function BudgetForm({
   const { toast } = useToast();
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof budgetSchema>>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
@@ -72,7 +72,7 @@ export function BudgetForm({
         try {
           const fetchedCategories = await getCategoriesForType("debit");
           setCategories(fetchedCategories);
-          
+
           if (initialCategory) {
             form.setValue("category", initialCategory);
           }
@@ -80,7 +80,7 @@ export function BudgetForm({
           console.error("Error loading expense categories:", error);
         }
       };
-      
+
       loadCategories();
     }
   }, [open, form, initialCategory]);
@@ -136,7 +136,8 @@ export function BudgetForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
         <DialogHeader>
           <DialogTitle className="text-lg">Set Budget Limit</DialogTitle>
           <DialogDescription className="text-sm">
@@ -151,8 +152,8 @@ export function BudgetForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Category</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     value={field.value}
                     disabled={!!initialCategory || loading || categories.length === 0}
                   >
@@ -207,7 +208,7 @@ export function BudgetForm({
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 className="h-9 text-sm"
                 disabled={loading}

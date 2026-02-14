@@ -35,7 +35,7 @@ export function SavingsWithdrawalForm({
   const { toast } = useToast();
   const { currency } = useSettings();
   const [loading, setLoading] = useState(false);
-  
+
   const form = useForm<z.infer<typeof withdrawalSchema>>({
     resolver: zodResolver(withdrawalSchema),
     defaultValues: {
@@ -70,7 +70,7 @@ export function SavingsWithdrawalForm({
 
   const calculateSavingsByCategory = (category: string) => {
     if (!transactionsData) return 0;
-    
+
     return transactionsData
       .filter((t) => t.category === category)
       .reduce((sum, t) => sum + t.amount, 0);
@@ -81,10 +81,10 @@ export function SavingsWithdrawalForm({
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-      
+
       const withdrawalAmount = parseFloat(values.amount);
       const availableSavings = calculateSavingsByCategory(values.category);
-      
+
       if (withdrawalAmount > availableSavings) {
         toast({
           title: "Insufficient funds",
@@ -93,9 +93,9 @@ export function SavingsWithdrawalForm({
         });
         return;
       }
-      
+
       const today = new Date().toISOString().split('T')[0];
-      
+
       // Create withdrawal transaction (negative savings entry)
       const { error: savingsError } = await supabase
         .from('transactions')
@@ -107,12 +107,12 @@ export function SavingsWithdrawalForm({
           description: `Withdrawal: ${values.description}`,
           user_id: user.id
         }]);
-        
+
       if (savingsError) {
         console.error("Savings error:", savingsError);
         throw savingsError;
       }
-      
+
       // Add to wallet balance (credit entry)
       const { error: creditError } = await supabase
         .from('transactions')
@@ -124,19 +124,19 @@ export function SavingsWithdrawalForm({
           description: `From ${values.category}: ${values.description}`,
           user_id: user.id
         }]);
-        
+
       if (creditError) {
         console.error("Credit error:", creditError);
         throw creditError;
       }
-      
+
       toast({
         title: "Success",
         description: `${currency.symbol}${withdrawalAmount.toFixed(2)} withdrawn successfully`
       });
 
       onOpenChange(false);
-      
+
       if (onWithdrawalComplete) {
         onWithdrawalComplete();
       }
@@ -161,7 +161,8 @@ export function SavingsWithdrawalForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
         <DialogHeader>
           <DialogTitle>Withdraw from Savings</DialogTitle>
           <DialogDescription>

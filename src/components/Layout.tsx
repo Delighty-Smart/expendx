@@ -173,21 +173,23 @@ const Layout = ({
 
     <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
-    <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 flex items-center justify-between px-3 z-50">
-      <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="animated-button touch-manipulation">
-        {isSidebarOpen ? (
-          <X className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} />
-        ) : (
-          <Menu className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} />
-        )}
-      </Button>
-      <div className="h-8 md:h-9">
-        <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-full object-contain" />
-      </div>
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="animated-button touch-manipulation" onClick={toggleTheme}>
-          {theme === "dark" ? <Moon className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} /> : <Sun className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} />}
+    <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 z-50">
+      <div className="container mx-auto h-full flex items-center justify-between">
+        <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="animated-button touch-manipulation">
+          {isSidebarOpen ? (
+            <X className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} />
+          ) : (
+            <Menu className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} />
+          )}
         </Button>
+        <div className="h-8 md:h-9">
+          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-full object-contain" />
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="animated-button touch-manipulation" onClick={toggleTheme}>
+            {theme === "dark" ? <Moon className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} /> : <Sun className="h-6 w-6 text-foreground md:h-5 md:w-5" strokeWidth={1.5} />}
+          </Button>
+        </div>
       </div>
     </header>
 
@@ -271,7 +273,7 @@ const Layout = ({
     </aside>
 
     <main className={`pt-14 lg:pt-0 lg:pl-64 min-h-screen transition-all duration-300 ${isSidebarOpen ? "brightness-50 lg:brightness-100" : ""}`} onClick={() => isSidebarOpen && setIsSidebarOpen(false)}>
-      <div className="container mx-auto p-3 md:p-4 lg:p-6 animate-fadeIn">
+      <div className="container mx-auto py-3 md:p-4 lg:p-6 animate-fadeIn">
         {children}
       </div>
     </main>

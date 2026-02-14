@@ -1,20 +1,30 @@
+declare const Deno: any;
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { imageBase64 } = await req.json();
+    const json = await req.json().catch(() => ({}));
+    const { imageBase64 } = json;
+
+    if (!imageBase64) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'No image data received. The pulse-check succeeded, but the image payload was empty.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
@@ -91,9 +101,17 @@ serve(async (req) => {
     const data = await response.json();
     console.log('AI response:', JSON.stringify(data));
 
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (data.error) {
+      console.error('AI API logic error:', data.error);
+      throw new Error(`AI API error: ${data.error.message || JSON.stringify(data.error)}`);
+    }
+
+    const message = data.choices?.[0]?.message;
+    const toolCall = message?.tool_calls?.[0];
+
     if (!toolCall) {
-      throw new Error('No tool call in response');
+      console.error('No tool call in AI response. Message content:', message?.content);
+      throw new Error('Receipt analysis failed: The AI could not find structured data. Please try a clearer photo.');
     }
 
     const extractedData = JSON.parse(toolCall.function.arguments);
@@ -106,13 +124,13 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in extract-receipt-data:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

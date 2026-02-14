@@ -112,10 +112,10 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       style={{
-        // Disable native browser refresh behavior
-        overscrollBehaviorY: "none",
+        // Disable native browser refresh behavior only when at the top
+        overscrollBehaviorY: pullPixels > 0 ? "none" : "auto",
         // Allow vertical scrolling
-        touchAction: "pan-y",
+        touchAction: "auto",
         position: "relative",
         minHeight: "100%"
       }}

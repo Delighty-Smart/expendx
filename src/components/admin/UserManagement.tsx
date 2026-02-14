@@ -60,7 +60,7 @@ const UserManagement = () => {
         .select('*');
 
       if (error) throw error;
-      
+
       if (data) {
         setUsers(data);
         const uniqueCountries = [...new Set(data.map(user => user.country).filter(Boolean))];
@@ -236,268 +236,270 @@ const UserManagement = () => {
     }
   };
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="font-bold text-base">User Management</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={toggleInfoVisibility} className="flex items-center gap-2 text-base">
-            {showInfo ? <>
-                <EyeOff className="h-4 w-4" />
-                <span>Hide Info</span>
-              </> : <>
-                <Eye className="h-4 w-4" />
-                <span>Show Info</span>
-              </>}
-          </Button>
-          
-          <Dialog open={createUserModalOpen} onOpenChange={setCreateUserModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Create User
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>
-                  Enter the details for the new user.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="email" className="col-span-1">Email</Label>
-                  <Input id="email" type="email" value={newUserDetails.email} onChange={e => setNewUserDetails({
+    <div className="flex justify-between items-center">
+      <h2 className="font-bold text-base">User Management</h2>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={toggleInfoVisibility} className="flex items-center gap-2 text-base">
+          {showInfo ? <>
+            <EyeOff className="h-4 w-4" />
+            <span>Hide Info</span>
+          </> : <>
+            <Eye className="h-4 w-4" />
+            <span>Show Info</span>
+          </>}
+        </Button>
+
+        <Dialog open={createUserModalOpen} onOpenChange={setCreateUserModalOpen}>
+          <DialogTrigger asChild>
+            <Button variant="default">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Create User
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-lg overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
+            <DialogHeader>
+              <DialogTitle>Create New User</DialogTitle>
+              <DialogDescription>
+                Enter the details for the new user.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="email" className="col-span-1">Email</Label>
+                <Input id="email" type="email" value={newUserDetails.email} onChange={e => setNewUserDetails({
                   ...newUserDetails,
                   email: e.target.value
                 })} className="col-span-3" required />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="password" className="col-span-1">Password</Label>
-                  <Input id="password" type="password" value={newUserDetails.password} onChange={e => setNewUserDetails({
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="password" className="col-span-1">Password</Label>
+                <Input id="password" type="password" value={newUserDetails.password} onChange={e => setNewUserDetails({
                   ...newUserDetails,
                   password: e.target.value
                 })} className="col-span-3" required />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="firstName" className="col-span-1">First Name</Label>
-                  <Input id="firstName" value={newUserDetails.firstName} onChange={e => setNewUserDetails({
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="firstName" className="col-span-1">First Name</Label>
+                <Input id="firstName" value={newUserDetails.firstName} onChange={e => setNewUserDetails({
                   ...newUserDetails,
                   firstName: e.target.value
                 })} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="lastName" className="col-span-1">Last Name</Label>
-                  <Input id="lastName" value={newUserDetails.lastName} onChange={e => setNewUserDetails({
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="lastName" className="col-span-1">Last Name</Label>
+                <Input id="lastName" value={newUserDetails.lastName} onChange={e => setNewUserDetails({
                   ...newUserDetails,
                   lastName: e.target.value
                 })} className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="role" className="col-span-1">Role</Label>
-                  <Select value={newUserDetails.role} onValueChange={(value: UserRoleType) => setNewUserDetails({
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="role" className="col-span-1">Role</Label>
+                <Select value={newUserDetails.role} onValueChange={(value: UserRoleType) => setNewUserDetails({
                   ...newUserDetails,
                   role: value
                 })}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="pro">Pro</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="pro">Pro</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateUserModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreateUser}>Create User</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
-          <Dialog open={messageModalOpen} onOpenChange={setMessageModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="secondary" disabled={filteredUsers.length === 0}>
-                <Send className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Send Message to Users</DialogTitle>
-                <DialogDescription>
-                  This message will be sent to {selectedUsers.length > 0 ? selectedUsers.length : "all"} user(s).
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="messageTitle" className="col-span-1">Title</Label>
-                  <Input id="messageTitle" value={messageDetails.title} onChange={e => setMessageDetails({
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateUserModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreateUser}>Create User</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={messageModalOpen} onOpenChange={setMessageModalOpen}>
+          <DialogTrigger asChild>
+            <Button variant="secondary" disabled={filteredUsers.length === 0}>
+              <Send className="h-4 w-4 mr-2" />
+              Send Message
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-lg overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+
+            <DialogHeader>
+              <DialogTitle>Send Message to Users</DialogTitle>
+              <DialogDescription>
+                This message will be sent to {selectedUsers.length > 0 ? selectedUsers.length : "all"} user(s).
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="messageTitle" className="col-span-1">Title</Label>
+                <Input id="messageTitle" value={messageDetails.title} onChange={e => setMessageDetails({
                   ...messageDetails,
                   title: e.target.value
                 })} className="col-span-3" placeholder="Message title" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-2">
-                  <Label htmlFor="messageContent" className="col-span-1">Message</Label>
-                  <Input id="messageContent" value={messageDetails.message} onChange={e => setMessageDetails({
+              </div>
+              <div className="grid grid-cols-4 items-center gap-2">
+                <Label htmlFor="messageContent" className="col-span-1">Message</Label>
+                <Input id="messageContent" value={messageDetails.message} onChange={e => setMessageDetails({
                   ...messageDetails,
                   message: e.target.value
                 })} className="col-span-3" placeholder="Message content" />
-                </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setMessageModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleSendMessage}>Send Message</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setMessageModalOpen(false)}>Cancel</Button>
+              <Button onClick={handleSendMessage}>Send Message</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      
-      <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search users..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
-        </div>
-        
-        <div className="flex space-x-2">
-          <Select onValueChange={value => {
+    </div>
+
+    <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+      <div className="flex-1 relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Search users..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
+      </div>
+
+      <div className="flex space-x-2">
+        <Select onValueChange={value => {
           if (value === "all") {
             setSelectedRoles([]);
           } else {
             setSelectedRoles([value]);
           }
         }}>
-            <SelectTrigger className="w-40">
-              <div className="flex items-center">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                <span>Role</span>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="free">Free</SelectItem>
-              <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="premium">Premium</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select onValueChange={value => {
+          <SelectTrigger className="w-40">
+            <div className="flex items-center">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              <span>Role</span>
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Roles</SelectItem>
+            <SelectItem value="free">Free</SelectItem>
+            <SelectItem value="pro">Pro</SelectItem>
+            <SelectItem value="premium">Premium</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={value => {
           if (value === "all") {
             setSelectedCountries([]);
           } else {
             setSelectedCountries([value]);
           }
         }}>
-            <SelectTrigger className="w-40">
-              <div className="flex items-center">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                <span>Country</span>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Countries</SelectItem>
-              {countries.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          
-          <Select onValueChange={value => {
+          <SelectTrigger className="w-40">
+            <div className="flex items-center">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              <span>Country</span>
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Countries</SelectItem>
+            {countries.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select onValueChange={value => {
           if (value === "all") {
             setSelectedContinents([]);
           } else {
             setSelectedContinents([value]);
           }
         }}>
-            <SelectTrigger className="w-40">
-              <div className="flex items-center">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                <span>Continent</span>
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Continents</SelectItem>
-              {continents.map(continent => <SelectItem key={continent} value={continent}>{continent}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+          <SelectTrigger className="w-40">
+            <div className="flex items-center">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              <span>Continent</span>
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Continents</SelectItem>
+            {continents.map(continent => <SelectItem key={continent} value={continent}>{continent}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
-      
-      {loading ? <div className="flex justify-center py-8">
-          <div className="animate-pulse text-muted-foreground">Loading users...</div>
-        </div> : filteredUsers.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-          No users found with the current filters
-        </div> : <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox checked={selectAll} onCheckedChange={handleSelectAllChange} aria-label="Select all" size="sm" />
-                </TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map(user => <TableRow key={user.id}>
-                  <TableCell>
-                    <Checkbox checked={selectedUsers.includes(user.id)} onCheckedChange={() => handleCheckboxChange(user.id)} aria-label={`Select ${user.email}`} size="sm" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                        {user.avatar_url ? <img src={`/lovable-uploads/${user.avatar_url}`} alt={user.username || user.email} className="h-full w-full object-cover rounded-full" /> : <div className="font-semibold text-muted-foreground">
-                            {user.first_name?.[0]}{user.last_name?.[0]}
-                          </div>}
-                      </div>
-                      <div>
-                        <div className="font-medium">
-                          {showInfo ? user.username || user.email : <span className="blur-sm hover:blur-none transition-all select-none">
-                              {user.username || user.email}
-                            </span>}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {showInfo ? user.email : <span className="blur-sm hover:blur-none transition-all select-none">
-                              {user.email}
-                            </span>}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.country ? <div>
-                        {showInfo ? <>
-                            <div>{user.country}</div>
-                            <div className="text-sm text-muted-foreground">{user.continent}</div>
-                          </> : <span className="blur-sm hover:blur-none transition-all select-none">
-                            <div>{user.country}</div>
-                            <div className="text-sm text-muted-foreground">{user.continent}</div>
-                          </span>}
-                      </div> : <span className="text-muted-foreground">Not specified</span>}
-                  </TableCell>
-                  <TableCell>
-                    <Select defaultValue={user.role} onValueChange={(value: UserRoleType) => handleRoleChange(user.id, value)}>
-                      <SelectTrigger className="w-28">
-                        <SelectValue>
-                          <Badge variant={getRoleBadgeVariant(user.role) as any}>
-                            {user.role}
-                          </Badge>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="free">Free</SelectItem>
-                        <SelectItem value="pro">Pro</SelectItem>
-                        <SelectItem value="premium">Premium</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => {
+    </div>
+
+    {loading ? <div className="flex justify-center py-8">
+      <div className="animate-pulse text-muted-foreground">Loading users...</div>
+    </div> : filteredUsers.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+      No users found with the current filters
+    </div> : <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-10">
+              <Checkbox checked={selectAll} onCheckedChange={handleSelectAllChange} aria-label="Select all" size="sm" />
+            </TableHead>
+            <TableHead>User</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredUsers.map(user => <TableRow key={user.id}>
+            <TableCell>
+              <Checkbox checked={selectedUsers.includes(user.id)} onCheckedChange={() => handleCheckboxChange(user.id)} aria-label={`Select ${user.email}`} size="sm" />
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                  {user.avatar_url ? <img src={`/lovable-uploads/${user.avatar_url}`} alt={user.username || user.email} className="h-full w-full object-cover rounded-full" /> : <div className="font-semibold text-muted-foreground">
+                    {user.first_name?.[0]}{user.last_name?.[0]}
+                  </div>}
+                </div>
+                <div>
+                  <div className="font-medium">
+                    {showInfo ? user.username || user.email : <span className="blur-sm hover:blur-none transition-all select-none">
+                      {user.username || user.email}
+                    </span>}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {showInfo ? user.email : <span className="blur-sm hover:blur-none transition-all select-none">
+                      {user.email}
+                    </span>}
+                  </div>
+                </div>
+              </div>
+            </TableCell>
+            <TableCell>
+              {user.country ? <div>
+                {showInfo ? <>
+                  <div>{user.country}</div>
+                  <div className="text-sm text-muted-foreground">{user.continent}</div>
+                </> : <span className="blur-sm hover:blur-none transition-all select-none">
+                  <div>{user.country}</div>
+                  <div className="text-sm text-muted-foreground">{user.continent}</div>
+                </span>}
+              </div> : <span className="text-muted-foreground">Not specified</span>}
+            </TableCell>
+            <TableCell>
+              <Select defaultValue={user.role} onValueChange={(value: UserRoleType) => handleRoleChange(user.id, value)}>
+                <SelectTrigger className="w-28">
+                  <SelectValue>
+                    <Badge variant={getRoleBadgeVariant(user.role) as any}>
+                      {user.role}
+                    </Badge>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </TableCell>
+            <TableCell className="text-right">
+              <Button variant="ghost" size="icon" onClick={() => {
                 setMessageDetails({
                   title: "",
                   message: "",
@@ -505,16 +507,16 @@ const UserManagement = () => {
                 });
                 setMessageModalOpen(true);
               }}>
-                      <Send className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>)}
-            </TableBody>
-          </Table>
-        </div>}
-    </div>;
+                <Send className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Edit className="h-4 w-4" />
+              </Button>
+            </TableCell>
+          </TableRow>)}
+        </TableBody>
+      </Table>
+    </div>}
+  </div>;
 };
 export default UserManagement;

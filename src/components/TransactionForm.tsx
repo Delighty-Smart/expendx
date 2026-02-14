@@ -22,7 +22,7 @@ import { PendingSyncIndicator } from "./PendingSyncIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { useSmartCategorization } from "@/hooks/useSmartCategorization";
 import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
-import { ReceiptScanner } from "./ReceiptScanner";
+// import { ReceiptScanner } from "./ReceiptScanner";
 import { Badge } from "@/components/ui/badge";
 
 const transactionSchema = z.object({
@@ -55,7 +55,7 @@ export const TransactionForm = ({
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { getTransactionSyncStatus } = useEnhancedOfflineSync();
-  
+
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -71,6 +71,7 @@ export const TransactionForm = ({
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
 
+  /*
   const handleReceiptData = useCallback((data: {
     amount: number;
     date?: string;
@@ -86,6 +87,7 @@ export const TransactionForm = ({
       form.setValue('category', data.category);
     }
   }, [form]);
+  */
 
   // Helper function to get cached user ID for offline use
   const getCachedUserId = (): string | null => {
@@ -157,7 +159,7 @@ export const TransactionForm = ({
         }
       }
     };
-    
+
     cacheUserIdOnOpen();
   }, [open]);
 
@@ -172,7 +174,7 @@ export const TransactionForm = ({
   const onSubmit = useCallback(async (values: z.infer<typeof transactionSchema>) => {
     try {
       setLoading(true);
-      
+
       // Get user ID from cache or auth
       let userId = getCachedUserId();
       if (!userId && navigator.onLine) {
@@ -186,7 +188,7 @@ export const TransactionForm = ({
       if (!userId) {
         throw new Error("Unable to determine user ID. Please try again when online.");
       }
-      
+
       const transactionData = {
         date: values.date,
         amount: parseFloat(values.amount),
@@ -206,7 +208,7 @@ export const TransactionForm = ({
       if (transaction) {
         // Update existing transaction
         await enhancedOfflineManager.updateTransactionOffline(transaction.id, transactionData);
-        
+
         const isOffline = !navigator.onLine;
         toast({
           title: "Success",
@@ -215,7 +217,7 @@ export const TransactionForm = ({
       } else {
         // Insert new transaction
         await enhancedOfflineManager.addTransactionOffline(transactionData);
-        
+
         const isOffline = !navigator.onLine;
         toast({
           title: "Success",
@@ -228,9 +230,9 @@ export const TransactionForm = ({
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      
+
       onOpenChange(false);
-      
+
       if (onTransactionAdded) {
         onTransactionAdded();
       }
@@ -255,10 +257,11 @@ export const TransactionForm = ({
       }
       onOpenChange(open);
     }}>
-      <DialogContent 
-        className={`${isMobile ? 'w-[95%] max-w-[400px]' : 'sm:max-w-[500px]'} mx-auto overflow-hidden max-h-[90vh]`}
+      <DialogContent
+        className={`${isMobile ? 'w-[calc(100%-3rem)]' : 'sm:max-w-[440px]'} mx-auto overflow-y-auto max-h-[95vh] p-3 sm:p-6`}
       >
-        <ScrollArea 
+
+        <ScrollArea
           className="h-full px-1 overflow-y-auto"
           style={{
             overflowY: 'auto',
@@ -270,7 +273,7 @@ export const TransactionForm = ({
         >
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <DialogTitle className="text-xl font-semibold">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
+              <DialogTitle className="text-lg font-semibold">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
               <PendingSyncIndicator status={syncStatus} />
             </div>
             <DialogDescription className="text-sm leading-relaxed">
@@ -283,10 +286,10 @@ export const TransactionForm = ({
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <ReceiptScanner onDataExtracted={handleReceiptData} />
-              
-              <div className="grid grid-cols-2 gap-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* <ReceiptScanner onDataExtracted={handleReceiptData} /> */}
+
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="date"
@@ -428,9 +431,9 @@ export const TransactionForm = ({
                   <FormItem>
                     <FormLabel className="text-sm font-medium text-foreground">Description</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Enter transaction details..." 
-                        {...field} 
+                      <Textarea
+                        placeholder="Enter transaction details..."
+                        {...field}
                         className="resize-none text-sm rounded-lg border-border/50 focus:border-primary transition-colors min-h-[80px]"
                         disabled={loading}
                         rows={3}
@@ -442,9 +445,9 @@ export const TransactionForm = ({
               />
 
               <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => {
                     form.reset();
                     onOpenChange(false);
@@ -454,7 +457,7 @@ export const TransactionForm = ({
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   type="submit"
                   className="mobile-button rounded-lg transition-all hover:scale-105 touch-manipulation"
                   disabled={loading}
