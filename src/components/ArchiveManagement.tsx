@@ -53,7 +53,7 @@ export const ArchiveManagement = () => {
         .order("date", { ascending: false });
 
       if (error) throw error;
-      
+
       // Transform the data to match our interface
       const transformedData: ArchivedTransaction[] = (data || []).map(transaction => ({
         id: transaction.id,
@@ -64,7 +64,7 @@ export const ArchiveManagement = () => {
         description: transaction.description,
         archived: transaction.archived
       }));
-      
+
       setArchivedTransactions(transformedData);
     } catch (error: any) {
       toast({
@@ -83,7 +83,7 @@ export const ArchiveManagement = () => {
 
   const handleUnarchive = async (transactionIds?: string[]) => {
     const idsToUnarchive = transactionIds || selectedTransactions;
-    
+
     try {
       const { error } = await supabase
         .from("transactions")
@@ -94,7 +94,7 @@ export const ArchiveManagement = () => {
 
       await fetchArchivedTransactions();
       setSelectedTransactions([]);
-      
+
       toast({
         title: "Success",
         description: `${idsToUnarchive.length} transaction(s) unarchived successfully`
@@ -119,12 +119,12 @@ export const ArchiveManagement = () => {
 
       await fetchArchivedTransactions();
       setSelectedTransactions([]);
-      
+
       toast({
         title: "Success",
         description: "All archived transactions have been unarchived"
       });
-      
+
       setConfirmUnarchiveAllOpen(false);
     } catch (error: any) {
       toast({
@@ -147,12 +147,12 @@ export const ArchiveManagement = () => {
 
       await fetchArchivedTransactions();
       setSelectedTransactions([]);
-      
+
       toast({
         title: "Success",
         description: `${selectedTransactions.length} transaction(s) deleted permanently`
       });
-      
+
       setConfirmDeleteOpen(false);
     } catch (error: any) {
       toast({
@@ -171,17 +171,17 @@ export const ArchiveManagement = () => {
   };
 
   const toggleTransactionSelection = (id: string) => {
-    setSelectedTransactions(prev => 
+    setSelectedTransactions(prev =>
       prev.includes(id) ? prev.filter(transId => transId !== id) : [...prev, id]
     );
   };
 
   const selectAllInDay = (dayTransactions: ArchivedTransaction[], e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const dayIds = dayTransactions.map(t => t.id);
     const allSelected = dayIds.every(id => selectedTransactions.includes(id));
-    
+
     if (allSelected) {
       setSelectedTransactions(prev => prev.filter(id => !dayIds.includes(id)));
     } else {
@@ -197,10 +197,10 @@ export const ArchiveManagement = () => {
 
   const selectAllInMonth = (monthTransactions: ArchivedTransaction[], e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     const monthIds = monthTransactions.flat().map(t => t.id);
     const allSelected = monthIds.every(id => selectedTransactions.includes(id));
-    
+
     if (allSelected) {
       setSelectedTransactions(prev => prev.filter(id => !monthIds.includes(id)));
     } else {
@@ -350,11 +350,11 @@ export const ArchiveManagement = () => {
             {Object.entries(groupedTransactions).map(([month, days]) => {
               const { income, expense } = getMonthlyTotals(month);
               const allDayTransactions = Object.values(days).flat();
-              
+
               return (
                 <div key={month} className="transaction-month-group">
                   {/* Month header */}
-                  <div 
+                  <div
                     className="bg-muted/50 dark:bg-muted/20 p-4 border-b border-border cursor-pointer hover:bg-muted/70 dark:hover:bg-muted/30"
                     onClick={(e) => selectAllInMonth(allDayTransactions, e)}
                   >
@@ -374,13 +374,12 @@ export const ArchiveManagement = () => {
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Unarchive Month
                           </Button>
-                          <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
-                            allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                          <div className={`h-3 w-3 rounded-full border-2 border-primary ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
                               ? 'bg-primary'
                               : allDayTransactions.some(t => selectedTransactions.includes(t.id))
-                              ? 'bg-primary/30'
-                              : 'bg-background'
-                          }`}></div>
+                                ? 'bg-primary/30'
+                                : 'bg-background'
+                            }`}></div>
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
@@ -400,18 +399,17 @@ export const ArchiveManagement = () => {
                       .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
                       .map(([day, dayTransactions]) => (
                         <div key={day} className="transaction-day-group">
-                          <div 
+                          <div
                             className="px-4 py-2 bg-muted/30 dark:bg-muted/10 border-b border-border text-sm text-muted-foreground flex items-center justify-between cursor-pointer hover:bg-muted/50 dark:hover:bg-muted/20"
                             onClick={(e) => selectAllInDay(dayTransactions, e)}
                           >
                             <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
-                            <div className={`h-4 w-4 rounded-sm border-2 border-primary ${
-                              dayTransactions.every(t => selectedTransactions.includes(t.id))
+                            <div className={`h-3 w-3 rounded-full border-2 border-primary ${dayTransactions.every(t => selectedTransactions.includes(t.id))
                                 ? 'bg-primary'
                                 : dayTransactions.some(t => selectedTransactions.includes(t.id))
-                                ? 'bg-primary/30'
-                                : 'bg-background'
-                            }`}></div>
+                                  ? 'bg-primary/30'
+                                  : 'bg-background'
+                              }`}></div>
                           </div>
 
                           <div className="divide-y divide-border">
@@ -421,12 +419,13 @@ export const ArchiveManagement = () => {
                                 className="transaction-row p-4 flex items-center gap-3 bg-card hover:bg-accent/50 dark:hover:bg-accent/20 cursor-pointer"
                                 onClick={() => toggleTransactionSelection(transaction.id)}
                               >
-                                <Checkbox 
+                                <Checkbox
+                                  size="xs"
                                   checked={selectedTransactions.includes(transaction.id)}
-                                  onCheckedChange={(checked) => 
-                                    checked ? 
-                                    setSelectedTransactions(prev => [...prev, transaction.id]) :
-                                    setSelectedTransactions(prev => prev.filter(id => id !== transaction.id))
+                                  onCheckedChange={(checked) =>
+                                    checked ?
+                                      setSelectedTransactions(prev => [...prev, transaction.id]) :
+                                      setSelectedTransactions(prev => prev.filter(id => id !== transaction.id))
                                   }
                                 />
 
@@ -444,13 +443,12 @@ export const ArchiveManagement = () => {
                                 </div>
 
                                 <div
-                                  className={`text-right ${
-                                    transaction.type === "credit"
+                                  className={`text-right ${transaction.type === "credit"
                                       ? "text-green-600 dark:text-green-400"
                                       : transaction.type === "debit"
-                                      ? "text-red-600 dark:text-red-400"
-                                      : "text-blue-600 dark:text-blue-400"
-                                  }`}
+                                        ? "text-red-600 dark:text-red-400"
+                                        : "text-blue-600 dark:text-blue-400"
+                                    }`}
                                 >
                                   <p className="font-medium text-sm leading-tight">
                                     {transaction.type === "credit" ? "+" : transaction.type === "debit" ? "-" : ""}
@@ -486,7 +484,7 @@ export const ArchiveManagement = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={() => {
                 handleUnarchive();
                 setConfirmUnarchiveOpen(false);

@@ -8,7 +8,7 @@ import { useBudgetAlerts } from "@/hooks/useBudgetAlerts";
 import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard } from "lucide-react";
 
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTransactionData } from "@/hooks/useTransactionData";
@@ -22,7 +22,10 @@ import { updateUserStreak } from "@/lib/streak";
 import { startOfMonth, endOfMonth, addWeeks, subWeeks, eachDayOfInterval, format } from "date-fns";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, PieChart, Pie, Sector, AreaChart as RechartAreaChart, Area, LineChart as RechartLineChart, Line } from "recharts";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import StreakModal from "@/components/StreakModal";
+import UserAvatar from "@/components/UserAvatar";
+import { getUserProfile } from "@/lib/streak";
 
 // Transaction types
 interface TransactionData {
@@ -68,20 +71,19 @@ const IndexPage = () => {
 
 
   const today = new Date();
-  const firstDayOfMonth = startOfMonth(today).toISOString();
-  const lastDayOfMonth = endOfMonth(today).toISOString();
+  const firstDayOfMonth = format(startOfMonth(today), 'yyyy-MM-dd');
+  const lastDayOfMonth = format(endOfMonth(today), 'yyyy-MM-dd');
 
 
   // Fetch unread alerts
   useEffect(() => {
     const fetchUnreadAlerts = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
         const { data, error } = await supabase
           .from('alerts')
           .select('id')
-          .eq('user_id', user.id)
           .eq('read', false);
 
         if (error) throw error;
@@ -110,15 +112,12 @@ const IndexPage = () => {
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
     queryKey: ["monthly_income_estimate"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
 
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
-        .eq("user_id", user.id)
         .maybeSingle();
 
 
@@ -134,17 +133,14 @@ const IndexPage = () => {
   const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
     queryKey: ["user_streak"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
 
       await updateUserStreak();
 
       const { data, error } = await supabase
         .from("user_streaks")
         .select("*")
-        .eq("user_id", user.id)
         .maybeSingle();
 
 
@@ -154,21 +150,25 @@ const IndexPage = () => {
     },
   });
 
+  const { data: userProfile } = useQuery({
+    queryKey: ["user_profile"],
+    queryFn: async () => {
+      return await getUserProfile();
+    },
+  });
+
   // Query for monthly transactions (ONLY unarchived)
-  const { data: monthlyTransactionsData, refetch: refetchMonthlyTransactions } = useQuery({
+  const { data: monthlyTransactionsData, isLoading: isMonthlyTransactionsLoading, refetch: refetchMonthlyTransactions } = useQuery({
     queryKey: ["transactions", "monthly", firstDayOfMonth, lastDayOfMonth],
     queryFn: async () => {
       console.log("Dashboard: Fetching UNARCHIVED transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
 
-
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return [];
 
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
         .eq("archived", false) // ONLY unarchived transactions
         .gte("date", firstDayOfMonth)
         .lte("date", lastDayOfMonth)
@@ -181,20 +181,17 @@ const IndexPage = () => {
   });
 
   // Query for ALL unarchived transactions (for wallet balance)
-  const { data: allTransactionsData } = useQuery({
+  const { data: allTransactionsData, isLoading: isAllTransactionsLoading } = useQuery({
     queryKey: ["all_transactions", "unarchived"],
     queryFn: async () => {
       console.log("Dashboard: Fetching ALL UNARCHIVED transactions for wallet balance");
 
-
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return [];
 
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
         .eq("archived", false) // ONLY unarchived transactions
         .order("date", { ascending: false });
 
@@ -254,20 +251,6 @@ const IndexPage = () => {
       .reduce((sum, t) => sum + t.amount, 0) || 0;
   };
 
-  // Calculate all-time income from unarchived transactions only
-  const calculateTotalIncome = () => {
-    return allTransactions
-      ?.filter((t) => t.type === "credit")
-      .reduce((sum, t) => sum + t.amount, 0) || 0;
-  };
-
-  // Calculate all-time expenses from unarchived transactions only
-  const calculateTotalExpenses = () => {
-    return allTransactions
-      ?.filter((t) => t.type === "debit")
-      .reduce((sum, t) => sum + t.amount, 0) || 0;
-  };
-
   // Calculate all-time savings from unarchived transactions only
   const calculateTotalSavings = () => {
     return allTransactions
@@ -281,8 +264,12 @@ const IndexPage = () => {
 
 
   // Calculate wallet balance based on all-time UNARCHIVED transactions only
-  // Wallet Balance = Total Income (unarchived) - Total Expenses (unarchived) - Total Savings (unarchived)
-  const currentBalance = calculateTotalIncome() - calculateTotalExpenses() - calculateTotalSavings();
+  // Wallet Balance = Total Credits - Total Debits - Total Savings
+  // We need to re-calculate these locally or keep the functions. 
+  // Actually, let's just do it inline to keep it clean if we removed the functions.
+  const currentBalance = (allTransactions?.filter(t => t.type === 'credit').reduce((sum, t) => sum + t.amount, 0) || 0) -
+    (allTransactions?.filter(t => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0) || 0) -
+    (allTransactions?.filter(t => t.type === 'savings').reduce((sum, t) => sum + t.amount, 0) || 0);
 
   const progressPercentage = monthlyIncome > 0
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
@@ -458,14 +445,17 @@ const IndexPage = () => {
               <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="secondary"
-                size="icon"
-                className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none"
+              <button
+                className="rounded-full w-10 h-10 hover:opacity-80 transition-opacity flex items-center justify-center overflow-hidden"
                 onClick={() => navigate('/profile')}
               >
-                <User className="h-5 w-5" strokeWidth={1.5} />
-              </Button>
+                <UserAvatar
+                  url={userProfile?.avatar_url}
+                  name={userProfile?.username || userProfile?.email || "User"}
+                  className="w-full h-full"
+                  showDefaultGradient={false}
+                />
+              </button>
               <div className="relative">
                 <Button
                   variant="secondary"
@@ -497,15 +487,23 @@ const IndexPage = () => {
               </Button>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-[36px] font-semibold tracking-[-0.5px] text-foreground">
-                {currency.symbol}{formatAmount(currentBalance).split('.')[0]}
-              </span>
-              <span className="text-xl font-medium text-muted-foreground">
-                .{formatAmount(currentBalance).split('.')[1]}
-              </span>
+              {isAllTransactionsLoading ? (
+                <Skeleton className="h-10 w-32 mb-1" />
+              ) : (
+                <>
+                  <span className="text-[36px] font-semibold tracking-[-0.5px] text-foreground">
+                    {currency.symbol}{formatAmount(currentBalance).split('.')[0]}
+                  </span>
+                  <span className="text-xl font-medium text-muted-foreground">
+                    .{formatAmount(currentBalance).split('.')[1]}
+                  </span>
+                </>
+              )}
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-medium text-foreground">
-              {monthlyIncome > 0 ? (
+              {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
+                <Skeleton className="h-4 w-24" />
+              ) : monthlyIncome > 0 ? (
                 <>
                   <TrendingUp className="h-3 w-3 text-accent" strokeWidth={1.5} />
                   <span>{progressPercentage.toFixed(0)}% of monthly target</span>
@@ -538,8 +536,14 @@ const IndexPage = () => {
               <div className="flex flex-col gap-0.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Income</p>
                 <p className="text-lg font-bold tracking-tight text-foreground">
-                  <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
-                  {formatAmount(monthlyIncomeTotal)}
+                  {isMonthlyTransactionsLoading ? (
+                    <Skeleton className="h-6 w-20 mt-1" />
+                  ) : (
+                    <>
+                      <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
+                      {formatAmount(monthlyIncomeTotal)}
+                    </>
+                  )}
                 </p>
               </div>
               <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors">
@@ -552,8 +556,14 @@ const IndexPage = () => {
               <div className="flex flex-col gap-0.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
                 <p className="text-lg font-bold tracking-tight text-foreground">
-                  <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
-                  {formatAmount(monthlyExpenses)}
+                  {isMonthlyTransactionsLoading ? (
+                    <Skeleton className="h-6 w-20 mt-1" />
+                  ) : (
+                    <>
+                      <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
+                      {formatAmount(monthlyExpenses)}
+                    </>
+                  )}
                 </p>
               </div>
               <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
@@ -561,34 +571,46 @@ const IndexPage = () => {
               </div>
             </div>
 
-            {/* Total Income */}
-            <div className="p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100/50 dark:border-emerald-900/20 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <p className="text-xs font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider">Total In</p>
-                <p className="text-lg font-bold tracking-tight text-emerald-700 dark:text-emerald-300">
-                  <span className="text-xs font-normal opacity-70 mr-0.5">{currency.symbol}</span>
-                  {formatAmount(calculateTotalIncome())}
-                </p>
-              </div>
-              <div className="p-2 bg-emerald-500/10 rounded-full group-hover:bg-emerald-500/20 transition-colors">
-                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
-              </div>
-            </div>
+          </div>
 
-            {/* Total Expenses */}
-            <div className="p-3 rounded-2xl bg-red-50/50 dark:bg-red-950/10 border border-red-100/50 dark:border-red-900/20 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <p className="text-xs font-medium text-red-600/80 dark:text-red-400/80 uppercase tracking-wider">Total Out</p>
-                <p className="text-lg font-bold tracking-tight text-red-700 dark:text-red-300">
-                  <span className="text-xs font-normal opacity-70 mr-0.5">{currency.symbol}</span>
-                  {formatAmount(calculateTotalExpenses())}
-                </p>
+          {/* Quick Links */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <button
+              onClick={() => navigate('/transactions')}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            >
+              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <Receipt className="h-5 w-5" strokeWidth={1.5} />
               </div>
-              <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
-                <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
+              <span className="font-medium text-foreground text-sm">Transactions</span>
+            </button>
+            <button
+              onClick={() => navigate('/budgets')}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            >
+              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <DollarSign className="h-5 w-5" strokeWidth={1.5} />
               </div>
-            </div>
-
+              <span className="font-medium text-foreground text-sm">Budgets</span>
+            </button>
+            <button
+              onClick={() => navigate('/savings')}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            >
+              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <PiggyBank className="h-5 w-5" strokeWidth={1.5} />
+              </div>
+              <span className="font-medium text-foreground text-sm">Savings</span>
+            </button>
+            <button
+              onClick={() => navigate('/subscriptions')}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            >
+              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                <CreditCard className="h-5 w-5" strokeWidth={1.5} />
+              </div>
+              <span className="font-medium text-foreground text-sm">Subscriptions</span>
+            </button>
           </div>
 
           {/* Charts section - All using glass card style */}
@@ -685,30 +707,32 @@ const IndexPage = () => {
                 Daily Income & Expenses
               </h3>
               <div className="h-[300px] relative">
-                <div className="absolute top-0 right-0 flex items-center gap-2 z-10">
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={scrollToPreviousWeek}
-                    className="h-8 w-8 p-0"
-                    aria-label="Previous Week"
-                  >
-                    <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={scrollToNextWeek}
-                    className="h-8 w-8 p-0"
-                    aria-label="Next Week"
-                  >
-                    <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
-
-                  </Button>
-                </div>
-                <div className="text-center text-sm text-muted-foreground mt-2">
-                  Week of {format(currentWeekStart, 'MMMM d, yyyy')}
+                <div className="flex flex-col space-y-2 mb-4">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Week of {format(currentWeekStart, 'MMMM d, yyyy')}
+                    </div>
+                    <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={scrollToPreviousWeek}
+                        className="h-7 w-7 p-0 hover:bg-background"
+                        aria-label="Previous Week"
+                      >
+                        <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={scrollToNextWeek}
+                        className="h-7 w-7 p-0 hover:bg-background"
+                        aria-label="Next Week"
+                      >
+                        <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartAreaChart data={dailyData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>

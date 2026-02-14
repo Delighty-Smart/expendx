@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Card, GlassCard } from "@/components/ui/card";
 
-import { startOfMonth, endOfMonth } from "date-fns";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useCategories } from "@/hooks/useCategories";
 import { useTransactionData } from "@/hooks/useTransactionData";
 
@@ -35,11 +35,6 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
 
   const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
   const { categories: expenseCategories } = useCategories('debit');
-  const { transactions } = useTransactionData({
-    type: 'debit',
-    startDate: startOfMonth(new Date()).toISOString(),
-    endDate: endOfMonth(new Date()).toISOString()
-  });
 
   const { user } = useAuth();
   const { data: currentSpending = 0 } = useQuery({
@@ -48,8 +43,8 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
     queryFn: async () => {
       if (!user) return 0;
 
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString();
+      const firstDay = format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd');
+      const lastDay = format(new Date(now.getFullYear(), now.getMonth() + 1, 0), 'yyyy-MM-dd');
 
       const { data, error } = await supabase
         .from('transactions')
@@ -127,6 +122,11 @@ const BudgetsPage = () => {
   const { toast } = useToast();
   const { refreshData } = useRefresh();
   const { user } = useAuth();
+  const { transactions } = useTransactionData({
+    type: 'debit',
+    startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+    endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
+  });
 
   const { data: budgets, isLoading, isError } = useQuery({
     queryKey: ['budgets', user?.id],

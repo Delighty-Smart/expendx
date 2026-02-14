@@ -179,24 +179,21 @@ const Settings = () => {
                         type="single"
                         value={theme}
                         onValueChange={handleThemeChange}
-                        className="justify-start bg-muted/50 p-1 rounded-lg inline-flex"
+                        className="justify-start bg-muted/50 p-1 rounded-full inline-flex border border-border/40"
                       >
                         <ToggleGroupItem
                           value="light"
                           aria-label="Light mode"
-                          className="flex items-center gap-2 rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm transition-all duration-200 px-3 py-2"
+                          className="flex items-center justify-center rounded-full data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:shadow-sm transition-all duration-300 w-10 h-8"
                         >
-                          <Sun className="h-4 w-4" strokeWidth={1.5} />
-                          Light Mode
+                          <Sun className="h-4 w-4" strokeWidth={2} />
                         </ToggleGroupItem>
                         <ToggleGroupItem
                           value="dark"
                           aria-label="Dark mode"
-                          className="flex items-center gap-2 rounded-md data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm transition-all duration-200 px-3 py-2"
+                          className="flex items-center justify-center rounded-full data-[state=on]:bg-background data-[state=on]:text-primary data-[state=on]:shadow-sm transition-all duration-300 w-10 h-8"
                         >
-                          <Moon className="h-4 w-4" strokeWidth={1.5} />
-
-                          Dark Mode
+                          <Moon className="h-4 w-4" strokeWidth={2} />
                         </ToggleGroupItem>
                       </ToggleGroup>
                     </div>

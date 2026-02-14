@@ -50,7 +50,7 @@ class EnhancedOfflineManager {
         } else {
           localStorage.removeItem('cached_user_id');
         }
-      } catch {}
+      } catch { }
     });
 
     this.startPeriodicSync();
@@ -59,7 +59,7 @@ class EnhancedOfflineManager {
   private async initializeManager() {
     await this.loadSyncQueue();
     await this.loadDataCache();
-    
+
     if (this.isOnline) {
       await this.performFullDataSync();
     }
@@ -96,11 +96,11 @@ class EnhancedOfflineManager {
         this.cachedUserId = cached;
         return cached;
       }
-    } catch {}
+    } catch { }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('No authenticated user');
     this.cachedUserId = user.id;
-    try { localStorage.setItem('cached_user_id', user.id); } catch {}
+    try { localStorage.setItem('cached_user_id', user.id); } catch { }
     return user.id;
   }
 
@@ -137,10 +137,10 @@ class EnhancedOfflineManager {
       };
 
       await this.saveDataCache();
-      
+
       // Process any pending sync items
       await this.processSyncQueue();
-      
+
       localStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
       console.log('Full data sync completed successfully');
 
@@ -159,9 +159,9 @@ class EnhancedOfflineManager {
       .eq('user_id', userId)
       .eq('archived', false)
       .order('date', { ascending: false });
-    
+
     if (error) throw error;
-    
+
     return (data || []).map(item => ({
       ...item,
       type: item.type as TransactionType
@@ -173,7 +173,7 @@ class EnhancedOfflineManager {
       .from('budget_categories')
       .select('*')
       .eq('user_id', userId);
-    
+
     if (error) throw error;
     return data;
   }
@@ -183,7 +183,7 @@ class EnhancedOfflineManager {
       .from('savings_goals')
       .select('*')
       .eq('user_id', userId);
-    
+
     if (error) throw error;
     return data;
   }
@@ -194,7 +194,7 @@ class EnhancedOfflineManager {
       .select('*')
       .eq('id', userId)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     return data;
   }
@@ -205,7 +205,7 @@ class EnhancedOfflineManager {
       .select('*')
       .eq('user_id', userId)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     return data;
   }
@@ -213,9 +213,9 @@ class EnhancedOfflineManager {
   // Local data access methods with sync status
   getTransactions(filters?: any): Transaction[] {
     if (!this.dataCache) return [];
-    
+
     let transactions = this.dataCache.transactions;
-    
+
     // Apply filters if provided
     if (filters) {
       if (filters.type && filters.type !== 'all') {
@@ -230,8 +230,14 @@ class EnhancedOfflineManager {
       if (filters.category && filters.category !== 'All') {
         transactions = transactions.filter(t => t.category === filters.category);
       }
+      if (filters.includeArchived !== true) {
+        transactions = transactions.filter(t => !t.archived);
+      }
+    } else {
+      // Default: exclude archived
+      transactions = transactions.filter(t => !t.archived);
     }
-    
+
     return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
@@ -260,7 +266,7 @@ class EnhancedOfflineManager {
 
     // If offline, use offline queue system
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const transaction: Transaction = {
       ...transactionData,
       id: tempId
@@ -320,9 +326,9 @@ class EnhancedOfflineManager {
     if (this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
-        this.dataCache.transactions[index] = { 
-          ...this.dataCache.transactions[index], 
-          ...updates 
+        this.dataCache.transactions[index] = {
+          ...this.dataCache.transactions[index],
+          ...updates
         };
         await this.saveDataCache();
       }
@@ -351,9 +357,9 @@ class EnhancedOfflineManager {
     if (this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
-        this.dataCache.transactions[index] = { 
-          ...this.dataCache.transactions[index], 
-          ...updates 
+        this.dataCache.transactions[index] = {
+          ...this.dataCache.transactions[index],
+          ...updates
         };
         await this.saveDataCache();
       }
@@ -384,7 +390,7 @@ class EnhancedOfflineManager {
       });
     } else {
       // Remove temp transaction from sync queue if it exists
-      this.syncQueue = this.syncQueue.filter(item => 
+      this.syncQueue = this.syncQueue.filter(item =>
         !(item.tempId === id || (item.data && item.data.id === id))
       );
       await this.saveSyncQueue();
@@ -440,25 +446,25 @@ class EnhancedOfflineManager {
     const pendingItems = this.syncQueue
       .filter(item => item.status === 'pending')
       .sort((a, b) => a.timestamp - b.timestamp);
-    
+
     console.log(`Processing ${pendingItems.length} pending sync items`);
 
     for (const item of pendingItems) {
       try {
         item.status = 'syncing';
         await this.syncItem(item);
-        
+
         // Mark as synced and set sync timestamp
         item.status = 'synced';
         item.lastSyncedAt = Date.now();
-        
+
         console.log(`Successfully synced ${item.type} ${item.table}`);
-        
+
       } catch (error) {
         console.error(`Failed to sync item ${item.id}:`, error);
         item.status = 'failed';
         item.retryCount++;
-        
+
         // Remove item if max retries exceeded
         if (item.retryCount >= 3) {
           console.log(`Removed item ${item.id} after max retries`);
@@ -467,7 +473,7 @@ class EnhancedOfflineManager {
     }
 
     // Clean up successfully synced items
-    this.syncQueue = this.syncQueue.filter(item => 
+    this.syncQueue = this.syncQueue.filter(item =>
       item.status !== 'synced' && item.retryCount < 3
     );
 
@@ -498,9 +504,9 @@ class EnhancedOfflineManager {
           .insert({ ...data, user_id: userId })
           .select()
           .single();
-        
+
         if (insertError) throw insertError;
-        
+
         // Update local cache with real ID and properly cast the type
         if (this.dataCache && item.tempId) {
           const tempIndex = this.dataCache.transactions.findIndex(t => t.id === item.tempId);
@@ -520,7 +526,7 @@ class EnhancedOfflineManager {
           .update(data)
           .eq('id', data.id)
           .eq('user_id', userId);
-        
+
         if (updateError) throw updateError;
         break;
 
@@ -530,7 +536,7 @@ class EnhancedOfflineManager {
           .delete()
           .eq('id', data.id)
           .eq('user_id', userId);
-        
+
         if (deleteError) throw deleteError;
         break;
 
@@ -617,25 +623,25 @@ class EnhancedOfflineManager {
   // Check if transaction is pending sync
   isTransactionPending(transactionId: string): boolean {
     if (transactionId.startsWith('temp_')) return true;
-    
-    return this.syncQueue.some(item => 
-      item.table === 'transactions' && 
+
+    return this.syncQueue.some(item =>
+      item.table === 'transactions' &&
       item.status === 'pending' &&
       (item.data.id === transactionId || item.tempId === transactionId)
     );
   }
 
   isTransactionSyncing(transactionId: string): boolean {
-    return this.syncQueue.some(item => 
-      item.table === 'transactions' && 
+    return this.syncQueue.some(item =>
+      item.table === 'transactions' &&
       item.status === 'syncing' &&
       (item.data.id === transactionId || item.tempId === transactionId)
     );
   }
 
   isTransactionFailed(transactionId: string): boolean {
-    return this.syncQueue.some(item => 
-      item.table === 'transactions' && 
+    return this.syncQueue.some(item =>
+      item.table === 'transactions' &&
       item.status === 'failed' &&
       (item.data.id === transactionId || item.tempId === transactionId)
     );

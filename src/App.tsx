@@ -20,7 +20,7 @@ import Alerts from '@/pages/Alerts'
 import Settings from '@/pages/Settings'
 import Admin from '@/pages/Admin'
 import AdminFeedback from '@/pages/AdminFeedback'
-import Feedback from '@/pages/Feedback'
+import Feedback from '@/pages/FeedbackPage'
 import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
@@ -35,6 +35,7 @@ function App() {
     const initializeEnhancedOffline = async () => {
       try {
         // Enhanced offline manager initialized successfully
+        console.log('App version: 1.0.1 - Minimalistic Feedback');
         console.log('Enhanced offline manager initialized');
       } catch (err) {
         console.error('Failed to initialize enhanced offline manager:', err);

@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Sparkles, Home, ArrowRight } from "lucide-react";
 
 interface FeedbackSuccessProps {
   onClose: () => void;
@@ -9,31 +8,57 @@ interface FeedbackSuccessProps {
 
 const FeedbackSuccess = ({ onClose }: FeedbackSuccessProps) => {
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4">
-      <Card className="w-full text-center">
-        <CardHeader>
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <Check className="h-8 w-8 text-primary" />
-            </div>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] w-full max-w-xl mx-auto px-6 text-center animate-fadeIn">
+      {/* Decorative Background for Success */}
+      <div className="relative mb-12">
+        <div className="absolute inset-0 bg-primary/20 rounded-full blur-[60px] animate-pulse" />
+        <div className="relative h-28 w-28 bg-primary rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-primary/40 animate-float translate-y-[-10px]">
+          <Check className="h-14 w-14 text-primary-foreground stroke-[3px]" />
+          <div className="absolute -top-2 -right-2 bg-yellow-400 p-2 rounded-full shadow-lg animate-bounce">
+            <Sparkles className="h-4 w-4 text-yellow-900" />
           </div>
-          <CardTitle className="text-xl">Thank You!</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            We appreciate your valuable feedback. Your insights help us improve ExpendX
-            and create a better experience for everyone.
+        </div>
+      </div>
+
+      <div className="space-y-6 max-w-md mx-auto relative z-10">
+        <h2 className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Feedback Received!
+        </h2>
+
+        <p className="text-lg text-muted-foreground leading-relaxed font-medium px-4">
+          Thank you for helping us shape the future of <span className="text-primary font-bold">ExpendX</span>. Your insights are already on their way to our development team.
+        </p>
+
+        <div className="glass-card rounded-3xl p-6 border border-white/10 bg-muted/20 backdrop-blur-sm">
+          <p className="text-sm text-foreground/70 font-medium">
+            We value your time and will review your submission within 24 hours. If we need more context, we'll reach out via your profile email.
           </p>
-          <p className="mt-4 text-sm">
-            The team will review your feedback and take appropriate action.
-          </p>
-        </CardContent>
-        <CardFooter className="flex justify-center pt-2">
-          <Button onClick={onClose}>
-            Return to Dashboard
+        </div>
+
+        <div className="pt-8 flex flex-col gap-4">
+          <Button
+            size="lg"
+            onClick={onClose}
+            className="group h-16 w-full rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
+          >
+            <span>Back to Dashboard</span>
+            <Home className="h-5 w-5 opacity-70 group-hover:scale-110 transition-transform" />
           </Button>
-        </CardFooter>
-      </Card>
+
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors font-medium flex items-center justify-center gap-2 group/btn"
+          >
+            Stay on this page
+            <ArrowRight className="h-4 w-4 opacity-0 group-hover/btn:opacity-100 group-hover/btn:translate-x-1 transition-all" />
+          </button>
+        </div>
+      </div>
+
+      {/* Background visual flair */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[600px] bg-primary/5 rounded-full blur-[120px]" />
+      </div>
     </div>
   );
 };

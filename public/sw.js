@@ -1,7 +1,7 @@
 
 // Enhanced Service Worker for ExpendX PWA with advanced offline capabilities
 
-const CACHE_NAME = 'expendx-cache-v3';
+const CACHE_NAME = 'expendx-cache-v4';
 const OFFLINE_URL = '/offline.html';
 const SYNC_TAG = 'expendx-background-sync';
 
@@ -50,7 +50,7 @@ self.addEventListener('install', (event) => {
 // Activate and clean up old caches
 self.addEventListener('activate', (event) => {
   const currentCaches = Object.values(CACHES);
-  
+
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -70,20 +70,20 @@ self.addEventListener('activate', (event) => {
 
 // Enhanced auth request detection
 const isAuthRequest = (url) => {
-  return url.includes('/auth/') || 
-         url.includes('/token') || 
-         url.includes('/supabase.co/auth/') || 
-         url.includes('/supabase.co/rest/') ||
-         url.includes('/.netlify/functions/') ||
-         url.includes('/signup') ||
-         url.includes('/signin');
+  return url.includes('/auth/') ||
+    url.includes('/token') ||
+    url.includes('/supabase.co/auth/') ||
+    url.includes('/supabase.co/rest/') ||
+    url.includes('/.netlify/functions/') ||
+    url.includes('/signup') ||
+    url.includes('/signin');
 };
 
 // Check if request is for API data
 const isApiRequest = (url) => {
-  return url.includes('/rest/v1/') || 
-         url.includes('/graphql') ||
-         url.includes('/api/');
+  return url.includes('/rest/v1/') ||
+    url.includes('/graphql') ||
+    url.includes('/api/');
 };
 
 // Check if request is for images
@@ -97,9 +97,9 @@ self.addEventListener('fetch', (event) => {
   const url = request.url;
 
   // Skip non-GET requests and browser extensions
-  if (request.method !== 'GET' || 
-      url.startsWith('chrome-extension://') ||
-      url.includes('extension')) {
+  if (request.method !== 'GET' ||
+    url.startsWith('chrome-extension://') ||
+    url.includes('extension')) {
     return;
   }
 
@@ -123,17 +123,17 @@ async function handleImageRequest(request) {
   try {
     const cache = await caches.open(CACHES.images);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       return cachedResponse;
     }
-    
+
     const response = await fetch(request);
-    
+
     if (response.status === 200) {
       cache.put(request, response.clone());
     }
-    
+
     return response;
   } catch (error) {
     console.error('Image cache error:', error);
@@ -147,31 +147,31 @@ async function handleImageRequest(request) {
 async function handleApiRequest(request) {
   try {
     const response = await fetch(request);
-    
+
     if (response.status === 200) {
       const cache = await caches.open(CACHES.api);
       cache.put(request, response.clone());
     }
-    
+
     return response;
   } catch (error) {
     console.log('API request failed, trying cache:', request.url);
-    
+
     const cache = await caches.open(CACHES.api);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       // Add header to indicate cached response
       const headers = new Headers(cachedResponse.headers);
       headers.set('X-From-Cache', 'true');
-      
+
       return new Response(cachedResponse.body, {
         status: cachedResponse.status,
         statusText: cachedResponse.statusText,
         headers: headers
       });
     }
-    
+
     // Return structured offline response for API requests
     return new Response(JSON.stringify({
       error: 'Offline',
@@ -188,7 +188,7 @@ async function handleStaticRequest(request) {
   try {
     const cache = await caches.open(CACHES.static);
     const cachedResponse = await cache.match(request);
-    
+
     // Serve from cache immediately if available
     const fetchPromise = fetch(request)
       .then(response => {
@@ -198,17 +198,17 @@ async function handleStaticRequest(request) {
         return response;
       })
       .catch(() => cachedResponse);
-    
+
     return cachedResponse || await fetchPromise;
   } catch (error) {
     console.error('Static content error:', error);
-    
+
     // Try to serve offline page for navigation requests
     if (request.mode === 'navigate') {
       const cache = await caches.open(CACHES.static);
       return cache.match(OFFLINE_URL) || new Response('Offline');
     }
-    
+
     return new Response('Content not available offline');
   }
 }
@@ -216,7 +216,7 @@ async function handleStaticRequest(request) {
 // Enhanced background sync
 self.addEventListener('sync', (event) => {
   console.log('Background sync triggered:', event.tag);
-  
+
   if (event.tag === SYNC_TAG || event.tag === 'sync-transactions') {
     event.waitUntil(performBackgroundSync());
   }
@@ -224,34 +224,34 @@ self.addEventListener('sync', (event) => {
 
 async function performBackgroundSync() {
   console.log('Performing background sync');
-  
+
   try {
     // Notify all clients about sync start
     const clients = await self.clients.matchAll({ type: 'window' });
     clients.forEach(client => {
-      client.postMessage({ 
+      client.postMessage({
         type: 'SYNC_STARTED',
         timestamp: Date.now()
       });
     });
-    
+
     // The actual sync logic is handled by the sync manager in the main app
     // We just trigger it here
     clients.forEach(client => {
-      client.postMessage({ 
+      client.postMessage({
         type: 'PERFORM_SYNC',
         timestamp: Date.now()
       });
     });
-    
+
     console.log('Background sync completed successfully');
   } catch (error) {
     console.error('Background sync failed:', error);
-    
+
     // Notify clients of sync failure
     const clients = await self.clients.matchAll({ type: 'window' });
     clients.forEach(client => {
-      client.postMessage({ 
+      client.postMessage({
         type: 'SYNC_FAILED',
         error: error.message,
         timestamp: Date.now()
@@ -263,10 +263,10 @@ async function performBackgroundSync() {
 // Enhanced push notification handling
 self.addEventListener('push', (event) => {
   if (!event.data) return;
-  
+
   try {
     const data = event.data.json();
-    
+
     const notificationOptions = {
       body: data.message,
       icon: '/icons/icon-192x192.png',
@@ -275,7 +275,7 @@ self.addEventListener('push', (event) => {
       requireInteraction: data.important || false,
       tag: data.tag || 'default'
     };
-    
+
     event.waitUntil(
       self.registration.showNotification(data.title, notificationOptions)
     );
@@ -287,9 +287,9 @@ self.addEventListener('push', (event) => {
 // Enhanced notification click handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
+
   const urlToOpen = event.notification.data?.url || '/';
-  
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(windowClients => {
@@ -299,7 +299,7 @@ self.addEventListener('notificationclick', (event) => {
             return client.focus();
           }
         }
-        
+
         // If not already open, open new window
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
@@ -318,20 +318,20 @@ self.addEventListener('message', (event) => {
 async function cleanupOldCacheEntries() {
   try {
     const cacheNames = await caches.keys();
-    
+
     for (const cacheName of cacheNames) {
       if (cacheName.startsWith('expendx-cache-')) {
         const cache = await caches.open(cacheName);
         const requests = await cache.keys();
-        
+
         // Remove entries older than 7 days for dynamic content
         if (cacheName.includes('dynamic') || cacheName.includes('api')) {
           const cutoffTime = Date.now() - (7 * 24 * 60 * 60 * 1000);
-          
+
           for (const request of requests) {
             const response = await cache.match(request);
             const dateHeader = response?.headers.get('date');
-            
+
             if (dateHeader && new Date(dateHeader).getTime() < cutoffTime) {
               await cache.delete(request);
             }
@@ -339,7 +339,7 @@ async function cleanupOldCacheEntries() {
         }
       }
     }
-    
+
     console.log('Cache cleanup completed');
   } catch (error) {
     console.error('Cache cleanup failed:', error);

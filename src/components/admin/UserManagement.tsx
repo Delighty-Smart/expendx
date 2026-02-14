@@ -11,6 +11,7 @@ import { Search, SlidersHorizontal, Send, UserPlus, Edit, Eye, EyeOff } from "lu
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import UserAvatar from "@/components/UserAvatar";
 
 // Define the user role type to match the database enum
 type UserRoleType = 'free' | 'pro' | 'premium' | 'admin';
@@ -451,11 +452,11 @@ const UserManagement = () => {
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                  {user.avatar_url ? <img src={`/lovable-uploads/${user.avatar_url}`} alt={user.username || user.email} className="h-full w-full object-cover rounded-full" /> : <div className="font-semibold text-muted-foreground">
-                    {user.first_name?.[0]}{user.last_name?.[0]}
-                  </div>}
-                </div>
+                <UserAvatar
+                  url={user.avatar_url}
+                  name={user.first_name ? `${user.first_name} ${user.last_name || ''}` : user.username || user.email}
+                  className="h-10 w-10 shadow-sm"
+                />
                 <div>
                   <div className="font-medium">
                     {showInfo ? user.username || user.email : <span className="blur-sm hover:blur-none transition-all select-none">

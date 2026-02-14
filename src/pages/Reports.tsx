@@ -77,8 +77,8 @@ const ReportsPage = () => {
   }, [selectedType, allIncomeCategories, allExpenseCategories, allSavingsCategories]);
 
   const { transactions, isLoading } = useTransactionData({
-    startDate: dateFrom?.toISOString(),
-    endDate: dateTo?.toISOString(),
+    startDate: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
+    endDate: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
   });
 
   // Filter transactions based on selections with proper typing
@@ -102,16 +102,17 @@ const ReportsPage = () => {
 
 
     const income = filteredTransactions
-      .filter(t => t.type === 'credit')
+      .filter(t => t.type?.toLowerCase() === 'credit')
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const expenses = filteredTransactions
-      .filter(t => t.type === 'debit')
+      .filter(t => t.type?.toLowerCase() === 'debit')
       .reduce((sum, t) => sum + Number(t.amount), 0);
 
     const savings = filteredTransactions
-      .filter(t => t.type === 'savings')
+      .filter(t => t.type?.toLowerCase() === 'savings')
       .reduce((sum, t) => sum + Number(t.amount), 0);
+
 
 
     return {
@@ -454,11 +455,11 @@ const ReportsPage = () => {
             <Card className="border-border bg-card">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" strokeWidth={1.5} />
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground font-medium">Income</p>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total In</p>
                     <p className="text-lg font-bold text-foreground truncate">
                       {currency.symbol}{formatAmount(summaryMetrics.income)}
                     </p>
@@ -475,7 +476,7 @@ const ReportsPage = () => {
                     <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground font-medium">Expenses</p>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Out</p>
                     <p className="text-lg font-bold text-foreground truncate">
                       {currency.symbol}{formatAmount(summaryMetrics.expenses)}
                     </p>

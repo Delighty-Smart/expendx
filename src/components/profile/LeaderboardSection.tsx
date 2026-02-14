@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import UserAvatar from "@/components/UserAvatar";
 
 interface LeaderboardItem {
   id: string;
@@ -47,27 +48,27 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
-      
+
       // First get all user profiles with their locations
       const { data: profilesData, error: profilesError } = await supabase
         .from('user_profiles')
         .select('id, username, first_name, last_name, email, avatar_url, country, continent');
-        
+
       if (profilesError) throw profilesError;
-      
+
       // Now get all user streaks 
       const { data: streaksData, error: streaksError } = await supabase
         .from('user_streaks')
         .select('user_id, current_streak, highest_streak')
         .order('current_streak', { ascending: false });
-        
+
       if (streaksError) throw streaksError;
-      
+
       if (!profilesData || !streaksData) {
         setLeaderboard([]);
         return;
       }
-      
+
       // Filter profiles data if local leaderboard
       let filteredProfiles = profilesData;
       if (type === 'local') {
@@ -77,13 +78,13 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
           filteredProfiles = profilesData.filter(profile => profile.continent === continent);
         }
       }
-      
+
       // Create a map of user IDs to their profiles for quick lookup
       const userProfileMap = new Map();
       filteredProfiles.forEach(profile => {
         userProfileMap.set(profile.id, profile);
       });
-      
+
       // Join the streaks with the filtered profiles
       const formattedData = streaksData
         .filter(streak => userProfileMap.has(streak.user_id))
@@ -101,9 +102,9 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
             rank: index + 1 // Add position rank
           };
         });
-      
+
       setLeaderboard(formattedData);
-      
+
     } catch (error) {
       console.error('Error fetching leaderboard data:', error);
       toast({
@@ -122,13 +123,13 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
 
   const getDisplayName = (item: LeaderboardItem) => {
     if (item.username) return item.username;
-    if (item.first_name || item.last_name) 
+    if (item.first_name || item.last_name)
       return `${item.first_name || ''} ${item.last_name || ''}`.trim();
     return item.email.split('@')[0];
   };
 
   const getInitials = (item: LeaderboardItem) => {
-    if (item.first_name && item.last_name) 
+    if (item.first_name && item.last_name)
       return `${item.first_name[0]}${item.last_name[0]}`.toUpperCase();
     if (item.username) return item.username.substring(0, 2).toUpperCase();
     return item.email.substring(0, 2).toUpperCase();
@@ -162,38 +163,35 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
       ) : (
         <div className="space-y-2">
           {leaderboard.map((item) => (
-            <div 
-              key={item.id} 
-              className={`flex items-center p-3 rounded-md ${
-                currentUserId === item.id 
-                  ? "bg-primary/10 border border-primary/30" 
+            <div
+              key={item.id}
+              className={`flex items-center p-3 rounded-md ${currentUserId === item.id
+                  ? "bg-primary/10 border border-primary/30"
                   : "hover:bg-accent"
-              }`}
+                }`}
             >
               <div className="w-8 text-center font-bold text-muted-foreground">
                 {item.rank}
               </div>
-              
-              <Avatar className="h-8 w-8 mr-3">
-                {item.avatar_url ? (
-                  <AvatarImage src={item.avatar_url} alt={getDisplayName(item)} />
-                ) : (
-                  <AvatarFallback>{getInitials(item)}</AvatarFallback>
-                )}
-              </Avatar>
-              
+
+              <UserAvatar
+                url={item.avatar_url}
+                name={getDisplayName(item)}
+                className="h-8 w-8 mr-3"
+              />
+
               <div className="flex-1">
                 <div className="font-medium text-sm">{getDisplayName(item)}</div>
               </div>
-              
+
               <div className="flex gap-2 items-center">
-                <Badge 
+                <Badge
                   className={`${getStreakColor(item.current_streak)}`}
                   variant="outline"
                 >
                   {item.current_streak} day{item.current_streak !== 1 ? "s" : ""}
                 </Badge>
-                
+
                 {item.highest_streak > item.current_streak && (
                   <span className="text-xs text-muted-foreground">
                     Best: {item.highest_streak}

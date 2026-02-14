@@ -11,6 +11,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import UserAvatar from "./UserAvatar";
 
 const Layout = ({
   children
@@ -251,9 +252,11 @@ const Layout = ({
       {/* User Profile */}
       <div className="border-t border-border p-3">
         <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors touch-manipulation" onClick={handleProfileClick}>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden md:w-9 md:h-9">
-            {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-primary md:h-5 md:w-5" strokeWidth={1.5} />}
-          </div>
+          <UserAvatar
+            url={userProfile?.avatar_url}
+            name={userProfile?.username || userProfile?.email || "User"}
+            className="w-10 h-10 md:w-9 md:h-9 shadow-sm"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
               {userProfile?.username || userProfile?.email || "User"}

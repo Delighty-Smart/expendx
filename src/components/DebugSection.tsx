@@ -9,42 +9,8 @@ import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Database, Cloud, Wifi, WifiOff, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 
-// Custom Toggle Component (same as in NotificationPreferences)
-const CustomToggle = ({ 
-  checked, 
-  onCheckedChange, 
-  disabled 
-}: { 
-  checked: boolean; 
-  onCheckedChange: (checked: boolean) => void; 
-  disabled?: boolean; 
-}) => {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onCheckedChange(!checked)}
-      className={`
-        relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-        transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        ${checked ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-      `}
-      style={{ minWidth: '44px', minHeight: '24px' }}
-    >
-      <span
-        className={`
-          pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 
-          transition duration-200 ease-in-out
-          ${checked ? 'translate-x-5' : 'translate-x-0'}
-        `}
-      />
-    </button>
-  );
-};
 
 export const DebugSection = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -112,7 +78,8 @@ export const DebugSection = () => {
           </p>
         </div>
         <div className="flex-shrink-0 mt-1">
-          <CustomToggle
+          <Switch
+            id="auto-sync"
             checked={autoSync}
             onCheckedChange={setAutoSync}
           />
@@ -147,7 +114,7 @@ export const DebugSection = () => {
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Sync Status:</span>
                 <Badge variant={syncStatus.isSyncing ? "secondary" : "outline"} className="text-xs">
@@ -155,22 +122,22 @@ export const DebugSection = () => {
                 </Badge>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Queue Count:</span>
-                <Badge 
-                  variant={syncStatus.queueCount > 0 ? "secondary" : "outline"} 
+                <Badge
+                  variant={syncStatus.queueCount > 0 ? "secondary" : "outline"}
                   className="text-xs"
                 >
                   {syncStatus.queueCount}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Failed:</span>
-                <Badge 
-                  variant={syncStatus.failedCount > 0 ? "destructive" : "outline"} 
+                <Badge
+                  variant={syncStatus.failedCount > 0 ? "destructive" : "outline"}
                   className="text-xs"
                 >
                   {syncStatus.failedCount}
@@ -186,7 +153,7 @@ export const DebugSection = () => {
               <span className="text-muted-foreground">Last Sync:</span>
               <span className="text-xs">{formatTime(syncStatus.lastSync?.getTime() || null)}</span>
             </div>
-            
+
             {debugInfo?.cacheAge && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Cache Age:</span>
@@ -234,20 +201,20 @@ export const DebugSection = () => {
       </Collapsible>
 
       <div className="flex gap-2">
-        <Button 
-          onClick={forceSync} 
+        <Button
+          onClick={forceSync}
           disabled={syncStatus.isSyncing || !syncStatus.isOnline}
-          size="sm" 
+          size="sm"
           className="flex-1"
         >
           <Cloud className="h-4 w-4 mr-2" />
           {syncStatus.isSyncing ? "Syncing..." : "Force Sync"}
         </Button>
-        
-        <Button 
+
+        <Button
           onClick={clearAllData}
           variant="outline"
-          size="sm" 
+          size="sm"
           className="flex-1"
         >
           <Trash2 className="h-4 w-4 mr-2" />

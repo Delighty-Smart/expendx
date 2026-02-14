@@ -8,6 +8,7 @@ import { Transaction, TransactionType } from "@/types/transactions";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionIntegration } from './useSubscriptionIntegration';
+import { normalizeDate } from "@/lib/utils";
 
 
 export function useEnhancedTransactionData(filter?: {
@@ -40,7 +41,11 @@ export function useEnhancedTransactionData(filter?: {
     queryKey,
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }) => {
-      console.log("Fetching transactions page:", pageParam, "with filters:", filter);
+      const normalizedStartDate = normalizeDate(filter?.startDate);
+      const normalizedEndDate = normalizeDate(filter?.endDate);
+      const effectiveFilter = filter ? { ...filter, startDate: normalizedStartDate, endDate: normalizedEndDate } : undefined;
+
+      console.log("Fetching transactions page:", pageParam, "with filters:", effectiveFilter);
       const pageSize = 20;
       const from = pageParam * pageSize;
       const to = from + pageSize - 1;
@@ -49,11 +54,10 @@ export function useEnhancedTransactionData(filter?: {
       // If online, fetch from database and update cache
       if (navigator.onLine) {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error('No authenticated user');
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.user) throw new Error('No authenticated user');
 
-
-          let query = supabase.from("transactions").select("*", { count: 'exact' }).eq('user_id', user.id);
+          let query = supabase.from("transactions").select("*", { count: 'exact' });
 
 
           // Apply filters
@@ -69,12 +73,12 @@ export function useEnhancedTransactionData(filter?: {
             }
 
 
-            if (filter.startDate) {
-              query = query.gte("date", filter.startDate);
+            if (normalizedStartDate) {
+              query = query.gte("date", normalizedStartDate);
             }
 
-            if (filter.endDate) {
-              query = query.lte("date", filter.endDate);
+            if (normalizedEndDate) {
+              query = query.lte("date", normalizedEndDate);
             }
 
 
@@ -100,13 +104,13 @@ export function useEnhancedTransactionData(filter?: {
           console.error("Error fetching from database:", fetchError);
 
           // Fallback to cache (simulated pagination)
-          const allTransactions = await enhancedOfflineManager.getTransactions(filter);
+          const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
           return allTransactions.slice(from, from + pageSize);
         }
       }
 
       // If offline, get from cache (simulated pagination)
-      const allTransactions = await enhancedOfflineManager.getTransactions(filter);
+      const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
       return allTransactions.slice(from, from + pageSize);
     },
     getNextPageParam: (lastPage, allPages) => {

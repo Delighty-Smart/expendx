@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell, Clock, Smartphone } from "lucide-react";
 import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationDescription, notificationScheduler } from "@/services/notificationScheduler";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 
 interface NotificationPreference {
   id: string;
@@ -234,179 +235,142 @@ const NotificationPreferences = () => {
     );
   }
 
-  const notificationOptions = [
+  const notificationGroups = [
     {
-      key: 'weekly_recap' as const,
-      label: 'ðŸ“… Weekly Wallet Recap',
-      description: 'Get a weekly summary of your financial activity'
+      title: "Financial Insights",
+      options: [
+        { key: 'weekly_recap', label: 'Weekly Wallet Recap', description: 'Weekly summary of your financial activity' },
+        { key: 'monthly_snapshot', label: 'Monthly Financial Snapshots', description: 'Overview of your monthly financial health' },
+        { key: 'reflection_prompts', label: 'Reflection Prompts', description: 'Mindful spending reflection questions' }
+      ]
     },
     {
-      key: 'budget_nudges' as const,
-      label: 'ðŸŽ¯ Budget Nudges',
-      description: 'Gentle reminders when you approach budget limits'
+      title: "Reminders & Alerts",
+      options: [
+        { key: 'daily_log_reminder', label: 'Daily Log Reminders', description: 'Reminders to log your daily transactions' },
+        { key: 'budget_nudges', label: 'Budget Nudges', description: 'Alerts when you approach budget limits' },
+        { key: 'unusual_activity', label: 'Unusual Activity Alerts', description: 'Alerts for unexpected spending patterns' },
+        { key: 'savings_progress', label: 'Savings Progress Updates', description: 'Celebrate milestones in your savings goals' },
+        { key: 'recurring_expense_reminder', label: 'Recurring Expense Reminders', description: 'Reminders for recurring bills and payments' },
+        { key: 'month_reset_preview', label: 'Month Reset Preview', description: 'End-of-month budget review reminders' },
+        { key: 'night_owl_checkin', label: 'Night Owl Check-ins', description: 'Late night spending review prompts' },
+        { key: 'custom_goal_reminder', label: 'Custom Goal Reminders', description: 'Updates on your custom savings goals' },
+        { key: 'business_mode_nudges', label: 'Business Mode Nudges', description: 'Reminders for business expense tracking' }
+      ]
     },
     {
-      key: 'unusual_activity' as const,
-      label: 'ðŸ’¸ Unusual Activity Alerts',
-      description: 'Get notified about unexpected spending patterns'
-    },
-    {
-      key: 'daily_log_reminder' as const,
-      label: 'ðŸ§¾ Daily Log Reminders',
-      description: 'Reminders to log your daily transactions'
-    },
-    {
-      key: 'savings_progress' as const,
-      label: 'ðŸª™ Savings Progress Updates',
-      description: 'Celebrate milestones in your savings goals'
-    },
-    {
-      key: 'month_reset_preview' as const,
-      label: 'ðŸ”„ Month Reset Preview',
-      description: 'End-of-month budget review reminders'
-    },
-    {
-      key: 'recurring_expense_reminder' as const,
-      label: 'ðŸ” Recurring Expense Reminders',
-      description: 'Never miss your recurring bills and payments'
-    },
-    {
-      key: 'night_owl_checkin' as const,
-      label: 'ðŸŒ™ Night Owl Check-ins',
-      description: 'Late night spending review prompts'
-    },
-    {
-      key: 'monthly_snapshot' as const,
-      label: 'ðŸ“ˆ Monthly Financial Snapshots',
-      description: 'Monthly overview of your financial health'
-    },
-    {
-      key: 'reflection_prompts' as const,
-      label: 'ðŸªž Reflection Prompts',
-      description: 'Mindful spending reflection questions'
-    },
-    {
-      key: 'custom_goal_reminder' as const,
-      label: 'âš™ï¸ Custom Goal Reminders',
-      description: 'Updates on your custom savings goals'
-    },
-    {
-      key: 'business_mode_nudges' as const,
-      label: 'ðŸ’¼ Business Mode Nudges',
-      description: 'Reminders for business expense tracking'
-    },
-    {
-      key: 'streak_milestone_alerts' as const,
-      label: 'ðŸ† Streak Milestone Alerts',
-      description: 'Celebrate when you reach logging streak milestones'
-    },
-    {
-      key: 'streak_freeze_warnings' as const,
-      label: 'â„ï¸ Streak Freeze Warnings',
-      description: 'Alerts when your streak freeze is about to expire'
-    },
-    {
-      key: 'streak_recovery_reminders' as const,
-      label: 'ðŸ”„ Streak Recovery Reminders',
-      description: 'Gentle nudges to help you get back on track'
-    },
-    {
-      key: 'streak_breaking_alerts' as const,
-      label: 'âš ï¸ Streak Breaking Alerts',
-      description: 'Urgent alerts when your streak is at risk'
+      title: "Streaks & Milestones",
+      options: [
+        { key: 'streak_milestone_alerts', label: 'Streak Milestone Alerts', description: 'Celebrate logging streak milestones' },
+        { key: 'streak_freeze_warnings', label: 'Streak Freeze Warnings', description: 'Alerts when your streak freeze is expiring' },
+        { key: 'streak_recovery_reminders', label: 'Streak Recovery Reminders', description: 'Nudges to help you get back on track' },
+        { key: 'streak_breaking_alerts', label: 'Streak Breaking Alerts', description: 'Alerts when your streak is at risk' }
+      ]
     }
   ];
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notification Preferences
+      <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-b from-card to-card/50">
+        <CardHeader className="bg-primary/5 pb-8">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 rounded-xl bg-primary/20 text-primary">
+              <Bell className="h-6 w-6" />
+            </div>
+            Notification Settings
           </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Choose how and when you want to be notified about your finances.
+          </p>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-6">
-            {notificationOptions.map((option) => (
-              <div key={option.key} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1 flex-1 min-w-0">
-                    <Label className="text-sm font-medium leading-tight">{option.label}</Label>
-                    <p className="text-xs text-muted-foreground leading-tight">{option.description}</p>
-                    <p className="text-xs text-blue-600 leading-tight">
-                      {getNotificationDescription(option.key)}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 mt-1">
 
-                    <Switch
+        <CardContent className="p-0">
+          <div className="divide-y divide-border/40">
+            {notificationGroups.map((group) => (
+              <div key={group.title} className="p-6 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary/70 mb-4">{group.title}</h3>
+                <div className="space-y-3">
+                  {group.options.map((option) => (
+                    <div
+                      key={option.key}
+                      className={cn(
+                        "group flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-2xl transition-all duration-300",
+                        preferences[option.key as keyof NotificationPreference] ? "bg-primary/5 ring-1 ring-primary/10" : "hover:bg-muted/50"
+                      )}
+                    >
+                      <div className="space-y-1 pr-4 mb-3 sm:mb-0">
+                        <Label className="text-sm font-semibold cursor-pointer block">{option.label}</Label>
+                        <p className="text-xs text-muted-foreground line-clamp-1 group-hover:line-clamp-none transition-all">
+                          {option.description}
+                        </p>
+                      </div>
 
-                      checked={preferences[option.key]}
-                      onCheckedChange={(checked) => updatePreference(option.key, checked)}
-                      disabled={saving}
-                    />
-                  </div>
+                      <div className="flex items-center justify-between sm:justify-end gap-4 min-w-[140px]">
+                        {preferences[option.key as keyof NotificationPreference] && (
+                          <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
+                            <Clock className="h-3.5 w-3.5 text-primary/60" />
+                            <input
+                              type="time"
+                              value={preferences.notification_times?.[option.key as string] || getDefaultTimeForNotification(option.key as string)}
+                              onChange={(e) => updateNotificationTime(option.key as string, e.target.value)}
+                              className="bg-transparent border-none text-xs font-medium w-[70px] focus:ring-0 p-0 h-auto cursor-pointer text-primary hover:text-primary/80 transition-colors"
+                              disabled={saving}
+                            />
+                          </div>
+                        )}
+                        <Switch
+                          checked={preferences[option.key as keyof NotificationPreference] as boolean}
+                          onCheckedChange={(checked) => updatePreference(option.key as keyof NotificationPreference, checked)}
+                          disabled={saving}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-
-
-                {preferences[option.key] && (
-                  <div className="flex items-center gap-2 pt-2 border-t">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Preferred time:</Label>
-                    <Input
-                      type="time"
-                      value={preferences.notification_times?.[option.key] || getDefaultTimeForNotification(option.key)}
-                      onChange={(e) => updateNotificationTime(option.key, e.target.value)}
-                      className="w-24 h-7 text-xs"
-                      disabled={saving}
-                    />
-                  </div>
-                )}
               </div>
             ))}
           </div>
 
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Smartphone className="h-4 w-4" />
-              <Label className="text-sm font-medium">Browser Notifications</Label>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Enable browser notifications to receive alerts even when the app is not open.
-            </p>
+          <div className="p-6 bg-muted/30 border-t border-border/40">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="p-4 rounded-2xl bg-background shadow-sm border border-border/40 flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <Smartphone className="h-5 w-5" />
+                  </div>
+                  <Label className="text-sm font-bold">Browser Notifications</Label>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed italic">
+                  Enable system-level alerts to receive updates even when Expendx is running in the background.
+                </p>
+              </div>
 
-            <Button
-              variant="outline"
-
-              size="sm"
-              onClick={() => {
-                if ('Notification' in window) {
-                  Notification.requestPermission().then((permission) => {
-                    toast({
-                      title: permission === 'granted' ? "Notifications enabled" : "Notifications blocked",
-
-                      description: permission === 'granted'
-
-                        ? "You'll now receive browser notifications at your preferred times"
-                        : "You can enable notifications in your browser settings"
-                    });
-
-                    // Reschedule all notifications if permission was granted
-                    if (permission === 'granted' && preferences) {
-                      supabase.auth.getUser().then(({ data }) => {
-                        if (data && data.user) {
-                          scheduleAllNotifications(data.user.id, preferences);
-                        }
+              <Button
+                variant="default"
+                className="w-full sm:w-auto h-12 px-8 rounded-2xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
+                onClick={() => {
+                  if ('Notification' in window) {
+                    Notification.requestPermission().then((permission) => {
+                      toast({
+                        title: permission === 'granted' ? "Notifications enabled" : "Notifications blocked",
+                        description: permission === 'granted'
+                          ? "You'll now receive browser notifications at your preferred times"
+                          : "You can enable notifications in your browser settings"
                       });
-                    }
-                  });
-                }
-              }}
-            >
-              Enable Browser Notifications
-            </Button>
+                      if (permission === 'granted' && preferences) {
+                        supabase.auth.getUser().then(({ data }) => {
+                          if (data && data.user) {
+                            scheduleAllNotifications(data.user.id, preferences);
+                          }
+                        });
+                      }
+                    });
+                  }
+                }}
+              >
+                Enable Alerts
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
