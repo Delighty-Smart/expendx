@@ -27,6 +27,7 @@ import StreakModal from "@/components/StreakModal";
 import UserAvatar from "@/components/UserAvatar";
 import { getUserProfile } from "@/lib/streak";
 import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 
 // Transaction types
 interface TransactionData {
