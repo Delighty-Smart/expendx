@@ -9,17 +9,17 @@ import { LoadingState } from "@/components/ui/loading-state";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, isLoading, signIn, signUp } = useAuth();
+  const { user, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [processingAuth, setProcessingAuth] = useState(false);
 
   useEffect(() => {
     console.log("Auth page effect - user:", user?.id, "isLoading:", isLoading);
-    
+
     if (user && !isLoading) {
       const isNewUser = !!user.user_metadata?.isNewUser;
       console.log("User authenticated, is new user:", isNewUser);
-      
+
       if (isNewUser) {
         console.log("Showing onboarding for new user");
         setShowOnboarding(true);
@@ -46,19 +46,30 @@ const Auth = () => {
     try {
       setProcessingAuth(true);
       console.log("Handling signup for:", email, "firstName:", firstName, "lastName:", lastName);
-      
+
       const metadata = {
         first_name: firstName,
         last_name: lastName,
         isNewUser: true
       };
-      
+
       console.log("Signup metadata:", metadata);
       await signUp(email, password, metadata);
       console.log("Signup successful, attempting signin");
       await signIn(email, password);
     } catch (error) {
       console.error("Signup error:", error);
+    } finally {
+      setProcessingAuth(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setProcessingAuth(true);
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Google auth error:", error);
     } finally {
       setProcessingAuth(false);
     }
@@ -95,9 +106,9 @@ const Auth = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img 
-              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" 
-              alt="ExpendX" 
+            <img
+              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
+              alt="ExpendX"
               className="h-16 object-contain"
             />
           </div>
@@ -105,9 +116,10 @@ const Auth = () => {
         </div>
 
         {/* Auth Form */}
-        <AuthForm 
-          onLogin={handleLogin} 
+        <AuthForm
+          onLogin={handleLogin}
           onSignup={handleSignup}
+          onGoogleSignIn={handleGoogleSignIn}
           isProcessing={processingAuth}
         />
 

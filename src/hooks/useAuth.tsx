@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -50,10 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log(`Auth state changed: ${event}`, currentSession?.user?.id || 'No user');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        
+
         // Cache user ID for offline use
         cacheUserId(currentSession?.user?.id ?? null);
-        
+
         setIsLoading(false);
       }
     );
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setUser(data.session?.user ?? null);
-        
+
         // Cache user ID for offline use
         cacheUserId(data.session?.user?.id ?? null);
       } catch (error) {
@@ -86,9 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       console.log("Attempting sign in with email:", email);
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
+
       if (error) {
         console.error("Sign in error:", error.message);
         showToast({
@@ -98,14 +99,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         throw error;
       }
-      
+
       console.log("Sign in successful, user:", data.user?.id);
-      
+
       // Cache user ID immediately after successful sign in
       if (data.user) {
         cacheUserId(data.user.id);
       }
-      
+
       showToast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -122,14 +123,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       console.log("Attempting sign up with email:", email, "metadata:", metadata);
-      
+
       // Add detailed debugging for the signup process
       console.log("Signup metadata being sent:", JSON.stringify(metadata, null, 2));
-      
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
-        options: { 
+        options: {
           data: metadata,
           emailRedirectTo: window.location.origin
         }
@@ -144,14 +145,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         throw error;
       }
-      
+
       console.log("Sign up successful, response:", JSON.stringify(data, null, 2));
-      
+
       // Cache user ID immediately after successful sign up
       if (data.user) {
         cacheUserId(data.user.id);
       }
-      
+
       showToast({
         title: "Account created",
         description: "Your account has been created successfully.",
@@ -170,21 +171,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Attempting Google sign in");
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) {
+        console.error("Google sign in error:", error.message);
+        showToast({
+          variant: "destructive",
+          title: "Google login failed",
+          description: error.message || "Could not connect to Google",
+        });
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Google sign in error caught:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       setIsLoading(true);
       console.log("Attempting to sign out");
-      
+
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         console.error("Sign out error:", error.message);
         throw error;
       }
-      
+
       // Clear cached user ID on sign out
       cacheUserId(null);
-      
+
       console.log("Sign out successful");
       showToast({
         title: "Signed out",
@@ -208,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut
   };
 
