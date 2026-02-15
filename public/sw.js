@@ -269,8 +269,8 @@ self.addEventListener('push', (event) => {
 
     const notificationOptions = {
       body: data.message,
-      icon: '/lovable-uploads/467823f6-4919-4813-9a3b-9e4ec8f9d6c4.png',
-      badge: '/lovable-uploads/467823f6-4919-4813-9a3b-9e4ec8f9d6c4.png',
+      icon: '/app-icon.png',
+      badge: '/app-icon.png',
       data: data.url ? { url: data.url } : undefined,
       requireInteraction: data.important || false,
       tag: data.tag || 'default'
