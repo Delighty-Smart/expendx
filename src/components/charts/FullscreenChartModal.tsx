@@ -1,13 +1,9 @@
-
-import React from 'react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Maximize2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface FullscreenChartModalProps {
     isOpen: boolean;
@@ -34,14 +30,6 @@ const FullscreenChartModal = ({
                             {title}
                         </DialogTitle>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                        className="rounded-full h-10 w-10 hover:bg-muted/50 transition-colors"
-                    >
-                        <X className="h-5 w-5 text-muted-foreground" />
-                    </Button>
                 </DialogHeader>
 
                 <div className="flex-1 w-full min-h-0 relative animate-in fade-in zoom-in duration-300">
