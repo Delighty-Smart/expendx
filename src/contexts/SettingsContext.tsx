@@ -39,53 +39,61 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const [currency, setCurrency] = useState<Currency>(() => {
     const saved = localStorage.getItem('expendx_currency');
     if (saved) {
-      const currencyObj = currencies.find(c => c.code === saved) || { 
-        code: 'USD', 
-        symbol: '$', 
-        name: 'US Dollar' 
+      const currencyObj = currencies.find(c => c.code === saved) || {
+        code: 'USD',
+        symbol: '$',
+        name: 'US Dollar'
       };
       return currencyObj;
     }
-    return { 
-      code: 'USD', 
-      symbol: '$', 
-      name: 'US Dollar' 
+    return {
+      code: 'USD',
+      symbol: '$',
+      name: 'US Dollar'
     };
   });
-  
+
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     // Check localStorage first, then system preference
     const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
     if (savedTheme) return savedTheme;
-    
+
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return prefersDark ? 'dark' : 'light';
   });
-  
+
   const [hideAmounts, setHideAmounts] = useState<boolean>(() => {
     return localStorage.getItem('expendx_hideAmounts') === 'true';
   });
 
-  // Initialize settings on mount
+  // Initialize settings on mount and listen for auth changes
   useEffect(() => {
+    let authListener: any;
+
     const initializeSettings = async () => {
       try {
-        // Apply theme immediately
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        localStorage.setItem('expendx_theme', theme);
+        console.log('Initializing settings...');
 
-        // Load saved currency
-        const savedCurrency = localStorage.getItem('expendx_currency');
-        if (savedCurrency) {
-          const currencyObj = currencies.find(c => c.code === savedCurrency) || { 
-            code: 'USD', 
-            symbol: '$', 
-            name: 'US Dollar' 
-          };
-          setCurrency(currencyObj);
+        // Initial theme application from localStorage (for fast UI response)
+        const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
+        if (savedTheme) {
+          document.documentElement.classList.toggle('dark', savedTheme === 'dark');
         }
 
-        // Sync with server
+        // Setup auth listener to fetch settings whenever user logs in
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth event in SettingsContext:', event);
+          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
+            await fetchUserSettings();
+          } else if (event === 'SIGNED_OUT') {
+            // Reset to defaults on sign out if desired, or keep local
+            console.log('User signed out, keeping local settings for now');
+          }
+        });
+
+        authListener = subscription;
+
+        // One-time initial fetch
         await fetchUserSettings();
       } catch (error) {
         console.error('Error initializing settings:', error);
@@ -94,22 +102,22 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
     const askNotification = async () => {
       if (!notificationService.isSupported()) return;
-      // Only ask if the user hasn't decided
       if (Notification.permission === 'default' && !localStorage.getItem('expendx_noti_permission_prompted')) {
         try {
           const permission = await Notification.requestPermission();
           localStorage.setItem('expendx_noti_permission_prompted', 'true');
-          if (permission === 'granted') {
-            console.log("Browser notifications enabled");
-          }
         } catch (e) {
           console.warn("Unable to request browser notification permission", e);
         }
       }
     };
-    askNotification();
 
+    askNotification();
     initializeSettings();
+
+    return () => {
+      if (authListener) authListener.unsubscribe();
+    };
     // eslint-disable-next-line
   }, []);
 
@@ -129,47 +137,57 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const fetchUserSettings = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && !error.message.includes('No rows found')) {
-        console.error('Error fetching user settings:', error);
+      if (!user) {
+        console.log('No user found in fetchUserSettings, using local storage/defaults');
         return;
       }
 
-      const savedCurrencyLS = localStorage.getItem('expendx_currency');
-      if (savedCurrencyLS) {
-        const savedObj = currencies.find(c => c.code === savedCurrencyLS) || { 
-          code: 'USD', 
-          symbol: '$', 
-          name: 'US Dollar' 
-        };
-        setCurrency(savedObj);
-        if (data) {
-          if (data.currency_code !== savedCurrencyLS) {
-            await supabase
-              .from('user_settings')
-              .update({ currency_code: savedCurrencyLS })
-              .eq('user_id', user.id);
-          }
-        } else {
-          await supabase
-            .from('user_settings')
-            .insert({ user_id: user.id, currency_code: savedCurrencyLS });
+      console.log('Fetching server settings for user:', user.id);
+
+      // 1. Fetch Currency from user_settings table
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('user_settings')
+        .select('currency_code')
+        .eq('user_id', user.id)
+        .single();
+
+      if (settingsError && !settingsError.message.includes('No rows found')) {
+        console.error('Error fetching user_settings:', settingsError);
+      } else if (settingsData?.currency_code) {
+        // SERVER WINS: Update state and localStorage with server value
+        console.log('Applying server currency:', settingsData.currency_code);
+        const currencyObj = currencies.find(c => c.code === settingsData.currency_code);
+        if (currencyObj) {
+          setCurrency(currencyObj);
+          localStorage.setItem('expendx_currency', currencyObj.code);
         }
-      } else if (data && data.currency_code) {
-        const currencyObj = currencies.find(c => c.code === data.currency_code) || { 
-          code: 'USD', 
-          symbol: '$', 
-          name: 'US Dollar' 
-        };
-        setCurrency(currencyObj);
-        localStorage.setItem('expendx_currency', data.currency_code);
+      } else {
+        // No server settings found, push local if it exists
+        const localCurrency = localStorage.getItem('expendx_currency');
+        if (localCurrency) {
+          console.log('Pushing local currency to server:', localCurrency);
+          await supabase.from('user_settings').upsert({
+            user_id: user.id,
+            currency_code: localCurrency
+          });
+        }
+      }
+
+      // 2. Fetch Theme and HideAmounts from User Metadata (User Meta data is more persistent for simple UI traits)
+      const metadata = user.user_metadata;
+      if (metadata) {
+        if (metadata.theme && (metadata.theme === 'light' || metadata.theme === 'dark')) {
+          console.log('Applying server theme:', metadata.theme);
+          setTheme(metadata.theme);
+          document.documentElement.classList.toggle('dark', metadata.theme === 'dark');
+          localStorage.setItem('expendx_theme', metadata.theme);
+        }
+
+        if (typeof metadata.hideAmounts === 'boolean') {
+          console.log('Applying server hideAmounts:', metadata.hideAmounts);
+          setHideAmounts(metadata.hideAmounts);
+          localStorage.setItem('expendx_hideAmounts', metadata.hideAmounts.toString());
+        }
       }
     } catch (error) {
       console.error('Error in fetchUserSettings:', error);
@@ -179,51 +197,38 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   // Update user settings with better persistence
   const updateUserSettings = async () => {
     try {
-      // Always save to localStorage immediately
+      // 1. Local Persistence (Fast UI)
       localStorage.setItem('expendx_theme', theme);
       localStorage.setItem('expendx_hideAmounts', hideAmounts.toString());
       localStorage.setItem('expendx_currency', currency.code);
 
-      // Save additional settings metadata
-      const additionalSettings = {
-        lastUpdated: new Date().toISOString(),
-        version: '1.0'
-      };
-      localStorage.setItem('expendx_settings_meta', JSON.stringify(additionalSettings));
-
-      // Sync with server
+      // 2. Server Sync
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: existingSettings, error: selectError } = await supabase
+      console.log('Syncing settings to server for user:', user.id);
+
+      // Sync Currency (Table)
+      const { error: currencyError } = await supabase
         .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .upsert({
+          user_id: user.id,
+          currency_code: currency.code,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
 
-      if (selectError && !selectError.message.includes('No rows found')) {
-        console.error('Error checking existing settings:', selectError);
-        return;
-      }
+      if (currencyError) console.error('Error syncing currency:', currencyError);
 
-      if (existingSettings) {
-        const { error: updateError } = await supabase
-          .from('user_settings')
-          .update({ currency_code: currency.code })
-          .eq('user_id', user.id);
-
-        if (updateError) {
-          console.error('Error updating user settings:', updateError);
+      // Sync Theme & Visibility (Auth Metadata)
+      const { error: metaError } = await supabase.auth.updateUser({
+        data: {
+          theme: theme,
+          hideAmounts: hideAmounts
         }
-      } else {
-        const { error: insertError } = await supabase
-          .from('user_settings')
-          .insert({ user_id: user.id, currency_code: currency.code });
+      });
 
-        if (insertError) {
-          console.error('Error creating user settings:', insertError);
-        }
-      }
+      if (metaError) console.error('Error syncing metadata:', metaError);
+
     } catch (error) {
       console.error('Error in updateUserSettings:', error);
     }
@@ -236,10 +241,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
   // Function to update currency by code
   const updateCurrency = (currencyCode: string) => {
-    const currencyObj = currencies.find(c => c.code === currencyCode) || { 
-      code: 'USD', 
-      symbol: '$', 
-      name: 'US Dollar' 
+    const currencyObj = currencies.find(c => c.code === currencyCode) || {
+      code: 'USD',
+      symbol: '$',
+      name: 'US Dollar'
     };
     setCurrency(currencyObj);
     localStorage.setItem('expendx_currency', currencyObj.code);
