@@ -604,8 +604,7 @@ const IndexPage = () => {
 
                   <BarChart
                     data={spendingData}
-
-                    margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                    margin={{ top: 20, right: 30, left: 5, bottom: 70 }}
                     barSize={50}
                     layout="vertical"
                   >
@@ -621,12 +620,11 @@ const IndexPage = () => {
 
                     <YAxis
                       dataKey="name"
-
                       type="category"
                       tick={{ fontSize: 12 }}
                       tickLine={false}
                       axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                      width={120}
+                      width={100}
                     />
 
                     <XAxis
@@ -711,7 +709,7 @@ const IndexPage = () => {
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height="100%">
-                  <RechartAreaChart data={dailyData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
+                  <RechartAreaChart data={dailyData} margin={{ top: 20, right: 30, left: 10, bottom: 30 }}>
                     <defs>
                       <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
 
