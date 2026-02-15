@@ -208,103 +208,101 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           localStorage.setItem('expendx_hideAmounts', metadata.hideAmounts.toString());
         }
       }
+
+      // Mark as initialized so FUTURE changes trigger sync to server
+      isInitialized.current = true;
+      console.log('Settings successfully initialized from server');
+    } catch (error) {
+      console.error('Error in fetchUserSettings:', error);
+      // Fallback: still mark as initialized so user can save changes even if fetch failed
+      isInitialized.current = true;
     }
-      }
-
-  // Mark as initialized so FUTURE changes trigger sync to server
-  isInitialized.current = true;
-  console.log('Settings successfully initialized from server');
-} catch (error) {
-  console.error('Error in fetchUserSettings:', error);
-  // Fallback: still mark as initialized so user can save changes even if fetch failed
-  isInitialized.current = true;
-}
   };
 
-// Update user settings with better persistence
-const updateUserSettings = async () => {
-  try {
-    // 1. Local Persistence (Fast UI)
-    localStorage.setItem('expendx_theme', theme);
-    localStorage.setItem('expendx_hideAmounts', hideAmounts.toString());
-    localStorage.setItem('expendx_currency', currency.code);
+  // Update user settings with better persistence
+  const updateUserSettings = async () => {
+    try {
+      // 1. Local Persistence (Fast UI)
+      localStorage.setItem('expendx_theme', theme);
+      localStorage.setItem('expendx_hideAmounts', hideAmounts.toString());
+      localStorage.setItem('expendx_currency', currency.code);
 
-    // 2. Server Sync
-    if (!navigator.onLine) return;
+      // 2. Server Sync
+      if (!navigator.onLine) return;
 
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Settings update timed out')), 5000);
-    });
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Settings update timed out')), 5000);
+      });
 
-    const userPromise = supabase.auth.getUser();
-    const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
+      const userPromise = supabase.auth.getUser();
+      const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
 
-    if (!user) return;
+      if (!user) return;
 
-    console.log('Syncing settings to server for user:', user.id);
+      console.log('Syncing settings to server for user:', user.id);
 
-    // Sync Currency (Table)
-    const currencyPromise = supabase
-      .from('user_settings')
-      .upsert({
-        user_id: user.id,
-        currency_code: currency.code,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      // Sync Currency (Table)
+      const currencyPromise = supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          currency_code: currency.code,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
 
-    await Promise.race([currencyPromise, timeoutPromise]);
+      await Promise.race([currencyPromise, timeoutPromise]);
 
-    // Sync Theme & Visibility (Auth Metadata)
-    const metaPromise = supabase.auth.updateUser({
-      data: {
-        theme: theme,
-        hideAmounts: hideAmounts
-      }
-    });
+      // Sync Theme & Visibility (Auth Metadata)
+      const metaPromise = supabase.auth.updateUser({
+        data: {
+          theme: theme,
+          hideAmounts: hideAmounts
+        }
+      });
 
-    await Promise.race([metaPromise, timeoutPromise]);
+      await Promise.race([metaPromise, timeoutPromise]);
 
-  } catch (error) {
-    console.error('Error in updateUserSettings:', error);
-  }
-};
-
-// Function to update theme
-const updateTheme = (newTheme: 'light' | 'dark') => {
-  setTheme(newTheme);
-};
-
-// Function to update currency by code
-const updateCurrency = (currencyCode: string) => {
-  const currencyObj = currencies.find(c => c.code === currencyCode) || {
-    code: 'USD',
-    symbol: '$',
-    name: 'US Dollar'
+    } catch (error) {
+      console.error('Error in updateUserSettings:', error);
+    }
   };
-  setCurrency(currencyObj);
-  localStorage.setItem('expendx_currency', currencyObj.code);
-};
 
-// Function to toggle hideAmounts
-const toggleHideAmounts = () => {
-  setHideAmounts(prev => !prev);
-};
+  // Function to update theme
+  const updateTheme = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+  };
 
-const contextValue: SettingsContextType = {
-  currency,
-  setCurrency,
-  theme,
-  updateTheme,
-  updateCurrency,
-  hideAmounts,
-  toggleHideAmounts
-};
+  // Function to update currency by code
+  const updateCurrency = (currencyCode: string) => {
+    const currencyObj = currencies.find(c => c.code === currencyCode) || {
+      code: 'USD',
+      symbol: '$',
+      name: 'US Dollar'
+    };
+    setCurrency(currencyObj);
+    localStorage.setItem('expendx_currency', currencyObj.code);
+  };
 
-return (
-  <SettingsContext.Provider value={contextValue}>
-    {children}
-  </SettingsContext.Provider>
-);
+  // Function to toggle hideAmounts
+  const toggleHideAmounts = () => {
+    setHideAmounts(prev => !prev);
+  };
+
+  const contextValue: SettingsContextType = {
+    currency,
+    setCurrency,
+    theme,
+    updateTheme,
+    updateCurrency,
+    hideAmounts,
+    toggleHideAmounts
+  };
+
+  return (
+    <SettingsContext.Provider value={contextValue}>
+      {children}
+    </SettingsContext.Provider>
+  );
 };
 
 export default SettingsProvider;
