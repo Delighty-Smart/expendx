@@ -10,22 +10,32 @@ import { LoadingState } from "@/components/ui/loading-state";
 const Auth = () => {
   const navigate = useNavigate();
   const { user, isLoading, signIn, signUp, signInWithGoogle } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [view, setView] = useState<'onboarding' | 'auth' | 'loading'>('loading');
   const [processingAuth, setProcessingAuth] = useState(false);
 
   useEffect(() => {
     console.log("Auth page effect - user:", user?.id, "isLoading:", isLoading);
 
-    if (user && !isLoading) {
-      const isNewUser = !!user.user_metadata?.isNewUser;
-      console.log("User authenticated, is new user:", isNewUser);
+    if (!isLoading) {
+      if (user) {
+        const isNewUser = !!user.user_metadata?.isNewUser;
+        console.log("User authenticated, is new user:", isNewUser);
 
-      if (isNewUser) {
-        console.log("Showing onboarding for new user");
-        setShowOnboarding(true);
+        if (isNewUser) {
+          console.log("Showing onboarding for new user (authenticated)");
+          setView('onboarding');
+        } else {
+          console.log("Redirecting existing user to dashboard");
+          navigate('/');
+        }
       } else {
-        console.log("Redirecting existing user to dashboard");
-        navigate('/');
+        // User not logged in, check if they've already seen onboarding in this sessions
+        const hasSeenOnboarding = sessionStorage.getItem('expendx_onboarding_seen');
+        if (hasSeenOnboarding) {
+          setView('auth');
+        } else {
+          setView('onboarding');
+        }
       }
     }
   }, [user, isLoading, navigate]);
@@ -76,12 +86,18 @@ const Auth = () => {
   };
 
   const handleOnboardingComplete = async () => {
-    setShowOnboarding(false);
-    navigate('/');
+    sessionStorage.setItem('expendx_onboarding_seen', 'true');
+    if (user) {
+      // If they were already authenticated (e.g. just signed up), go to dashboard
+      navigate('/');
+    } else {
+      // Go to login form
+      setView('auth');
+    }
     return Promise.resolve();
   };
 
-  if (isLoading) {
+  if (isLoading || view === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <LoadingState size="lg" message="Loading..." />
@@ -89,7 +105,7 @@ const Auth = () => {
     );
   }
 
-  if (showOnboarding) {
+  if (view === 'onboarding') {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 

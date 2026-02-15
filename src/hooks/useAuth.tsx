@@ -212,8 +212,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      // Clear cached user ID on sign out
+      // Clear cached user ID and onboarding flag on sign out
       cacheUserId(null);
+      sessionStorage.removeItem('expendx_onboarding_seen');
 
       console.log("Sign out successful");
       showToast({
