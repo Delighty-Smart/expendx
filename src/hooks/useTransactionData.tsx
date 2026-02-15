@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Transaction, TransactionType, TransactionCategory } from "@/types/transactions";
 import { initializeDB, getAllTransactions } from "@/services/offlineStorage";
 import {
@@ -29,14 +30,15 @@ export function useTransactionData(filter?: {
   category?: string,
   includeArchived?: boolean,
 }) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
 
   // Create query key based on filters
   const queryKey = filter
-    ? ['transactions', filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
-    : ['transactions'];
+    ? ['transactions', user?.id, filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
+    : ['transactions', user?.id];
 
   // Setup the main query with enhanced offline support
   const {
@@ -47,6 +49,7 @@ export function useTransactionData(filter?: {
     refetch
   } = useQuery({
     queryKey,
+    enabled: !!user,
     queryFn: async () => {
       const normalizedStartDate = normalizeDate(filter?.startDate);
       const normalizedEndDate = normalizeDate(filter?.endDate);
@@ -54,7 +57,6 @@ export function useTransactionData(filter?: {
       console.log("Fetching transactions with filters:", { ...filter, startDate: normalizedStartDate, endDate: normalizedEndDate });
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("User not authenticated");
 
         let query = supabase.from("transactions")

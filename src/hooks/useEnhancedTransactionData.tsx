@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { useToast } from "@/hooks/use-toast";
@@ -19,14 +20,15 @@ export function useEnhancedTransactionData(filter?: {
 
   includeArchived?: boolean,
 }) {
+  const { user } = useAuth();
   const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
 
   const queryKey = filter
-    ? ['enhanced_transactions', filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
-    : ['enhanced_transactions'];
+    ? ['enhanced_transactions', user?.id, filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
+    : ['enhanced_transactions', user?.id];
 
   const {
     data,
@@ -40,6 +42,7 @@ export function useEnhancedTransactionData(filter?: {
   } = useInfiniteQuery({
     queryKey,
     initialPageParam: 0,
+    enabled: !!user,
     queryFn: async ({ pageParam = 0 }) => {
       const normalizedStartDate = normalizeDate(filter?.startDate);
       const normalizedEndDate = normalizeDate(filter?.endDate);
@@ -54,7 +57,6 @@ export function useEnhancedTransactionData(filter?: {
       // If online, fetch from database and update cache
       if (navigator.onLine) {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
           if (!user) throw new Error('No authenticated user');
 
           let query = supabase.from("transactions")

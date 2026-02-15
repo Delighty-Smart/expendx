@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard } from "lucide-react";
 
 import { useSettings } from "@/contexts/SettingsContext";
-import { useTransactionData } from "@/hooks/useTransactionData";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BudgetProgress } from "@/components/BudgetProgress";
@@ -49,6 +49,7 @@ const handleAddTransaction = () => {
 };
 
 const IndexPage = () => {
+  const { user } = useAuth();
   const { currency } = useSettings();
   const navigate = useNavigate();
   const { refreshData } = useRefresh();
@@ -78,9 +79,8 @@ const IndexPage = () => {
   // Fetch unread alerts
   useEffect(() => {
     const fetchUnreadAlerts = async () => {
+      if (!user) return;
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
         const { data, error } = await supabase
           .from('alerts')
           .select('id')
@@ -95,7 +95,7 @@ const IndexPage = () => {
     };
 
     fetchUnreadAlerts();
-  }, []);
+  }, [user]);
 
 
   // Utility function for formatting amounts with commas
@@ -118,18 +118,14 @@ const IndexPage = () => {
 
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
-    queryKey: ["monthly_income_estimate"],
+    queryKey: ["monthly_income_estimate", user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .maybeSingle();
-
-
 
       if (error) throw error;
       return data?.amount || 0;
@@ -140,20 +136,16 @@ const IndexPage = () => {
   const monthlyIncome = monthlyIncomeData || 0;
 
   const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
-    queryKey: ["user_streak"],
+    queryKey: ["user_streak", user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
       await updateUserStreak();
 
       const { data, error } = await supabase
         .from("user_streaks")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .maybeSingle();
-
-
 
       if (error) throw error;
       return data;
@@ -169,17 +161,15 @@ const IndexPage = () => {
 
   // Query for monthly transactions (ONLY unarchived)
   const { data: monthlyTransactionsData, isLoading: isMonthlyTransactionsLoading, refetch: refetchMonthlyTransactions } = useQuery({
-    queryKey: ["transactions", "monthly", firstDayOfMonth, lastDayOfMonth],
+    queryKey: ["transactions", "monthly", user?.id, firstDayOfMonth, lastDayOfMonth],
+    enabled: !!user,
     queryFn: async () => {
       console.log("Dashboard: Fetching UNARCHIVED transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
 
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .eq("archived", false) // ONLY unarchived transactions
         .gte("date", firstDayOfMonth)
         .lte("date", lastDayOfMonth)
@@ -193,17 +183,15 @@ const IndexPage = () => {
 
   // Query for ALL unarchived transactions (for wallet balance)
   const { data: allTransactionsData, isLoading: isAllTransactionsLoading } = useQuery({
-    queryKey: ["all_transactions", "unarchived"],
+    queryKey: ["all_transactions", "unarchived", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       console.log("Dashboard: Fetching ALL UNARCHIVED transactions for wallet balance");
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
 
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user!.id)
         .eq("archived", false) // ONLY unarchived transactions
         .order("date", { ascending: false });
 
