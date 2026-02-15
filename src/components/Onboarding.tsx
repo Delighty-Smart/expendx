@@ -86,22 +86,22 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-secondary/10 dark:bg-secondary/20 rounded-full blur-[100px] animate-pulse delay-1000" />
       </div>
 
-      <Card className="relative w-full max-w-lg shadow-2xl border-none bg-card/80 backdrop-blur-xl overflow-hidden rounded-[32px]">
+      <Card className="relative w-full max-w-sm sm:max-w-md shadow-2xl border-none bg-card/80 backdrop-blur-xl overflow-hidden rounded-[32px]">
         {/* Subtle top border gradient */}
         <div className={`h-1.5 w-full bg-gradient-to-r ${activeStep === 0 ? 'from-primary' : activeStep === 1 ? 'from-secondary' : 'from-blue-500'} to-transparent opacity-50`} />
 
-        <CardHeader className="text-center pb-2 pt-8">
+        <CardHeader className="text-center pb-2 pt-6">
           {/* Logo */}
-          <div className="inline-flex items-center justify-center mb-6 mx-auto transform hover:scale-105 transition-transform">
+          <div className="inline-flex items-center justify-center mb-4 mx-auto transform hover:scale-105 transition-transform">
             <img
               src="/app-icon.png"
               alt="ExpendX"
-              className="h-14 w-14 object-contain shadow-lg rounded-2xl"
+              className="h-12 w-12 object-contain shadow-lg rounded-2xl"
             />
           </div>
 
           {/* Progress indicators - more modern */}
-          <div className="flex justify-center space-x-3 mb-4">
+          <div className="flex justify-center space-x-3 mb-2">
             {steps.map((_, index) => (
               <div
                 key={index}
@@ -116,28 +116,28 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
           </div>
         </CardHeader>
 
-        <CardContent className="px-8 pb-10">
+        <CardContent className="px-6 pb-8">
           {/* Current step content with smooth transition placeholder */}
-          <div className="min-h-[320px] flex flex-col items-center justify-center text-center">
-            <div className={`mb-8 p-10 rounded-full bg-gradient-to-br ${steps[activeStep].gradient} border border-white/10 shadow-inner scale-110`}>
+          <div className="min-h-[280px] flex flex-col items-center justify-center text-center">
+            <div className={`mb-6 p-8 rounded-full bg-gradient-to-br ${steps[activeStep].gradient} border border-white/10 shadow-inner scale-105`}>
               {steps[activeStep].icon}
             </div>
 
-            <h2 className="text-3xl font-bold text-foreground mb-4 tracking-tight">
+            <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">
               {steps[activeStep].title}
             </h2>
 
-            <p className="text-muted-foreground text-lg leading-relaxed max-w-[90%] mx-auto">
+            <p className="text-muted-foreground text-base leading-relaxed max-w-[90%] mx-auto">
               {steps[activeStep].description}
             </p>
           </div>
 
           {/* Action buttons - more prominent Skip */}
-          <div className="flex flex-col gap-4 mt-8">
+          <div className="flex flex-col gap-3 mt-6">
             <Button
               onClick={handleNext}
               disabled={isProcessing}
-              className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg rounded-2xl shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-2xl shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 group"
             >
               <ButtonLoading
                 isLoading={isProcessing}
@@ -154,17 +154,10 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               variant="ghost"
               onClick={handleSkip}
               disabled={isProcessing}
-              className="w-full h-12 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-2xl font-medium"
+              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-2xl font-medium"
             >
               Skip and log in
             </Button>
-          </div>
-
-          {/* Step indicator footer */}
-          <div className="text-center mt-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/50">
-              Personal Finance • Powered by AI
-            </p>
           </div>
         </CardContent>
       </Card>
