@@ -99,9 +99,9 @@ const Layout = ({
       return () => clearTimeout(timer);
     }
   }, [userStreak]);
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      await signOut();
+      signOut();
       navigate("/auth");
     } catch (error) {
       console.error("Error logging out in Layout:", error);

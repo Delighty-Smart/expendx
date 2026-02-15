@@ -202,23 +202,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      setIsLoading(true);
-      console.log("Attempting to sign out");
+      console.log("Starting immediate sign out");
 
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("Sign out error:", error.message);
-        throw error;
-      }
-
-      // Explicitly clear state to ensure immediate UI update
+      // 1. Clear local state IMMEDIATELY for instant UI response
       setSession(null);
       setUser(null);
-
-      // Clear cached user ID and onboarding flag on sign out
       cacheUserId(null);
       sessionStorage.removeItem('expendx_onboarding_seen');
+
+      // 2. Clear Supabase session in the background/awaited but without blocking UI progress
+      // We don't set isLoading(true) here because we already know the user is "logged out" locally
+      await supabase.auth.signOut();
 
       console.log("Sign out successful");
       showToast({
@@ -227,13 +221,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (error: any) {
       console.error("Sign out error caught:", error);
+      // We still consider the user logged out locally
       showToast({
         variant: "destructive",
-        title: "Error signing out",
-        description: error.message || "An error occurred while signing out",
+        title: "Sign out completed with notice",
+        description: "You have been signed out locally. Some server sessions may persist.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
