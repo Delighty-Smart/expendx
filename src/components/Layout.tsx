@@ -250,26 +250,26 @@ const Layout = ({
 
 
       {/* User Profile */}
-      <div className="border-t border-border p-3">
-        <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors touch-manipulation" onClick={handleProfileClick}>
+      <div className="border-t border-border mt-auto p-2">
+        <div className="flex items-center gap-2 p-2 rounded-xl hover:bg-accent/50 cursor-pointer transition-all duration-200 group touch-manipulation" onClick={handleProfileClick}>
           <UserAvatar
             url={userProfile?.avatar_url}
             name={userProfile?.username || userProfile?.email || "User"}
-            className="w-10 h-10 md:w-9 md:h-9 shadow-sm"
+            className="w-9 h-9 md:w-8 md:h-8 shadow-sm ring-1 ring-border/50"
           />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
+          <div className="flex-1 min-w-0 ml-1">
+            <p className="text-sm font-bold text-foreground truncate tracking-tight leading-tight">
               {userProfile?.username || userProfile?.email || "User"}
             </p>
-            {userStreak && <p className="text-xs text-muted-foreground truncate">
+            {userStreak && <p className="text-[10px] uppercase font-bold text-muted-foreground/60 truncate tracking-wider mt-0.5">
               {userStreak.current_title}
             </p>}
           </div>
           <Button variant="ghost" size="icon" onClick={e => {
             e.stopPropagation();
             handleLogout();
-          }} className="touch-manipulation">
-            <LogOut className="h-5 w-5 md:h-5 md:w-5" strokeWidth={1.5} />
+          }} className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+            <LogOut className="h-4 w-4" strokeWidth={2} />
           </Button>
         </div>
       </div>
