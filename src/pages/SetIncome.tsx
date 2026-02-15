@@ -10,7 +10,6 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -100,65 +99,63 @@ const SetIncomePage = () => {
   }, [toast, navigate, queryClient, monthlyIncome]);
 
   return (
-    <Layout>
-      <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="mr-2" 
-            onClick={() => navigate("/budgets")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Set Monthly Income</h1>
-        </div>
-        
-        <div className="bg-card rounded-lg shadow-sm border p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Income</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                          {currency.symbol}
-                        </span>
-                        <Input
-                          type="number"
-                          placeholder="0.00"
-                          step="0.01"
-                          className="pl-8"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/budgets")}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Save Income"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          className="mr-2"
+          onClick={() => navigate("/budgets")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">Set Monthly Income</h1>
       </div>
-    </Layout>
+
+      <div className="bg-card rounded-lg shadow-sm border p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monthly Income</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                        {currency.symbol}
+                      </span>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        step="0.01"
+                        className="pl-8"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/budgets")}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Save Income"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </div>
   );
 };
 

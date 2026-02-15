@@ -1,7 +1,6 @@
 ﻿
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
 import { Card, GlassCard } from "@/components/ui/card";
 
 import { startOfMonth, endOfMonth, format } from "date-fns";
@@ -196,125 +195,121 @@ const BudgetsPage = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="h-8 bg-muted rounded animate-skeleton-pulse w-32"></div>
-            <div className="h-10 bg-muted rounded animate-skeleton-pulse w-28"></div>
-          </div>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="h-8 bg-muted rounded animate-skeleton-pulse w-32"></div>
+          <div className="h-10 bg-muted rounded animate-skeleton-pulse w-28"></div>
+        </div>
 
 
 
-          <div className="animate-skeleton-pulse">
-            <div className="p-6 bg-muted/50 rounded-lg border">
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 rounded-2xl bg-muted"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-24"></div>
-                  <div className="h-8 bg-muted rounded w-32"></div>
-                </div>
+        <div className="animate-skeleton-pulse">
+          <div className="p-6 bg-muted/50 rounded-lg border">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-muted"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-24"></div>
+                <div className="h-8 bg-muted rounded w-32"></div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-skeleton-pulse">
-                <div className="p-4 bg-muted/50 rounded-lg border space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="h-6 bg-muted rounded w-24"></div>
-                    <div className="flex gap-1">
-                      <div className="h-8 w-8 bg-muted rounded"></div>
-                      <div className="h-8 w-8 bg-muted rounded"></div>
-                    </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-skeleton-pulse">
+              <div className="p-4 bg-muted/50 rounded-lg border space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="h-6 bg-muted rounded w-24"></div>
+                  <div className="flex gap-1">
+                    <div className="h-8 w-8 bg-muted rounded"></div>
+                    <div className="h-8 w-8 bg-muted rounded"></div>
                   </div>
-                  <div className="space-y-3">
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-muted rounded w-16"></div>
+                    <div className="h-4 bg-muted rounded w-20"></div>
+                  </div>
+                  <div className="space-y-2">
                     <div className="flex justify-between">
-                      <div className="h-4 bg-muted rounded w-16"></div>
-                      <div className="h-4 bg-muted rounded w-20"></div>
+                      <div className="h-3 bg-muted rounded w-12"></div>
+                      <div className="h-3 bg-muted rounded w-16"></div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <div className="h-3 bg-muted rounded w-12"></div>
-                        <div className="h-3 bg-muted rounded w-16"></div>
-                      </div>
-                      <div className="h-2 bg-muted rounded w-full"></div>
-                    </div>
+                    <div className="h-2 bg-muted rounded w-full"></div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </Layout>
+      </div>
     );
   }
 
   if (isError) {
-    return <Layout><div>Error loading budgets.</div></Layout>;
+    return <div>Error loading budgets.</div>;
   }
 
   return (
-    <Layout>
-      <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+    <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
-        <div className="space-y-6 pb-24">
+      <div className="space-y-6 pb-24">
 
-          <PageHeader
-            title="Budgets"
-            actions={
-              <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2 flex-none whitespace-nowrap">
-                <PlusCircle className="h-4 w-4" />
-                Add Budget
-              </Button>
-            }
-          />
+        <PageHeader
+          title="Budgets"
+          actions={
+            <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2 flex-none whitespace-nowrap">
+              <PlusCircle className="h-4 w-4" />
+              Add Budget
+            </Button>
+          }
+        />
 
-          <GlassCard className="p-6 bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10 border-orange-200/30 dark:border-orange-800/30">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-400 dark:to-amber-500 flex items-center justify-center shadow-lg">
-                <TrendingUp className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Total Budget</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
-                  {currency.symbol}
-                  {formatAmount(budgets?.reduce((sum, budget) => sum + budget.monthly_limit, 0) || 0)}
-                </p>
-              </div>
+        <GlassCard className="p-6 bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10 border-orange-200/30 dark:border-orange-800/30">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-400 dark:to-amber-500 flex items-center justify-center shadow-lg">
+              <TrendingUp className="h-8 w-8 text-white" />
             </div>
-          </GlassCard>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {budgets?.map((budget) => (
-              <BudgetCard
-                key={budget.id}
-                budget={budget}
-                onEdit={handleEditBudget}
-                onDelete={confirmDeleteBudget}
-              />
-            ))}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Total Budget</p>
+              <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
+                {currency.symbol}
+                {formatAmount(budgets?.reduce((sum, budget) => sum + budget.monthly_limit, 0) || 0)}
+              </p>
+            </div>
           </div>
+        </GlassCard>
 
-          <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Budget</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this budget? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setBudgetToDelete(null)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteBudget} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {budgets?.map((budget) => (
+            <BudgetCard
+              key={budget.id}
+              budget={budget}
+              onEdit={handleEditBudget}
+              onDelete={confirmDeleteBudget}
+            />
+          ))}
         </div>
-      </PullToRefresh>
-    </Layout>
+
+        <AlertDialog open={open} onOpenChange={setOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Budget</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this budget? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setBudgetToDelete(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteBudget} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </PullToRefresh>
   );
 };
 

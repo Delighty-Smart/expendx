@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PROFILE_GRADIENTS } from "@/lib/gradients";
 import UserAvatar from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const AGE_BRACKETS = [
   "18-24", "25-34", "35-44", "45-54", "55-64", "65+"
@@ -32,6 +33,7 @@ const COUNTRIES_BY_CONTINENT: Record<string, string[]> = {
 };
 
 const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profile: any) => void }) => {
+  const { refreshProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updatingGradient, setUpdatingGradient] = useState(false);
@@ -89,6 +91,9 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       });
 
       setIsEditing(false);
+      // Refresh global profile state
+      await refreshProfile();
+
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -123,6 +128,9 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
         ...profile,
         avatar_url: gradientClass
       });
+
+      // Refresh global profile state
+      await refreshProfile();
 
       toast({
         title: "Profile style updated",

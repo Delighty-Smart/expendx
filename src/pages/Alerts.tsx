@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -317,11 +316,9 @@ const Alerts = () => {
 
   if (isAuthenticated === null) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
     );
   }
 
@@ -329,189 +326,187 @@ const Alerts = () => {
   const someSelected = selectedAlerts.size > 0;
 
   return (
-    <Layout>
-      <div className="container mx-auto p-4">
-        <PageHeader
-          className="mb-6"
-          title="Alerts & Notifications"
-          actions={
-            <>
-              {selectionMode ? (
-                <>
-                  {someSelected && (
+    <div className="container mx-auto p-4">
+      <PageHeader
+        className="mb-6"
+        title="Alerts & Notifications"
+        actions={
+          <>
+            {selectionMode ? (
+              <>
+                {someSelected && (
 
-                    <Button
-                      variant="destructive"
+                  <Button
+                    variant="destructive"
 
-                      onClick={handleDeleteSelected}
-                      className="flex items-center gap-2 flex-none whitespace-nowrap"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete Selected ({selectedAlerts.size})
-                    </Button>
-                  )}
+                    onClick={handleDeleteSelected}
+                    className="flex items-center gap-2 flex-none whitespace-nowrap"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedAlerts.size})
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+
+                  onClick={toggleSelectionMode}
+                  className="flex items-center gap-2 flex-none whitespace-nowrap"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                {alerts.length > 0 && (
 
                   <Button
                     variant="outline"
 
                     onClick={toggleSelectionMode}
-                    className="flex items-center gap-2 flex-none whitespace-nowrap"
-                  >
-                    <X className="h-4 w-4" />
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <>
-                  {alerts.length > 0 && (
-
-                    <Button
-                      variant="outline"
-
-                      onClick={toggleSelectionMode}
-                      className="flex-none whitespace-nowrap"
-                    >
-                      Select
-                    </Button>
-                  )}
-
-                  <Button
-                    variant="outline"
-
-                    onClick={handleMarkAllAsRead}
-                    disabled={alerts.every(alert => alert.read) || alerts.length === 0}
                     className="flex-none whitespace-nowrap"
                   >
-                    <CheckCheck className="mr-2 h-4 w-4" />
-                    <span>Mark All as Read</span>
+                    Select
                   </Button>
-                </>
-              )}
-            </>
-          }
-        />
+                )}
 
-        {selectionMode && alerts.length > 0 && (
-          <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                size="sm"
-                checked={allSelected}
-                onCheckedChange={handleSelectAll}
-                className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
-              />
-              <span className="text-sm font-medium">
+                <Button
+                  variant="outline"
 
-                {allSelected ? 'Deselect All' : 'Select All'}
+                  onClick={handleMarkAllAsRead}
+                  disabled={alerts.every(alert => alert.read) || alerts.length === 0}
+                  className="flex-none whitespace-nowrap"
+                >
+                  <CheckCheck className="mr-2 h-4 w-4" />
+                  <span>Mark All as Read</span>
+                </Button>
+              </>
+            )}
+          </>
+        }
+      />
 
-                {someSelected && !allSelected && ` (${selectedAlerts.size} selected)`}
-              </span>
-            </div>
+      {selectionMode && alerts.length > 0 && (
+        <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              size="sm"
+              checked={allSelected}
+              onCheckedChange={handleSelectAll}
+              className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
+            />
+            <span className="text-sm font-medium">
+
+              {allSelected ? 'Deselect All' : 'Select All'}
+
+              {someSelected && !allSelected && ` (${selectedAlerts.size} selected)`}
+            </span>
           </div>
-        )}
+        </div>
+      )}
 
 
 
-        {loading ? (
-          <div className="space-y-4 animate-skeleton-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-5 h-5 bg-muted rounded"></div>
-                  <div className="h-5 bg-muted rounded flex-1"></div>
-                  <div className="h-6 w-20 bg-muted rounded"></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-full"></div>
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                </div>
-                <div className="flex justify-between items-center mt-3">
-                  <div className="h-5 w-16 bg-muted rounded"></div>
-                  <div className="h-4 w-24 bg-muted rounded"></div>
-                </div>
+      {loading ? (
+        <div className="space-y-4 animate-skeleton-pulse">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="border rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-5 h-5 bg-muted rounded"></div>
+                <div className="h-5 bg-muted rounded flex-1"></div>
+                <div className="h-6 w-20 bg-muted rounded"></div>
               </div>
-            ))}
-          </div>
-        ) : alerts.length > 0 ? (
-          <div className="space-y-4">
-            {alerts.map((alert) => (
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-full"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+              </div>
+              <div className="flex justify-between items-center mt-3">
+                <div className="h-5 w-16 bg-muted rounded"></div>
+                <div className="h-4 w-24 bg-muted rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : alerts.length > 0 ? (
+        <div className="space-y-4">
+          {alerts.map((alert) => (
 
-              <Card
-                key={alert.id}
-                className={`transition-all duration-300 hover:shadow-md ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : 'bg-card/50'}`}
-              >
-                {/* Header with Checkbox (if in selection mode), Icon and Title */}
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
+            <Card
+              key={alert.id}
+              className={`transition-all duration-300 hover:shadow-md ${!alert.read ? 'border-l-4 border-l-primary bg-primary/5' : 'bg-card/50'}`}
+            >
+              {/* Header with Checkbox (if in selection mode), Icon and Title */}
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
 
-                    {selectionMode && (
-                      <Checkbox
+                  {selectionMode && (
+                    <Checkbox
+                      size="sm"
+                      checked={selectedAlerts.has(alert.id)}
+                      onCheckedChange={(checked) => handleSelectAlert(alert.id, checked as boolean)}
+                      className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-shrink-0">
+                    {getAlertIcon(alert.type)}
+                  </div>
+
+                  <CardTitle className="text-lg font-semibold flex-1 min-w-0 leading-tight">
+
+                    {alert.title}
+                  </CardTitle>
+                  {!alert.read && (
+                    <div className="ml-auto flex-shrink-0">
+
+                      <Button
+                        variant="ghost"
+
                         size="sm"
-                        checked={selectedAlerts.has(alert.id)}
-                        onCheckedChange={(checked) => handleSelectAlert(alert.id, checked as boolean)}
-                        className="rounded-full data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-shrink-0">
-                      {getAlertIcon(alert.type)}
+                        onClick={() => handleMarkAsRead(alert.id)}
+                        className="text-xs px-2 py-1 h-auto"
+                      >
+                        <Check className="h-3 w-3 mr-1" />
+                        Mark Read
+                      </Button>
                     </div>
+                  )}
+                </div>
+              </CardHeader>
 
-                    <CardTitle className="text-lg font-semibold flex-1 min-w-0 leading-tight">
+              {/* Message Content */}
+              <CardContent className="py-0">
+                <p className="text-muted-foreground leading-relaxed">
+                  {alert.message}
+                </p>
+              </CardContent>
 
-                      {alert.title}
-                    </CardTitle>
-                    {!alert.read && (
-                      <div className="ml-auto flex-shrink-0">
-
-                        <Button
-                          variant="ghost"
-
-                          size="sm"
-                          onClick={() => handleMarkAsRead(alert.id)}
-                          className="text-xs px-2 py-1 h-auto"
-                        >
-                          <Check className="h-3 w-3 mr-1" />
-                          Mark Read
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                {/* Message Content */}
-                <CardContent className="py-0">
-                  <p className="text-muted-foreground leading-relaxed">
-                    {alert.message}
-                  </p>
-                </CardContent>
-
-                {/* Footer with Badge and Date */}
-                <CardFooter className="pt-4 pb-4">
-                  <div className="flex items-center justify-between w-full">
-                    <Badge variant={getAlertBadgeVariant(alert.type)} className="text-xs">
-                      {alert.type.replace('_', ' ')}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(alert.created_at)}
-                    </span>
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No alerts</h3>
-              <p className="text-muted-foreground">
-                You don't have any notifications or alerts at this time.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </Layout>
+              {/* Footer with Badge and Date */}
+              <CardFooter className="pt-4 pb-4">
+                <div className="flex items-center justify-between w-full">
+                  <Badge variant={getAlertBadgeVariant(alert.type)} className="text-xs">
+                    {alert.type.replace('_', ' ')}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {formatDate(alert.created_at)}
+                  </span>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-semibold mb-2">No alerts</h3>
+            <p className="text-muted-foreground">
+              You don't have any notifications or alerts at this time.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

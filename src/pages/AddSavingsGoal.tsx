@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCategoriesForType, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useQueryClient } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
 import { ArrowLeft, PiggyBank } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GlassCard } from "@/components/ui/card";
@@ -31,11 +30,11 @@ const AddSavingsGoalPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  
+
   // Check if we're editing an existing goal
   const savingsGoalToEdit = location.state?.savingsGoal;
   const isEditing = !!savingsGoalToEdit;
-  
+
   const form = useForm<z.infer<typeof savingsGoalSchema>>({
     resolver: zodResolver(savingsGoalSchema),
     defaultValues: {
@@ -63,7 +62,7 @@ const AddSavingsGoalPage = () => {
         console.error("Error loading savings categories:", error);
       }
     };
-    
+
     loadCategories();
   }, []);
 
@@ -72,7 +71,7 @@ const AddSavingsGoalPage = () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
-      
+
       const savingsGoalData = {
         category: values.category,
         target_amount: parseFloat(values.target_amount),
@@ -85,12 +84,12 @@ const AddSavingsGoalPage = () => {
           .from("savings_goals" as any)
           .update(savingsGoalData)
           .eq('id', savingsGoalToEdit.id);
-          
+
         if (error) {
           console.error("Update error:", error);
           throw error;
         }
-        
+
         toast({
           title: "Success",
           description: "Savings goal updated successfully"
@@ -103,12 +102,12 @@ const AddSavingsGoalPage = () => {
           .eq('category', values.category)
           .eq('user_id', user.id)
           .maybeSingle();
-          
+
         if (checkError) {
           console.error("Check error:", checkError);
           throw checkError;
         }
-        
+
         // Fix: Check if existingGoal exists and has an id property before accessing it
         if (existingGoal && 'id' in existingGoal) {
           // Update the existing goal instead of creating a new one
@@ -118,12 +117,12 @@ const AddSavingsGoalPage = () => {
               target_amount: parseFloat(values.target_amount)
             })
             .eq('id', existingGoal.id);
-            
+
           if (error) {
             console.error("Update error:", error);
             throw error;
           }
-          
+
           toast({
             title: "Success",
             description: "Savings goal updated successfully"
@@ -133,12 +132,12 @@ const AddSavingsGoalPage = () => {
           const { error } = await supabase
             .from("savings_goals" as any)
             .insert([savingsGoalData]);
-            
+
           if (error) {
             console.error("Insert error:", error);
             throw error;
           }
-          
+
           toast({
             title: "Success",
             description: "Savings goal added successfully"
@@ -161,108 +160,106 @@ const AddSavingsGoalPage = () => {
   };
 
   return (
-    <Layout>
-      <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="mr-2" 
-            onClick={() => navigate("/savings")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
-        </div>
-        
-        <GlassCard className="p-6 bg-gradient-to-br from-white/80 via-green-50/40 to-emerald-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-green-200/30 dark:border-slate-600/30 shadow-lg">
-          <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
-              <PiggyBank className="h-8 w-8 text-white" />
-            </div>
-          </div>
-          
-          <p className="text-center mb-5 text-sm text-muted-foreground">
-            Set a target amount for your savings category.
-          </p>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isEditing || loading || categories.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <ScrollArea className="h-[200px]">
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="target_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Target Amount ({currency.symbol})</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        min="0" 
-                        {...field} 
-                        className="h-9" 
-                        disabled={loading}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => navigate("/savings")}
-                  className="h-9 text-sm"
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={loading}
-                  className="h-9 text-sm"
-                >
-                  {loading ? "Saving..." : isEditing ? "Update" : "Save"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </GlassCard>
+    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          className="mr-2"
+          onClick={() => navigate("/savings")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <h1 className="text-xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
       </div>
-    </Layout>
+
+      <GlassCard className="p-6 bg-gradient-to-br from-white/80 via-green-50/40 to-emerald-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-green-200/30 dark:border-slate-600/30 shadow-lg">
+        <div className="flex justify-center mb-5">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
+            <PiggyBank className="h-8 w-8 text-white" />
+          </div>
+        </div>
+
+        <p className="text-center mb-5 text-sm text-muted-foreground">
+          Set a target amount for your savings category.
+        </p>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Category</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isEditing || loading || categories.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <ScrollArea className="h-[200px]">
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="target_amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Target Amount ({currency.symbol})</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      {...field}
+                      className="h-9"
+                      disabled={loading}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/savings")}
+                className="h-9 text-sm"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-9 text-sm"
+              >
+                {loading ? "Saving..." : isEditing ? "Update" : "Save"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </GlassCard>
+    </div>
   );
 };
 

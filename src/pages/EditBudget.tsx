@@ -12,7 +12,6 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
 import { ArrowLeft } from "lucide-react";
 
 const budgetSchema = z.object({
@@ -48,7 +47,7 @@ const EditBudgetPage = () => {
         console.error("Error loading expense categories:", error);
       }
     };
-    
+
     loadCategories();
   }, []);
 
@@ -111,93 +110,89 @@ const EditBudgetPage = () => {
 
   if (!budget) {
     return (
-      <Layout>
-        <div className="container mx-auto p-4">
-          <p>Loading...</p>
-        </div>
-      </Layout>
+      <div className="container mx-auto p-4">
+        <p>Loading...</p>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            className="mr-2" 
-            onClick={() => navigate("/budgets")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Edit Budget Limit</h1>
-        </div>
-        
-        <div className="bg-card rounded-lg shadow-sm border p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-[250px] overflow-y-auto">
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="monthlyLimit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Limit</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0.00"
-                        step="0.01"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate("/budgets")}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : "Update Budget"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          className="mr-2"
+          onClick={() => navigate("/budgets")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">Edit Budget Limit</h1>
       </div>
-    </Layout>
+
+      <div className="bg-card rounded-lg shadow-sm border p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[250px] overflow-y-auto">
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="monthlyLimit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Monthly Limit</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      step="0.01"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/budgets")}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Update Budget"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </div>
   );
 };
 

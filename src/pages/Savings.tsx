@@ -1,7 +1,6 @@
 ﻿
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
 import { useSettings } from "@/contexts/SettingsContext";
 import { SavingsGoal } from "@/types/transactions";
 import { useToast } from "@/hooks/use-toast";
@@ -114,103 +113,101 @@ const SavingsPage = () => {
   };
 
   return (
-    <Layout>
-      <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+    <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
-        <div className="space-y-6 pb-24">
-          <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
+      <div className="space-y-6 pb-24">
+        <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
 
-          <SavingsTotalCard totalSavings={totalSavings} currency={currency} />
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Savings Goals</h1>
-              <p className="text-sm text-muted-foreground mt-1">Track your progress towards financial goals</p>
-            </div>
-            <Button onClick={() => setIsAddGoalOpen(true)} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" strokeWidth={1.5} />
-              New Goal
-            </Button>
+        <SavingsTotalCard totalSavings={totalSavings} currency={currency} />
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Savings Goals</h1>
+            <p className="text-sm text-muted-foreground mt-1">Track your progress towards financial goals</p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            {/* Stats Cards - Added for better dashboard feel */}
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-full">
-                  <Target className="h-6 w-6 text-primary" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Goals</p>
-                  <p className="text-2xl font-bold">{savingsGoals?.length || 0}</p>
-                </div>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
-                <div className="p-3 bg-green-500/10 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-500" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Saved</p>
-                  <p className="text-2xl font-bold">{currency.symbol}{(totalSavings || 0).toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          <SavingsGoalsList
-            savingsGoals={savingsGoals}
-            getSavingsProgress={getSavingsProgress}
-            currency={currency}
-            onEditGoal={handleEditGoal}
-            onDeleteGoal={setDeletingGoal}
-          />
-
-          {/* Add/Edit Savings Goal Modal */}
-
-          <SavingsGoalForm
-            open={isAddGoalOpen || !!editingGoal}
-
-            onOpenChange={open => {
-              if (!open) {
-                setIsAddGoalOpen(false);
-                setEditingGoal(null);
-              }
-
-            }}
-            onSavingsGoalAdded={handleGoalSaved}
-            savingsGoalId={editingGoal?.id}
-
-          />
-
-          {/* Delete Confirmation Dialog */}
-          <AlertDialog open={!!deletingGoal} onOpenChange={() => setDeletingGoal(null)}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Savings Goal</AlertDialogTitle>
-                <AlertDialogDescription>
-
-                  Are you sure you want to delete the savings goal for "{deletingGoal?.category}"?
-
-                  This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-                <AlertDialogAction
-                  onClick={() => deletingGoal && handleDeleteGoal(deletingGoal)}
-
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button onClick={() => setIsAddGoalOpen(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" strokeWidth={1.5} />
+            New Goal
+          </Button>
         </div>
-      </PullToRefresh>
-    </Layout>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Stats Cards - Added for better dashboard feel */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
+              <div className="p-3 bg-primary/10 rounded-full">
+                <Target className="h-6 w-6 text-primary" strokeWidth={1.5} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Active Goals</p>
+                <p className="text-2xl font-bold">{savingsGoals?.length || 0}</p>
+              </div>
+            </div>
+            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
+              <div className="p-3 bg-green-500/10 rounded-full">
+                <TrendingUp className="h-6 w-6 text-green-500" strokeWidth={1.5} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Saved</p>
+                <p className="text-2xl font-bold">{currency.symbol}{(totalSavings || 0).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <SavingsGoalsList
+          savingsGoals={savingsGoals}
+          getSavingsProgress={getSavingsProgress}
+          currency={currency}
+          onEditGoal={handleEditGoal}
+          onDeleteGoal={setDeletingGoal}
+        />
+
+        {/* Add/Edit Savings Goal Modal */}
+
+        <SavingsGoalForm
+          open={isAddGoalOpen || !!editingGoal}
+
+          onOpenChange={open => {
+            if (!open) {
+              setIsAddGoalOpen(false);
+              setEditingGoal(null);
+            }
+
+          }}
+          onSavingsGoalAdded={handleGoalSaved}
+          savingsGoalId={editingGoal?.id}
+
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deletingGoal} onOpenChange={() => setDeletingGoal(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Savings Goal</AlertDialogTitle>
+              <AlertDialogDescription>
+
+                Are you sure you want to delete the savings goal for "{deletingGoal?.category}"?
+
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+              <AlertDialogAction
+                onClick={() => deletingGoal && handleDeleteGoal(deletingGoal)}
+
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </PullToRefresh>
   );
 };
 

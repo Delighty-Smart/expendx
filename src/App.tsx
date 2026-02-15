@@ -30,49 +30,10 @@ import PWAUpdatePrompt from '@/components/PWAUpdatePrompt'
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
 
+import Layout from '@/components/Layout'
+
 function App() {
-  // Initialize enhanced offline manager
-  useEffect(() => {
-    const initializeEnhancedOffline = async () => {
-      try {
-        // Enhanced offline manager initialized successfully
-        console.log('App version: 1.0.1 - Minimalistic Feedback');
-        console.log('Enhanced offline manager initialized');
-      } catch (err) {
-        console.error('Failed to initialize enhanced offline manager:', err);
-      }
-    };
-
-    initializeEnhancedOffline();
-
-    // Enable native pull-to-refresh by setting appropriate meta tags
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (viewport) {
-      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
-    }
-
-    // Add CSS to enable native pull-to-refresh
-    const style = document.createElement('style');
-    style.textContent = `
-      html, body {
-        overscroll-behavior: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      /* Enable native pull-to-refresh on mobile */
-      @supports (-webkit-overflow-scrolling: touch) {
-        body {
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior-y: auto;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  // ... (keep initializeEnhancedOffline and viewport/style effects)
 
   return (
     <TooltipProvider>
@@ -80,26 +41,33 @@ function App() {
         <BrowserRouter>
           <div className="app-container">
             <Routes>
-              <Route path="/" element={<IndexPage />} />
+              {/* Public Routes */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/add-transaction" element={<AddTransaction />} />
-              <Route path="/budgets" element={<Budgets />} />
-              <Route path="/add-budget" element={<AddBudget />} />
-              <Route path="/edit-budget" element={<EditBudget />} />
-              <Route path="/set-income" element={<SetIncome />} />
-              <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
-              <Route path="/savings" element={<Savings />} />
-              <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
-              <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/feedback" element={<AdminFeedback />} />
+
+              {/* Protected Routes with Persistent Layout */}
+              <Route element={<Layout />}>
+                <Route path="/" element={<IndexPage />} />
+                <Route path="/transactions" element={<Transactions />} />
+                <Route path="/add-transaction" element={<AddTransaction />} />
+                <Route path="/budgets" element={<Budgets />} />
+                <Route path="/add-budget" element={<AddBudget />} />
+                <Route path="/edit-budget" element={<EditBudget />} />
+                <Route path="/set-income" element={<SetIncome />} />
+                <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
+                <Route path="/savings" element={<Savings />} />
+                <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
+                <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/feedback" element={<Feedback />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/feedback" element={<AdminFeedback />} />
+              </Route>
+
+              {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

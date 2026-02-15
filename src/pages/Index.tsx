@@ -3,7 +3,6 @@
 import { createPortal } from "react-dom";
 
 import { useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
 import { useBudgetAlerts } from "@/hooks/useBudgetAlerts";
 import { Card, GlassCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,13 +48,10 @@ interface TransactionData {
 
 type TransactionType = "credit" | "debit" | "savings";
 
-// Function to navigate to Add Transaction page
-const handleAddTransaction = () => {
-  window.location.href = '/add-transaction';
-};
+// Function to handle adding transactions relocated inside component to use navigate
 
 const IndexPage = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { currency } = useSettings();
   const navigate = useNavigate();
   const { refreshData } = useRefresh();
@@ -159,13 +155,7 @@ const IndexPage = () => {
     },
   });
 
-  const { data: userProfile } = useQuery({
-    queryKey: ["user_profile", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      return await getUserProfile();
-    },
-  });
+  // Removed local userProfile query as it's now handled globally by useAuth
 
   // Use the enhanced transaction data hook for monthly transactions
   const {
@@ -414,328 +404,327 @@ const IndexPage = () => {
   const totalSpendingAmount = spendingData.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <Layout>
-      <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
+    <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
-        <div className="space-y-6 pb-20 px-4 md:px-0">
-          {/* Header Area */}
-          <div className="flex items-center justify-between pt-4 pb-2">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                {getGreeting()}, {userProfile?.first_name || userProfile?.username || "there"}
-              </h1>
-              <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                className="rounded-full w-10 h-10 hover:opacity-80 transition-opacity flex items-center justify-center overflow-hidden"
-                onClick={() => navigate('/profile')}
+      <div className="space-y-6 pb-20 px-4 md:px-0">
+        {/* Header Area */}
+        <div className="flex items-center justify-between pt-4 pb-2">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              {getGreeting()}, {profile?.first_name || profile?.username || "there"}
+            </h1>
+            <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              className="rounded-full w-10 h-10 hover:opacity-80 transition-opacity flex items-center justify-center overflow-hidden"
+              onClick={() => navigate('/profile')}
+            >
+              <UserAvatar
+                url={profile?.avatar_url}
+                name={profile?.username || profile?.email || "User"}
+                className="w-full h-full"
+                showDefaultGradient={false}
+              />
+            </button>
+            <div className="relative">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none"
+                onClick={() => navigate('/alerts')}
               >
-                <UserAvatar
-                  url={userProfile?.avatar_url}
-                  name={userProfile?.username || userProfile?.email || "User"}
-                  className="w-full h-full"
-                  showDefaultGradient={false}
-                />
-              </button>
-              <div className="relative">
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none"
-                  onClick={() => navigate('/alerts')}
-                >
-                  <Bell className="h-5 w-5" strokeWidth={1.5} />
-                  {unreadAlerts > 0 && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-accent rounded-full border-2 border-background" />}
-                </Button>
-              </div>
+                <Bell className="h-5 w-5" strokeWidth={1.5} />
+                {unreadAlerts > 0 && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-accent rounded-full border-2 border-background" />}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Balance</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              onClick={() => setHideAmounts(!hideAmounts)}
+            >
+              {hideAmounts ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          <div className="flex items-baseline gap-1">
+            {isAllTransactionsLoading ? (
+              <Skeleton className="h-10 w-32 mb-1" />
+            ) : (
+              <>
+                <span className="text-[36px] font-semibold tracking-[-0.5px] text-foreground">
+                  {currency.symbol}{formatAmount(currentBalance).split('.')[0]}
+                </span>
+                <span className="text-xl font-medium text-muted-foreground">
+                  .{formatAmount(currentBalance).split('.')[1]}
+                </span>
+              </>
+            )}
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-medium text-foreground">
+            {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : monthlyIncome > 0 ? (
+              <>
+                <TrendingUp className="h-3 w-3 text-accent" strokeWidth={1.5} />
+                <span>{progressPercentage.toFixed(0)}% of monthly target</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">No monthly target set</span>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+
+        {/* Floating Action Button (FAB) */}
+        {/* Floating Action Button (FAB) - Portaled to escape Layout transforms */}
+        {createPortal(
+          <Button
+            onClick={() => navigate("/add-transaction")}
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+            size="icon"
+          >
+            <Plus className="h-6 w-6" strokeWidth={1.5} />
+          </Button>,
+          document.body
+        )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Monthly Income */}
+          <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Income</p>
+              <p className="text-lg font-bold tracking-tight text-foreground">
+                {isMonthlyTransactionsLoading ? (
+                  <Skeleton className="h-6 w-20 mt-1" />
+                ) : (
+                  <>
+                    <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
+                    {formatAmount(monthlyIncomeTotal)}
+                  </>
+                )}
+              </p>
+            </div>
+            <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors">
+              <ArrowUpRight className="w-4 h-4 text-green-600 dark:text-green-400" strokeWidth={2} />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Balance</p>
+          {/* Monthly Expenses */}
+          <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
+              <p className="text-lg font-bold tracking-tight text-foreground">
+                {isMonthlyTransactionsLoading ? (
+                  <Skeleton className="h-6 w-20 mt-1" />
+                ) : (
+                  <>
+                    <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
+                    {formatAmount(monthlyExpenses)}
+                  </>
+                )}
+              </p>
+            </div>
+            <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
+              <ArrowDownRight className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
+            </div>
+          </div>
+
+        </div>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <button
+            onClick={() => navigate('/transactions')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+          >
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <Receipt className="h-5 w-5" strokeWidth={1.5} />
+            </div>
+            <span className="font-medium text-foreground text-sm">Transactions</span>
+          </button>
+          <button
+            onClick={() => navigate('/budgets')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+          >
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <DollarSign className="h-5 w-5" strokeWidth={1.5} />
+            </div>
+            <span className="font-medium text-foreground text-sm">Budgets</span>
+          </button>
+          <button
+            onClick={() => navigate('/savings')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+          >
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <PiggyBank className="h-5 w-5" strokeWidth={1.5} />
+            </div>
+            <span className="font-medium text-foreground text-sm">Savings</span>
+          </button>
+          <button
+            onClick={() => navigate('/subscriptions')}
+            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+          >
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <CreditCard className="h-5 w-5" strokeWidth={1.5} />
+            </div>
+            <span className="font-medium text-foreground text-sm">Subscriptions</span>
+          </button>
+        </div>
+
+        {/* Charts section - All using glass card style */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Spending by Category Chart */}
+          <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                Spending by Category
+              </h3>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                onClick={() => setHideAmounts(!hideAmounts)}
+                className="h-8 w-8 hover:bg-primary/10 rounded-full"
+                onClick={() => setFullscreenChartId('spending')}
               >
-                {hideAmounts ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                <Maximize2 className="h-4 w-4 text-muted-foreground" />
               </Button>
             </div>
-            <div className="flex items-baseline gap-1">
-              {isAllTransactionsLoading ? (
-                <Skeleton className="h-10 w-32 mb-1" />
-              ) : (
-                <>
-                  <span className="text-[36px] font-semibold tracking-[-0.5px] text-foreground">
-                    {currency.symbol}{formatAmount(currentBalance).split('.')[0]}
-                  </span>
-                  <span className="text-xl font-medium text-muted-foreground">
-                    .{formatAmount(currentBalance).split('.')[1]}
-                  </span>
-                </>
-              )}
+            <div className="h-[300px]">
+              <SpendingByCategoryChart
+                data={spendingData}
+                hideAmounts={hideAmounts}
+                currencySymbol={currency.symbol}
+                formatAmount={formatAmount}
+                colors={COLORS}
+              />
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-medium text-foreground">
-              {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
-                <Skeleton className="h-4 w-24" />
-              ) : monthlyIncome > 0 ? (
-                <>
-                  <TrendingUp className="h-3 w-3 text-accent" strokeWidth={1.5} />
-                  <span>{progressPercentage.toFixed(0)}% of monthly target</span>
-                </>
-              ) : (
-                <span className="text-muted-foreground">No monthly target set</span>
-              )}
+          </GlassCard>
+
+          {/* Daily Income & Expenses Chart */}
+          <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-blue-500/5 to-blue-500/10 dark:from-blue-500/10 dark:to-blue-500/20 border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                <AreaChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                Daily Income & Expenses
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-primary/10 rounded-full"
+                onClick={() => setFullscreenChartId('daily')}
+              >
+                <Maximize2 className="h-4 w-4 text-muted-foreground" />
+              </Button>
             </div>
-          </div>
-
-          {/* Action Buttons */}
-
-          {/* Floating Action Button (FAB) */}
-          {/* Floating Action Button (FAB) - Portaled to escape Layout transforms */}
-          {createPortal(
-            <Button
-              onClick={() => navigate("/add-transaction")}
-              className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
-              size="icon"
-            >
-              <Plus className="h-6 w-6" strokeWidth={1.5} />
-            </Button>,
-            document.body
-          )}
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* Monthly Income */}
-            <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Income</p>
-                <p className="text-lg font-bold tracking-tight text-foreground">
-                  {isMonthlyTransactionsLoading ? (
-                    <Skeleton className="h-6 w-20 mt-1" />
-                  ) : (
-                    <>
-                      <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
-                      {formatAmount(monthlyIncomeTotal)}
-                    </>
-                  )}
-                </p>
-              </div>
-              <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors">
-                <ArrowUpRight className="w-4 h-4 text-green-600 dark:text-green-400" strokeWidth={2} />
-              </div>
-            </div>
-
-            {/* Monthly Expenses */}
-            <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
-              <div className="flex flex-col gap-0.5">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
-                <p className="text-lg font-bold tracking-tight text-foreground">
-                  {isMonthlyTransactionsLoading ? (
-                    <Skeleton className="h-6 w-20 mt-1" />
-                  ) : (
-                    <>
-                      <span className="text-xs font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>
-                      {formatAmount(monthlyExpenses)}
-                    </>
-                  )}
-                </p>
-              </div>
-              <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
-                <ArrowDownRight className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
-              </div>
-            </div>
-
-          </div>
-
-          {/* Quick Links */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <button
-              onClick={() => navigate('/transactions')}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
-            >
-              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                <Receipt className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <span className="font-medium text-foreground text-sm">Transactions</span>
-            </button>
-            <button
-              onClick={() => navigate('/budgets')}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
-            >
-              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                <DollarSign className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <span className="font-medium text-foreground text-sm">Budgets</span>
-            </button>
-            <button
-              onClick={() => navigate('/savings')}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
-            >
-              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                <PiggyBank className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <span className="font-medium text-foreground text-sm">Savings</span>
-            </button>
-            <button
-              onClick={() => navigate('/subscriptions')}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
-            >
-              <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                <CreditCard className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <span className="font-medium text-foreground text-sm">Subscriptions</span>
-            </button>
-          </div>
-
-          {/* Charts section - All using glass card style */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Spending by Category Chart */}
-            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border border-border/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                  <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                  Spending by Category
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-primary/10 rounded-full"
-                  onClick={() => setFullscreenChartId('spending')}
-                >
-                  <Maximize2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-              <div className="h-[300px]">
-                <SpendingByCategoryChart
-                  data={spendingData}
-                  hideAmounts={hideAmounts}
-                  currencySymbol={currency.symbol}
-                  formatAmount={formatAmount}
-                  colors={COLORS}
-                />
-              </div>
-            </GlassCard>
-
-            {/* Daily Income & Expenses Chart */}
-            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-blue-500/5 to-blue-500/10 dark:from-blue-500/10 dark:to-blue-500/20 border border-border/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                  <AreaChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                  Daily Income & Expenses
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-primary/10 rounded-full"
-                  onClick={() => setFullscreenChartId('daily')}
-                >
-                  <Maximize2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-              <div className="h-[300px] relative">
-                <div className="flex flex-col space-y-2 mb-4">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Week of {format(currentWeekStart, 'MMMM d, yyyy')}
-                    </div>
-                    <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={scrollToPreviousWeek}
-                        className="h-7 w-7 p-0 hover:bg-background"
-                        aria-label="Previous Week"
-                      >
-                        <ChevronLeft className="h-4 w-4" strokeWidth={2} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={scrollToNextWeek}
-                        className="h-7 w-7 p-0 hover:bg-background"
-                        aria-label="Next Week"
-                      >
-                        <ChevronRight className="h-4 w-4" strokeWidth={2} />
-                      </Button>
-                    </div>
+            <div className="h-[300px] relative">
+              <div className="flex flex-col space-y-2 mb-4">
+                <div className="flex items-center justify-between w-full">
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Week of {format(currentWeekStart, 'MMMM d, yyyy')}
+                  </div>
+                  <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={scrollToPreviousWeek}
+                      className="h-7 w-7 p-0 hover:bg-background"
+                      aria-label="Previous Week"
+                    >
+                      <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={scrollToNextWeek}
+                      className="h-7 w-7 p-0 hover:bg-background"
+                      aria-label="Next Week"
+                    >
+                      <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                    </Button>
                   </div>
                 </div>
-                <DailyIncomeExpensesChart
-                  data={dailyData}
-                  hideAmounts={hideAmounts}
-                  currencySymbol={currency.symbol}
-                  formatAmount={formatAmount}
-                />
               </div>
-            </GlassCard>
+              <DailyIncomeExpensesChart
+                data={dailyData}
+                hideAmounts={hideAmounts}
+                currencySymbol={currency.symbol}
+                formatAmount={formatAmount}
+              />
+            </div>
+          </GlassCard>
 
-            {/* Balance Trend Chart */}
-            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-green-500/5 to-green-500/10 dark:from-green-500/10 dark:to-green-500/20 border border-border/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                  <LineChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                  Balance Trend
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-primary/10 rounded-full"
-                  onClick={() => setFullscreenChartId('trend')}
-                >
-                  <Maximize2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-              <div className="h-[300px]">
-                <BalanceTrendChart
-                  data={trendData}
-                  hideAmounts={hideAmounts}
-                  currencySymbol={currency.symbol}
-                  formatAmount={formatAmount}
-                />
-              </div>
-            </GlassCard>
+          {/* Balance Trend Chart */}
+          <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-green-500/5 to-green-500/10 dark:from-green-500/10 dark:to-green-500/20 border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                <LineChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                Balance Trend
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-primary/10 rounded-full"
+                onClick={() => setFullscreenChartId('trend')}
+              >
+                <Maximize2 className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
+            <div className="h-[300px]">
+              <BalanceTrendChart
+                data={trendData}
+                hideAmounts={hideAmounts}
+                currencySymbol={currency.symbol}
+                formatAmount={formatAmount}
+              />
+            </div>
+          </GlassCard>
 
-            {/* Expense Distribution Chart */}
-            <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-amber-500/5 to-amber-500/10 dark:from-amber-500/10 dark:to-amber-500/20 border border-border/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                  <PieChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                  Expense Distribution
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-primary/10 rounded-full"
-                  onClick={() => setFullscreenChartId('distribution')}
-                >
-                  <Maximize2 className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-              <div className="h-[350px]">
-                <ExpenseDistributionChart
-                  data={spendingData}
-                  hideAmounts={hideAmounts}
-                  currencySymbol={currency.symbol}
-                  formatAmount={formatAmount}
-                  colors={COLORS}
-                  totalAmount={totalSpendingAmount}
-                  hoveredLegendItem={hoveredLegendItem}
-                  setHoveredLegendItem={setHoveredLegendItem}
-                />
-              </div>
-            </GlassCard>
+          {/* Expense Distribution Chart */}
+          <GlassCard className="p-6 chart-container transition-opacity duration-500 bg-gradient-to-br from-amber-500/5 to-amber-500/10 dark:from-amber-500/10 dark:to-amber-500/20 border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+                <PieChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                Expense Distribution
+              </h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-primary/10 rounded-full"
+                onClick={() => setFullscreenChartId('distribution')}
+              >
+                <Maximize2 className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </div>
+            <div className="h-[350px]">
+              <ExpenseDistributionChart
+                data={spendingData}
+                hideAmounts={hideAmounts}
+                currencySymbol={currency.symbol}
+                formatAmount={formatAmount}
+                colors={COLORS}
+                totalAmount={totalSpendingAmount}
+                hoveredLegendItem={hoveredLegendItem}
+                setHoveredLegendItem={setHoveredLegendItem}
+              />
+            </div>
+          </GlassCard>
 
-          </div>
         </div>
-      </PullToRefresh>
+      </div>
+
 
       {/* Fullscreen Chart Modal */}
       <FullscreenChartModal
@@ -858,7 +847,7 @@ const IndexPage = () => {
           )}
         </div>
       </FullscreenChartModal>
-    </Layout>
+    </PullToRefresh>
   );
 };
 

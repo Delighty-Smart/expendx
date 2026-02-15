@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -40,35 +39,35 @@ const AdminDashboard = () => {
       const { count: userCount, error: userError } = await supabase
         .from('user_profiles')
         .select('*', { count: 'exact', head: true });
-      
+
       if (userError) throw userError;
 
       // Fetch transaction count
       const { count: transactionCount, error: transactionError } = await supabase
         .from('transactions')
         .select('*', { count: 'exact', head: true });
-      
+
       if (transactionError) throw transactionError;
 
       // Fetch feedback count
       const { count: feedbackCount, error: feedbackError } = await supabase
         .from('user_feedback')
         .select('*', { count: 'exact', head: true });
-      
+
       if (feedbackError) throw feedbackError;
 
       // Fetch streak count
       const { count: streakCount, error: streakError } = await supabase
         .from('user_streaks')
         .select('*', { count: 'exact', head: true });
-      
+
       if (streakError) throw streakError;
 
       // Fetch savings goal count
       const { count: savingsCount, error: savingsError } = await supabase
         .from('savings_goals')
         .select('*', { count: 'exact', head: true });
-      
+
       if (savingsError) throw savingsError;
 
       setStats({
@@ -141,80 +140,76 @@ const AdminDashboard = () => {
 
   if (isAdmin === null) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <h1 className="font-bold text-xl">Admin Dashboard</h1>
-        
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="feedback">Feedback</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview" className="mt-4">
-            <Card className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">System Overview</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</h3>
-                  <p className="text-2xl font-bold">{stats.userCount}</p>
-                </div>
-                
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-green-600 dark:text-green-400">Transactions</h3>
-                  <p className="text-2xl font-bold">{stats.transactionCount}</p>
-                </div>
-                
-                <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400">Feedback Entries</h3>
-                  <p className="text-2xl font-bold">{stats.feedbackCount}</p>
-                </div>
+    <div className="space-y-6">
+      <h1 className="font-bold text-xl">Admin Dashboard</h1>
+
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-4">
+          <Card className="p-6">
+            <h2 className="text-2xl font-semibold mb-4">System Overview</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</h3>
+                <p className="text-2xl font-bold">{stats.userCount}</p>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400">Active Streaks</h3>
-                  <p className="text-2xl font-bold">{stats.streakCount}</p>
-                </div>
-                
-                <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-pink-600 dark:text-pink-400">Savings Goals</h3>
-                  <p className="text-2xl font-bold">{stats.savingsCount}</p>
-                </div>
+
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-green-600 dark:text-green-400">Transactions</h3>
+                <p className="text-2xl font-bold">{stats.transactionCount}</p>
               </div>
-              
-              <p className="text-muted-foreground">
-                Welcome to the admin panel. Use the tabs above to navigate between different sections.
-                The dashboard will automatically update when data changes.
-              </p>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="users" className="mt-4">
-            <Card className="p-6">
-              <UserManagement />
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="feedback" className="mt-4">
-            <Card className="p-6">
-              <FeedbackManagement />
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </Layout>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400">Feedback Entries</h3>
+                <p className="text-2xl font-bold">{stats.feedbackCount}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400">Active Streaks</h3>
+                <p className="text-2xl font-bold">{stats.streakCount}</p>
+              </div>
+
+              <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-pink-600 dark:text-pink-400">Savings Goals</h3>
+                <p className="text-2xl font-bold">{stats.savingsCount}</p>
+              </div>
+            </div>
+
+            <p className="text-muted-foreground">
+              Welcome to the admin panel. Use the tabs above to navigate between different sections.
+              The dashboard will automatically update when data changes.
+            </p>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users" className="mt-4">
+          <Card className="p-6">
+            <UserManagement />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="feedback" className="mt-4">
+          <Card className="p-6">
+            <FeedbackManagement />
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
