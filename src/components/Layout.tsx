@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import UserAvatar from "./UserAvatar";
+import { useAuth } from "@/hooks/useAuth";
 
 const Layout = ({
   children
@@ -28,6 +29,7 @@ const Layout = ({
     theme,
     updateTheme
   } = useSettings();
+  const { signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const {
@@ -99,19 +101,10 @@ const Layout = ({
   }, [userStreak]);
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account"
-      });
+      await signOut();
       navigate("/auth");
     } catch (error) {
-      console.error("Error logging out:", error);
-      toast({
-        title: "Logout failed",
-        description: "There was an error logging out. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Error logging out in Layout:", error);
     }
   };
   const handleStreakClick = () => {

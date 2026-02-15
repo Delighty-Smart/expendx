@@ -212,6 +212,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
+      // Explicitly clear state to ensure immediate UI update
+      setSession(null);
+      setUser(null);
+
       // Clear cached user ID and onboarding flag on sign out
       cacheUserId(null);
       sessionStorage.removeItem('expendx_onboarding_seen');
