@@ -34,16 +34,30 @@ export const MAX_FREEZE_DAYS = 3;
 
 export async function updateUserStreak(): Promise<UserStreak | null> {
   try {
+    console.log("updateUserStreak called");
+
+    // Timeout for Supabase operations
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Streak update timed out')), 8000);
+    });
+
     // Check if user is authenticated
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    const userPromise = supabase.auth.getUser();
+    const { data: { user }, error: authError } = await (Promise.race([userPromise, timeoutPromise]) as any);
+
+    if (authError || !user) {
+      console.log("No user in updateUserStreak, skipping");
+      return null;
+    }
 
     // Get current user streak or create if not exists
-    const { data: streakData, error: streakError } = await supabase
+    const streakPromise = supabase
       .from("user_streaks")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    const { data: streakData, error: streakError } = await (Promise.race([streakPromise, timeoutPromise]) as any);
 
     if (streakError && !streakError.message.includes("no rows")) {
       console.error("Error fetching streak:", streakError);
@@ -55,25 +69,32 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
 
     // If no streak data exists yet, create new streak record
     if (!streakData) {
-      const { data: newStreak, error: insertError } = await supabase
+      console.log("Creating new streak record for user:", user.id);
+      const insertPromise = supabase
         .from("user_streaks")
-        .insert([{ 
-          user_id: user.id, 
-          current_streak: 1, 
+        .insert([{
+          user_id: user.id,
+          current_streak: 1,
           highest_streak: 1,
-          current_title: "Budget Beginner", 
+          current_title: "Budget Beginner",
           freeze_count: MAX_FREEZE_DAYS,
           last_login: today.toISOString()
         }])
         .select()
         .single();
-        
+
+      const { data: newStreak, error: insertError } = await (Promise.race([insertPromise, timeoutPromise]) as any);
+
       if (insertError) {
         console.error("Error creating streak:", insertError);
         return null;
       }
-      
-      await createStreakAlert(user.id, "Welcome! Your streak journey begins now. Keep logging in daily to build your streak!", "streak");
+
+      try {
+        await createStreakAlert(user.id, "Welcome! Your streak journey begins now. Keep logging in daily to build your streak!", "streak");
+      } catch (err) {
+        console.warn("Failed to create initial streak alert, ignoring.");
+      }
       return newStreak;
     }
 
@@ -96,7 +117,7 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       // Perfect consecutive day - increment streak and reset freeze count
       newStreak += 1;
       freezeCount = MAX_FREEZE_DAYS;
-      
+
       // Check for milestone achievement
       const milestone = STREAK_MILESTONES.find(m => m.days === newStreak);
       if (milestone && milestone.title !== currentTitle) {
@@ -104,27 +125,23 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
         alertMessage = `🎉 Congratulations! You've achieved a ${newStreak}-day streak and earned the "${milestone.title}" title!`;
         currentTitle = milestone.title;
       } else if (newStreak % 7 === 0 && newStreak > 7) {
-        // Celebrate weekly milestones
         shouldCreateAlert = true;
         alertMessage = `🔥 Amazing! You've maintained your streak for ${newStreak} days straight! Keep it up!`;
       }
     } else if (daysSinceLastLogin > 1) {
       // Gap in login days
       if (daysSinceLastLogin <= MAX_FREEZE_DAYS && freezeCount >= (daysSinceLastLogin - 1)) {
-        // Within freeze window and have enough freeze credits
         const freezeUsed = daysSinceLastLogin - 1;
         freezeCount = Math.max(0, freezeCount - freezeUsed);
-        newStreak += 1; // Still count as consecutive due to freeze
-        
+        newStreak += 1;
+
         shouldCreateAlert = true;
         alertMessage = `⚡ Streak saved! You used ${freezeUsed} freeze ${freezeUsed === 1 ? 'credit' : 'credits'}. You have ${freezeCount} remaining.`;
       } else {
-        // Streak broken - reset
         const oldStreak = streakData.current_streak;
-        newStreak = 1; // Start fresh with today's login
+        newStreak = 1;
         freezeCount = MAX_FREEZE_DAYS;
-        
-        // Reset title if streak was significant
+
         if (oldStreak >= 30) {
           currentTitle = "Budget Beginner";
           shouldCreateAlert = true;
@@ -146,12 +163,11 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       }
     }
 
-    // Calculate highest streak
     const highestStreak = Math.max(streakData.highest_streak, newStreak);
     const isNewRecord = highestStreak > streakData.highest_streak;
 
     // Update streak in database
-    const { data: updatedStreak, error: updateError } = await supabase
+    const updatePromise = supabase
       .from("user_streaks")
       .update({
         current_streak: newStreak,
@@ -164,6 +180,8 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       .select()
       .single();
 
+    const { data: updatedStreak, error: updateError } = await (Promise.race([updatePromise, timeoutPromise]) as any);
+
     if (updateError) {
       console.error("Error updating streak:", updateError);
       return null;
@@ -174,14 +192,13 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       await createStreakAlert(user.id, alertMessage, "streak");
     }
 
-    // Special alert for new personal records
     if (isNewRecord && newStreak > 1) {
       await createStreakAlert(user.id, `🏆 New personal record! ${newStreak} days is your longest streak yet!`, "achievement");
     }
 
     return updatedStreak;
   } catch (error) {
-    console.error("Error in updateUserStreak:", error);
+    console.error("Error in updateUserStreak or timeout:", error);
     return null;
   }
 }
@@ -192,7 +209,7 @@ async function createStreakAlert(userId: string, message: string, type: string) 
     // Check for duplicate alerts in the last hour to prevent spam
     const oneHourAgo = new Date();
     oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-    
+
     const { data: existingAlerts, error: checkError } = await supabase
       .from('alerts')
       .select('id')
@@ -201,18 +218,18 @@ async function createStreakAlert(userId: string, message: string, type: string) 
       .eq('type', type)
       .gte('created_at', oneHourAgo.toISOString())
       .limit(1);
-    
+
     if (checkError) {
       console.error("Error checking for duplicate alerts:", checkError);
       return;
     }
-    
+
     // If duplicate exists, don't create another one
     if (existingAlerts && existingAlerts.length > 0) {
       console.log("Duplicate alert detected, skipping creation:", message);
       return;
     }
-    
+
     // Create the alert if no duplicate exists
     const { error: insertError } = await supabase
       .from('alerts')
@@ -226,7 +243,7 @@ async function createStreakAlert(userId: string, message: string, type: string) 
         },
         { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
       );
-    
+
     if (insertError) {
       console.error("Error creating streak alert:", insertError);
     }
@@ -240,7 +257,7 @@ export function determineUserTitle(dayCount: number): string {
   const milestone = [...STREAK_MILESTONES]
     .reverse()
     .find(m => dayCount >= m.days);
-  
+
   return milestone ? milestone.title : "Budget Beginner";
 }
 
@@ -260,7 +277,7 @@ export function canMaintainStreak(lastLogin: string, freezeCount: number): boole
   const lastLoginDate = startOfDay(new Date(lastLogin));
   const today = startOfDay(new Date());
   const daysSince = differenceInDays(today, lastLoginDate);
-  
+
   if (daysSince <= 1) return true; // Today or yesterday
   return daysSince - 1 <= freezeCount; // Can use freeze credits
 }
@@ -274,7 +291,7 @@ export function getStreakStatus(streak: StreakStatusData): {
   const lastLogin = startOfDay(new Date(streak.last_login));
   const today = startOfDay(new Date());
   const daysSince = differenceInDays(today, lastLogin);
-  
+
   if (isToday(lastLogin)) {
     return {
       status: 'active',
@@ -282,7 +299,7 @@ export function getStreakStatus(streak: StreakStatusData): {
       canRecover: false
     };
   }
-  
+
   if (isYesterday(lastLogin)) {
     return {
       status: 'at_risk',
@@ -290,7 +307,7 @@ export function getStreakStatus(streak: StreakStatusData): {
       canRecover: true
     };
   }
-  
+
   if (daysSince <= MAX_FREEZE_DAYS + 1 && streak.freeze_count > 0) {
     return {
       status: 'at_risk',
@@ -298,7 +315,7 @@ export function getStreakStatus(streak: StreakStatusData): {
       canRecover: true
     };
   }
-  
+
   return {
     status: 'broken',
     message: 'Streak broken, but you can start fresh!',
@@ -309,23 +326,38 @@ export function getStreakStatus(streak: StreakStatusData): {
 // Get user profile data including email
 export async function getUserProfile() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    
-    const { data: profile, error } = await supabase
+    console.log("getUserProfile called");
+
+    // Timeout for Supabase operations
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Profile fetch timed out')), 8000);
+    });
+
+    const userPromise = supabase.auth.getUser();
+    const { data: { user }, error: authError } = await (Promise.race([userPromise, timeoutPromise]) as any);
+
+    if (authError || !user) {
+      console.log("No user in getUserProfile, skipping");
+      return null;
+    }
+
+    const profilePromise = supabase
       .from("user_profiles")
       .select("*")
       .eq("id", user.id)
       .maybeSingle();
-    
+
+    const { data: profile, error } = await (Promise.race([profilePromise, timeoutPromise]) as any);
+
     if (error && !error.message.includes("no rows")) {
       console.error("Error fetching user profile:", error);
       return null;
     }
-    
+
     // If profile doesn't exist, create one
     if (!profile) {
-      const { data: newProfile, error: createError } = await supabase
+      console.log("Creating new profile for user:", user.id);
+      const insertPromise = supabase
         .from("user_profiles")
         .insert({
           id: user.id,
@@ -334,18 +366,20 @@ export async function getUserProfile() {
         })
         .select()
         .single();
-        
+
+      const { data: newProfile, error: createError } = await (Promise.race([insertPromise, timeoutPromise]) as any);
+
       if (createError) {
         console.error("Error creating user profile:", createError);
         return null;
       }
-      
+
       return newProfile;
     }
-    
+
     return profile;
   } catch (error) {
-    console.error("Error in getUserProfile:", error);
+    console.error("Error in getUserProfile or timeout:", error);
     return null;
   }
 }

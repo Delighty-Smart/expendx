@@ -20,29 +20,40 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        console.log("Profile page: fetchUserData called");
+
+        // Timeout for session retrieval
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Profile data fetch timed out')), 10000);
+        });
+
         // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
+        const userPromise = supabase.auth.getUser();
+        const { data: { user }, error: authError } = await (Promise.race([userPromise, timeoutPromise]) as any);
+
+        if (authError || !user) {
+          console.log("No user in Profile page, redirecting to auth: ", authError);
           navigate("/auth");
           return;
         }
 
-        console.log("Current user:", user);
+        console.log("Current user for profile:", user.id);
 
         // Get user profile
-        let { data: profileData, error: profileError } = await supabase
+        const profileQuery = supabase
           .from("user_profiles")
           .select("*")
           .eq("id", user.id)
           .maybeSingle();
+
+        let { data: profileData, error: profileError } = await (Promise.race([profileQuery, timeoutPromise]) as any);
 
         console.log("Profile data response:", { data: profileData, error: profileError });
 
         // If profile doesn't exist, create one
         if (!profileData && (profileError?.code === 'PGRST116' || profileError?.message?.includes("no rows"))) {
           console.log("Creating new profile for user");
-          const { data: newProfile, error: createError } = await supabase
+          const createProfilePromise = supabase
             .from("user_profiles")
             .insert({
               id: user.id,
@@ -51,78 +62,72 @@ const Profile = () => {
             })
             .select()
             .single();
-            
+
+          const { data: newProfile, error: createError } = await (Promise.race([createProfilePromise, timeoutPromise]) as any);
+
           if (createError) {
             console.error("Error creating profile:", createError);
             throw createError;
           }
           console.log("New profile created:", newProfile);
           profileData = newProfile;
-        } else if (profileError && !profileError.message?.includes("no rows")) {
-          console.error("Profile error:", profileError);
-          throw profileError;
+        } else if (profileError) {
+          console.error("Profile query error:", profileError);
+          // Don't throw here, try to continue with streak
         }
-        
-        // Update user streak (also creates if it doesn't exist)
+
+        // Update user streak (also creates if it doesn't exist) - This function already has timeouts
         const updatedStreak = await updateUserStreak();
-        console.log("Updated streak:", updatedStreak);
-        
+        console.log("Updated streak in profile:", updatedStreak);
+
         if (updatedStreak) {
           setUserStreak(updatedStreak);
         } else {
           // Fallback to fetching streak directly
-          let { data: streakData, error: streakError } = await supabase
+          const streakQuery = supabase
             .from("user_streaks")
             .select("*")
             .eq("user_id", user.id)
             .maybeSingle();
-            
+
+          let { data: streakData, error: streakError } = await (Promise.race([streakQuery, timeoutPromise]) as any);
+
           console.log("Streak data response:", { data: streakData, error: streakError });
-          
-          // If streak doesn't exist, create one
-          if (!streakData && (streakError?.code === 'PGRST116' || streakError?.message?.includes("no rows"))) {
-            console.log("Creating new streak for user");
-            const today = new Date();
-            const { data: newStreak, error: createStreakError } = await supabase
-              .from("user_streaks")
-              .insert({
-                user_id: user.id,
-                current_streak: 1,
-                highest_streak: 1,
-                current_title: "Budget Beginner",
-                freeze_count: 3,
-                last_login: today.toISOString()
-              })
-              .select()
-              .single();
-              
-            if (createStreakError) {
-              console.error("Error creating streak:", createStreakError);
-              throw createStreakError;
-            }
-            console.log("New streak created:", newStreak);
-            streakData = newStreak;
-          } else if (streakError && !streakError.message?.includes("no rows")) {
-            console.error("Streak error:", streakError);
-            throw streakError;
+
+          if (!streakData) {
+            console.log("Streak missing, creating defaults");
+            // We'll let updateUserStreak handle creation eventually, but set local state for now
+            setUserStreak({
+              current_streak: 1,
+              highest_streak: 1,
+              current_title: "Budget Beginner",
+              freeze_count: 3,
+              last_login: new Date().toISOString()
+            });
+          } else {
+            setUserStreak(streakData);
           }
-          
-          setUserStreak(streakData);
         }
 
-        setUserProfile(profileData);
-        
-        // Success notification
-        toast({
-          title: "Profile loaded",
-          description: `Welcome back, ${profileData?.username || 'user'}!`,
+        setUserProfile(profileData || {
+          id: user.id,
+          email: user.email,
+          username: user.email?.split('@')[0] || 'user'
         });
+
+        // Success notification
+        if (profileData) {
+          toast({
+            title: "Profile loaded",
+            description: `Welcome back, ${profileData?.username || 'user'}!`,
+          });
+        }
       } catch (error: any) {
-        console.error("Error fetching user data:", error);
+        console.error("Error in Profile.tsx fetchUserData:", error);
         toast({
-          title: "Error",
-          description: "Failed to load profile data. Please try again.",
-          variant: "destructive",
+          title: "Partial load",
+          description: "Some profile data couldn't be retrieved from the server.",
+          variant: "default",
         });
       } finally {
         setLoading(false);
@@ -203,9 +208,9 @@ const Profile = () => {
                 <CardTitle>Profile Information</CardTitle>
               </CardHeader>
               <CardContent>
-                <ProfileForm 
-                  profile={userProfile} 
-                  setProfile={setUserProfile} 
+                <ProfileForm
+                  profile={userProfile}
+                  setProfile={setUserProfile}
                 />
               </CardContent>
             </Card>

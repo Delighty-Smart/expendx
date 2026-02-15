@@ -29,7 +29,7 @@ const Layout = ({
     theme,
     updateTheme
   } = useSettings();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const {
@@ -37,6 +37,8 @@ const Layout = ({
   } = useToast();
   const isMobile = useIsMobile();
   useEffect(() => {
+    if (!user) return;
+
     const updateStreak = async () => {
       try {
         const streak = await updateUserStreak();
@@ -48,45 +50,42 @@ const Layout = ({
         console.error("Error updating streak:", error);
       }
     };
-    updateStreak();
-  }, []);
-  useEffect(() => {
+
     const fetchUnreadAlerts = async () => {
       try {
-        const {
-          data: {
-            user
-          }
-        } = await supabase.auth.getUser();
-        if (!user) return;
-        const {
-          data,
-          error
-        } = await supabase.from('alerts').select('id').eq('user_id', user.id).eq('read', false);
+        console.log("fetchUnreadAlerts called in Layout");
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Alerts fetch timed out')), 6000);
+        });
+
+        const alertPromise = supabase.from('alerts').select('id').eq('user_id', user.id).eq('read', false);
+        const { data, error } = await (Promise.race([alertPromise, timeoutPromise]) as any);
+
         if (error) throw error;
         setUnreadAlerts(data?.length || 0);
       } catch (error) {
         console.error('Error fetching unread alerts:', error);
       }
     };
+
+    updateStreak();
     fetchUnreadAlerts();
 
     // Set up realtime subscription for alerts
-    const channel = supabase.channel('alerts-count').on('postgres_changes', {
+    const channel = supabase.channel(`alerts-${user.id}`).on('postgres_changes', {
       event: '*',
       schema: 'public',
-      table: 'alerts'
+      table: 'alerts',
+      filter: `user_id=eq.${user.id}`
     }, () => {
       fetchUnreadAlerts();
-      // Dispatch event to notify Alerts page to refresh
       window.dispatchEvent(new CustomEvent('alerts-updated'));
-    }).subscribe((status) => {
-      console.log('Subscription status for alerts:', status);
-    });
+    }).subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
   useEffect(() => {
     if (userStreak) {
       const timer = setTimeout(() => {

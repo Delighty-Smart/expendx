@@ -136,20 +136,30 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   // Get user settings from Supabase
   const fetchUserSettings = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log('No user found in fetchUserSettings, using local storage/defaults');
+      console.log('fetchUserSettings called');
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Settings fetch timed out')), 8000);
+      });
+
+      const userPromise = supabase.auth.getUser();
+      const { data: { user }, error: userError } = await (Promise.race([userPromise, timeoutPromise]) as any);
+
+      if (userError || !user) {
+        console.log('No user or error in fetchUserSettings, using local: ', userError);
         return;
       }
 
       console.log('Fetching server settings for user:', user.id);
 
       // 1. Fetch Currency from user_settings table
-      const { data: settingsData, error: settingsError } = await supabase
+      const settingsPromise = supabase
         .from('user_settings')
         .select('currency_code')
         .eq('user_id', user.id)
         .single();
+
+      const { data: settingsData, error: settingsError } = await (Promise.race([settingsPromise, timeoutPromise]) as any);
 
       if (settingsError && !settingsError.message.includes('No rows found')) {
         console.error('Error fetching user_settings:', settingsError);
@@ -173,7 +183,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         }
       }
 
-      // 2. Fetch Theme and HideAmounts from User Metadata (User Meta data is more persistent for simple UI traits)
+      // 2. Fetch Theme and HideAmounts from User Metadata
       const metadata = user.user_metadata;
       if (metadata) {
         if (metadata.theme && (metadata.theme === 'light' || metadata.theme === 'dark')) {
@@ -203,13 +213,21 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       localStorage.setItem('expendx_currency', currency.code);
 
       // 2. Server Sync
-      const { data: { user } } = await supabase.auth.getUser();
+      if (!navigator.onLine) return;
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Settings update timed out')), 5000);
+      });
+
+      const userPromise = supabase.auth.getUser();
+      const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
+
       if (!user) return;
 
       console.log('Syncing settings to server for user:', user.id);
 
       // Sync Currency (Table)
-      const { error: currencyError } = await supabase
+      const currencyPromise = supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
@@ -217,17 +235,17 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
-      if (currencyError) console.error('Error syncing currency:', currencyError);
+      await Promise.race([currencyPromise, timeoutPromise]);
 
       // Sync Theme & Visibility (Auth Metadata)
-      const { error: metaError } = await supabase.auth.updateUser({
+      const metaPromise = supabase.auth.updateUser({
         data: {
           theme: theme,
           hideAmounts: hideAmounts
         }
       });
 
-      if (metaError) console.error('Error syncing metadata:', metaError);
+      await Promise.race([metaPromise, timeoutPromise]);
 
     } catch (error) {
       console.error('Error in updateUserSettings:', error);

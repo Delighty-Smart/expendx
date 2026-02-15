@@ -44,76 +44,69 @@ export function useEnhancedTransactionData(filter?: {
     initialPageParam: 0,
     enabled: !!user,
     queryFn: async ({ pageParam = 0 }) => {
+      if (!user) {
+        throw new Error('No authenticated user');
+      }
+
       const normalizedStartDate = normalizeDate(filter?.startDate);
       const normalizedEndDate = normalizeDate(filter?.endDate);
       const effectiveFilter = filter ? { ...filter, startDate: normalizedStartDate, endDate: normalizedEndDate } : undefined;
 
-      console.log("Fetching transactions page:", pageParam, "with filters:", effectiveFilter);
       const pageSize = 20;
       const from = pageParam * pageSize;
       const to = from + pageSize - 1;
 
-
-      // If online, fetch from database and update cache
+      // If online, attempt to fetch from Supabase
       if (navigator.onLine) {
         try {
-          if (!user) throw new Error('No authenticated user');
+          console.log(`Fetching transactions from Supabase: user ${user.id}, page ${pageParam}`);
 
           let query = supabase.from("transactions")
             .select("*", { count: 'exact' })
             .eq("user_id", user.id);
 
-
-          // Apply filters
           if (!filter?.includeArchived) {
             query = query.eq("archived", false);
           }
-
-
 
           if (filter) {
             if (filter.type && filter.type !== "all") {
               query = query.eq("type", filter.type);
             }
-
-
             if (normalizedStartDate) {
               query = query.gte("date", normalizedStartDate);
             }
-
             if (normalizedEndDate) {
               query = query.lte("date", normalizedEndDate);
             }
-
-
             if (filter.category && filter.category !== "All") {
               query = query.eq("category", filter.category);
             }
           }
 
+          const { data, error } = await query
+            .order("date", { ascending: false })
+            .range(from, to);
 
-          // Apply pagination and sort
-          query = query.order("date", { ascending: false }).range(from, to);
-
-          const { data, error, count } = await query;
-
-          if (error) throw error;
-
+          if (error) {
+            console.error("Supabase query error:", error);
+            throw error;
+          }
 
           return (data || []).map(item => ({
             ...item,
             type: item.type as TransactionType
           }));
         } catch (fetchError) {
-          console.error("Error fetching from database:", fetchError);
-
-          // Fallback to cache (simulated pagination)
+          console.error("Supabase fetch failed, falling back to offline cache:", fetchError);
+          // Fallback to offline manager
           const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
           return allTransactions.slice(from, from + pageSize);
         }
       }
 
-      // If offline, get from cache (simulated pagination)
+      // If naturally offline, use cache
+      console.log("Device is offline, using local cache");
       const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
       return allTransactions.slice(from, from + pageSize);
     },

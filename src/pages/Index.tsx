@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StreakModal from "@/components/StreakModal";
 import UserAvatar from "@/components/UserAvatar";
 import { getUserProfile } from "@/lib/streak";
+import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
 
 // Transaction types
 interface TransactionData {
@@ -118,9 +119,10 @@ const IndexPage = () => {
 
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
-    queryKey: ["monthly_income_estimate", user?.id],
+    queryKey: ["monthly_income", user?.id],
     enabled: !!user,
     queryFn: async () => {
+      console.log("Fetching monthly income estimate...");
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
@@ -139,8 +141,7 @@ const IndexPage = () => {
     queryKey: ["user_streak", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      await updateUserStreak();
-
+      console.log("Fetching user streak...");
       const { data, error } = await supabase
         .from("user_streaks")
         .select("*")
@@ -153,58 +154,33 @@ const IndexPage = () => {
   });
 
   const { data: userProfile } = useQuery({
-    queryKey: ["user_profile"],
+    queryKey: ["user_profile", user?.id],
+    enabled: !!user,
     queryFn: async () => {
       return await getUserProfile();
     },
   });
 
-  // Query for monthly transactions (ONLY unarchived)
-  const { data: monthlyTransactionsData, isLoading: isMonthlyTransactionsLoading, refetch: refetchMonthlyTransactions } = useQuery({
-    queryKey: ["transactions", "monthly", user?.id, firstDayOfMonth, lastDayOfMonth],
-    enabled: !!user,
-    queryFn: async () => {
-      console.log("Dashboard: Fetching UNARCHIVED transactions for date range:", firstDayOfMonth, "to", lastDayOfMonth);
-
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user!.id)
-        .eq("archived", false) // ONLY unarchived transactions
-        .gte("date", firstDayOfMonth)
-        .lte("date", lastDayOfMonth)
-        .order("date", { ascending: false });
-
-      if (error) throw error;
-      console.log(`Dashboard: Found ${data?.length || 0} UNARCHIVED transactions in the current month`);
-      return data as TransactionData[] || [];
-    },
+  // Use the enhanced transaction data hook for monthly transactions
+  const {
+    transactions: transactionsData,
+    isLoading: isMonthlyTransactionsLoading,
+    refetch: refetchMonthlyTransactions
+  } = useEnhancedTransactionData({
+    startDate: firstDayOfMonth,
+    endDate: lastDayOfMonth,
+    includeArchived: false
   });
 
-  // Query for ALL unarchived transactions (for wallet balance)
-  const { data: allTransactionsData, isLoading: isAllTransactionsLoading } = useQuery({
-    queryKey: ["all_transactions", "unarchived", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      console.log("Dashboard: Fetching ALL UNARCHIVED transactions for wallet balance");
-
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user!.id)
-        .eq("archived", false) // ONLY unarchived transactions
-        .order("date", { ascending: false });
-
-      if (error) throw error;
-      console.log(`Dashboard: Found ${data?.length || 0} UNARCHIVED transactions in total`);
-      return data as TransactionData[] || [];
-    },
+  // Use the enhanced transaction data hook for all transactions (wallet balance)
+  const {
+    transactions: allTransactionsData,
+    isLoading: isAllTransactionsLoading
+  } = useEnhancedTransactionData({
+    includeArchived: false
   });
 
-  const transactions = (monthlyTransactionsData || []).map(transaction => ({
-    ...transaction,
-    type: transaction.type as TransactionType
-  }));
+  const transactions = transactionsData;
 
   const allTransactions = (allTransactionsData || []).map(transaction => ({
     ...transaction,
@@ -222,7 +198,8 @@ const IndexPage = () => {
       queryClient.invalidateQueries({ queryKey: ["all_transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly_income"] });
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
-    }
+    },
+    user ? { column: 'user_id', value: user.id } : undefined
   );
 
   const handleTransactionAdded = () => {

@@ -17,8 +17,40 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  // Initialize from localStorage for immediate (though potentially stale) session recovery
+  const [session, setSession] = useState<Session | null>(() => {
+    try {
+      // Supabase uses a predictable key for storing the session in many versions:
+      // it's usually `sb-${projectRef}-auth-token` where projectRef is the first part of the URL.
+      // However, it's safer to rely on the SDK's internal mechanisms or try the most common keys.
+
+      const possibleKeys = Object.keys(localStorage).filter(key =>
+        key.startsWith('sb-') && key.endsWith('-auth-token')
+      );
+
+      // Add default potential keys if filter returns empty
+      if (possibleKeys.length === 0) {
+        possibleKeys.push('supabase.auth.token', 'sb-auth-token');
+      }
+
+      for (const key of possibleKeys) {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          console.log(`Checking session key: ${key}`);
+          const parsed = JSON.parse(cached);
+          const recoveredSession = parsed?.currentSession || parsed || null;
+          if (recoveredSession?.user) {
+            console.log(`Recovered session from ${key}`);
+            return recoveredSession;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Early session recovery failed:", e);
+    }
+    return null;
+  });
+  const [user, setUser] = useState<User | null>(() => session?.user ?? null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Helper function to cache user ID for offline use
@@ -45,38 +77,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // First set up the auth state change listener
+    // Set up state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log(`Auth state changed: ${event}`, currentSession?.user?.id || 'No user');
+        console.log(`Auth state change [${event}]:`, currentSession?.user?.id || 'No user');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-
-        // Cache user ID for offline use
         cacheUserId(currentSession?.user?.id ?? null);
-
         setIsLoading(false);
       }
     );
 
-    // Then check for existing session
-    const getInitialSession = async () => {
+    // Initial session check
+    const checkSession = async () => {
       try {
-        setIsLoading(true);
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
+        console.log("Checking initial session...");
 
-        // Cache user ID for offline use
-        cacheUserId(data.session?.user?.id ?? null);
+        // Timeout for session retrieval
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Session retrieval timed out')), 7000);
+        });
+
+        const sessionPromise = supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await (Promise.race([sessionPromise, timeoutPromise]) as any);
+
+        if (error) throw error;
+
+        if (currentSession) {
+          console.log("Session recovered successfully:", currentSession.user.id);
+          setSession(currentSession);
+          setUser(currentSession.user);
+          cacheUserId(currentSession.user.id);
+        } else {
+          console.log("No session found during check");
+        }
       } catch (error) {
-        console.error("Error getting session:", error);
+        console.error("Session recovery error or timeout:", error);
       } finally {
+        console.log("Setting isLoading to false in useAuth");
         setIsLoading(false);
       }
     };
 
-    getInitialSession();
+    checkSession();
 
     return () => {
       subscription.unsubscribe();

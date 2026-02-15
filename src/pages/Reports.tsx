@@ -29,6 +29,8 @@ import { useRefresh } from "@/hooks/useRefresh";
 import { Transaction } from "@/types/transactions";
 import { useCategories } from "@/hooks/useCategories";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
 import jsPDF from "jspdf";
 
 // Define chart data types
@@ -51,6 +53,7 @@ const ReportsPage = () => {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
   const { currency } = useSettings();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { refreshData } = useRefresh();
 
   // Get categories based on selected type
@@ -78,7 +81,7 @@ const ReportsPage = () => {
 
   const {
     transactions,
-    isLoading,
+    isLoading: isDataLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
@@ -86,6 +89,8 @@ const ReportsPage = () => {
     startDate: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
     endDate: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
   });
+
+  const isLoading = isAuthLoading || isDataLoading;
 
   // Filter transactions based on selections with proper typing
   const filteredTransactions = useMemo((): Transaction[] => {

@@ -90,18 +90,44 @@ class EnhancedOfflineManager {
 
   private async getCurrentUserId(): Promise<string> {
     if (this.cachedUserId) return this.cachedUserId;
+
     try {
+      // 1. Try localStorage first
       const cached = localStorage.getItem('cached_user_id');
       if (cached) {
         this.cachedUserId = cached;
         return cached;
       }
-    } catch { }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('No authenticated user');
-    this.cachedUserId = user.id;
-    try { localStorage.setItem('cached_user_id', user.id); } catch { }
-    return user.id;
+
+      // Add timeout for auth checks
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('User ID retrieval timed out')), 10000); // 10s timeout
+      });
+
+      // 2. Try auth session (snappier than getUser)
+      const sessionPromise = supabase.auth.getSession();
+      const { data: { session } } = await (Promise.race([sessionPromise, timeoutPromise]) as any);
+
+      if (session?.user) {
+        this.cachedUserId = session.user.id;
+        localStorage.setItem('cached_user_id', session.user.id);
+        return session.user.id;
+      }
+
+      // 3. Last resort - get user (expensive)
+      const userPromise = supabase.auth.getUser();
+      const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
+
+      if (user) {
+        this.cachedUserId = user.id;
+        localStorage.setItem('cached_user_id', user.id);
+        return user.id;
+      }
+    } catch (error) {
+      console.warn('Failed to retrieve user ID for sync:', error);
+    }
+
+    throw new Error('No authenticated user for offline operations');
   }
 
   // Full data download and caching
@@ -112,18 +138,24 @@ class EnhancedOfflineManager {
     this.notifyStatusChange();
 
     try {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Full data sync timed out')), 30000); // 30s total timeout
+      });
+
       const userId = await this.getCurrentUserId();
 
       console.log('Starting full data sync for user:', userId);
 
       // Fetch all user data in parallel
-      const [transactions, budgets, savings, profile, settings] = await Promise.all([
+      const syncPromise = Promise.all([
         this.fetchTransactions(userId),
         this.fetchBudgets(userId),
         this.fetchSavings(userId),
         this.fetchProfile(userId),
         this.fetchSettings(userId)
       ]);
+
+      const [transactions, budgets, savings, profile, settings] = await (Promise.race([syncPromise, timeoutPromise]) as any);
 
       // Update local cache with properly typed transactions
       this.dataCache = {
@@ -618,6 +650,13 @@ class EnhancedOfflineManager {
   // Force sync method
   async forceSync(): Promise<void> {
     await this.performFullDataSync();
+  }
+
+  // Clear sync queue
+  clearSyncQueue(): void {
+    this.syncQueue = [];
+    this.saveSyncQueue();
+    this.notifyStatusChange();
   }
 
   // Check if transaction is pending sync
