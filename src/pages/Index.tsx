@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 import { useSettings } from "@/contexts/SettingsContext";
 import { useAuth } from "@/hooks/useAuth";
-import { Maximize2, ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard } from "lucide-react";
+import { Maximize2, ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, PieChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BudgetProgress } from "@/components/BudgetProgress";
@@ -19,7 +19,7 @@ import { useRefresh } from "@/hooks/useRefresh";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { updateUserStreak } from "@/lib/streak";
 import { startOfMonth, endOfMonth, addWeeks, subWeeks, eachDayOfInterval, format } from "date-fns";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, PieChart, Pie, Sector, AreaChart as RechartAreaChart, Area, LineChart as RechartLineChart, Line } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, PieChart as RechartPieChart, Pie, Sector, AreaChart as RechartAreaChart, Area, LineChart as RechartLineChart, Line } from "recharts";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import StreakModal from "@/components/StreakModal";
