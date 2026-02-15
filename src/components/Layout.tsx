@@ -250,11 +250,11 @@ const Layout = ({
             name={userProfile?.username || userProfile?.email || "User"}
             className="w-8 h-8 md:w-8 md:h-8 shadow-sm ring-1 ring-border/50"
           />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground truncate tracking-tight leading-none">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <p className="text-sm font-bold text-foreground truncate tracking-tighter leading-none">
               {userProfile?.username || userProfile?.email || "User"}
             </p>
-            {userStreak && <p className="text-[10px] uppercase font-bold text-muted-foreground/60 truncate tracking-wider mt-0.5">
+            {userStreak && <p className="text-[10px] uppercase font-black text-muted-foreground/50 truncate tracking-wider leading-none mt-1">
               {userStreak.current_title}
             </p>}
           </div>
