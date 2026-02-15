@@ -42,7 +42,6 @@ self.addEventListener('install', (event) => {
       })
     ]).then(() => {
       console.log('Enhanced service worker installed');
-      return self.skipWaiting();
     })
   );
 });
@@ -308,10 +307,13 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Periodic cleanup of old cache entries
+// Enhanced periodic cleanup and message handling
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'CLEANUP_CACHE') {
     event.waitUntil(cleanupOldCacheEntries());
+  } else if (event.data?.type === 'SKIP_WAITING') {
+    console.log('Triggering skipWaiting() from message');
+    self.skipWaiting();
   }
 });
 

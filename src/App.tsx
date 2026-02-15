@@ -25,6 +25,7 @@ import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 import Subscriptions from '@/pages/Subscriptions'
+import PWAUpdatePrompt from '@/components/PWAUpdatePrompt'
 
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
@@ -103,6 +104,7 @@ function App() {
             </Routes>
           </div>
           <Toaster />
+          <PWAUpdatePrompt />
         </BrowserRouter>
       </SettingsProvider>
     </TooltipProvider>
