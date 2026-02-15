@@ -240,17 +240,14 @@ const IndexPage = () => {
   const monthlySavings = calculateMonthlySavings();
 
 
-  // Calculate wallet balance based on all-time UNARCHIVED transactions only
-  // Wallet Balance = Total Credits - Total Debits - Total Savings
-  // We need to re-calculate these locally or keep the functions. 
-  // Actually, let's just do it inline to keep it clean if we removed the functions.
-  const currentBalance = (allTransactions?.filter(t => t.type === 'credit').reduce((sum, t) => sum + t.amount, 0) || 0) -
-    (allTransactions?.filter(t => t.type === 'debit').reduce((sum, t) => sum + t.amount, 0) || 0) -
-    (allTransactions?.filter(t => t.type === 'savings').reduce((sum, t) => sum + t.amount, 0) || 0);
+  // Get totals for accurate balance calculation across all pages of data
+  // Since we use the same user_id filter, we can rely on the offline manager's full cache
+  const totals = enhancedOfflineManager.getTransactionSummary();
+  const currentBalance = totals.balance;
+  const totalSavings = totals.totalSavings;
 
   const progressPercentage = monthlyIncome > 0
     ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
-
     : 0;
 
   // Spending by category calculation - only unarchived transactions

@@ -273,6 +273,32 @@ class EnhancedOfflineManager {
     return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
+  // Get summary of all transactions (for balance calculations)
+  getTransactionSummary(): { totalCredits: number; totalDebits: number; totalSavings: number; balance: number } {
+    if (!this.dataCache) return { totalCredits: 0, totalDebits: 0, totalSavings: 0, balance: 0 };
+
+    const transactions = this.dataCache.transactions.filter(t => !t.archived);
+
+    const totalCredits = transactions
+      .filter(t => t.type === 'credit')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalDebits = transactions
+      .filter(t => t.type === 'debit')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalSavings = transactions
+      .filter(t => t.type === 'savings')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return {
+      totalCredits,
+      totalDebits,
+      totalSavings,
+      balance: totalCredits - totalDebits - totalSavings
+    };
+  }
+
   getBudgets(): any[] {
     return this.dataCache?.budgets || [];
   }
