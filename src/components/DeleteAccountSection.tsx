@@ -52,7 +52,7 @@ const DeleteAccountSection = () => {
     if (!selectedOption || !user) return;
 
     setIsProcessing(true);
-    
+
     try {
       // Save feedback if provided
       if (feedbackReason) {
@@ -77,65 +77,34 @@ const DeleteAccountSection = () => {
 
         // Clear local storage
         localStorage.clear();
-        
+
         toast({
           title: "Data cleared",
           description: "All your data has been deleted.",
         });
-        
+
         navigate('/');
         window.location.reload();
       } else if (selectedOption === "account-and-data") {
-        // First delete all user data using the secure database function
-        const { error: dataError } = await supabase.rpc('delete_user_data', {
+        // Use the secure database function to delete account + all data
+        const { error: accountError } = await supabase.rpc('delete_user_account', {
           target_user_id: user.id
         });
 
-        if (dataError) {
-          throw dataError;
-        }
-
-        // Then delete the user profile
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .delete()
-          .eq('id', user.id);
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        // Finally, delete the user from Supabase Auth
-        const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-
-        if (authError) {
-          // If admin deletion fails, try user self-deletion as fallback
-          console.warn("Admin deletion failed, attempting user self-deletion:", authError);
-          
-          // Clear local storage before sign out
-          localStorage.clear();
-          
-          // Sign out the user (which will redirect them to auth page)
-          await signOut();
-          navigate('/auth');
-          
-          toast({
-            title: "Account deletion initiated",
-            description: "Your account has been removed. You can no longer sign in with these credentials.",
-          });
-          
-          return;
+        if (accountError) {
+          throw accountError;
         }
 
         // Clear local storage
         localStorage.clear();
-        
-        // Navigate to auth page
+
+        // Sign out and redirect
+        await signOut();
         navigate('/auth');
-        
+
         toast({
           title: "Account deleted",
-          description: "Your account has been permanently deleted.",
+          description: "Your account and all data have been permanently deleted.",
         });
       }
     } catch (error: any) {
@@ -213,8 +182,8 @@ const DeleteAccountSection = () => {
               className="flex-1"
               disabled={isProcessing}
             >
-              <ButtonLoading 
-                isLoading={isProcessing} 
+              <ButtonLoading
+                isLoading={isProcessing}
                 loadingText="Processing..."
               >
                 <>
@@ -238,8 +207,8 @@ const DeleteAccountSection = () => {
             Confirm Delete
           </CardTitle>
           <CardDescription className="text-red-600 dark:text-red-300">
-            {selectedOption === "data-only" 
-              ? "Delete all data but keep account." 
+            {selectedOption === "data-only"
+              ? "Delete all data but keep account."
               : "Permanently delete account and all data."
             }
           </CardDescription>
