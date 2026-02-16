@@ -116,6 +116,7 @@ const Layout = ({
     { path: "/alerts", label: "Alerts", icon: Bell, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
     { path: "/feedback", label: "Feedback", icon: MessageSquare },
     { path: "/settings", label: "Settings", icon: Settings },
+    { path: "#", label: "Log Out", icon: LogOut, onClick: handleLogout, active: false },
   ];
 
   if (isAdmin) {
@@ -148,14 +149,40 @@ const Layout = ({
         </div>
 
         <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">
-          {menuItems.map(item => (
-            <Link key={item.path} to={item.path} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group touch-manipulation ${location.pathname === item.path ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`} onClick={() => setIsSidebarOpen(false)}>
-              <item.icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
-              <span className="text-sm font-medium">{item.label}</span>
-              {item.badge && <Badge variant="destructive" className="ml-auto text-xs">{item.badge}</Badge>}
-              {item.path === "/feedback" && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full"></div>}
-            </Link>
-          ))}
+          {menuItems.map(item => {
+            const Icon = item.icon;
+            const isAction = 'onClick' in item;
+
+            if (isAction) {
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    item.onClick?.();
+                    setIsSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group touch-manipulation text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group touch-manipulation ${location.pathname === item.path ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
+                <span className="text-sm font-medium">{item.label}</span>
+                {item.badge && <Badge variant="destructive" className="ml-auto text-xs">{item.badge}</Badge>}
+                {item.path === "/feedback" && <div className="ml-auto w-2 h-2 bg-red-500 rounded-full"></div>}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="px-3 py-2">
@@ -193,9 +220,6 @@ const Layout = ({
                 {userStreak.current_title}
               </p>}
             </div>
-            <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); handleLogout(); }} className="h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg">
-              <LogOut className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </Button>
           </div>
         </div>
       </aside>
