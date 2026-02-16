@@ -12,8 +12,9 @@ export const useDataExport = () => {
     const convertToCSV = (data: any[]) => {
         if (!data || data.length === 0) return "";
 
-        // Get headers from the first object
-        const headers = Object.keys(data[0]);
+        // Get headers from the first object, excluding technical IDs
+        const excludedKeys = ["id", "user_id", "admin_id", "created_by", "related_id"];
+        const headers = Object.keys(data[0]).filter(key => !excludedKeys.includes(key));
         const csvRows = [];
 
         // Add header row
