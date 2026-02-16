@@ -198,30 +198,6 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
 // Helper function to create streak alerts with deduplication
 async function createStreakAlert(userId: string, message: string, type: string) {
   try {
-    // Check for duplicate alerts in the last hour to prevent spam
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
-    const { data: existingAlerts, error: checkError } = await supabase
-      .from('alerts')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('message', message)
-      .eq('type', type)
-      .gte('created_at', oneHourAgo.toISOString())
-      .limit(1);
-
-    if (checkError) {
-      console.error("Error checking for duplicate alerts:", checkError);
-      return;
-    }
-
-    // If duplicate exists, don't create another one
-    if (existingAlerts && existingAlerts.length > 0) {
-      console.log("Duplicate alert detected, skipping creation:", message);
-      return;
-    }
-
     // Create the alert if no duplicate exists
     const { error: insertError } = await supabase
       .from('alerts')

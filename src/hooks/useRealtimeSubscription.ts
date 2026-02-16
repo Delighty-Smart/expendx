@@ -21,7 +21,7 @@ export function useRealtimeSubscription(
   // Use refs to store stable references and prevent unnecessary re-subscriptions
   const callbackRef = useRef(callback);
   const filterRef = useRef(filter);
-  
+
   // Update refs when values change
   callbackRef.current = callback;
   filterRef.current = filter;
@@ -34,9 +34,9 @@ export function useRealtimeSubscription(
   useEffect(() => {
     // Create a unique channel identifier
     const channelId = `${table}-${event}-${filterRef.current?.column || 'all'}-${filterRef.current?.value || 'all'}`;
-    
+
     console.log(`Setting up realtime subscription for ${table} table with event ${event}`);
-    
+
     try {
       // Build filter string if provided
       let filterString: string | undefined;
@@ -51,7 +51,7 @@ export function useRealtimeSubscription(
         .on(
           'postgres_changes' as any, // Use type assertion to avoid the typescript error
           {
-            event: event === '*' ? undefined : event,
+            event: event,
             schema: 'public',
             table: table,
             ...(filterString ? { filter: filterString } : {})
@@ -64,7 +64,7 @@ export function useRealtimeSubscription(
         .subscribe((status) => {
           console.log(`Subscription status for ${table}:`, status);
         });
-      
+
       // Cleanup function to remove the subscription when component unmounts
       return () => {
         console.log(`Cleaning up realtime subscription for ${table}`);

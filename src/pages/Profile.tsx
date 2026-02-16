@@ -11,7 +11,7 @@ import { updateUserStreak } from "@/lib/streak";
 import { useAuth } from "@/hooks/useAuth";
 
 const Profile = () => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, isLoading: authLoading } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(profile);
   const [userStreak, setUserStreak] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        if (authLoading) return; // Wait for auth to initialize
         if (!user) {
           navigate("/auth");
           return;
@@ -55,7 +56,7 @@ const Profile = () => {
     };
 
     fetchUserData();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // Render empty profile as fallback if data fetch failed but we're not in loading state
   if (!loading && (!userProfile || !userStreak)) {

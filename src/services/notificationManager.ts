@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { notificationService } from './notificationService';
 
-export type NotificationType = 
+export type NotificationType =
   | 'weekly_recap'
   | 'budget_nudges'
   | 'unusual_activity'
@@ -43,9 +43,9 @@ class NotificationManager {
       // Check rate limiting
       const rateKey = `${userId}-${notification.type}`;
       const now = Date.now();
-      
-      if (this.lastNotificationTime[rateKey] && 
-          now - this.lastNotificationTime[rateKey] < this.RATE_LIMIT_MS) {
+
+      if (this.lastNotificationTime[rateKey] &&
+        now - this.lastNotificationTime[rateKey] < this.RATE_LIMIT_MS) {
         console.log(`Rate limited notification for ${notification.type}`);
         return false;
       }
@@ -57,7 +57,7 @@ class NotificationManager {
         .eq('user_id', userId)
         .single();
 
-      if (!preferences || !preferences[notification.type]) {
+      if (preferences && preferences[notification.type] === false) {
         console.log(`User has disabled ${notification.type} notifications`);
         return false;
       }
@@ -79,19 +79,6 @@ class NotificationManager {
       if (alertError) {
         console.error('Error creating alert:', alertError);
         return false;
-      }
-
-      // Log the notification
-      const { error: logError } = await supabase
-        .from('user_notification_logs')
-        .insert({
-          user_id: userId,
-          notification_type: notification.type,
-          metadata: notification.metadata || {}
-        });
-
-      if (logError) {
-        console.error('Error logging notification:', logError);
       }
 
       // Send browser notification if supported and permitted

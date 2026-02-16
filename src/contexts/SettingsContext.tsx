@@ -70,61 +70,36 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const isInitialized = useRef<boolean>(false);
   const { user } = useAuth();
 
-  // Initialize settings on mount and listen for auth changes
+  // Initialize settings on mount and fetch when user changes
   useEffect(() => {
-    let authListener: any;
+    // Initial theme application from localStorage (for fast UI response)
+    const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    }
+  }, []);
 
-    const initializeSettings = async () => {
-      try {
-        console.log('Initializing settings...');
+  // Fetch user settings when user logs in or changes
+  useEffect(() => {
+    if (user) {
+      fetchUserSettings();
+    }
+  }, [user?.id]);
 
-        // Initial theme application from localStorage (for fast UI response)
-        const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
-        if (savedTheme) {
-          document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-        }
-
-        // Setup auth listener to fetch settings whenever user logs in
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-          console.log('Auth event in SettingsContext:', event);
-          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
-            await fetchUserSettings();
-          } else if (event === 'SIGNED_OUT') {
-            // Reset to defaults on sign out if desired, or keep local
-            console.log('User signed out, keeping local settings for now');
-          }
-        });
-
-        authListener = subscription;
-
-        // One-time initial fetch
-        if (user) {
-          await fetchUserSettings();
-        }
-      } catch (error) {
-        console.error('Error initializing settings:', error);
-      }
-    };
-
+  // Ask for notification permission once
+  useEffect(() => {
     const askNotification = async () => {
       if (!notificationService.isSupported()) return;
       if (Notification.permission === 'default' && !localStorage.getItem('expendx_noti_permission_prompted')) {
         try {
-          const permission = await Notification.requestPermission();
+          await Notification.requestPermission();
           localStorage.setItem('expendx_noti_permission_prompted', 'true');
         } catch (e) {
           console.warn("Unable to request browser notification permission", e);
         }
       }
     };
-
     askNotification();
-    initializeSettings();
-
-    return () => {
-      if (authListener) authListener.unsubscribe();
-    };
-    // eslint-disable-next-line
   }, []);
 
   // Auto-save settings changes
@@ -228,7 +203,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       localStorage.setItem('expendx_currency', currency.code);
 
       // 2. Server Sync
-      if (!navigator.onLine) return;
+      // Only sync if online AND initialized (to prevent overwriting server with local defaults)
+      if (!navigator.onLine || !isInitialized.current) return;
 
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Settings update timed out')), 5000);

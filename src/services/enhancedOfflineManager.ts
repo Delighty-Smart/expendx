@@ -548,7 +548,39 @@ class EnhancedOfflineManager {
         await this.syncTransaction(type, data, item);
         break;
       default:
-        throw new Error(`Unsupported table: ${table}`);
+        // Generic handler for other tables (budget_categories, savings_goals, subscriptions, etc.)
+        await this.syncGenericItem(type, table, data, item);
+        break;
+    }
+  }
+
+  private async syncGenericItem(type: string, table: string, data: any, item: SyncQueueItem): Promise<void> {
+    switch (type) {
+      case 'INSERT': {
+        const insertData = { ...data };
+        // Remove temp IDs for insert
+        if (item.tempId && insertData.id === item.tempId) {
+          delete insertData.id;
+        }
+        const { error } = await supabase.from(table).insert(insertData);
+        if (error) throw error;
+        break;
+      }
+      case 'UPDATE': {
+        if (!data.id) throw new Error(`Cannot update ${table}: missing id`);
+        const { id, ...updateFields } = data;
+        const { error } = await supabase.from(table).update(updateFields).eq('id', id);
+        if (error) throw error;
+        break;
+      }
+      case 'DELETE': {
+        if (!data.id) throw new Error(`Cannot delete from ${table}: missing id`);
+        const { error } = await supabase.from(table).delete().eq('id', data.id);
+        if (error) throw error;
+        break;
+      }
+      default:
+        console.warn(`Unknown sync operation type: ${type} for table: ${table}`);
     }
   }
 
@@ -630,8 +662,23 @@ class EnhancedOfflineManager {
   private async saveSyncQueue(): Promise<void> {
     try {
       localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(this.syncQueue));
-    } catch (error) {
-      console.error('Failed to save sync queue:', error);
+    } catch (error: any) {
+      // Handle quota exceeded by clearing cache to make space for the queue (priority)
+      if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+        console.warn('LocalStorage quota exceeded. Clearing cache to save sync queue.');
+        try {
+          // Clear large data caches to free space
+          localStorage.removeItem(`${CACHE_PREFIX}data`);
+          this.dataCache = null;
+          // Retry saving queue
+          localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(this.syncQueue));
+          console.log('Successfully saved sync queue after clearing cache');
+        } catch (retryError) {
+          console.error('Failed to save sync queue even after clearing cache:', retryError);
+        }
+      } else {
+        console.error('Failed to save sync queue:', error);
+      }
     }
   }
 

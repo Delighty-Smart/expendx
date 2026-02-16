@@ -14,7 +14,7 @@ import { useRefresh } from "@/hooks/useRefresh";
 import { SavingsHeader } from "@/components/savings/SavingsHeader";
 import { SavingsTotalCard } from "@/components/savings/SavingsTotalCard";
 import { SavingsGoalsList } from "@/components/savings/SavingsGoalsList";
-
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Plus, Target, TrendingUp } from "lucide-react";
 
@@ -24,6 +24,7 @@ const SavingsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { refreshData } = useRefresh();
+  const { user } = useAuth();
 
   // State for modals and editing
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
@@ -37,12 +38,16 @@ const SavingsPage = () => {
 
   // Fetch savings goals separately
   const { data: savingsGoals } = useQuery({
-    queryKey: ["savings_goals"],
+    queryKey: ["savings_goals", user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      // Use type assertion to bypass TypeScript errors
+      if (!user) return [] as SavingsGoal[];
+      // Using 'as any' because savings_goals table is not yet in the generated types
+      // TODO: Run `npx supabase gen types typescript` to update types
       const { data, error } = await supabase
         .from("savings_goals" as any)
         .select("*")
+        .eq("user_id", user.id)
         .order("category");
       if (error) throw error;
       return (data as unknown as SavingsGoal[]) || [];

@@ -1,25 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Subscription } from '@/types/subscriptions';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user) {
+      setSubscriptions([]);
+      setLoading(false);
+      return;
+    }
+
     fetchSubscriptions();
 
-    // Set up real-time subscription
+    // Set up real-time subscription scoped to current user
     const channel = supabase
-      .channel('subscriptions-changes')
+      .channel(`subscriptions-changes-${user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'subscriptions'
+          table: 'subscriptions',
+          filter: `user_id=eq.${user.id}`
         },
         (payload) => {
           console.log('Subscription change detected:', payload);
@@ -27,7 +36,7 @@ export function useSubscriptions() {
         }
       )
       .subscribe((status) => {
-        console.log('Subscription status for transactions:', status);
+        console.log('Subscription status for subscriptions:', status);
         if (status === 'SUBSCRIBED') {
           console.log('Successfully subscribed to subscription changes');
         } else if (status === 'CHANNEL_ERROR') {
@@ -38,7 +47,7 @@ export function useSubscriptions() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user?.id]);
 
   const fetchSubscriptions = async () => {
     try {

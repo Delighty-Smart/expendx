@@ -31,15 +31,7 @@ initializeDB()
   })
   .catch(err => console.error('Failed to initialize offline storage:', err));
 
-// Request notification permissions on startup
-notificationService.requestPermission()
-  .then(granted => {
-    if (granted) {
-      console.log('Notification permission granted');
-    } else {
-      console.log('Notification permission denied');
-    }
-  });
+
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({

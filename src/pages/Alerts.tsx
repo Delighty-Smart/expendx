@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 
 type Alert = {
   id: string;
@@ -24,64 +24,37 @@ type Alert = {
 const Alerts = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
 
-  // Note: We rely on Layout.tsx for realtime alerts updates to avoid duplicate subscriptions
-
-  // Set up real-time alerts refresh via window events (from Layout.tsx)
+  // Handle alert updates from Layout realtime channel
   useEffect(() => {
-    const handleAlertsUpdate = () => {
-      console.log("Alerts updated via window event, refreshing list");
-      fetchAlerts();
-    };
-
-    window.addEventListener('alerts-updated', handleAlertsUpdate);
-    return () => {
-      window.removeEventListener('alerts-updated', handleAlertsUpdate);
-    };
-  }, []);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session: Session | null) => {
-        if (event === "SIGNED_IN" && session) {
-          setIsAuthenticated(true);
-          fetchAlerts();
-        } else if (event === "SIGNED_OUT") {
-          setIsAuthenticated(false);
-          navigate('/auth');
-        }
-      }
-    );
-
-    // Check if user is already authenticated
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsAuthenticated(true);
+    const handleAlertsUpdated = () => {
+      if (user) {
         fetchAlerts();
-      } else {
-        setIsAuthenticated(false);
-        navigate('/auth');
       }
-    });
+    };
+    window.addEventListener('alerts-updated', handleAlertsUpdated);
+    return () => window.removeEventListener('alerts-updated', handleAlertsUpdated);
+  }, [user]);
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  useEffect(() => {
+    if (authLoading) return; // Wait for auth to initialize
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    fetchAlerts();
+  }, [user, authLoading, navigate]);
 
   const fetchAlerts = async () => {
     try {
       setLoading(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsAuthenticated(false);
-        navigate('/auth');
-        return;
-      }
+      if (!user) return;
 
       // Get all alerts for the current user
       const { data, error } = await supabase
@@ -314,7 +287,7 @@ const Alerts = () => {
     }).format(date);
   };
 
-  if (isAuthenticated === null) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-pulse text-muted-foreground">Loading...</div>

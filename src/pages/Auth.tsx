@@ -65,8 +65,9 @@ const Auth = () => {
 
       console.log("Signup metadata:", metadata);
       await signUp(email, password, metadata);
-      console.log("Signup successful, attempting signin");
-      await signIn(email, password);
+      // signUp handles session creation automatically.
+      // If email confirmation is enabled, user will need to verify first.
+      // If disabled, the onAuthStateChange listener will pick up the new session.
     } catch (error) {
       console.error("Signup error:", error);
     } finally {

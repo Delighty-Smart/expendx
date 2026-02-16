@@ -135,7 +135,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
@@ -156,14 +155,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "Invalid email or password",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
-      setIsLoading(true);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -193,14 +189,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "An error occurred during signup",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signInWithGoogle = async () => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -216,8 +209,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: error.message || "Could not connect to Google",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -364,39 +364,35 @@ const TransactionsPage = () => {
             <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
             <OfflineIndicator />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {selectionMode && selectedTransactions.length > 0 && (
               <>
                 <Button
                   variant="outline"
-                  className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-950"
+                  size="compact"
+                  className="flex items-center gap-1.5 text-sm border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-950"
                   onClick={() => setConfirmArchiveOpen(true)}
                 >
-
-                  <Archive className="h-4 w-4" strokeWidth={1.5} />
-
+                  <Archive className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Archive ({selectedTransactions.length})
                 </Button>
                 <Button
                   variant="destructive"
-                  className="flex items-center gap-2"
+                  size="compact"
+                  className="flex items-center gap-1.5 text-sm"
                   onClick={() => setConfirmDeleteOpen(true)}
                 >
-
-                  <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Delete ({selectedTransactions.length})
                 </Button>
               </>
             )}
             <Button
               size="compact"
-              className="flex items-center gap-2 touch-manipulation"
+              className="flex items-center gap-1.5 text-sm touch-manipulation"
               onClick={() => navigate("/add-transaction")}
             >
-
-              <PlusCircle className="mobile-icon-sm" strokeWidth={1.5} />
-
+              <PlusCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
               Add
             </Button>
           </div>
