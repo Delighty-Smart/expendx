@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
 import { notificationService } from "@/services/notificationService";
+import GlobalBanner from "@/components/GlobalBanner";
 
 const Layout = ({
   children
@@ -151,13 +152,19 @@ const Layout = ({
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
+      <GlobalBanner />
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
       {/* Header for mobile */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 z-50">
         <div className="container mx-auto h-full flex items-center justify-between px-4">
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="animated-button touch-manipulation h-10 w-10">
-            <Menu className="h-6 w-6" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="animated-button touch-manipulation h-10 w-10"
+          >
+            {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
 
           <Link to="/" className="flex items-center gap-2">
@@ -172,7 +179,7 @@ const Layout = ({
               variant="ghost"
               size="icon"
               onClick={handleProfileClick}
-              className="ml-1 rounded-full overflow-hidden border border-border/50 active:scale-95 transition-transform h-9 w-9"
+              className="ml-1 rounded-full overflow-hidden border border-border/50 active:scale-95 transition-transform h-8 w-8"
             >
               <UserAvatar
                 url={profile?.avatar_url}
@@ -229,16 +236,13 @@ const Layout = ({
 
 
         <div className="border-t border-border mt-auto p-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <div className="flex-1 flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/50 cursor-pointer transition-all duration-200 group overflow-hidden" onClick={handleProfileClick}>
               <UserAvatar url={profile?.avatar_url} name={profile?.username || profile?.email || "User"} className="w-8 h-8 flex-shrink-0 shadow-sm ring-1 ring-border/50" />
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <p className="text-sm font-bold text-foreground truncate tracking-tighter leading-none">
+              <div className="flex-1 min-w-0 flex flex-col justify-center gap-0">
+                <p className="text-sm font-bold text-foreground truncate tracking-tighter leading-tight">
                   {profile?.username || profile?.email || "User"}
                 </p>
-                {userStreak && <p className="text-[10px] uppercase font-black text-muted-foreground/50 truncate tracking-wider leading-none mt-0.5">
-                  {userStreak.current_title}
-                </p>}
               </div>
             </div>
             <Button

@@ -22,7 +22,7 @@ const FullscreenChartModal = ({
 }: FullscreenChartModalProps) => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-[95vw] w-full h-[90vh] flex flex-col p-4 md:p-6 bg-background/95 backdrop-blur-md border border-border/50 shadow-2xl overflow-hidden sm:rounded-lg">
+            <DialogContent className="max-w-[95vw] w-full h-[90vh] flex flex-col overflow-hidden transition-all duration-500">
                 <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/10 mb-2">
                     <div className="flex items-center gap-2">
                         {icon && <div className="text-primary p-2 bg-primary/10 rounded-xl">{icon}</div>}

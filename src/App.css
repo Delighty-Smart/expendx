@@ -43,8 +43,6 @@
 .PopoverContent,
 .DropdownMenuContent,
 .ContextMenuContent,
-.DialogContent,
-[role="dialog"],
 [role="listbox"],
 [role="menu"] {
   overflow-y: auto !important;

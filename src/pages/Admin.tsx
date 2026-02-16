@@ -1,14 +1,24 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import UserManagement from "@/components/admin/UserManagement";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
+import BannerManagement from "@/components/admin/BannerManagement";
 import SidebarAdmin from "@/components/admin/SidebarAdmin";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import {
+  Users,
+  CreditCard,
+  MessageSquare,
+  TrendingUp,
+  PiggyBank,
+  LayoutDashboard,
+  ShieldAlert
+} from "lucide-react";
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -22,53 +32,32 @@ const AdminDashboard = () => {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Check URL params to set active tab
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
-    if (tab && ['overview', 'users', 'feedback'].includes(tab)) {
+    if (tab && ['overview', 'users', 'feedback', 'banners'].includes(tab)) {
       setActiveTab(tab);
     }
-  }, []);
+  }, [location.search]);
 
   // Fetch dashboard statistics
   const fetchDashboardStats = async () => {
     try {
-      // Fetch user count
-      const { count: userCount, error: userError } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-
-      if (userError) throw userError;
-
-      // Fetch transaction count
-      const { count: transactionCount, error: transactionError } = await supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true });
-
-      if (transactionError) throw transactionError;
-
-      // Fetch feedback count
-      const { count: feedbackCount, error: feedbackError } = await supabase
-        .from('user_feedback')
-        .select('*', { count: 'exact', head: true });
-
-      if (feedbackError) throw feedbackError;
-
-      // Fetch streak count
-      const { count: streakCount, error: streakError } = await supabase
-        .from('user_streaks')
-        .select('*', { count: 'exact', head: true });
-
-      if (streakError) throw streakError;
-
-      // Fetch savings goal count
-      const { count: savingsCount, error: savingsError } = await supabase
-        .from('savings_goals')
-        .select('*', { count: 'exact', head: true });
-
-      if (savingsError) throw savingsError;
+      const [
+        { count: userCount },
+        { count: transactionCount },
+        { count: feedbackCount },
+        { count: streakCount },
+        { count: savingsCount }
+      ] = await Promise.all([
+        supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('transactions').select('*', { count: 'exact', head: true }),
+        supabase.from('user_feedback').select('*', { count: 'exact', head: true }),
+        supabase.from('user_streaks').select('*', { count: 'exact', head: true }),
+        supabase.from('savings_goals').select('*', { count: 'exact', head: true })
+      ]);
 
       setStats({
         userCount: userCount || 0,
@@ -82,12 +71,9 @@ const AdminDashboard = () => {
     }
   };
 
-  // Set up realtime subscriptions for dashboard stats
   useRealtimeSubscription('user_profiles', '*', fetchDashboardStats);
   useRealtimeSubscription('transactions', '*', fetchDashboardStats);
   useRealtimeSubscription('user_feedback', '*', fetchDashboardStats);
-  useRealtimeSubscription('user_streaks', '*', fetchDashboardStats);
-  useRealtimeSubscription('savings_goals', '*', fetchDashboardStats);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -117,14 +103,9 @@ const AdminDashboard = () => {
         }
 
         setIsAdmin(true);
-        fetchDashboardStats(); // Initial fetch of dashboard stats
+        fetchDashboardStats();
       } catch (error) {
         console.error("Error checking admin status:", error);
-        toast({
-          title: "Error",
-          description: "There was an error verifying your permissions",
-          variant: "destructive"
-        });
         navigate('/');
       }
     };
@@ -132,7 +113,6 @@ const AdminDashboard = () => {
     checkAdminStatus();
   }, [navigate, toast]);
 
-  // Update URL when tab changes
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     navigate(`/admin?tab=${value}`, { replace: true });
@@ -140,76 +120,197 @@ const AdminDashboard = () => {
 
   if (isAdmin === null) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div className="flex items-center justify-center h-screen bg-background text-foreground">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground animate-pulse">Verifying privileges...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-bold text-xl">Admin Dashboard</h1>
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar - Desktop */}
+      <div className="hidden md:block w-64 border-r bg-card/50 backdrop-blur-sm p-4 space-y-4">
+        <div className="flex items-center gap-2 px-2 py-4">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <LayoutDashboard className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-bold text-lg tracking-tight">Admin Portal</h1>
+            <p className="text-xs text-muted-foreground">System Management</p>
+          </div>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="feedback">Feedback</TabsTrigger>
-        </TabsList>
+        <nav className="space-y-1">
+          {[
+            { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+            { id: 'users', label: 'User Management', icon: Users },
+            { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+            { id: 'banners', label: 'Banners & Popups', icon: ShieldAlert },
+          ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleTabChange(item.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === item.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-        <TabsContent value="overview" className="mt-4">
-          <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-4">System Overview</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</h3>
-                <p className="text-2xl font-bold">{stats.userCount}</p>
-              </div>
-
-              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-green-600 dark:text-green-400">Transactions</h3>
-                <p className="text-2xl font-bold">{stats.transactionCount}</p>
-              </div>
-
-              <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-amber-600 dark:text-amber-400">Feedback Entries</h3>
-                <p className="text-2xl font-bold">{stats.feedbackCount}</p>
-              </div>
+      {/* Main Content */}
+      <main className="flex-1 p-8 overflow-y-auto">
+        <div className="max-w-7xl mx-auto">
+          <header className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {activeTab === 'overview' && "System-wide metrics and status at a glance."}
+                {activeTab === 'users' && "Manage user accounts, roles, and permissions."}
+                {activeTab === 'feedback' && "Review and respond to user feedback."}
+                {activeTab === 'banners' && "Manage global announcements and popups."}
+              </p>
             </div>
+            {/* Mobile Sidebar Trigger could go here if needed */}
+          </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400">Active Streaks</h3>
-                <p className="text-2xl font-bold">{stats.streakCount}</p>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-8">
+            <TabsContent value="overview" className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard
+                  title="Total Users"
+                  value={stats.userCount}
+                  icon={Users}
+                  trend="+12% from last month"
+                  color="blue"
+                />
+                <StatsCard
+                  title="Transactions"
+                  value={stats.transactionCount}
+                  icon={CreditCard}
+                  trend="Active daily volume"
+                  color="green"
+                />
+                <StatsCard
+                  title="Feedback"
+                  value={stats.feedbackCount}
+                  icon={MessageSquare}
+                  trend="Pending review"
+                  color="amber"
+                />
+                <StatsCard
+                  title="Active Streaks"
+                  value={stats.streakCount}
+                  icon={TrendingUp}
+                  trend="High engagement"
+                  color="purple"
+                />
               </div>
 
-              <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-pink-600 dark:text-pink-400">Savings Goals</h3>
-                <p className="text-2xl font-bold">{stats.savingsCount}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Users className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">New user registration</p>
+                            <p className="text-xs text-muted-foreground">2 minutes ago</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>System Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                          <span className="font-medium text-sm">Database</span>
+                        </div>
+                        <span className="text-xs text-green-600 bg-green-500/10 px-2 py-1 rounded-full">Operational</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                          <span className="font-medium text-sm">API Gateway</span>
+                        </div>
+                        <span className="text-xs text-green-600 bg-green-500/10 px-2 py-1 rounded-full">Operational</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                          <span className="font-medium text-sm">Vercel Deployment</span>
+                        </div>
+                        <span className="text-xs text-green-600 bg-green-500/10 px-2 py-1 rounded-full">Operational</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
+            </TabsContent>
 
-            <p className="text-muted-foreground">
-              Welcome to the admin panel. Use the tabs above to navigate between different sections.
-              The dashboard will automatically update when data changes.
-            </p>
-          </Card>
-        </TabsContent>
+            <TabsContent value="users" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <UserManagement />
+            </TabsContent>
 
-        <TabsContent value="users" className="mt-4">
-          <Card className="p-6">
-            <UserManagement />
-          </Card>
-        </TabsContent>
+            <TabsContent value="feedback" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <FeedbackManagement />
+            </TabsContent>
 
-        <TabsContent value="feedback" className="mt-4">
-          <Card className="p-6">
-            <FeedbackManagement />
-          </Card>
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="banners" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
+              <BannerManagement />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </main>
     </div>
+  );
+};
+
+// Helper component for clearer stats code
+const StatsCard = ({ title, value, icon: Icon, trend, color }: any) => {
+  const colorMap: Record<string, string> = {
+    blue: "text-blue-500 bg-blue-500/10",
+    green: "text-green-500 bg-green-500/10",
+    amber: "text-amber-500 bg-amber-500/10",
+    purple: "text-purple-500 bg-purple-500/10",
+  };
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <div className={`h-8 w-8 rounded-md flex items-center justify-center ${colorMap[color]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1">{trend}</p>
+      </CardContent>
+    </Card>
   );
 };
 

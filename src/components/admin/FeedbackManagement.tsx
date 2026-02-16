@@ -312,7 +312,7 @@ const FeedbackManagement = () => {
           setResponseDialog(prev => ({ ...prev, isOpen: open }))
         }
       >
-        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-lg overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+        <DialogContent className="sm:max-w-lg">
 
           <DialogHeader>
             <DialogTitle>Respond to Feedback</DialogTitle>
@@ -321,27 +321,31 @@ const FeedbackManagement = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-6">
             <Textarea
               value={responseDialog.response}
               onChange={(e) =>
                 setResponseDialog(prev => ({ ...prev, response: e.target.value }))
               }
               placeholder="Type your response here..."
-              className="min-h-[150px]"
+              className="min-h-[180px] bg-muted/30 border-none rounded-2xl resize-none font-medium p-4"
             />
           </div>
 
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="ghost"
+              className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
               onClick={() =>
                 setResponseDialog(prev => ({ ...prev, isOpen: false }))
               }
             >
               Cancel
             </Button>
-            <Button onClick={handleSendResponse}>
+            <Button
+              className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+              onClick={handleSendResponse}
+            >
               Send Response
             </Button>
           </DialogFooter>

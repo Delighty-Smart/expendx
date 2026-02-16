@@ -183,7 +183,7 @@ export function SavingsGoalForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[480px]">
 
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit' : 'Add'} Savings Goal</DialogTitle>
@@ -192,7 +192,7 @@ export function SavingsGoalForm({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="category"
@@ -205,18 +205,16 @@ export function SavingsGoalForm({
                     disabled={loading}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <ScrollArea className="h-[200px]">
-                        {savingsCategories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
+                      {savingsCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -231,7 +229,7 @@ export function SavingsGoalForm({
                 <FormItem>
                   <FormLabel>Target Amount ({currency.symbol})</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" {...field} disabled={loading} />
+                    <Input type="number" step="0.01" min="0" {...field} className="h-11 bg-muted/30 border-none rounded-xl font-bold" disabled={loading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -239,10 +237,20 @@ export function SavingsGoalForm({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button
+                type="submit"
+                className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+                disabled={loading}
+              >
                 {loading ? "Saving..." : isEditing ? "Update Goal" : "Save Goal"}
               </Button>
             </DialogFooter>
@@ -252,3 +260,5 @@ export function SavingsGoalForm({
     </Dialog>
   );
 }
+
+export default SavingsGoalForm;

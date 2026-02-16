@@ -120,9 +120,6 @@
   /* Background Pattern & Body Style */
   body {
     background-color: hsl(var(--background));
-    background-image: linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
 
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     @apply text-base text-foreground antialiased;
@@ -680,9 +677,7 @@
 .PopoverContent,
 .DropdownMenuContent,
 .SelectContent,
-.ContextMenuContent,
-.DialogContent,
-.SheetContent {
+.ContextMenuContent {
   max-height: 180px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;

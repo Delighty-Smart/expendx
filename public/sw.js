@@ -1,349 +1,225 @@
 
-// Enhanced Service Worker for ExpendX PWA with advanced offline capabilities
+// Service Worker for ExpendX PWA
+// Auto-updates seamlessly — no prompt needed
 
-const CACHE_NAME = 'expendx-cache-v4';
-const OFFLINE_URL = '/offline.html';
-const SYNC_TAG = 'expendx-background-sync';
+const CACHE_NAME = 'expendx-v1';
 
-// Enhanced files to cache with critical resources prioritized
-const criticalFiles = [
-  '/',
-  '/index.html',
+// Only cache the offline fallback and app shell during install
+const PRECACHE_URLS = [
   '/offline.html',
   '/manifest.json',
-  '/favicon.ico',
+  '/favicon.png',
+  '/app-icon.png',
 ];
 
-const staticAssets = [
-  // Add more static assets as needed
-];
-
-// Dynamic cache names for different content types
-const CACHES = {
-  static: `${CACHE_NAME}-static`,
-  dynamic: `${CACHE_NAME}-dynamic`,
-  api: `${CACHE_NAME}-api`,
-  images: `${CACHE_NAME}-images`
-};
-
-// Install the service worker with enhanced caching
+// ─── INSTALL ────────────────────────────────────────────────
+// Immediately activate the new SW — don't wait for old tabs to close
 self.addEventListener('install', (event) => {
+  console.log('[SW] Installing new service worker...');
   event.waitUntil(
-    Promise.all([
-      // Cache critical files
-      caches.open(CACHES.static).then((cache) => {
-        console.log('Caching critical files');
-        return cache.addAll(criticalFiles);
-      }),
-      // Cache static assets
-      caches.open(CACHES.dynamic).then((cache) => {
-        console.log('Caching static assets');
-        return cache.addAll(staticAssets);
-      })
-    ]).then(() => {
-      console.log('Enhanced service worker installed');
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()) // Activate immediately
   );
 });
 
-// Activate and clean up old caches
+// ─── ACTIVATE ───────────────────────────────────────────────
+// Claim all clients and purge old caches
 self.addEventListener('activate', (event) => {
-  const currentCaches = Object.values(CACHES);
-
+  console.log('[SW] Activating new service worker...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (!currentCaches.includes(cacheName)) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('Enhanced service worker activated');
-      return self.clients.claim();
-    })
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME)
+            .map((name) => {
+              console.log('[SW] Deleting old cache:', name);
+              return caches.delete(name);
+            })
+        );
+      })
+      .then(() => self.clients.claim()) // Take control of all open tabs
   );
 });
 
-// Enhanced auth request detection
-const isAuthRequest = (url) => {
-  return url.includes('/auth/') ||
-    url.includes('/token') ||
-    url.includes('/supabase.co/auth/') ||
-    url.includes('/supabase.co/rest/') ||
-    url.includes('/.netlify/functions/') ||
-    url.includes('/signup') ||
-    url.includes('/signin');
+// ─── FETCH ──────────────────────────────────────────────────
+
+// Helper: is this a navigation request (HTML page)?
+const isNavigationRequest = (request) => {
+  return request.mode === 'navigate' ||
+    (request.method === 'GET' && request.headers.get('accept')?.includes('text/html'));
 };
 
-// Check if request is for API data
-const isApiRequest = (url) => {
+// Helper: is this a Vite-hashed asset? (contains a hash in the filename)
+const isHashedAsset = (url) => {
+  // Vite outputs files like: /assets/index-abc123.js, /assets/style-def456.css
+  return url.includes('/assets/') && /\.[a-f0-9]{8,}\./i.test(url);
+};
+
+// Helper: is this an API/auth request that should never be cached?
+const isApiOrAuthRequest = (url) => {
   return url.includes('/rest/v1/') ||
+    url.includes('/auth/') ||
+    url.includes('/token') ||
+    url.includes('/supabase.co/') ||
     url.includes('/graphql') ||
-    url.includes('/api/');
+    url.includes('/api/') ||
+    url.includes('/realtime/');
 };
 
-// Check if request is for images
+// Helper: is this an image?
 const isImageRequest = (url) => {
-  return url.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/i);
+  return /\.(jpg|jpeg|png|gif|webp|svg|ico|avif)(\?|$)/i.test(url);
 };
 
-// Enhanced fetch event with intelligent caching strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = request.url;
 
-  // Skip non-GET requests and browser extensions
-  if (request.method !== 'GET' ||
-    url.startsWith('chrome-extension://') ||
-    url.includes('extension')) {
+  // Skip non-GET, cross-origin auth, and browser extension requests
+  if (request.method !== 'GET' || url.startsWith('chrome-extension://')) {
     return;
   }
 
-  // Never cache auth requests - always go to network
-  if (isAuthRequest(url)) {
+  // ── API / Auth: NEVER cache, always network ──
+  if (isApiOrAuthRequest(url)) {
+    return; // Let the browser handle it normally
+  }
+
+  // ── Navigation (HTML): NETWORK-FIRST ──
+  // Always try to get fresh HTML so the PWA stays up-to-date
+  if (isNavigationRequest(request)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Cache the fresh HTML for offline fallback
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(async () => {
+          // Offline: serve cached page or offline fallback
+          const cache = await caches.open(CACHE_NAME);
+          const cached = await cache.match(request);
+          return cached || cache.match('/offline.html') || new Response('Offline', { status: 503 });
+        })
+    );
     return;
   }
 
-  // Handle different content types with specific strategies
-  if (isImageRequest(url)) {
-    event.respondWith(handleImageRequest(request));
-  } else if (isApiRequest(url)) {
-    event.respondWith(handleApiRequest(request));
-  } else {
-    event.respondWith(handleStaticRequest(request));
-  }
-});
+  // ── Hashed assets (JS/CSS): CACHE-FIRST ──
+  // Safe because Vite generates unique filenames per build
+  if (isHashedAsset(url)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
 
-// Cache-first strategy for images with long-term storage
-async function handleImageRequest(request) {
-  try {
-    const cache = await caches.open(CACHES.images);
-    const cachedResponse = await cache.match(request);
-
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    const response = await fetch(request);
-
-    if (response.status === 200) {
-      cache.put(request, response.clone());
-    }
-
-    return response;
-  } catch (error) {
-    console.error('Image cache error:', error);
-    // Return a placeholder or cached fallback
-    const cache = await caches.open(CACHES.images);
-    return cache.match('/favicon.ico') || new Response('Image not available offline');
-  }
-}
-
-// Network-first strategy for API requests with offline fallback
-async function handleApiRequest(request) {
-  try {
-    const response = await fetch(request);
-
-    if (response.status === 200) {
-      const cache = await caches.open(CACHES.api);
-      cache.put(request, response.clone());
-    }
-
-    return response;
-  } catch (error) {
-    console.log('API request failed, trying cache:', request.url);
-
-    const cache = await caches.open(CACHES.api);
-    const cachedResponse = await cache.match(request);
-
-    if (cachedResponse) {
-      // Add header to indicate cached response
-      const headers = new Headers(cachedResponse.headers);
-      headers.set('X-From-Cache', 'true');
-
-      return new Response(cachedResponse.body, {
-        status: cachedResponse.status,
-        statusText: cachedResponse.statusText,
-        headers: headers
-      });
-    }
-
-    // Return structured offline response for API requests
-    return new Response(JSON.stringify({
-      error: 'Offline',
-      message: 'This request failed because you are offline'
-    }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}
-
-// Stale-while-revalidate strategy for static content
-async function handleStaticRequest(request) {
-  try {
-    const cache = await caches.open(CACHES.static);
-    const cachedResponse = await cache.match(request);
-
-    // Serve from cache immediately if available
-    const fetchPromise = fetch(request)
-      .then(response => {
+        const response = await fetch(request);
         if (response.status === 200) {
           cache.put(request, response.clone());
         }
         return response;
       })
-      .catch(() => cachedResponse);
-
-    return cachedResponse || await fetchPromise;
-  } catch (error) {
-    console.error('Static content error:', error);
-
-    // Try to serve offline page for navigation requests
-    if (request.mode === 'navigate') {
-      const cache = await caches.open(CACHES.static);
-      return cache.match(OFFLINE_URL) || new Response('Offline');
-    }
-
-    return new Response('Content not available offline');
+    );
+    return;
   }
-}
 
-// Enhanced background sync
+  // ── Images: CACHE-FIRST with network fallback ──
+  if (isImageRequest(url)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+
+        try {
+          const response = await fetch(request);
+          if (response.status === 200) {
+            cache.put(request, response.clone());
+          }
+          return response;
+        } catch {
+          return new Response('', { status: 404 });
+        }
+      })
+    );
+    return;
+  }
+
+  // ── Everything else: NETWORK-FIRST with cache fallback ──
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cache = await caches.open(CACHE_NAME);
+        return cache.match(request) || new Response('Offline', { status: 503 });
+      })
+  );
+});
+
+// ─── BACKGROUND SYNC ────────────────────────────────────────
 self.addEventListener('sync', (event) => {
-  console.log('Background sync triggered:', event.tag);
-
-  if (event.tag === SYNC_TAG || event.tag === 'sync-transactions') {
-    event.waitUntil(performBackgroundSync());
+  if (event.tag === 'expendx-background-sync' || event.tag === 'sync-transactions') {
+    event.waitUntil(notifyClientsToSync());
   }
 });
 
-async function performBackgroundSync() {
-  console.log('Performing background sync');
-
-  try {
-    // Notify all clients about sync start
-    const clients = await self.clients.matchAll({ type: 'window' });
-    clients.forEach(client => {
-      client.postMessage({
-        type: 'SYNC_STARTED',
-        timestamp: Date.now()
-      });
-    });
-
-    // The actual sync logic is handled by the sync manager in the main app
-    // We just trigger it here
-    clients.forEach(client => {
-      client.postMessage({
-        type: 'PERFORM_SYNC',
-        timestamp: Date.now()
-      });
-    });
-
-    console.log('Background sync completed successfully');
-  } catch (error) {
-    console.error('Background sync failed:', error);
-
-    // Notify clients of sync failure
-    const clients = await self.clients.matchAll({ type: 'window' });
-    clients.forEach(client => {
-      client.postMessage({
-        type: 'SYNC_FAILED',
-        error: error.message,
-        timestamp: Date.now()
-      });
-    });
-  }
+async function notifyClientsToSync() {
+  const clients = await self.clients.matchAll({ type: 'window' });
+  clients.forEach((client) => {
+    client.postMessage({ type: 'PERFORM_SYNC', timestamp: Date.now() });
+  });
 }
 
-// Enhanced push notification handling
+// ─── PUSH NOTIFICATIONS ─────────────────────────────────────
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   try {
     const data = event.data.json();
-
-    const notificationOptions = {
-      body: data.message,
-      icon: '/app-icon.png',
-      badge: '/app-icon.png',
-      data: data.url ? { url: data.url } : undefined,
-      requireInteraction: data.important || false,
-      tag: data.tag || 'default'
-    };
-
     event.waitUntil(
-      self.registration.showNotification(data.title, notificationOptions)
+      self.registration.showNotification(data.title, {
+        body: data.message,
+        icon: '/app-icon.png',
+        badge: '/app-icon.png',
+        data: data.url ? { url: data.url } : undefined,
+        requireInteraction: data.important || false,
+        tag: data.tag || 'default',
+      })
     );
   } catch (error) {
-    console.error('Error showing notification:', error);
+    console.error('[SW] Push notification error:', error);
   }
 });
 
-// Enhanced notification click handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-
   const urlToOpen = event.notification.data?.url || '/';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(windowClients => {
-        // Check if app is already open
-        for (const client of windowClients) {
-          if (client.url === urlToOpen && 'focus' in client) {
-            return client.focus();
-          }
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
         }
-
-        // If not already open, open new window
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
+      }
+    })
   );
 });
 
-// Enhanced periodic cleanup and message handling
+// ─── MESSAGE HANDLING ────────────────────────────────────────
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'CLEANUP_CACHE') {
-    event.waitUntil(cleanupOldCacheEntries());
-  } else if (event.data?.type === 'SKIP_WAITING') {
-    console.log('Triggering skipWaiting() from message');
+  if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
-
-async function cleanupOldCacheEntries() {
-  try {
-    const cacheNames = await caches.keys();
-
-    for (const cacheName of cacheNames) {
-      if (cacheName.startsWith('expendx-cache-')) {
-        const cache = await caches.open(cacheName);
-        const requests = await cache.keys();
-
-        // Remove entries older than 7 days for dynamic content
-        if (cacheName.includes('dynamic') || cacheName.includes('api')) {
-          const cutoffTime = Date.now() - (7 * 24 * 60 * 60 * 1000);
-
-          for (const request of requests) {
-            const response = await cache.match(request);
-            const dateHeader = response?.headers.get('date');
-
-            if (dateHeader && new Date(dateHeader).getTime() < cutoffTime) {
-              await cache.delete(request);
-            }
-          }
-        }
-      }
-    }
-
-    console.log('Cache cleanup completed');
-  } catch (error) {
-    console.error('Cache cleanup failed:', error);
-  }
-}

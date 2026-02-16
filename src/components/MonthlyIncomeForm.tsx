@@ -87,7 +87,7 @@ export function MonthlyIncomeForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[480px]">
 
         <DialogHeader>
           <DialogTitle>Set Monthly Income</DialogTitle>
@@ -96,7 +96,7 @@ export function MonthlyIncomeForm({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="amount"
@@ -108,6 +108,7 @@ export function MonthlyIncomeForm({
                       type="number"
                       placeholder="0.00"
                       step="0.01"
+                      className="h-11 bg-muted/30 border-none rounded-xl font-bold"
                       {...field}
                     />
                   </FormControl>
@@ -119,12 +120,18 @@ export function MonthlyIncomeForm({
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
+                className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+              <Button
+                type="submit"
+                className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+              >
+                Save
+              </Button>
             </DialogFooter>
           </form>
         </Form>
@@ -132,3 +139,5 @@ export function MonthlyIncomeForm({
     </Dialog>
   );
 }
+
+export default MonthlyIncomeForm;

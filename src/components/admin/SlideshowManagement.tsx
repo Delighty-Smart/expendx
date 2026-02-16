@@ -382,7 +382,7 @@ const SlideshowManagement = () => {
               Create Banner
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-2xl overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+          <DialogContent className="sm:max-w-2xl">
 
             <DialogHeader>
               <DialogTitle>Create Banner</DialogTitle>
@@ -390,9 +390,9 @@ const SlideshowManagement = () => {
                 Create a new banner for the slideshow on the dashboard.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+            <div className="grid gap-6 py-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
                     <Input
@@ -400,9 +400,10 @@ const SlideshowManagement = () => {
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Banner title"
+                      className="h-11 bg-muted/30 border-none rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2 mt-4">
+                  <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
@@ -410,87 +411,47 @@ const SlideshowManagement = () => {
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Optional banner description"
                       rows={3}
+                      className="bg-muted/30 border-none rounded-xl resize-none"
                     />
                   </div>
-                  <div className="space-y-2 mt-4">
+                  <div className="space-y-2">
                     <Label htmlFor="link_url">Link URL (optional)</Label>
                     <Input
                       id="link_url"
                       value={formData.link_url}
                       onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                       placeholder="https://example.com"
+                      className="h-11 bg-muted/30 border-none rounded-xl"
                     />
                   </div>
-                  <div className="flex items-center space-x-2 mt-4">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                    <Label htmlFor="active" className="font-semibold">Active Status</Label>
                     <Switch
                       id="active"
                       checked={formData.active}
                       onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                     />
-                    <Label htmlFor="active">Active</Label>
-                  </div>
-                  <div className="space-y-2 mt-4">
-                    <Label>Visible to</Label>
-                    <div className="space-y-2 mt-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="free"
-                          checked={formData.visible_to.free}
-                          onCheckedChange={(checked) =>
-                            setFormData({
-                              ...formData,
-                              visible_to: { ...formData.visible_to, free: !!checked }
-                            })
-                          }
-                        />
-                        <Label htmlFor="free">Free Users</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="pro"
-                          checked={formData.visible_to.pro}
-                          onCheckedChange={(checked) =>
-                            setFormData({
-                              ...formData,
-                              visible_to: { ...formData.visible_to, pro: !!checked }
-                            })
-                          }
-                        />
-                        <Label htmlFor="pro">Pro Users</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="premium"
-                          checked={formData.visible_to.premium}
-                          onCheckedChange={(checked) =>
-                            setFormData({
-                              ...formData,
-                              visible_to: { ...formData.visible_to, premium: !!checked }
-                            })
-                          }
-                        />
-                        <Label htmlFor="premium">Premium Users</Label>
-                      </div>
-                    </div>
                   </div>
                 </div>
-                <div>
+                <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="image">Banner Image</Label>
-                    <div className="border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => document.getElementById('image-upload')?.click()}>
+                    <Label>Banner Image</Label>
+                    <div className="border-2 border-dashed border-border/50 rounded-2xl p-4 text-center cursor-pointer hover:bg-muted/30 transition-all group" onClick={() => document.getElementById('image-upload')?.click()}>
                       {imagePreview ? (
                         <div className="relative">
                           <img
                             src={imagePreview}
                             alt="Banner preview"
-                            className="mx-auto rounded-md max-h-52 object-contain"
+                            className="mx-auto rounded-xl max-h-52 object-contain shadow-premium"
                           />
-                          <div className="mt-2 text-sm text-muted-foreground">Click to change image</div>
+                          <div className="mt-3 text-sm text-muted-foreground font-medium group-hover:text-foreground">Click to change image</div>
                         </div>
                       ) : (
                         <div className="py-8">
-                          <Image className="mx-auto h-12 w-12 text-muted-foreground" />
-                          <div className="mt-2 text-sm text-muted-foreground">
+                          <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/10 transition-colors">
+                            <Image className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                          <div className="text-sm text-muted-foreground font-medium group-hover:text-foreground">
                             Click to upload an image
                           </div>
                         </div>
@@ -503,19 +464,66 @@ const SlideshowManagement = () => {
                         onChange={handleImageChange}
                       />
                     </div>
+                    <p className="text-[10px] text-muted-foreground/60 text-center uppercase tracking-wider font-bold mt-2">
+                      Recommended: 1200 x 400 pixels
+                    </p>
                   </div>
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    <p>Recommended banner size: 1200 x 400 pixels</p>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">Visible to</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border-none">
+                        <Label htmlFor="free" className="font-medium">Free Users</Label>
+                        <Checkbox
+                          id="free"
+                          checked={formData.visible_to.free}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              visible_to: { ...formData.visible_to, free: !!checked }
+                            })
+                          }
+                          className="rounded-md"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border-none">
+                        <Label htmlFor="pro" className="font-medium">Pro Users</Label>
+                        <Checkbox
+                          id="pro"
+                          checked={formData.visible_to.pro}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              visible_to: { ...formData.visible_to, pro: !!checked }
+                            })
+                          }
+                          className="rounded-md"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border-none">
+                        <Label htmlFor="premium" className="font-medium">Premium Users</Label>
+                        <Checkbox
+                          id="premium"
+                          checked={formData.visible_to.premium}
+                          onCheckedChange={(checked) =>
+                            setFormData({
+                              ...formData,
+                              visible_to: { ...formData.visible_to, premium: !!checked }
+                            })
+                          }
+                          className="rounded-md"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
+              <Button variant="ghost" className="h-12 rounded-xl px-6 font-bold" onClick={() => {
                 resetForm();
                 setCreateModalOpen(false);
               }}>Cancel</Button>
-              <Button onClick={handleCreate}>Create Banner</Button>
+              <Button className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all" onClick={handleCreate}>Create Banner</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -645,7 +653,7 @@ const SlideshowManagement = () => {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-2xl overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+                        <DialogContent className="sm:max-w-2xl">
 
                           <DialogHeader>
                             <DialogTitle>Edit Banner</DialogTitle>
@@ -653,9 +661,9 @@ const SlideshowManagement = () => {
                               Update the banner information.
                             </DialogDescription>
                           </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
+                          <div className="grid gap-6 py-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                              <div className="space-y-6">
                                 <div className="space-y-2">
                                   <Label htmlFor="edit-title">Title</Label>
                                   <Input
@@ -663,9 +671,10 @@ const SlideshowManagement = () => {
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="Banner title"
+                                    className="h-11 bg-muted/30 border-none rounded-xl"
                                   />
                                 </div>
-                                <div className="space-y-2 mt-4">
+                                <div className="space-y-2">
                                   <Label htmlFor="edit-description">Description</Label>
                                   <Textarea
                                     id="edit-description"
@@ -673,91 +682,49 @@ const SlideshowManagement = () => {
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     placeholder="Optional banner description"
                                     rows={3}
+                                    className="bg-muted/30 border-none rounded-xl resize-none"
                                   />
                                 </div>
-                                <div className="space-y-2 mt-4">
+                                <div className="space-y-2">
                                   <Label htmlFor="edit-link_url">Link URL (optional)</Label>
                                   <Input
                                     id="edit-link_url"
                                     value={formData.link_url}
                                     onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                                     placeholder="https://example.com"
+                                    className="h-11 bg-muted/30 border-none rounded-xl"
                                   />
                                 </div>
-                                <div className="flex items-center space-x-2 mt-4">
+                                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl">
+                                  <Label htmlFor="edit-active" className="font-semibold">Active Status</Label>
                                   <Switch
                                     id="edit-active"
                                     checked={formData.active}
                                     onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
                                   />
-                                  <Label htmlFor="edit-active">Active</Label>
-                                </div>
-                                <div className="space-y-2 mt-4">
-                                  <Label>Visible to</Label>
-                                  <div className="space-y-2 mt-2">
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id="edit-free"
-                                        checked={formData.visible_to.free}
-                                        onCheckedChange={(checked) =>
-                                          setFormData({
-                                            ...formData,
-                                            visible_to: { ...formData.visible_to, free: !!checked }
-                                          })
-                                        }
-                                      />
-                                      <Label htmlFor="edit-free">Free Users</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id="edit-pro"
-                                        checked={formData.visible_to.pro}
-                                        onCheckedChange={(checked) =>
-                                          setFormData({
-                                            ...formData,
-                                            visible_to: { ...formData.visible_to, pro: !!checked }
-                                          })
-                                        }
-                                      />
-                                      <Label htmlFor="edit-pro">Pro Users</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id="edit-premium"
-                                        checked={formData.visible_to.premium}
-                                        onCheckedChange={(checked) =>
-                                          setFormData({
-                                            ...formData,
-                                            visible_to: { ...formData.visible_to, premium: !!checked }
-                                          })
-                                        }
-                                      />
-                                      <Label htmlFor="edit-premium">Premium Users</Label>
-                                    </div>
-                                  </div>
                                 </div>
                               </div>
-                              <div>
+                              <div className="space-y-6">
                                 <div className="space-y-2">
                                   <Label htmlFor="edit-image">Banner Image</Label>
-                                  <div className="border-2 border-dashed rounded-md p-4 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => document.getElementById('edit-image-upload')?.click()}>
+                                  <div className="border-2 border-dashed border-border/50 rounded-2xl p-4 text-center cursor-pointer hover:bg-muted/30 transition-all group" onClick={() => document.getElementById('edit-image-upload')?.click()}>
                                     {imagePreview ? (
                                       <div className="relative">
                                         <img
                                           src={imagePreview}
                                           alt="Banner preview"
-                                          className="mx-auto rounded-md max-h-52 object-contain"
+                                          className="mx-auto rounded-xl max-h-52 object-contain shadow-premium"
                                         />
-                                        <div className="mt-2 text-sm text-muted-foreground">Click to change image</div>
+                                        <div className="mt-3 text-sm text-muted-foreground font-medium group-hover:text-foreground">Click to change image</div>
                                       </div>
                                     ) : (
                                       <div className="relative">
                                         <img
                                           src={formData.image_url}
                                           alt="Current banner"
-                                          className="mx-auto rounded-md max-h-52 object-contain"
+                                          className="mx-auto rounded-xl max-h-52 object-contain shadow-premium"
                                         />
-                                        <div className="mt-2 text-sm text-muted-foreground">Click to change image</div>
+                                        <div className="mt-3 text-sm text-muted-foreground font-medium group-hover:text-foreground">Click to change image</div>
                                       </div>
                                     )}
                                     <input
@@ -768,16 +735,64 @@ const SlideshowManagement = () => {
                                       onChange={handleImageChange}
                                     />
                                   </div>
+                                  <p className="text-[10px] text-muted-foreground/60 text-center uppercase tracking-wider font-bold mt-2">
+                                    Recommended: 1200 x 400 pixels
+                                  </p>
                                 </div>
-                                <div className="mt-4 text-sm text-muted-foreground">
-                                  <p>Recommended banner size: 1200 x 400 pixels</p>
+                                <div className="space-y-3">
+                                  <Label className="text-sm font-semibold text-foreground">Visible to</Label>
+                                  <div className="grid grid-cols-1 gap-2">
+                                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border-none">
+                                      <Label htmlFor="edit-free" className="font-medium">Free Users</Label>
+                                      <Checkbox
+                                        id="edit-free"
+                                        checked={formData.visible_to.free}
+                                        onCheckedChange={(checked) =>
+                                          setFormData({
+                                            ...formData,
+                                            visible_to: { ...formData.visible_to, free: !!checked }
+                                          })
+                                        }
+                                        className="rounded-md"
+                                      />
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border-none">
+                                      <Label htmlFor="edit-pro" className="font-medium">Pro Users</Label>
+                                      <Checkbox
+                                        id="edit-pro"
+                                        checked={formData.visible_to.pro}
+                                        onCheckedChange={(checked) =>
+                                          setFormData({
+                                            ...formData,
+                                            visible_to: { ...formData.visible_to, pro: !!checked }
+                                          })
+                                        }
+                                        className="rounded-md"
+                                      />
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border-none">
+                                      <Label htmlFor="edit-premium" className="font-medium">Premium Users</Label>
+                                      <Checkbox
+                                        id="edit-premium"
+                                        checked={formData.visible_to.premium}
+                                        onCheckedChange={(checked) =>
+                                          setFormData({
+                                            ...formData,
+                                            visible_to: { ...formData.visible_to, premium: !!checked }
+                                          })
+                                        }
+                                        className="rounded-md"
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                          <DialogFooter>
+                          <DialogFooter className="gap-2 sm:gap-0">
                             <Button
                               variant="destructive"
+                              className="h-12 rounded-xl px-6 font-bold"
                               onClick={() => {
                                 if (window.confirm('Are you sure you want to delete this banner?')) {
                                   handleDelete(selectedBanner.id);
@@ -788,11 +803,11 @@ const SlideshowManagement = () => {
                               Delete
                             </Button>
                             <div className="flex-1"></div>
-                            <Button variant="outline" onClick={() => {
+                            <Button variant="ghost" className="h-12 rounded-xl px-6 font-bold" onClick={() => {
                               resetForm();
                               setEditModalOpen(false);
                             }}>Cancel</Button>
-                            <Button onClick={handleEdit}>Update Banner</Button>
+                            <Button className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all" onClick={handleEdit}>Update Banner</Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>

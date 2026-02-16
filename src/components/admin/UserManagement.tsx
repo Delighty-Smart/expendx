@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, SlidersHorizontal, Send, UserPlus, Edit, Eye, EyeOff } from "lucide-react";
@@ -257,7 +258,7 @@ const UserManagement = () => {
               Create User
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-lg overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+          <DialogContent className="sm:max-w-lg">
 
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
@@ -265,42 +266,56 @@ const UserManagement = () => {
                 Enter the details for the new user.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="email" className="col-span-1">Email</Label>
-                <Input id="email" type="email" value={newUserDetails.email} onChange={e => setNewUserDetails({
-                  ...newUserDetails,
-                  email: e.target.value
-                })} className="col-span-3" required />
+            <div className="grid gap-6 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newUserDetails.email}
+                  onChange={e => setNewUserDetails({ ...newUserDetails, email: e.target.value })}
+                  className="h-11 bg-muted/30 border-none rounded-xl"
+                  required
+                />
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="password" className="col-span-1">Password</Label>
-                <Input id="password" type="password" value={newUserDetails.password} onChange={e => setNewUserDetails({
-                  ...newUserDetails,
-                  password: e.target.value
-                })} className="col-span-3" required />
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newUserDetails.password}
+                  onChange={e => setNewUserDetails({ ...newUserDetails, password: e.target.value })}
+                  className="h-11 bg-muted/30 border-none rounded-xl"
+                  required
+                />
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="firstName" className="col-span-1">First Name</Label>
-                <Input id="firstName" value={newUserDetails.firstName} onChange={e => setNewUserDetails({
-                  ...newUserDetails,
-                  firstName: e.target.value
-                })} className="col-span-3" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={newUserDetails.firstName}
+                    onChange={e => setNewUserDetails({ ...newUserDetails, firstName: e.target.value })}
+                    className="h-11 bg-muted/30 border-none rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={newUserDetails.lastName}
+                    onChange={e => setNewUserDetails({ ...newUserDetails, lastName: e.target.value })}
+                    className="h-11 bg-muted/30 border-none rounded-xl"
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="lastName" className="col-span-1">Last Name</Label>
-                <Input id="lastName" value={newUserDetails.lastName} onChange={e => setNewUserDetails({
-                  ...newUserDetails,
-                  lastName: e.target.value
-                })} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="role" className="col-span-1">Role</Label>
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
                 <Select value={newUserDetails.role} onValueChange={(value: UserRoleType) => setNewUserDetails({
                   ...newUserDetails,
                   role: value
                 })}>
-                  <SelectTrigger className="col-span-3">
+                  <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -313,8 +328,8 @@ const UserManagement = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateUserModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreateUser}>Create User</Button>
+              <Button variant="ghost" className="h-12 rounded-xl px-6 font-bold" onClick={() => setCreateUserModalOpen(false)}>Cancel</Button>
+              <Button className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all" onClick={handleCreateUser}>Create User</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -326,7 +341,7 @@ const UserManagement = () => {
               Send Message
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-lg overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+          <DialogContent className="sm:max-w-lg">
 
             <DialogHeader>
               <DialogTitle>Send Message to Users</DialogTitle>
@@ -334,25 +349,31 @@ const UserManagement = () => {
                 This message will be sent to {selectedUsers.length > 0 ? selectedUsers.length : "all"} user(s).
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="messageTitle" className="col-span-1">Title</Label>
-                <Input id="messageTitle" value={messageDetails.title} onChange={e => setMessageDetails({
-                  ...messageDetails,
-                  title: e.target.value
-                })} className="col-span-3" placeholder="Message title" />
+            <div className="grid gap-6 py-6">
+              <div className="space-y-2">
+                <Label htmlFor="messageTitle">Title</Label>
+                <Input
+                  id="messageTitle"
+                  value={messageDetails.title}
+                  onChange={e => setMessageDetails({ ...messageDetails, title: e.target.value })}
+                  className="h-11 bg-muted/30 border-none rounded-xl"
+                  placeholder="Message title"
+                />
               </div>
-              <div className="grid grid-cols-4 items-center gap-2">
-                <Label htmlFor="messageContent" className="col-span-1">Message</Label>
-                <Input id="messageContent" value={messageDetails.message} onChange={e => setMessageDetails({
-                  ...messageDetails,
-                  message: e.target.value
-                })} className="col-span-3" placeholder="Message content" />
+              <div className="space-y-2">
+                <Label htmlFor="messageContent">Message</Label>
+                <Textarea
+                  id="messageContent"
+                  value={messageDetails.message}
+                  onChange={e => setMessageDetails({ ...messageDetails, message: e.target.value })}
+                  className="min-h-[120px] bg-muted/30 border-none rounded-xl resize-none"
+                  placeholder="Type your message here..."
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setMessageModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSendMessage}>Send Message</Button>
+              <Button variant="ghost" className="h-12 rounded-xl px-6 font-bold" onClick={() => setMessageModalOpen(false)}>Cancel</Button>
+              <Button className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all" onClick={handleSendMessage}>Send Message</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

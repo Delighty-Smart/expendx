@@ -167,37 +167,39 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-2xl overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+      <DialogContent className="sm:max-w-2xl">
 
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Crop className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <Crop className="h-5 w-5 text-primary" />
+            </div>
             Crop Your Avatar
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div
             ref={containerRef}
-            className="relative overflow-hidden rounded-lg border bg-muted select-none touch-none"
+            className="relative overflow-hidden rounded-2xl border-none bg-muted/30 select-none touch-none aspect-square flex items-center justify-center p-2"
           >
             <img
               ref={imageRef}
               src={image}
               alt="Crop preview"
-              className="max-w-full h-auto pointer-events-none"
+              className="max-w-full max-h-full object-contain pointer-events-none rounded-xl shadow-xl"
               onLoad={handleImageLoad}
               draggable={false}
             />
 
             {imageLoaded && imageRef.current && (
               <div
-                className="absolute border-2 border-primary bg-primary/20 transition-all duration-75 ease-out"
+                className="absolute border-2 border-primary bg-primary/10 transition-all duration-75 ease-out rounded-xl"
                 style={{
-                  left: `${(cropArea.x / imageRef.current.naturalWidth) * 100}%`,
-                  top: `${(cropArea.y / imageRef.current.naturalHeight) * 100}%`,
-                  width: `${(cropArea.width / imageRef.current.naturalWidth) * 100}%`,
-                  height: `${(cropArea.height / imageRef.current.naturalHeight) * 100}%`,
+                  left: `${(cropArea.x / imageRef.current.naturalWidth) * imageRef.current.clientWidth + (containerRef.current!.clientWidth - imageRef.current.clientWidth) / 2}px`,
+                  top: `${(cropArea.y / imageRef.current.naturalHeight) * imageRef.current.clientHeight + (containerRef.current!.clientHeight - imageRef.current.clientHeight) / 2}px`,
+                  width: `${(cropArea.width / imageRef.current.naturalWidth) * imageRef.current.clientWidth}px`,
+                  height: `${(cropArea.height / imageRef.current.naturalHeight) * imageRef.current.clientHeight}px`,
                   cursor: isDragging ? 'grabbing' : 'grab',
                   touchAction: 'none',
                 }}
@@ -207,27 +209,35 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
                 role="button"
                 aria-label="Drag to reposition crop"
               >
-                <div className="absolute inset-0 border border-white/50" />
+                <div className="absolute inset-0 border border-white/30 rounded-xl" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-6 h-6 bg-primary/80 rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full" />
+                  <div className="w-8 h-8 bg-primary shadow-lg rounded-full flex items-center justify-center scale-100 hover:scale-110 active:scale-95 transition-transform">
+                    <div className="w-2.5 h-2.5 bg-white rounded-full" />
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground text-center">
-            Drag the crop area to position your avatar
+          <p className="text-sm text-muted-foreground/60 text-center font-medium">
+            Drag the crop area to position your avatar perfectly
           </p>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            variant="ghost"
+            className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+          >
             <X className="h-4 w-4 mr-2" />
             Cancel
           </Button>
-          <Button onClick={handleCrop} disabled={!imageLoaded}>
+          <Button
+            className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+            onClick={handleCrop}
+            disabled={!imageLoaded}
+          >
             <Check className="h-4 w-4 mr-2" />
             Apply Crop
           </Button>
@@ -240,4 +250,3 @@ const ImageCropper = ({ image, isOpen, onClose, onCrop }: ImageCropperProps) => 
 };
 
 export default ImageCropper;
-

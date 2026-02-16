@@ -375,10 +375,10 @@ export const ArchiveManagement = () => {
                             Unarchive Month
                           </Button>
                           <div className={`h-3 w-3 rounded-full border-2 border-primary ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
-                              ? 'bg-primary'
-                              : allDayTransactions.some(t => selectedTransactions.includes(t.id))
-                                ? 'bg-primary/30'
-                                : 'bg-background'
+                            ? 'bg-primary'
+                            : allDayTransactions.some(t => selectedTransactions.includes(t.id))
+                              ? 'bg-primary/30'
+                              : 'bg-background'
                             }`}></div>
                         </div>
                       </div>
@@ -405,10 +405,10 @@ export const ArchiveManagement = () => {
                           >
                             <span className="text-foreground">{format(new Date(day), "EEEE, MMM d")}</span>
                             <div className={`h-3 w-3 rounded-full border-2 border-primary ${dayTransactions.every(t => selectedTransactions.includes(t.id))
-                                ? 'bg-primary'
-                                : dayTransactions.some(t => selectedTransactions.includes(t.id))
-                                  ? 'bg-primary/30'
-                                  : 'bg-background'
+                              ? 'bg-primary'
+                              : dayTransactions.some(t => selectedTransactions.includes(t.id))
+                                ? 'bg-primary/30'
+                                : 'bg-background'
                               }`}></div>
                           </div>
 
@@ -444,10 +444,10 @@ export const ArchiveManagement = () => {
 
                                 <div
                                   className={`text-right ${transaction.type === "credit"
-                                      ? "text-green-600 dark:text-green-400"
-                                      : transaction.type === "debit"
-                                        ? "text-red-600 dark:text-red-400"
-                                        : "text-blue-600 dark:text-blue-400"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : transaction.type === "debit"
+                                      ? "text-red-600 dark:text-red-400"
+                                      : "text-blue-600 dark:text-blue-400"
                                     }`}
                                 >
                                   <p className="font-medium text-sm leading-tight">
@@ -474,16 +474,16 @@ export const ArchiveManagement = () => {
 
       {/* Confirmation dialogs */}
       <AlertDialog open={confirmUnarchiveOpen} onOpenChange={setConfirmUnarchiveOpen}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Confirm Unarchive</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
+            <AlertDialogTitle>Confirm Unarchive</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to unarchive {selectedTransactions.length} transaction(s)?
               They will be restored to your active transactions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 handleUnarchive();
@@ -498,16 +498,16 @@ export const ArchiveManagement = () => {
       </AlertDialog>
 
       <AlertDialog open={confirmUnarchiveAllOpen} onOpenChange={setConfirmUnarchiveAllOpen}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Confirm Unarchive All</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
+            <AlertDialogTitle>Confirm Unarchive All</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to unarchive all archived transactions?
               This will restore all {archivedTransactions.length} archived transactions to your active transactions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleUnarchiveAll} className="bg-blue-600 hover:bg-blue-700 text-white">
               Unarchive All
             </AlertDialogAction>
@@ -516,16 +516,16 @@ export const ArchiveManagement = () => {
       </AlertDialog>
 
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Confirm Permanent Deletion</AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground">
+            <AlertDialogTitle>Confirm Permanent Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to permanently delete {selectedTransactions.length} transaction(s)?
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeletePermanently} className="bg-red-600 hover:bg-red-700 text-white">
               Delete Permanently
             </AlertDialogAction>

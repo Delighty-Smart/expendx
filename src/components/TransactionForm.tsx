@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -258,216 +259,204 @@ export const TransactionForm = ({
       onOpenChange(open);
     }}>
       <DialogContent
-        className={`${isMobile ? 'w-[calc(100%-3rem)]' : 'sm:max-w-[440px]'} mx-auto overflow-y-auto max-h-[95vh] p-3 sm:p-6`}
+        className={cn(
+          isMobile ? "w-[calc(100%-2rem)]" : "sm:max-w-[480px]",
+          "max-h-[95vh]"
+        )}
       >
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
+            <PendingSyncIndicator status={syncStatus} />
+          </div>
+          <DialogDescription>
+            Enter the details of your transaction below.
+            {!navigator.onLine && (
+              <span className="block text-orange-600 dark:text-orange-400 mt-3 font-semibold px-4 py-2 bg-orange-500/10 rounded-xl border border-orange-500/10">
+                You're offline - changes will sync when connection is restored.
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
 
-        <ScrollArea
-          className="h-full px-1 overflow-y-auto"
-          style={{
-            overflowY: 'auto',
-            scrollBehavior: 'smooth',
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
-            touchAction: 'pan-y'
-          }}
-        >
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <DialogTitle className="text-lg font-semibold">{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
-              <PendingSyncIndicator status={syncStatus} />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-11 bg-muted/30 border-none rounded-xl font-bold" disabled={loading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <DialogDescription className="text-sm leading-relaxed">
-              Enter the details of your transaction below.
-              {!navigator.onLine && (
-                <span className="block text-orange-600 dark:text-orange-400 mt-2 font-medium px-3 py-2 bg-orange-50 dark:bg-orange-950/50 rounded-lg border border-orange-200 dark:border-orange-800">
-                  You're offline - changes will sync when connection is restored.
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* <ReceiptScanner onDataExtracted={handleReceiptData} /> */}
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground">Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors" disabled={loading} />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-foreground">Amount</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors" disabled={loading} />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground">Type</FormLabel>
-                    <Select
-                      onValueChange={handleTypeChange}
-                      value={transactionType}
-                      disabled={loading}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="credit">Credit (Income)</SelectItem>
-                        <SelectItem value="debit">Debit (Expense)</SelectItem>
-                        <SelectItem value="savings">Savings</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground">Category</FormLabel>
-                    {suggestions.length > 0 && !field.value && (
-                      <div className="flex gap-2 mb-2 flex-wrap">
-                        {suggestions.map((suggestion) => (
-                          <Badge
-                            key={suggestion.category}
-                            variant="outline"
-                            className="cursor-pointer hover:bg-primary/10"
-                            onClick={() => field.onChange(suggestion.category)}
-                          >
-                            ✨ {suggestion.category} ({Math.round(suggestion.confidence * 100)}%)
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={loading || categories.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors">
-                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Recurring Template Selector */}
-              <RecurringTemplateSelector
-                transactionType={transactionType}
-                disabled={loading}
-                onSelect={(template) => {
-                  if (template) {
-                    form.setValue('amount', template.amount.toString());
-                    form.setValue('category', template.category);
-                    form.setValue('description', template.description);
-                  }
-                }}
-              />
-
-              {/* Subscription Selection - only show when Subscriptions category is selected */}
-              {form.watch('category') === 'Subscriptions' && subscriptionOptions.length > 0 && (
-                <div>
-                  <Label className="text-sm font-medium text-foreground">Select Subscription</Label>
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
                   <Select
-                    value={selectedSubscription}
-                    onValueChange={setSelectedSubscription}
+                    onValueChange={handleTypeChange}
+                    value={transactionType}
                     disabled={loading}
                   >
-                    <SelectTrigger className="h-10 rounded-lg border-border/50 focus:border-primary transition-colors mt-2">
-                      <SelectValue placeholder="Choose a subscription" />
-                    </SelectTrigger>
+                    <FormControl>
+                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
-                      {subscriptionOptions.map((option) => (
-                        <SelectItem key={option.id} value={option.id}>
-                          {option.label}
+                      <SelectItem value="credit">Credit (Income)</SelectItem>
+                      <SelectItem value="debit">Debit (Expense)</SelectItem>
+                      <SelectItem value="savings">Savings</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  {suggestions.length > 0 && !field.value && (
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {suggestions.map((suggestion) => (
+                        <Badge
+                          key={suggestion.category}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground rounded-lg py-1 px-2 text-[10px]"
+                          onClick={() => field.onChange(suggestion.category)}
+                        >
+                          ✨ {suggestion.category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={loading || categories.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                        <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-foreground">Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter transaction details..."
-                        {...field}
-                        className="resize-none text-sm rounded-lg border-border/50 focus:border-primary transition-colors min-h-[80px]"
-                        disabled={loading}
-                        rows={3}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
+            <RecurringTemplateSelector
+              transactionType={transactionType}
+              disabled={loading}
+              onSelect={(template) => {
+                if (template) {
+                  form.setValue('amount', template.amount.toString());
+                  form.setValue('category', template.category);
+                  form.setValue('description', template.description);
+                }
+              }}
+            />
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    form.reset();
-                    onOpenChange(false);
-                  }}
-                  className="mobile-button rounded-lg border-border/50 hover:bg-muted/50 transition-colors touch-manipulation"
+            {form.watch('category') === 'Subscriptions' && subscriptionOptions.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold tracking-tight">Select Subscription</Label>
+                <Select
+                  value={selectedSubscription}
+                  onValueChange={setSelectedSubscription}
                   disabled={loading}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="mobile-button rounded-lg transition-all hover:scale-105 touch-manipulation"
-                  disabled={loading}
-                >
-                  {loading ? "Saving..." : transaction ? 'Update' : 'Add'} Transaction
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </ScrollArea>
+                  <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                    <SelectValue placeholder="Choose a subscription" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subscriptionOptions.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter transaction details..."
+                      {...field}
+                      className="resize-none bg-muted/30 border-none rounded-2xl min-h-[100px] p-4 text-sm font-medium"
+                      disabled={loading}
+                      rows={3}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  form.reset();
+                  onOpenChange(false);
+                }}
+                className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : transaction ? 'Update' : 'Add Transaction'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

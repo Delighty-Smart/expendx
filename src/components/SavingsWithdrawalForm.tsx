@@ -161,7 +161,7 @@ export function SavingsWithdrawalForm({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[480px]">
 
         <DialogHeader>
           <DialogTitle>Withdraw from Savings</DialogTitle>
@@ -170,7 +170,7 @@ export function SavingsWithdrawalForm({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="category"
@@ -182,7 +182,7 @@ export function SavingsWithdrawalForm({
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                     </FormControl>
@@ -195,7 +195,7 @@ export function SavingsWithdrawalForm({
                     </SelectContent>
                   </Select>
                   {categoryField && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs font-semibold text-muted-foreground mt-2 px-1">
                       Available: {currency.symbol}{availableSavings.toFixed(2)}
                     </p>
                   )}
@@ -211,7 +211,7 @@ export function SavingsWithdrawalForm({
                 <FormItem>
                   <FormLabel>Amount ({currency.symbol})</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" min="0" max={availableSavings.toString()} {...field} />
+                    <Input type="number" step="0.01" min="0" max={availableSavings.toString()} {...field} className="h-11 bg-muted/30 border-none rounded-xl font-bold" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,7 +225,7 @@ export function SavingsWithdrawalForm({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} className="resize-none bg-muted/30 border-none rounded-2xl min-h-[100px] p-4 text-sm font-medium" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -233,10 +233,19 @@ export function SavingsWithdrawalForm({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || !categoryField || availableSavings <= 0}>
+              <Button
+                type="submit"
+                className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+                disabled={loading || !categoryField || availableSavings <= 0}
+              >
                 {loading ? "Processing..." : "Withdraw"}
               </Button>
             </DialogFooter>
@@ -246,3 +255,5 @@ export function SavingsWithdrawalForm({
     </Dialog>
   );
 }
+
+export default SavingsWithdrawalForm;

@@ -116,7 +116,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[480px]">
 
         <DialogHeader>
           <DialogTitle>
@@ -124,14 +124,14 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="service_provider">Service Provider</Label>
             <Select
               value={formData.service_provider}
               onValueChange={(value) => setFormData(prev => ({ ...prev, service_provider: value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
                 <SelectValue placeholder="Select service provider" />
               </SelectTrigger>
               <SelectContent>
@@ -144,71 +144,77 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="card_type">Card Type</Label>
-            <Select
-              value={formData.card_type}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, card_type: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select card type" />
-              </SelectTrigger>
-              <SelectContent>
-                {CARD_TYPES.map((cardType) => (
-                  <SelectItem key={cardType} value={cardType}>
-                    {cardType}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="card_type">Card Type</Label>
+              <Select
+                value={formData.card_type}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, card_type: value }))}
+              >
+                <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                  <SelectValue placeholder="Select card type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CARD_TYPES.map((cardType) => (
+                    <SelectItem key={cardType} value={cardType}>
+                      {cardType}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="last_four_digits">Last 4 Digits</Label>
+              <Input
+                id="last_four_digits"
+                type="text"
+                placeholder="1234"
+                maxLength={4}
+                className="h-11 bg-muted/30 border-none rounded-xl font-medium"
+                value={formData.last_four_digits}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  setFormData(prev => ({ ...prev, last_four_digits: value }));
+                }}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="last_four_digits">Last 4 Digits of Card</Label>
-            <Input
-              id="last_four_digits"
-              type="text"
-              placeholder="1234"
-              maxLength={4}
-              value={formData.last_four_digits}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '');
-                setFormData(prev => ({ ...prev, last_four_digits: value }));
-              }}
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="subscription_type">Type</Label>
+              <Select
+                value={formData.subscription_type}
+                onValueChange={(value: 'monthly' | 'annual') =>
+                  setFormData(prev => ({ ...prev, subscription_type: value }))
+                }
+              >
+                <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SUBSCRIPTION_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="subscription_type">Subscription Type</Label>
-            <Select
-              value={formData.subscription_type}
-              onValueChange={(value: 'monthly' | 'annual') =>
-                setFormData(prev => ({ ...prev, subscription_type: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SUBSCRIPTION_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={formData.amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                className="h-11 bg-muted/30 border-none rounded-xl font-bold"
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -219,7 +225,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
                 setFormData(prev => ({ ...prev, status: value }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -238,22 +244,28 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
               <Input
                 id="next_billing_date"
                 type="date"
+                className="h-11 bg-muted/30 border-none rounded-xl font-medium"
                 value={formData.next_billing_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, next_billing_date: e.target.value }))}
               />
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 pt-6 border-t border-border/10">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
+              className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+              disabled={loading}
+            >
               {loading ? 'Saving...' : (subscription ? 'Update' : 'Add')} Subscription
             </Button>
           </div>
@@ -262,3 +274,5 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
     </Dialog>
   );
 }
+
+export default SubscriptionForm;

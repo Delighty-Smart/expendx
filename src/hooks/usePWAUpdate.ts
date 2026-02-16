@@ -1,62 +1,48 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 
+/**
+ * Lightweight PWA update hook.
+ * 
+ * Checks for SW updates every 5 minutes.
+ * Since the SW auto-activates with skipWaiting(), no user prompt is needed.
+ * When a new SW takes control, we silently reload to pick up the new version.
+ */
 export const usePWAUpdate = () => {
-    const [updateAvailable, setUpdateAvailable] = useState(false);
-    const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
-
     useEffect(() => {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistration().then(reg => {
-                if (!reg) return;
-                setRegistration(reg);
+        if (!('serviceWorker' in navigator)) return;
 
-                // Check for updates periodically
-                const interval = setInterval(() => {
-                    reg.update();
-                }, 60 * 60 * 1000); // Check every hour
+        let interval: ReturnType<typeof setInterval>;
 
-                // Listen for new service worker waiting
-                const onUpdateFound = () => {
-                    const newSW = reg.installing;
-                    if (newSW) {
-                        newSW.addEventListener('statechange', () => {
-                            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-                                setUpdateAvailable(true);
-                            }
-                        });
-                    }
-                };
+        const setup = async () => {
+            const reg = await navigator.serviceWorker.getRegistration();
+            if (!reg) return;
 
-                reg.addEventListener('updatefound', onUpdateFound);
+            // Check for updates every 5 minutes
+            interval = setInterval(() => {
+                reg.update().catch(() => {
+                    // Silently ignore update check failures (e.g., offline)
+                });
+            }, 5 * 60 * 1000);
 
-                // Also check if there's already one waiting (e.g., from a previous session)
-                if (reg.waiting) {
-                    setUpdateAvailable(true);
-                }
+            // Trigger an immediate check on mount
+            reg.update().catch(() => { });
+        };
 
-                return () => {
-                    clearInterval(interval);
-                    reg.removeEventListener('updatefound', onUpdateFound);
-                };
-            });
-        }
-    }, []);
-
-    const updateApp = useCallback(() => {
-        if (registration && registration.waiting) {
-            // Send message to SW to skip waiting
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-            // Reload page when the new SW takes over
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
+        // When a new SW takes control, reload to get fresh content
+        const onControllerChange = () => {
+            // Only reload if the document is visible (don't reload background tabs)
+            if (document.visibilityState === 'visible') {
                 window.location.reload();
-            });
-        } else {
-            // Fallback: just reload if something went wrong
-            window.location.reload();
-        }
-    }, [registration]);
+            }
+        };
 
-    return { updateAvailable, updateApp };
+        navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+        setup();
+
+        return () => {
+            clearInterval(interval);
+            navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+        };
+    }, []);
 };

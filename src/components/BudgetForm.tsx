@@ -136,43 +136,41 @@ export function BudgetForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[425px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
+      <DialogContent className="sm:max-w-[480px]">
 
         <DialogHeader>
-          <DialogTitle className="text-lg">Set Budget Limit</DialogTitle>
-          <DialogDescription className="text-sm">
+          <DialogTitle>Set Budget Limit</DialogTitle>
+          <DialogDescription>
             Set a monthly spending limit for a category.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Category</FormLabel>
+                  <FormLabel>Category</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
                     disabled={!!initialCategory || loading || categories.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
                         <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <ScrollArea className="h-[200px]">
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage className="text-xs" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -182,18 +180,18 @@ export function BudgetForm({
               name="monthlyLimit"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Monthly Limit</FormLabel>
+                  <FormLabel>Monthly Limit</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       placeholder="0.00"
                       step="0.01"
                       {...field}
-                      className="h-9"
+                      className="h-11 bg-muted/30 border-none rounded-xl font-bold"
                       disabled={loading}
                     />
                   </FormControl>
-                  <FormMessage className="text-xs" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -201,16 +199,16 @@ export function BudgetForm({
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
+                className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
                 onClick={() => onOpenChange(false)}
-                className="h-9 text-sm"
                 disabled={loading}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-9 text-sm"
+                className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
                 disabled={loading}
               >
                 {loading ? "Saving..." : budgetId ? "Update" : "Save"} Budget
@@ -222,3 +220,5 @@ export function BudgetForm({
     </Dialog>
   );
 }
+
+export default BudgetForm;
