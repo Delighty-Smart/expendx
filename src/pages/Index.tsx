@@ -407,17 +407,28 @@ const IndexPage = () => {
     <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
       <div className="space-y-6 pb-20 px-4 md:px-0">
-        {/* Header Area */}
-        <div className="flex items-center justify-between pt-4 pb-2">
+        {/* Header Area - Hidden on mobile */}
+        <div className="hidden lg:flex items-center justify-between pt-4 pb-2">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {getGreeting()}, {profile?.first_name || profile?.username || "there"}
             </h1>
             <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {streakData && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden lg:flex rounded-full h-10 gap-1.5 font-bold text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/20 border border-border/50 bg-muted/30 px-3"
+                onClick={() => setShowStreakModal(true)}
+              >
+                <Flame className="h-5 w-5 fill-current" />
+                <span>{streakData.current_streak}</span>
+              </Button>
+            )}
             <button
-              className="rounded-full w-10 h-10 hover:opacity-80 transition-opacity flex items-center justify-center overflow-hidden"
+              className="rounded-full w-10 h-10 hover:opacity-80 transition-opacity flex items-center justify-center overflow-hidden border border-border/50 shadow-sm"
               onClick={() => navigate('/profile')}
             >
               <UserAvatar
@@ -431,7 +442,7 @@ const IndexPage = () => {
               <Button
                 variant="secondary"
                 size="icon"
-                className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none"
+                className="rounded-full w-10 h-10 bg-muted text-foreground hover:bg-muted/80 shadow-none border border-border/50"
                 onClick={() => navigate('/alerts')}
               >
                 <Bell className="h-5 w-5" strokeWidth={1.5} />
@@ -442,20 +453,48 @@ const IndexPage = () => {
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Balance</p>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              onClick={() => setHideAmounts(!hideAmounts)}
-            >
-              {hideAmounts ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 h-7">
+              <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.12em] leading-none mb-0">Total Balance</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground/50 hover:text-accent hover:bg-accent/10 transition-colors"
+                onClick={() => setHideAmounts(!hideAmounts)}
+              >
+                {hideAmounts ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </div>
+
+            {/* Mobile-only secondary actions */}
+            <div className="flex lg:hidden items-center gap-2">
+              {streakData && (
+                <Button
+                  variant="ghost"
+                  size="compact"
+                  onClick={() => setShowStreakModal(true)}
+                  className="flex items-center gap-1.5 px-2 py-1 h-8 bg-orange-500/10 text-orange-500 font-bold hover:bg-orange-500/20 rounded-lg transition-all"
+                >
+                  <Flame className="h-4 w-4 fill-current" strokeWidth={2.5} />
+                  <span className="text-xs font-black tracking-tight">{streakData.current_streak}</span>
+                </Button>
               )}
-            </Button>
+              <div className="relative">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full w-8 h-8 bg-muted text-foreground hover:bg-muted/80 shadow-none border border-border/50"
+                  onClick={() => navigate('/alerts')}
+                >
+                  <Bell className="h-4 w-4" strokeWidth={1.5} />
+                  {unreadAlerts > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-accent rounded-full border-2 border-background" />}
+                </Button>
+              </div>
+            </div>
           </div>
           <div className="flex items-baseline gap-1">
             {isAllTransactionsLoading ? (
@@ -503,7 +542,7 @@ const IndexPage = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Monthly Income */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+          <div className="p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Income</p>
               <p className="text-lg font-bold tracking-tight text-foreground">
@@ -523,7 +562,7 @@ const IndexPage = () => {
           </div>
 
           {/* Monthly Expenses */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+          <div className="p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
               <p className="text-lg font-bold tracking-tight text-foreground">
@@ -548,36 +587,36 @@ const IndexPage = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <button
             onClick={() => navigate('/transactions')}
-            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
           >
-            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
               <Receipt className="h-5 w-5" strokeWidth={1.5} />
             </div>
             <span className="font-medium text-foreground text-sm">Transactions</span>
           </button>
           <button
             onClick={() => navigate('/budgets')}
-            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
           >
-            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
               <DollarSign className="h-5 w-5" strokeWidth={1.5} />
             </div>
             <span className="font-medium text-foreground text-sm">Budgets</span>
           </button>
           <button
             onClick={() => navigate('/savings')}
-            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
           >
-            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
               <PiggyBank className="h-5 w-5" strokeWidth={1.5} />
             </div>
             <span className="font-medium text-foreground text-sm">Savings</span>
           </button>
           <button
             onClick={() => navigate('/subscriptions')}
-            className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm transition-all hover:bg-muted/50 active:scale-95 group text-left"
           >
-            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
               <CreditCard className="h-5 w-5" strokeWidth={1.5} />
             </div>
             <span className="font-medium text-foreground text-sm">Subscriptions</span>
@@ -759,7 +798,7 @@ const IndexPage = () => {
                 <div className="text-sm md:text-base font-medium text-muted-foreground bg-muted/30 px-4 py-2 rounded-full">
                   Week of {format(currentWeekStart, 'MMMM d, yyyy')}
                 </div>
-                <div className="flex items-center gap-2 bg-muted/50 rounded-xl p-1">
+                <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1">
                   <Button
                     size="icon"
                     variant="ghost"
@@ -819,7 +858,7 @@ const IndexPage = () => {
                     <div
                       key={entry.name}
                       className={cn(
-                        "flex items-center justify-between p-4 rounded-2xl border border-border/10 transition-all duration-300",
+                        "flex items-center justify-between p-4 rounded-lg border border-border/10 transition-all duration-300",
                         "hover:bg-primary/5 hover:border-primary/20 hover:-translate-y-0.5 shadow-sm",
                         hoveredLegendItem === entry.name && "bg-primary/5 border-primary/20 scale-[1.02] shadow-md"
                       )}
@@ -847,6 +886,11 @@ const IndexPage = () => {
           )}
         </div>
       </FullscreenChartModal>
+      <StreakModal
+        open={showStreakModal}
+        onOpenChange={setShowStreakModal}
+        streak={streakData}
+      />
     </PullToRefresh>
   );
 };

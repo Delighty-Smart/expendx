@@ -101,102 +101,94 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
     const lastLogin = startOfDay(new Date(streakData.last_login));
     const daysSinceLastLogin = differenceInDays(today, lastLogin);
 
-    // If same day, don't update streak but return current data
-    if (isSameDay(today, lastLogin)) {
-      return streakData;
-    }
-
-    // Enhanced streak logic with better consistency
     let newStreak = streakData.current_streak;
     let freezeCount = streakData.freeze_count;
     let currentTitle = streakData.current_title;
+    let highestStreak = streakData.highest_streak;
+    let shouldUpdateDB = false;
     let shouldCreateAlert = false;
     let alertMessage = "";
 
-    if (daysSinceLastLogin === 1) {
-      // Perfect consecutive day - increment streak and reset freeze count
-      newStreak += 1;
-      freezeCount = MAX_FREEZE_DAYS;
-
-      // Check for milestone achievement
-      const milestone = STREAK_MILESTONES.find(m => m.days === newStreak);
-      if (milestone && milestone.title !== currentTitle) {
-        shouldCreateAlert = true;
-        alertMessage = `🎉 Congratulations! You've achieved a ${newStreak}-day streak and earned the "${milestone.title}" title!`;
-        currentTitle = milestone.title;
-      } else if (newStreak % 7 === 0 && newStreak > 7) {
-        shouldCreateAlert = true;
-        alertMessage = `🔥 Amazing! You've maintained your streak for ${newStreak} days straight! Keep it up!`;
-      }
-    } else if (daysSinceLastLogin > 1) {
-      // Gap in login days
-      if (daysSinceLastLogin <= MAX_FREEZE_DAYS && freezeCount >= (daysSinceLastLogin - 1)) {
-        const freezeUsed = daysSinceLastLogin - 1;
-        freezeCount = Math.max(0, freezeCount - freezeUsed);
+    // 1. Handle actual streak updates (not the same day)
+    if (!isSameDay(today, lastLogin)) {
+      if (daysSinceLastLogin === 1) {
+        // Consecutive day
         newStreak += 1;
-
-        shouldCreateAlert = true;
-        alertMessage = `⚡ Streak saved! You used ${freezeUsed} freeze ${freezeUsed === 1 ? 'credit' : 'credits'}. You have ${freezeCount} remaining.`;
-      } else {
-        const oldStreak = streakData.current_streak;
-        newStreak = 1;
-        freezeCount = MAX_FREEZE_DAYS;
-
-        if (oldStreak >= 30) {
-          currentTitle = "Budget Beginner";
+        freezeCount = MAX_FREEZE_DAYS; // Reset freezes on activity
+        shouldUpdateDB = true;
+      } else if (daysSinceLastLogin > 1) {
+        // Gap in login
+        if (daysSinceLastLogin <= MAX_FREEZE_DAYS + 1 && freezeCount >= (daysSinceLastLogin - 1)) {
+          const freezeUsed = daysSinceLastLogin - 1;
+          freezeCount = Math.max(0, freezeCount - freezeUsed);
+          newStreak += 1;
+          shouldUpdateDB = true;
           shouldCreateAlert = true;
-          alertMessage = `💔 Your ${oldStreak}-day streak has been reset after ${daysSinceLastLogin} days of inactivity. But don't give up - start building again!`;
-        } else if (oldStreak >= 7) {
+          alertMessage = `⚡ Streak saved! You used ${freezeUsed} freeze ${freezeUsed === 1 ? 'credit' : 'credits'}. You have ${freezeCount} remaining.`;
+        } else {
+          // Streak broken
+          newStreak = 1;
+          freezeCount = MAX_FREEZE_DAYS;
+          shouldUpdateDB = true;
           shouldCreateAlert = true;
-          alertMessage = `😔 Your streak was reset, but every expert was once a beginner. Start your comeback today!`;
+          alertMessage = streakData.current_streak >= 7 ?
+            "😔 Your streak was reset, but every expert was once a beginner. Start your comeback today!" :
+            "💔 Your streak has been reset. Log in daily to build it back up!";
         }
       }
     }
 
-    // Ensure title matches current streak level
+    // 2. Always verify title consistency regardless of same day
     const correctTitle = determineUserTitle(newStreak);
-    if (correctTitle !== currentTitle && getMilestoneRank(correctTitle) > getMilestoneRank(currentTitle)) {
-      currentTitle = correctTitle;
-      if (!shouldCreateAlert) {
+    if (correctTitle !== currentTitle) {
+      // Check if it's a level up for alerting
+      if (getMilestoneRank(correctTitle) > getMilestoneRank(currentTitle) && newStreak > streakData.current_streak) {
         shouldCreateAlert = true;
         alertMessage = `🌟 Level up! You've earned the "${correctTitle}" title!`;
       }
+      currentTitle = correctTitle;
+      shouldUpdateDB = true;
     }
 
-    const highestStreak = Math.max(streakData.highest_streak, newStreak);
-    const isNewRecord = highestStreak > streakData.highest_streak;
-
-    // Update streak in database
-    const updatePromise = supabase
-      .from("user_streaks")
-      .update({
-        current_streak: newStreak,
-        highest_streak: highestStreak,
-        last_login: today.toISOString(),
-        freeze_count: freezeCount,
-        current_title: currentTitle
-      })
-      .eq("user_id", user.id)
-      .select()
-      .single();
-
-    const { data: updatedStreak, error: updateError } = await (Promise.race([updatePromise, timeoutPromise]) as any);
-
-    if (updateError) {
-      console.error("Error updating streak:", updateError);
-      return null;
+    // 3. Update highest streak record
+    if (newStreak > highestStreak) {
+      highestStreak = newStreak;
+      shouldUpdateDB = true;
+      if (newStreak > 1 && !isSameDay(today, lastLogin)) {
+        await createStreakAlert(user.id, `🏆 New personal record! ${newStreak} days is your longest streak yet!`, "achievement");
+      }
     }
 
-    // Create alerts for important events
-    if (shouldCreateAlert && alertMessage) {
-      await createStreakAlert(user.id, alertMessage, "streak");
+    // 4. Perform database update if needed
+    if (shouldUpdateDB || !isSameDay(today, lastLogin)) {
+      const updatePromise = supabase
+        .from("user_streaks")
+        .update({
+          current_streak: newStreak,
+          highest_streak: highestStreak,
+          last_login: today.toISOString(),
+          freeze_count: freezeCount,
+          current_title: currentTitle
+        })
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+      const { data: updatedStreak, error: updateError } = await (Promise.race([updatePromise, timeoutPromise]) as any);
+
+      if (updateError) {
+        console.error("Error updating streak:", updateError);
+        return streakData; // Return old data on failure
+      }
+
+      if (shouldCreateAlert && alertMessage) {
+        await createStreakAlert(user.id, alertMessage, "streak");
+      }
+
+      return updatedStreak;
     }
 
-    if (isNewRecord && newStreak > 1) {
-      await createStreakAlert(user.id, `🏆 New personal record! ${newStreak} days is your longest streak yet!`, "achievement");
-    }
-
-    return updatedStreak;
+    return streakData;
   } catch (error) {
     console.error("Error in updateUserStreak or timeout:", error);
     return null;
@@ -254,6 +246,8 @@ async function createStreakAlert(userId: string, message: string, type: string) 
 
 // Helper to determine user title based on current streak
 export function determineUserTitle(dayCount: number): string {
+  if (dayCount < 1) return "Budget Beginner";
+
   const milestone = [...STREAK_MILESTONES]
     .reverse()
     .find(m => dayCount >= m.days);

@@ -134,7 +134,7 @@ const SavingsPage = () => {
 
           {/* Stats Cards - Added for better dashboard feel */}
           <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
+            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-4 flex items-center gap-4">
               <div className="p-3 bg-primary/10 rounded-full">
                 <Target className="h-6 w-6 text-primary" strokeWidth={1.5} />
               </div>
@@ -143,7 +143,7 @@ const SavingsPage = () => {
                 <p className="text-2xl font-bold">{savingsGoals?.length || 0}</p>
               </div>
             </div>
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 flex items-center gap-4">
+            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-4 flex items-center gap-4">
               <div className="p-3 bg-green-500/10 rounded-full">
                 <TrendingUp className="h-6 w-6 text-green-500" strokeWidth={1.5} />
               </div>

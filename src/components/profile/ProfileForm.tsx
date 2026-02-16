@@ -185,7 +185,7 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       </div>
 
       {isEditing && (
-        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500 p-4 rounded-2xl bg-muted/20 border border-border/40">
+        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500 p-4 rounded-lg bg-muted/20 border border-border/40">
           <div className="flex flex-col gap-1">
             <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/70">Choose Profile Style</Label>
             <p className="text-xs text-muted-foreground">Select a gradient that reflects your style</p>

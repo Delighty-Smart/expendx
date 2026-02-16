@@ -124,7 +124,16 @@ const Layout = ({
     updateTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const menuItems = [
+  interface MenuItem {
+    path: string;
+    label: string;
+    icon: any;
+    onClick?: () => void;
+    badge?: string | number;
+    active?: boolean;
+  }
+
+  const menuItems: MenuItem[] = [
     { path: "/", label: "Dashboard", icon: Home },
     { path: "/transactions", label: "Transactions", icon: Receipt },
     { path: "/budgets", label: "Budgets", icon: DollarSign },
@@ -134,7 +143,6 @@ const Layout = ({
     { path: "/alerts", label: "Alerts", icon: Bell, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
     { path: "/feedback", label: "Feedback", icon: MessageSquare },
     { path: "/settings", label: "Settings", icon: Settings },
-    { path: "#", label: "Log Out", icon: LogOut, onClick: handleLogout, active: false },
   ];
 
   if (isAdmin) {
@@ -145,17 +153,33 @@ const Layout = ({
     <div className="min-h-screen bg-background transition-colors duration-300">
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
+      {/* Header for mobile */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 z-50">
-        <div className="container mx-auto h-full flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="animated-button touch-manipulation">
-            {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        <div className="container mx-auto h-full flex items-center justify-between px-4">
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)} className="animated-button touch-manipulation h-10 w-10">
+            <Menu className="h-6 w-6" />
           </Button>
-          <div className="h-8 md:h-9">
-            <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-full object-contain" />
-          </div>
+
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
+          </Link>
+
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="animated-button touch-manipulation">
-              {theme === "dark" ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="animated-button touch-manipulation h-9 w-9">
+              {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleProfileClick}
+              className="ml-1 rounded-full overflow-hidden border border-border/50 active:scale-95 transition-transform h-9 w-9"
+            >
+              <UserAvatar
+                url={profile?.avatar_url}
+                name={profile?.username || "U"}
+                className="w-full h-full"
+                showDefaultGradient={false}
+              />
             </Button>
           </div>
         </div>
@@ -203,41 +227,29 @@ const Layout = ({
           })}
         </nav>
 
-        <div className="px-3 py-2">
-          <p className="text-xs font-semibold text-muted-foreground mb-2 px-3 tracking-wider">SHORTCUTS</p>
-          <div className="space-y-1">
-            <Link to="/add-transaction" className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors" onClick={() => setIsSidebarOpen(false)}>
-              <div className="w-5 h-5 bg-blue-500 rounded-sm flex items-center justify-center">
-                <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-              </div>
-              <span className="text-sm">Add Transaction</span>
-            </Link>
-            <Link to="/reports" className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors" onClick={() => setIsSidebarOpen(false)}>
-              <div className="w-5 h-5 bg-orange-500 rounded-sm flex items-center justify-center">
-                <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-              </div>
-              <span className="text-sm">Monthly Report</span>
-            </Link>
-            <button onClick={() => { handleStreakClick(); setIsSidebarOpen(false); }} className="flex items-center gap-3 px-3 py-3 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full text-left">
-              <div className="w-5 h-5 bg-purple-500 rounded-sm flex items-center justify-center">
-                <Flame className="w-3 h-3 text-white" strokeWidth={1.5} />
-              </div>
-              <span className="text-sm">Streak Progress</span>
-            </button>
-          </div>
-        </div>
 
-        <div className="border-t border-border mt-auto p-1.5">
-          <div className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-accent/50 cursor-pointer transition-all duration-200 group" onClick={handleProfileClick}>
-            <UserAvatar url={profile?.avatar_url} name={profile?.username || profile?.email || "User"} className="w-8 h-8 shadow-sm ring-1 ring-border/50" />
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <p className="text-sm font-bold text-foreground truncate tracking-tighter leading-none">
-                {profile?.username || profile?.email || "User"}
-              </p>
-              {userStreak && <p className="text-[10px] uppercase font-black text-muted-foreground/50 truncate tracking-wider leading-none mt-1">
-                {userStreak.current_title}
-              </p>}
+        <div className="border-t border-border mt-auto p-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/50 cursor-pointer transition-all duration-200 group overflow-hidden" onClick={handleProfileClick}>
+              <UserAvatar url={profile?.avatar_url} name={profile?.username || profile?.email || "User"} className="w-8 h-8 flex-shrink-0 shadow-sm ring-1 ring-border/50" />
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <p className="text-sm font-bold text-foreground truncate tracking-tighter leading-none">
+                  {profile?.username || profile?.email || "User"}
+                </p>
+                {userStreak && <p className="text-[10px] uppercase font-black text-muted-foreground/50 truncate tracking-wider leading-none mt-0.5">
+                  {userStreak.current_title}
+                </p>}
+              </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="h-8 w-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 flex-shrink-0 shadow-sm"
+              title="Log Out"
+            >
+              <LogOut className="h-4 w-4" strokeWidth={2} />
+            </Button>
           </div>
         </div>
       </aside>

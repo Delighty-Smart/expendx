@@ -20,7 +20,7 @@ export function SavingsTotalCard({ totalSavings, currency }: SavingsTotalCardPro
   return (
     <GlassCard className="p-6 bg-gradient-to-br from-green-50/80 via-emerald-50/60 to-teal-50/40 dark:from-green-950/30 dark:via-emerald-950/20 dark:to-teal-950/10 border-green-200/30 dark:border-green-800/30">
       <div className="flex items-center gap-6">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
+        <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
           <PiggyBank className="h-8 w-8 text-white" />
         </div>
         <div>

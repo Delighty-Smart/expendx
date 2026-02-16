@@ -27,7 +27,7 @@ const DataExportSection = () => {
             </Alert>
 
             <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col space-y-4 p-4 rounded-xl border border-border/50 bg-muted/30">
+                <div className="flex flex-col space-y-4 p-4 rounded-lg border border-border/50 bg-muted/30">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
                             <Download className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -46,7 +46,7 @@ const DataExportSection = () => {
                     </Button>
                 </div>
 
-                <div className="flex flex-col space-y-4 p-4 rounded-xl border border-border/50 bg-muted/30 opacity-60">
+                <div className="flex flex-col space-y-4 p-4 rounded-lg border border-border/50 bg-muted/30 opacity-60">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                             <FileJson className="h-5 w-5 text-blue-600 dark:text-blue-400" />

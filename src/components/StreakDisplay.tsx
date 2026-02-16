@@ -16,20 +16,20 @@ interface StreakDisplayProps {
 
 const StreakDisplay = ({ streak, onClick }: StreakDisplayProps) => {
   const status = getStreakStatus(streak);
-  
+
   return (
-    <div 
+    <div
       className="relative group cursor-pointer transition-all duration-300 hover:scale-[1.02]"
       onClick={onClick}
     >
       {/* Glassmorphism Card */}
-      <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl bg-white/5 dark:bg-black/20 border border-white/10 dark:border-white/5 shadow-2xl">
+      <div className="relative overflow-hidden rounded-lg backdrop-blur-xl bg-white/5 dark:bg-black/20 border border-white/10 dark:border-white/5 shadow-2xl">
         {/* Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-blue-500/10" />
-        
+
         {/* Animated Border */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-pink-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
         <div className="relative p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
@@ -46,7 +46,7 @@ const StreakDisplay = ({ streak, onClick }: StreakDisplayProps) => {
                 </h3>
               </div>
             </div>
-            
+
             {/* Status Indicator */}
             <div className={cn(
               "px-2 py-1 rounded-full text-xs font-medium",
@@ -86,7 +86,7 @@ const StreakDisplay = ({ streak, onClick }: StreakDisplayProps) => {
                 <p className="text-sm font-medium">{streak.current_title}</p>
               </div>
             </div>
-            
+
             <div className="text-right">
               <span className="text-xs text-muted-foreground">Best Streak</span>
               <p className="text-sm font-bold text-amber-500">{streak.highest_streak} days</p>

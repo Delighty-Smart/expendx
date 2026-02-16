@@ -29,7 +29,7 @@ const FeedbackSuccess = ({ onClose }: FeedbackSuccessProps) => {
           Thank you for helping us shape the future of <span className="text-primary font-bold">expendX</span>. Your insights are already on their way to our development team.
         </p>
 
-        <div className="glass-card rounded-3xl p-6 border border-white/10 bg-muted/20 backdrop-blur-sm">
+        <div className="glass-card rounded-lg p-6 border border-white/10 bg-muted/20 backdrop-blur-sm">
           <p className="text-sm text-foreground/70 font-medium">
             We value your time and will review your submission within 24 hours. If we need more context, we'll reach out via your profile email.
           </p>
@@ -39,7 +39,7 @@ const FeedbackSuccess = ({ onClose }: FeedbackSuccessProps) => {
           <Button
             size="lg"
             onClick={onClose}
-            className="group h-16 w-full rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
+            className="group h-16 w-full rounded-lg text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
           >
             <span>Back to Dashboard</span>
             <Home className="h-5 w-5 opacity-70 group-hover:scale-110 transition-transform" />

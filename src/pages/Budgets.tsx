@@ -206,7 +206,7 @@ const BudgetsPage = () => {
         <div className="animate-skeleton-pulse">
           <div className="p-6 bg-muted/50 rounded-lg border">
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 rounded-2xl bg-muted"></div>
+              <div className="w-16 h-16 rounded-lg bg-muted"></div>
               <div className="space-y-2">
                 <div className="h-4 bg-muted rounded w-24"></div>
                 <div className="h-8 bg-muted rounded w-32"></div>
@@ -268,7 +268,7 @@ const BudgetsPage = () => {
 
         <GlassCard className="p-6 bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10 border-orange-200/30 dark:border-orange-800/30">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-400 dark:to-amber-500 flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-400 dark:to-amber-500 flex items-center justify-center shadow-lg">
               <TrendingUp className="h-8 w-8 text-white" />
             </div>
             <div>

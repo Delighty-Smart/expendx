@@ -62,7 +62,7 @@ const StreakProgress = ({
 
         {/* Compact Stats Row */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
+          <div className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-lg p-3 flex flex-col items-center justify-center min-h-[80px]">
             <div className="flex items-center gap-2 mb-1">
               <Trophy className="h-4 w-4 text-amber-500" />
               <p className="text-xl font-bold leading-none">{streak.highest_streak}</p>
@@ -70,7 +70,7 @@ const StreakProgress = ({
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Best</p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
+          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-3 flex flex-col items-center justify-center min-h-[80px]">
             <div className="flex items-center gap-2 mb-1">
               <Shield className="h-4 w-4 text-blue-500" />
               <p className="text-xl font-bold leading-none">{streak.freeze_count}</p>
@@ -78,7 +78,7 @@ const StreakProgress = ({
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Freezes</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[80px]">
+          <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-lg p-3 flex flex-col items-center justify-center min-h-[80px]">
             <div className="flex items-center gap-2 mb-1">
               <Target className="h-4 w-4 text-purple-500" />
               <p className="text-xl font-bold leading-none">{STREAK_MILESTONES.length - STREAK_MILESTONES.findIndex(m => m.days > streak.current_streak)}</p>

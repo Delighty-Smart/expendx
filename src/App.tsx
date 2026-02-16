@@ -33,7 +33,27 @@ import { enhancedOfflineManager } from './services/enhancedOfflineManager';
 import Layout from '@/components/Layout'
 
 function App() {
-  // ... (keep initializeEnhancedOffline and viewport/style effects)
+  useEffect(() => {
+    // Fix for mobile viewport height (100vh issue)
+    const setVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setVh();
+    window.addEventListener('resize', setVh);
+    window.addEventListener('orientationchange', setVh);
+
+    // Initial sync for enhanced offline manager
+    if (navigator.onLine) {
+      enhancedOfflineManager.forceSync().catch(console.error);
+    }
+
+    return () => {
+      window.removeEventListener('resize', setVh);
+      window.removeEventListener('orientationchange', setVh);
+    };
+  }, []);
 
   return (
     <TooltipProvider>

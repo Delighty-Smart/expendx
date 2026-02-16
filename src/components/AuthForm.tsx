@@ -93,7 +93,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                         name="email"
                         type="email"
                         placeholder="you@example.com"
-                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
                         required
                       />
                     </div>
@@ -110,7 +110,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                         name="password"
                         type="password"
                         placeholder="Enter your password"
-                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
                         required
                       />
                     </div>
@@ -119,7 +119,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isDisabled}
                 >
                   <ButtonLoading
@@ -142,7 +142,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 border-border hover:bg-muted/50 text-foreground font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-3"
+                  className="w-full h-12 border-border hover:bg-muted/50 text-foreground font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-3"
                   onClick={onGoogleSignIn}
                   disabled={isDisabled}
                 >
@@ -187,7 +187,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                           name="firstName"
                           type="text"
                           placeholder="John"
-                          className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                          className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
                           required
                         />
                       </div>
@@ -202,7 +202,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                         name="lastName"
                         type="text"
                         placeholder="Doe"
-                        className="h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
                         required
                       />
                     </div>
@@ -219,7 +219,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                         name="email"
                         type="email"
                         placeholder="you@example.com"
-                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
                         required
                       />
                     </div>
@@ -236,7 +236,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                         name="password"
                         type="password"
                         placeholder="Create a strong password"
-                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-xl transition-all duration-200"
+                        className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
                         required
                         minLength={6}
                       />
@@ -249,7 +249,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
                   disabled={isDisabled}
                 >
                   <ButtonLoading
@@ -272,7 +272,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 border-border hover:bg-muted/50 text-foreground font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-3"
+                  className="w-full h-12 border-border hover:bg-muted/50 text-foreground font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-3"
                   onClick={onGoogleSignIn}
                   disabled={isDisabled}
                 >

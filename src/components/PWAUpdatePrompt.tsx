@@ -29,9 +29,9 @@ const PWAUpdatePrompt = () => {
     // but using Sonner toast is more consistent with our app.
     return (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-background/90 backdrop-blur-xl border border-primary/20 shadow-2xl rounded-3xl p-4 flex items-center justify-between gap-4">
+            <div className="bg-background/90 backdrop-blur-xl border border-primary/20 shadow-2xl rounded-lg p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Download className="h-5 w-5 text-primary" />
                     </div>
                     <div>

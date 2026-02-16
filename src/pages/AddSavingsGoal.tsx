@@ -175,7 +175,7 @@ const AddSavingsGoalPage = () => {
 
       <GlassCard className="p-6 bg-gradient-to-br from-white/80 via-green-50/40 to-emerald-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-green-200/30 dark:border-slate-600/30 shadow-lg">
         <div className="flex justify-center mb-5">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
             <PiggyBank className="h-8 w-8 text-white" />
           </div>
         </div>

@@ -96,7 +96,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
             <img
               src="/app-icon.png"
               alt="ExpendX"
-              className="h-12 w-12 object-contain shadow-lg rounded-2xl"
+              className="h-12 w-12 object-contain shadow-lg rounded-lg"
             />
           </div>
 
@@ -106,10 +106,10 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               <div
                 key={index}
                 className={`h-1.5 rounded-full transition-all duration-500 ${index === activeStep
-                    ? "w-8 bg-primary"
-                    : index < activeStep
-                      ? "w-4 bg-primary/40"
-                      : "w-4 bg-muted"
+                  ? "w-8 bg-primary"
+                  : index < activeStep
+                    ? "w-4 bg-primary/40"
+                    : "w-4 bg-muted"
                   }`}
               />
             ))}
@@ -137,7 +137,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
             <Button
               onClick={handleNext}
               disabled={isProcessing}
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-2xl shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-lg shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 group"
             >
               <ButtonLoading
                 isLoading={isProcessing}
@@ -154,7 +154,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               variant="ghost"
               onClick={handleSkip}
               disabled={isProcessing}
-              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-2xl font-medium"
+              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-lg font-medium"
             >
               Skip and log in
             </Button>

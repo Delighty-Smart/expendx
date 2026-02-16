@@ -181,7 +181,7 @@ const NotificationPreferences = () => {
             <div className="h-4 bg-muted rounded w-1/2"></div>
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-20 bg-muted rounded-xl"></div>
+                <div key={i} className="h-20 bg-muted rounded-lg"></div>
               ))}
             </div>
           </div>
@@ -195,7 +195,7 @@ const NotificationPreferences = () => {
       <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-b from-card to-card/50">
         <CardHeader className="bg-primary/5 pb-8">
           <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-xl bg-primary/20 text-primary">
+            <div className="p-2 rounded-lg bg-primary/20 text-primary">
               <Bell className="h-6 w-6" />
             </div>
             Smart Notifications
@@ -216,12 +216,12 @@ const NotificationPreferences = () => {
                 <div
                   key={key}
                   className={cn(
-                    "group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl transition-all duration-300 border",
+                    "group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg transition-all duration-300 border",
                     isEnabled ? "bg-primary/5 border-primary/20" : "bg-card border-border/50 hover:border-border"
                   )}
                 >
                   <div className={cn(
-                    "p-3 rounded-xl transition-colors",
+                    "p-3 rounded-lg transition-colors",
                     isEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                   )}>
                     <Icon className="h-6 w-6" />
@@ -259,8 +259,8 @@ const NotificationPreferences = () => {
             })}
           </div>
 
-          <div className="mt-8 p-6 rounded-2xl bg-muted/30 border border-dashed border-border flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            <div className="p-3 rounded-xl bg-background shadow-sm border border-border/50">
+          <div className="mt-8 p-6 rounded-lg bg-muted/30 border border-dashed border-border flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+            <div className="p-3 rounded-lg bg-background shadow-sm border border-border/50">
               <Smartphone className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 space-y-1">
@@ -272,7 +272,7 @@ const NotificationPreferences = () => {
             <Button
               variant="default"
               size="sm"
-              className="w-full sm:w-auto rounded-xl shadow-lg shadow-primary/20"
+              className="w-full sm:w-auto rounded-lg shadow-lg shadow-primary/20"
               onClick={() => {
                 notificationService.requestPermission().then(granted => {
                   toast({

@@ -154,7 +154,7 @@ const FeedbackPage = () => {
                     key={option.value}
                     type="button"
                     onClick={() => setSelectedRating(option.value)}
-                    className={`relative flex flex-col items-center gap-4 p-6 rounded-3xl border-2 transition-all duration-500 group/btn overflow-hidden ${selectedRating === option.value
+                    className={`relative flex flex-col items-center gap-4 p-6 rounded-lg border-2 transition-all duration-500 group/btn overflow-hidden ${selectedRating === option.value
                       ? `${option.border} ${option.bg} scale-[1.05] ${option.glow} shadow-xl`
                       : "border-transparent bg-muted/20 hover:bg-muted/40 hover:scale-[1.02]"
                       }`}
