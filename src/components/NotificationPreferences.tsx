@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Clock, Smartphone } from "lucide-react";
+import { Bell, Clock, Smartphone, AlertTriangle, Award, TrendingUp } from "lucide-react";
 import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationDescription, notificationScheduler } from "@/services/notificationScheduler";
+import { notificationService } from "@/services/notificationService";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface NotificationPreference {
@@ -15,27 +17,35 @@ interface NotificationPreference {
   user_id: string;
   created_at: string;
   updated_at?: string;
-  weekly_recap?: boolean;
-  budget_nudges?: boolean;
-  unusual_activity?: boolean;
-  daily_log_reminder?: boolean;
-  savings_progress?: boolean;
-  month_reset_preview?: boolean;
-  recurring_expense_reminder?: boolean;
-  night_owl_checkin?: boolean;
-  monthly_snapshot?: boolean;
-  reflection_prompts?: boolean;
-  custom_goal_reminder?: boolean;
-  business_mode_nudges?: boolean;
-  streak_milestone_alerts?: boolean;
-  streak_freeze_warnings?: boolean;
-  streak_recovery_reminders?: boolean;
-  streak_breaking_alerts?: boolean;
-  preferred_time?: string;
-  notification_times: Record<string, string>;
+  [key: string]: any; // Allow for dynamic fields
 }
 
-
+const CATEGORY_MAPPING: Record<string, { label: string, description: string, fields: string[], icon: any }> = {
+  critical: {
+    label: "Critical Alerts",
+    description: "Budget breaches and unusual activity alerts",
+    fields: ['budget_nudges', 'unusual_activity'],
+    icon: AlertTriangle
+  },
+  consistency: {
+    label: "Consistency Nudges",
+    description: "Daily reminders and streak protection",
+    fields: ['daily_log_reminder', 'streak_milestone_alerts', 'streak_freeze_warnings', 'streak_recovery_reminders', 'streak_breaking_alerts'],
+    icon: Award
+  },
+  bills: {
+    label: "Bill Reminders",
+    description: "Keep track of upcoming subscriptions and recurring bills",
+    fields: ['recurring_expense_reminder'],
+    icon: Clock
+  },
+  growth: {
+    label: "Financial Growth Insights",
+    description: "Weekly recaps and monthly financial snapshots",
+    fields: ['weekly_recap', 'monthly_snapshot', 'reflection_prompts'],
+    icon: TrendingUp
+  }
+};
 
 const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
@@ -63,34 +73,14 @@ const NotificationPreferences = () => {
         return;
       }
 
-      let patchedData = data as NotificationPreference | null;
-
-      // Always initialize NOTIFICATION_TIMES for local state/UI, not DB
-      const defaultTimes: Record<string, string> = {};
-      NOTIFICATION_SCHEDULES.forEach(schedule => {
-        defaultTimes[schedule.type] = schedule.defaultTime;
-      });
-
-      let notification_times = defaultTimes;
-      if (patchedData && 'preferred_time' in patchedData && patchedData.preferred_time) {
-        // For backward compatibility, set each time to preferred_time if exists
-        Object.keys(notification_times).forEach(type => {
-          notification_times[type] = (patchedData as any).preferred_time || defaultTimes[type];
-        });
-      }
-
-      if (patchedData) {
-        setPreferences({ ...patchedData, notification_times });
-        // Schedule notifications (notice we pass added notification_times, not from DB)
-        scheduleAllNotifications(user.id, { ...patchedData, notification_times });
+      if (data) {
+        setPreferences(data);
+        scheduleAllNotifications(user.id, data);
       } else {
-        // Insert without notification_times!
         const { data: newPrefs, error: createError } = await supabase
           .from('notification_preferences')
           .insert({
-
             user_id: user.id,
-
             preferred_time: '19:00'
           })
           .select('*')
@@ -98,8 +88,8 @@ const NotificationPreferences = () => {
         if (createError) {
           console.error('Error creating preferences:', createError);
         } else if (newPrefs) {
-          setPreferences({ ...newPrefs, notification_times: defaultTimes });
-          scheduleAllNotifications(user.id, { ...newPrefs, notification_times: defaultTimes });
+          setPreferences(newPrefs);
+          scheduleAllNotifications(user.id, newPrefs);
         }
       }
     } catch (error) {
@@ -110,13 +100,10 @@ const NotificationPreferences = () => {
   };
 
   const scheduleAllNotifications = (userId: string, prefs: NotificationPreference) => {
-    if (!prefs.notification_times) return;
-
-
     NOTIFICATION_SCHEDULES.forEach(schedule => {
-      const isEnabled = prefs[schedule.type as keyof NotificationPreference] as boolean;
-      const preferredTime = prefs.notification_times?.[schedule.type] || schedule.defaultTime;
-
+      // Map category to enable state
+      const isEnabled = prefs[schedule.type as keyof NotificationPreference] ?? prefs[schedule.category] ?? false;
+      const preferredTime = prefs.preferred_time || schedule.defaultTime;
 
       notificationScheduler.scheduleNotification(
         userId,
@@ -127,33 +114,36 @@ const NotificationPreferences = () => {
     });
   };
 
-  const updatePreference = async (key: keyof NotificationPreference, value: boolean | string) => {
+  const toggleCategory = async (category: string, enabled: boolean) => {
     if (!preferences) return;
 
     setSaving(true);
     try {
-      // Only send known fields, never notification_times
+      const fieldsToUpdate: Record<string, boolean> = {};
+      const categoryData = CATEGORY_MAPPING[category];
+
+      categoryData.fields.forEach(field => {
+        fieldsToUpdate[field] = enabled;
+      });
+
       const { error } = await supabase
         .from('notification_preferences')
-        .update({ [key]: value })
+        .update(fieldsToUpdate)
         .eq('id', preferences.id);
 
       if (error) throw error;
 
-      const updatedPrefs = { ...preferences, [key]: value };
+      const updatedPrefs = { ...preferences, ...fieldsToUpdate };
       setPreferences(updatedPrefs);
 
-      // Reschedule notifications if this was a toggle change
-      if (typeof value === 'boolean') {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          scheduleAllNotifications(user.id, updatedPrefs);
-        }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        scheduleAllNotifications(user.id, updatedPrefs);
       }
 
       toast({
         title: "Preferences updated",
-        description: "Your notification preferences have been saved.",
+        description: `${categoryData.label} have been ${enabled ? 'enabled' : 'disabled'}.`,
       });
     } catch (error) {
       console.error('Error updating preferences:', error);
@@ -167,42 +157,21 @@ const NotificationPreferences = () => {
     }
   };
 
-  const updateNotificationTime = async (notificationType: string, time: string) => {
-    if (!preferences) return;
-
-    setSaving(true);
-    try {
-      // Only update UI state, not DB!
-      const updatedTimes = {
-        ...preferences.notification_times,
-        [notificationType]: time
-      };
-      setPreferences({
-        ...preferences,
-        notification_times: updatedTimes
-      });
-      // Reschedule notification (no DB code here)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const isEnabled = preferences[notificationType as keyof NotificationPreference] as boolean;
-        notificationScheduler.scheduleNotification(user.id, notificationType, time, isEnabled);
+  const testNotification = (category: string) => {
+    const config = CATEGORY_MAPPING[category];
+    notificationService.sendServiceWorkerNotification(
+      `Test: ${config.label}`,
+      `This is how you'll receive your ${config.label.toLowerCase()}.`,
+      {
+        tag: `test-${category}`,
+        requireInteraction: category === 'critical'
       }
-      toast({
-        title: "Time updated",
-        description: "Notification time has been updated.",
-      });
-    } catch (error) {
-      console.error('Error updating notification time:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update notification time. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setSaving(false);
-    }
+    );
+    toast({
+      title: "Test sent",
+      description: "Check your device for the notification.",
+    });
   };
-
 
   if (loading) {
     return (
@@ -210,9 +179,9 @@ const NotificationPreferences = () => {
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-muted rounded w-1/2"></div>
-            <div className="space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-8 bg-muted rounded"></div>
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-20 bg-muted rounded-xl"></div>
               ))}
             </div>
           </div>
@@ -220,54 +189,6 @@ const NotificationPreferences = () => {
       </Card>
     );
   }
-
-  if (!preferences) {
-    return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <Bell className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground">Unable to load notification preferences.</p>
-          <Button onClick={fetchPreferences} className="mt-4">
-            Try Again
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const notificationGroups = [
-    {
-      title: "Financial Insights",
-      options: [
-        { key: 'weekly_recap', label: 'Weekly Wallet Recap', description: 'Weekly summary of your financial activity' },
-        { key: 'monthly_snapshot', label: 'Monthly Financial Snapshots', description: 'Overview of your monthly financial health' },
-        { key: 'reflection_prompts', label: 'Reflection Prompts', description: 'Mindful spending reflection questions' }
-      ]
-    },
-    {
-      title: "Reminders & Alerts",
-      options: [
-        { key: 'daily_log_reminder', label: 'Daily Log Reminders', description: 'Reminders to log your daily transactions' },
-        { key: 'budget_nudges', label: 'Budget Nudges', description: 'Alerts when you approach budget limits' },
-        { key: 'unusual_activity', label: 'Unusual Activity Alerts', description: 'Alerts for unexpected spending patterns' },
-        { key: 'savings_progress', label: 'Savings Progress Updates', description: 'Celebrate milestones in your savings goals' },
-        { key: 'recurring_expense_reminder', label: 'Recurring Expense Reminders', description: 'Reminders for recurring bills and payments' },
-        { key: 'month_reset_preview', label: 'Month Reset Preview', description: 'End-of-month budget review reminders' },
-        { key: 'night_owl_checkin', label: 'Night Owl Check-ins', description: 'Late night spending review prompts' },
-        { key: 'custom_goal_reminder', label: 'Custom Goal Reminders', description: 'Updates on your custom savings goals' },
-        { key: 'business_mode_nudges', label: 'Business Mode Nudges', description: 'Reminders for business expense tracking' }
-      ]
-    },
-    {
-      title: "Streaks & Milestones",
-      options: [
-        { key: 'streak_milestone_alerts', label: 'Streak Milestone Alerts', description: 'Celebrate logging streak milestones' },
-        { key: 'streak_freeze_warnings', label: 'Streak Freeze Warnings', description: 'Alerts when your streak freeze is expiring' },
-        { key: 'streak_recovery_reminders', label: 'Streak Recovery Reminders', description: 'Nudges to help you get back on track' },
-        { key: 'streak_breaking_alerts', label: 'Streak Breaking Alerts', description: 'Alerts when your streak is at risk' }
-      ]
-    }
-  ];
 
   return (
     <div className="space-y-6">
@@ -277,100 +198,93 @@ const NotificationPreferences = () => {
             <div className="p-2 rounded-xl bg-primary/20 text-primary">
               <Bell className="h-6 w-6" />
             </div>
-            Notification Settings
+            Smart Notifications
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Choose how and when you want to be notified about your finances.
+            Focus on what matters. We've simplified notifications to keep you informed without the noise.
           </p>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <div className="divide-y divide-border/40">
-            {notificationGroups.map((group) => (
-              <div key={group.title} className="p-6 space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary/70 mb-4">{group.title}</h3>
-                <div className="space-y-3">
-                  {group.options.map((option) => (
-                    <div
-                      key={option.key}
-                      className={cn(
-                        "group flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-2xl transition-all duration-300",
-                        preferences[option.key as keyof NotificationPreference] ? "bg-primary/5 ring-1 ring-primary/10" : "hover:bg-muted/50"
-                      )}
-                    >
-                      <div className="space-y-1 pr-4 mb-3 sm:mb-0">
-                        <Label className="text-sm font-semibold cursor-pointer block">{option.label}</Label>
-                        <p className="text-xs text-muted-foreground line-clamp-1 group-hover:line-clamp-none transition-all">
-                          {option.description}
-                        </p>
-                      </div>
+        <CardContent className="p-6">
+          <div className="grid gap-4">
+            {Object.entries(CATEGORY_MAPPING).map(([key, config]) => {
+              const Icon = config.icon;
+              // Category is "enabled" if at least one of its primary fields is enabled
+              const isEnabled = preferences?.[config.fields[0]] ?? false;
 
-                      <div className="flex items-center justify-between sm:justify-end gap-4 min-w-[140px]">
-                        {preferences[option.key as keyof NotificationPreference] && (
-                          <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                            <Clock className="h-3.5 w-3.5 text-primary/60" />
-                            <input
-                              type="time"
-                              value={preferences.notification_times?.[option.key as string] || getDefaultTimeForNotification(option.key as string)}
-                              onChange={(e) => updateNotificationTime(option.key as string, e.target.value)}
-                              className="bg-transparent border-none text-xs font-medium w-[70px] focus:ring-0 p-0 h-auto cursor-pointer text-primary hover:text-primary/80 transition-colors"
-                              disabled={saving}
-                            />
-                          </div>
-                        )}
-                        <Switch
-                          checked={preferences[option.key as keyof NotificationPreference] as boolean}
-                          onCheckedChange={(checked) => updatePreference(option.key as keyof NotificationPreference, checked)}
-                          disabled={saving}
-                        />
-                      </div>
+              return (
+                <div
+                  key={key}
+                  className={cn(
+                    "group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl transition-all duration-300 border",
+                    isEnabled ? "bg-primary/5 border-primary/20" : "bg-card border-border/50 hover:border-border"
+                  )}
+                >
+                  <div className={cn(
+                    "p-3 rounded-xl transition-colors",
+                    isEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                  )}>
+                    <Icon className="h-6 w-6" />
+                  </div>
+
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-base font-bold cursor-pointer">{config.label}</Label>
+                      {isEnabled && <Badge variant="secondary" className="text-[10px] h-4 uppercase tracking-wider font-bold">Active</Badge>}
                     </div>
-                  ))}
+                    <p className="text-sm text-muted-foreground leading-snug">
+                      {config.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-8"
+                      onClick={() => testNotification(key)}
+                    >
+                      Test
+                    </Button>
+                    <div className="flex-1 sm:flex-initial flex justify-end">
+                      <Switch
+                        checked={isEnabled}
+                        onCheckedChange={(checked) => toggleCategory(key, checked)}
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="p-6 bg-muted/30 border-t border-border/40">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="p-4 rounded-2xl bg-background shadow-sm border border-border/40 flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                  <Label className="text-sm font-bold">Browser Notifications</Label>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed italic">
-                  Enable system-level alerts to receive updates even when Expendx is running in the background.
-                </p>
-              </div>
-
-              <Button
-                variant="default"
-                className="w-full sm:w-auto h-12 px-8 rounded-2xl shadow-lg shadow-primary/20 transition-transform active:scale-95"
-                onClick={() => {
-                  if ('Notification' in window) {
-                    Notification.requestPermission().then((permission) => {
-                      toast({
-                        title: permission === 'granted' ? "Notifications enabled" : "Notifications blocked",
-                        description: permission === 'granted'
-                          ? "You'll now receive browser notifications at your preferred times"
-                          : "You can enable notifications in your browser settings"
-                      });
-                      if (permission === 'granted' && preferences) {
-                        supabase.auth.getUser().then(({ data }) => {
-                          if (data && data.user) {
-                            scheduleAllNotifications(data.user.id, preferences);
-                          }
-                        });
-                      }
-                    });
-                  }
-                }}
-              >
-                Enable Alerts
-              </Button>
+          <div className="mt-8 p-6 rounded-2xl bg-muted/30 border border-dashed border-border flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+            <div className="p-3 rounded-xl bg-background shadow-sm border border-border/50">
+              <Smartphone className="h-6 w-6 text-primary" />
             </div>
+            <div className="flex-1 space-y-1">
+              <h4 className="text-sm font-bold">Ready for Device Alerts?</h4>
+              <p className="text-xs text-muted-foreground">
+                Make sure you've granted browser permission to receive these notifications on your device.
+              </p>
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full sm:w-auto rounded-xl shadow-lg shadow-primary/20"
+              onClick={() => {
+                notificationService.requestPermission().then(granted => {
+                  toast({
+                    title: granted ? "Permission Granted" : "Permission Denied",
+                    description: granted ? "You're all set to receive smart alerts." : "Please enable notifications in your browser settings.",
+                    variant: granted ? "default" : "destructive"
+                  });
+                });
+              }}
+            >
+              Enable Device Alerts
+            </Button>
           </div>
         </CardContent>
       </Card>

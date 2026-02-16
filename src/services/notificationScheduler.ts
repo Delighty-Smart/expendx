@@ -7,110 +7,68 @@ export interface NotificationSchedule {
   defaultTime: string;
   description: string;
   frequency: 'daily' | 'weekly' | 'monthly' | 'conditional';
+  category: 'critical' | 'consistency' | 'bills' | 'growth';
 }
 
 export const NOTIFICATION_SCHEDULES: NotificationSchedule[] = [
+  // Consistency Nudges
   {
     type: 'daily_log_reminder',
-    defaultTime: '19:00', // 7 PM - End of day logging
-    description: 'Best time to review and log daily expenses',
-    frequency: 'daily'
+    defaultTime: '19:00',
+    description: 'Review and log daily expenses',
+    frequency: 'daily',
+    category: 'consistency'
   },
   {
-    type: 'budget_nudges',
-    defaultTime: '09:00', // 9 AM - Morning awareness
-    description: 'Morning reminder to be mindful of spending',
-    frequency: 'conditional'
+    type: 'streak_protection',
+    defaultTime: '21:00',
+    description: 'Alerts when your streak is at risk',
+    frequency: 'conditional',
+    category: 'consistency'
   },
+  // Critical Alerts
   {
-    type: 'weekly_recap',
-    defaultTime: '10:00', // 10 AM Sunday - Weekend review
-    description: 'Sunday morning financial review',
-    frequency: 'weekly'
+    type: 'budget_breach',
+    defaultTime: '09:00',
+    description: 'Instant alerts for budget limits',
+    frequency: 'conditional',
+    category: 'critical'
   },
   {
     type: 'unusual_activity',
-    defaultTime: '20:00', // 8 PM - Evening alert
-    description: 'Evening time for reviewing unusual spending',
-    frequency: 'conditional'
+    defaultTime: '20:00',
+    description: 'Alerts for unexpected spending',
+    frequency: 'conditional',
+    category: 'critical'
   },
-  {
-    type: 'savings_progress',
-    defaultTime: '18:00', // 6 PM - Positive evening motivation
-    description: 'Evening motivation boost for savings goals',
-    frequency: 'conditional'
-  },
-  {
-    type: 'month_reset_preview',
-    defaultTime: '11:00', // 11 AM - Late morning preparation
-    description: 'Late morning prep for new month budgets',
-    frequency: 'monthly'
-  },
+  // Bill Reminders
   {
     type: 'recurring_expense_reminder',
-    defaultTime: '08:00', // 8 AM - Morning planning
-    description: 'Morning reminder for upcoming bills',
-    frequency: 'conditional'
+    defaultTime: '08:00',
+    description: 'Reminders for upcoming bills',
+    frequency: 'conditional',
+    category: 'bills'
   },
+  // Growth Insights
   {
-    type: 'night_owl_checkin',
-    defaultTime: '23:00', // 11 PM - Late night reflection
-    description: 'Late night spending reflection time',
-    frequency: 'daily'
+    type: 'weekly_recap',
+    defaultTime: '10:00',
+    description: 'Sunday financial review',
+    frequency: 'weekly',
+    category: 'growth'
   },
   {
     type: 'monthly_snapshot',
-    defaultTime: '10:30', // 10:30 AM - Mid-morning review
-    description: 'Mid-morning monthly financial review',
-    frequency: 'monthly'
-  },
-  {
-    type: 'reflection_prompts',
-    defaultTime: '21:00', // 9 PM - Evening reflection
-    description: 'Evening time for mindful spending reflection',
-    frequency: 'weekly'
-  },
-  {
-    type: 'custom_goal_reminder',
-    defaultTime: '17:00', // 5 PM - End of workday motivation
-    description: 'End-of-workday goal motivation',
-    frequency: 'conditional'
-  },
-  {
-    type: 'business_mode_nudges',
-    defaultTime: '16:00', // 4 PM - Late afternoon business check
-    description: 'Afternoon business expense review',
-    frequency: 'daily'
-  },
-  {
-    type: 'streak_milestone_alerts',
-    defaultTime: '12:00', // 12 PM - Midday celebration
-    description: 'Midday celebration of achievements',
-    frequency: 'conditional'
-  },
-  {
-    type: 'streak_freeze_warnings',
-    defaultTime: '18:30', // 6:30 PM - Early evening warning
-    description: 'Early evening streak protection reminder',
-    frequency: 'conditional'
-  },
-  {
-    type: 'streak_recovery_reminders',
-    defaultTime: '15:00', // 3 PM - Afternoon encouragement
-    description: 'Afternoon encouragement to restart',
-    frequency: 'conditional'
-  },
-  {
-    type: 'streak_breaking_alerts',
-    defaultTime: '22:00', // 10 PM - Last chance evening alert
-    description: 'Last chance evening streak save reminder',
-    frequency: 'conditional'
+    defaultTime: '10:30',
+    description: 'Monthly financial review',
+    frequency: 'monthly',
+    category: 'growth'
   }
 ];
 
 export const getDefaultTimeForNotification = (notificationType: string): string => {
   const schedule = NOTIFICATION_SCHEDULES.find(s => s.type === notificationType);
-  return schedule?.defaultTime || '19:00'; // Fallback to 7 PM
+  return schedule?.defaultTime || '19:00';
 };
 
 export const getNotificationDescription = (notificationType: string): string => {
@@ -130,12 +88,11 @@ class NotificationScheduler {
   }
 
   async scheduleNotification(
-    userId: string, 
-    notificationType: string, 
+    userId: string,
+    notificationType: string,
     preferredTime: string,
     enabled: boolean
   ): Promise<void> {
-    // Clear existing schedule
     this.clearSchedule(`${userId}-${notificationType}`);
 
     if (!enabled || !('Notification' in window) || Notification.permission !== 'granted') {
@@ -143,42 +100,60 @@ class NotificationScheduler {
     }
 
     const scheduleKey = `${userId}-${notificationType}`;
-    
-    // Calculate next notification time
     const [hour, minute] = preferredTime.split(':').map(s => parseInt(s, 10));
     const now = new Date();
     const nextNotification = new Date();
     nextNotification.setHours(hour, minute, 0, 0);
-    
+
     if (nextNotification <= now) {
       nextNotification.setDate(nextNotification.getDate() + 1);
     }
-    
+
     const msUntil = nextNotification.getTime() - now.getTime();
 
     const timer = setTimeout(async () => {
       await this.triggerNotification(userId, notificationType);
-      // Reschedule for next occurrence
       this.scheduleNotification(userId, notificationType, preferredTime, enabled);
     }, msUntil);
 
     this.activeSchedules.set(scheduleKey, timer);
   }
 
-  private async triggerNotification(userId: string, notificationType: string): Promise<void> {
+  /**
+   * Triggers an immediate device notification for critical events (budget breaches, etc.)
+   */
+  async handleImmediateAlert(userId: string, type: string, title: string, message: string): Promise<void> {
     try {
-      // Get notification content based on type
-      const notificationData = this.getNotificationContent(notificationType);
-      
-      // Send browser notification
       if (Notification.permission === 'granted') {
-        new Notification(notificationData.title, {
-          body: notificationData.message,
-          icon: '/icons/icon-192x192.png'
+        await notificationService.sendServiceWorkerNotification(title, message, {
+          tag: type,
+          requireInteraction: true // Keep critical alerts on screen
         });
       }
 
-      // Save to app alerts with deduplication via unique index
+      await supabase
+        .from('alerts')
+        .insert({
+          user_id: userId,
+          title,
+          message,
+          type
+        });
+    } catch (error) {
+      console.error('Error handling immediate alert:', error);
+    }
+  }
+
+  private async triggerNotification(userId: string, notificationType: string): Promise<void> {
+    try {
+      const notificationData = this.getNotificationContent(notificationType);
+
+      if (Notification.permission === 'granted') {
+        await notificationService.sendServiceWorkerNotification(notificationData.title, notificationData.message, {
+          tag: notificationType
+        });
+      }
+
       await supabase
         .from('alerts')
         .upsert(
@@ -202,23 +177,30 @@ class NotificationScheduler {
         title: "🧾 Daily Log Reminder",
         message: "Your wallet's waiting for your say-so. Quick 5-sec log?"
       },
-      budget_nudges: {
-        title: "🎯 Budget Check-in",
-        message: "Starting your day mindfully - how's your budget looking?"
+      streak_protection: {
+        title: "🔥 Streak at Risk!",
+        message: "Don't let your progress slip away. Log a transaction now to save your streak!"
+      },
+      budget_breach: {
+        title: "🚨 Budget Warning",
+        message: "One of your budgets is reaching its limit. Let's check in!"
       },
       weekly_recap: {
         title: "📅 Weekly Wallet Recap",
         message: "Your money told a story this week. Want to hear it?"
       },
-      night_owl_checkin: {
-        title: "🌙 Night Owl Check-in",
-        message: "Midnight thoughts? This might be a good time to review your day's spending."
+      recurring_expense_reminder: {
+        title: "💳 Bill Reminder",
+        message: "You have a recurring expense coming up soon. Be prepared!"
       },
-      // Add more notification content as needed
+      monthly_snapshot: {
+        title: "📊 Monthly Snapshot",
+        message: "Your monthly financial review is ready. How did you do?"
+      }
     };
 
     return notifications[type] || {
-      title: "💰 Financial Reminder",
+      title: "💰 Financial Remark",
       message: "Time for a quick financial check-in!"
     };
   }

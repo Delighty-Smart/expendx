@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { notificationScheduler } from '@/services/notificationScheduler';
 
 interface BudgetStatus {
   category: string;
@@ -12,6 +13,7 @@ interface BudgetStatus {
 
 export function useBudgetAlerts() {
   const { toast } = useToast();
+  const notifiedRef = useRef<Record<string, number>>({}); // Track last notified percentage to avoid spam
 
   const { data: budgetStatus } = useQuery({
     queryKey: ['budget-status'],
@@ -56,40 +58,68 @@ export function useBudgetAlerts() {
 
       return status;
     },
-    refetchInterval: 60000, // Check every minute
+    refetchInterval: 30000, // Check every 30 seconds for smarter response
   });
 
   useEffect(() => {
     if (!budgetStatus) return;
 
-    budgetStatus.forEach(status => {
-      // Alert at 80% threshold
-      if (status.percentage >= 80 && status.percentage < 90) {
-        toast({
-          title: '⚠️ Budget Alert',
-          description: `You've used ${status.percentage.toFixed(0)}% of your ${status.category} budget`,
-          duration: 5000,
-        });
-      }
-      
-      // Alert at 90% threshold
-      if (status.percentage >= 90 && status.percentage < 100) {
-        toast({
-          title: '🚨 Budget Warning',
-          description: `You've used ${status.percentage.toFixed(0)}% of your ${status.category} budget!`,
-          variant: 'destructive',
-          duration: 7000,
-        });
-      }
+    const triggerAlert = async (status: BudgetStatus, title: string, message: string, threshold: number) => {
+      const key = `${status.category}-${threshold}`;
+      const lastNotified = notifiedRef.current[key];
+      const now = Date.now();
 
+      // Only notify once every 24 hours for the same threshold and category
+      if (!lastNotified || now - lastNotified > 24 * 60 * 60 * 1000) {
+        toast({
+          title,
+          description: message,
+          variant: threshold >= 90 ? 'destructive' : 'default',
+          duration: threshold >= 100 ? 10000 : 5000,
+        });
+
+        // Trigger device notification
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          notificationScheduler.handleImmediateAlert(
+            user.id,
+            'budget_breach',
+            title,
+            message
+          );
+        }
+
+        notifiedRef.current[key] = now;
+      }
+    };
+
+    budgetStatus.forEach(status => {
       // Alert when exceeded
       if (status.percentage >= 100) {
-        toast({
-          title: '❌ Budget Exceeded',
-          description: `You've exceeded your ${status.category} budget by ${(status.spent - status.limit).toFixed(2)}`,
-          variant: 'destructive',
-          duration: 10000,
-        });
+        triggerAlert(
+          status,
+          '❌ Budget Exceeded',
+          `You've exceeded your ${status.category} budget by ${(status.spent - status.limit).toFixed(2)}`,
+          100
+        );
+      }
+      // Alert at 90% threshold
+      else if (status.percentage >= 90) {
+        triggerAlert(
+          status,
+          '🚨 Budget Warning',
+          `Critical: You've used ${status.percentage.toFixed(0)}% of your ${status.category} budget!`,
+          90
+        );
+      }
+      // Alert at 80% threshold
+      else if (status.percentage >= 80) {
+        triggerAlert(
+          status,
+          '⚠️ Budget Alert',
+          `Heads up: You've used ${status.percentage.toFixed(0)}% of your ${status.category} budget`,
+          80
+        );
       }
     });
   }, [budgetStatus, toast]);

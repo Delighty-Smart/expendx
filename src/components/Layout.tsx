@@ -11,6 +11,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
+import { notificationService } from "@/services/notificationService";
 
 const Layout = ({
   children
@@ -62,13 +63,30 @@ const Layout = ({
     fetchUnreadAlerts();
 
     const channel = supabase.channel(`alerts-${user.id}`).on('postgres_changes', {
-      event: '*',
+      event: 'INSERT',
       schema: 'public',
       table: 'alerts',
       filter: `user_id=eq.${user.id}`
-    }, () => {
+    }, (payload) => {
       fetchUnreadAlerts();
       window.dispatchEvent(new CustomEvent('alerts-updated'));
+
+      // Trigger device notification for real-time inserts
+      if (payload.new) {
+        const alert = payload.new;
+        const highPriorityTypes = ['budget_alert', 'budget_breach', 'payment', 'unusual_activity'];
+
+        if (highPriorityTypes.includes(alert.type) || !alert.read) {
+          notificationService.sendServiceWorkerNotification(
+            alert.title || "New Alert",
+            alert.message || "You have a new high-priority notification.",
+            {
+              tag: alert.id,
+              requireInteraction: highPriorityTypes.includes(alert.type)
+            }
+          );
+        }
+      }
     }).subscribe();
 
     return () => {
