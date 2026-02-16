@@ -7,13 +7,14 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2 } from "lucide-react";
+import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CategoryManagement } from "@/components/CategoryManagement";
 import { ArchiveManagement } from "@/components/ArchiveManagement";
 import { DebugSection } from "@/components/DebugSection";
 import NotificationPreferences from "@/components/NotificationPreferences";
+import DataExportSection from "@/components/DataExportSection";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
@@ -272,6 +273,23 @@ const Settings = () => {
               <AccordionContent className="px-4 md:px-6 pb-6 pt-2">
 
                 <DebugSection />
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="data-export" className="border-b">
+              <AccordionTrigger className="px-4 md:px-6 py-5 hover:no-underline hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Download className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-base md:text-lg">Data Export</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">Download all your records as CSV files</div>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 md:px-6 pb-6 pt-2">
+                <DataExportSection />
               </AccordionContent>
             </AccordionItem>
 
