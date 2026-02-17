@@ -562,20 +562,20 @@ class EnhancedOfflineManager {
         if (item.tempId && insertData.id === item.tempId) {
           delete insertData.id;
         }
-        const { error } = await supabase.from(table).insert(insertData);
+        const { error } = await supabase.from(table as any).insert(insertData);
         if (error) throw error;
         break;
       }
       case 'UPDATE': {
         if (!data.id) throw new Error(`Cannot update ${table}: missing id`);
         const { id, ...updateFields } = data;
-        const { error } = await supabase.from(table).update(updateFields).eq('id', id);
+        const { error } = await supabase.from(table as any).update(updateFields).eq('id', id);
         if (error) throw error;
         break;
       }
       case 'DELETE': {
         if (!data.id) throw new Error(`Cannot delete from ${table}: missing id`);
-        const { error } = await supabase.from(table).delete().eq('id', data.id);
+        const { error } = await supabase.from(table as any).delete().eq('id', data.id);
         if (error) throw error;
         break;
       }
