@@ -63,22 +63,14 @@ const SetIncomePage = () => {
         user_id: user.id,
       };
 
-      if (monthlyIncome) {
-        // Update existing income
-        const { error } = await supabase
-          .from("monthly_income_estimates")
-          .update(incomeData)
-          .eq("id", monthlyIncome.id);
+      const { error } = await supabase
+        .from("monthly_income_estimates")
+        .upsert(
+          incomeData,
+          { onConflict: 'user_id' }
+        );
 
-        if (error) throw error;
-      } else {
-        // Insert new income
-        const { error } = await supabase
-          .from("monthly_income_estimates")
-          .insert([incomeData]);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -109,7 +101,7 @@ const SetIncomePage = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <h1 className="text-2xl font-bold">Set Monthly Income</h1>
+        <h1 className="text-2xl font-bold">Set Income Target</h1>
       </div>
 
       <div className="bg-card rounded-lg shadow-sm border p-6">

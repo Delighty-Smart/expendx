@@ -400,6 +400,31 @@ const IndexPage = () => {
     );
   };
 
+  // Fetch total budget for expense percentage calculation
+  const { data: totalBudget } = useQuery({
+    queryKey: ["total_budget", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("budget_categories")
+        .select("monthly_limit")
+        .eq("user_id", user!.id);
+
+      if (error) throw error;
+      return data?.reduce((sum, item) => sum + item.monthly_limit, 0) || 0;
+    },
+  });
+
+  const incomeProgress = monthlyIncome > 0
+    ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
+    : 0;
+
+  const expenseProgress = totalBudget && totalBudget > 0
+    ? Math.min((monthlyExpenses / totalBudget) * 100, 100)
+    : 0;
+
+  // ... (keeping existing charts setup)
+
   // Calculate total amount for percentage calculations
   const totalSpendingAmount = spendingData.reduce((sum, item) => sum + item.amount, 0);
 
@@ -510,16 +535,28 @@ const IndexPage = () => {
               </>
             )}
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-xs font-medium text-foreground">
+
+          <div className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",
+            isMonthlyTransactionsLoading || isMonthlyIncomeLoading
+              ? "bg-muted text-muted-foreground"
+              : (monthlyIncomeTotal - monthlyExpenses) >= 0
+                ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                : "bg-red-500/10 text-red-600 dark:text-red-400"
+          )}>
             {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
               <Skeleton className="h-4 w-24" />
-            ) : monthlyIncome > 0 ? (
-              <>
-                <TrendingUp className="h-3 w-3 text-accent" strokeWidth={1.5} />
-                <span>{progressPercentage.toFixed(0)}% of monthly target</span>
-              </>
             ) : (
-              <span className="text-muted-foreground">No monthly target set</span>
+              <>
+                {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? (
+                  <TrendingUp className="h-3 w-3" strokeWidth={1.5} />
+                ) : (
+                  <TrendingDown className="h-3 w-3" strokeWidth={1.5} />
+                )}
+                <span>
+                  {currency.symbol}{formatAmount(Math.abs(monthlyIncomeTotal - monthlyExpenses))} {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? "Net Income" : "Deficit"} this month
+                </span>
+              </>
             )}
           </div>
         </div>
@@ -542,7 +579,10 @@ const IndexPage = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Monthly Income */}
-          <div className="p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
+          <div
+            onClick={() => navigate('/set-income')}
+            className="p-3 rounded-lg bg-white dark:bg-card border border-border/40 shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between cursor-pointer active:scale-[0.98]"
+          >
             <div className="flex flex-col gap-0.5">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Income</p>
               <p className="text-lg font-bold tracking-tight text-foreground">
@@ -555,8 +595,13 @@ const IndexPage = () => {
                   </>
                 )}
               </p>
+              {monthlyIncome > 0 && !isMonthlyTransactionsLoading && (
+                <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                  {incomeProgress.toFixed(0)}% of target
+                </p>
+              )}
             </div>
-            <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors">
+            <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors self-start">
               <ArrowUpRight className="w-4 h-4 text-green-600 dark:text-green-400" strokeWidth={2} />
             </div>
           </div>
@@ -575,8 +620,13 @@ const IndexPage = () => {
                   </>
                 )}
               </p>
+              {totalBudget && totalBudget > 0 && !isMonthlyTransactionsLoading && (
+                <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                  {expenseProgress.toFixed(0)}% of budget
+                </p>
+              )}
             </div>
-            <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors">
+            <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors self-start">
               <ArrowDownRight className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
             </div>
           </div>
@@ -891,7 +941,7 @@ const IndexPage = () => {
         onOpenChange={setShowStreakModal}
         streak={streakData}
       />
-    </PullToRefresh>
+    </PullToRefresh >
   );
 };
 

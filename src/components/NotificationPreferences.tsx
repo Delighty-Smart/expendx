@@ -20,30 +20,34 @@ interface NotificationPreference {
   [key: string]: any; // Allow for dynamic fields
 }
 
-const CATEGORY_MAPPING: Record<string, { label: string, description: string, fields: string[], icon: any }> = {
+const CATEGORY_MAPPING: Record<string, { label: string, description: string, fields: string[], icon: any, hasTime?: boolean }> = {
   critical: {
     label: "Critical Alerts",
     description: "Budget breaches and unusual activity alerts",
     fields: ['budget_nudges', 'unusual_activity'],
-    icon: AlertTriangle
+    icon: AlertTriangle,
+    hasTime: false
   },
   consistency: {
     label: "Consistency Nudges",
     description: "Daily reminders and streak protection",
     fields: ['daily_log_reminder', 'streak_milestone_alerts', 'streak_freeze_warnings', 'streak_recovery_reminders', 'streak_breaking_alerts'],
-    icon: Award
+    icon: Award,
+    hasTime: true
   },
   bills: {
     label: "Bill Reminders",
     description: "Keep track of upcoming subscriptions and recurring bills",
     fields: ['recurring_expense_reminder'],
-    icon: Clock
+    icon: Clock,
+    hasTime: false
   },
   growth: {
     label: "Financial Growth Insights",
     description: "Weekly recaps and monthly financial snapshots",
     fields: ['weekly_recap', 'monthly_snapshot', 'reflection_prompts'],
-    icon: TrendingUp
+    icon: TrendingUp,
+    hasTime: true
   }
 };
 
@@ -99,11 +103,100 @@ const NotificationPreferences = () => {
     }
   };
 
+  const getPreferredTimeForCategory = (prefs: NotificationPreference | null, category: string) => {
+    if (!prefs?.preferred_time) return "19:00";
+    try {
+      // Try parsing as JSON first
+      const timeObj = JSON.parse(prefs.preferred_time);
+      return timeObj[category] || timeObj.default || "19:00";
+    } catch {
+      // Fallback for legacy simple string format
+      return prefs.preferred_time;
+    }
+  };
+
+  const updatePreferredTime = async (category: string, newTime: string) => {
+    if (!preferences) return;
+
+    setSaving(true);
+    try {
+      let timePreference: Record<string, string> = { default: "19:00" };
+
+      try {
+        if (preferences.preferred_time) {
+          // If it's already JSON, parse it
+          if (preferences.preferred_time.startsWith('{')) {
+            timePreference = JSON.parse(preferences.preferred_time);
+          } else {
+            // If it's a legacy string, use it as default
+            timePreference = { default: preferences.preferred_time };
+          }
+        }
+      } catch (e) {
+        console.warn("Could not parse existing time preference, starting fresh");
+      }
+
+      // Update the specific category
+      timePreference[category] = newTime;
+      // Also update default if this is the first time setting or broad consistency
+      if (category === 'consistency') {
+        timePreference.default = newTime;
+      }
+
+      const jsonString = JSON.stringify(timePreference);
+
+      const { error } = await supabase
+        .from('notification_preferences')
+        .update({ preferred_time: jsonString })
+        .eq('id', preferences.id);
+
+      if (error) throw error;
+
+      const updatedPrefs = { ...preferences, preferred_time: jsonString };
+      setPreferences(updatedPrefs);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        scheduleAllNotifications(user.id, updatedPrefs);
+      }
+
+      toast({
+        title: "Time updated",
+        description: `Notification time for ${CATEGORY_MAPPING[category].label} updated to ${newTime}.`,
+      });
+    } catch (error) {
+      console.error('Error updating time:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update time preference.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const testGlobalNotification = () => {
+    notificationService.sendServiceWorkerNotification(
+      "Test Notification",
+      "This is how your alerts will appear on this device.",
+      {
+        tag: 'test-global',
+        requireInteraction: false
+      }
+    );
+    toast({
+      title: "Test sent",
+      description: "Check your device for the notification.",
+    });
+  };
+
   const scheduleAllNotifications = (userId: string, prefs: NotificationPreference) => {
     NOTIFICATION_SCHEDULES.forEach(schedule => {
       // Map category to enable state
       const isEnabled = prefs[schedule.type as keyof NotificationPreference] ?? prefs[schedule.category] ?? false;
-      const preferredTime = prefs.preferred_time || schedule.defaultTime;
+      const categoryTime = getPreferredTimeForCategory(prefs, schedule.category);
+      const preferredTime = categoryTime || schedule.defaultTime;
 
       notificationScheduler.scheduleNotification(
         userId,
@@ -157,22 +250,6 @@ const NotificationPreferences = () => {
     }
   };
 
-  const testNotification = (category: string) => {
-    const config = CATEGORY_MAPPING[category];
-    notificationService.sendServiceWorkerNotification(
-      `Test: ${config.label}`,
-      `This is how you'll receive your ${config.label.toLowerCase()}.`,
-      {
-        tag: `test-${category}`,
-        requireInteraction: category === 'critical'
-      }
-    );
-    toast({
-      title: "Test sent",
-      description: "Check your device for the notification.",
-    });
-  };
-
   if (loading) {
     return (
       <Card>
@@ -211,6 +288,7 @@ const NotificationPreferences = () => {
               const Icon = config.icon;
               // Category is "enabled" if at least one of its primary fields is enabled
               const isEnabled = preferences?.[config.fields[0]] ?? false;
+              const preferredTime = getPreferredTimeForCategory(preferences, key);
 
               return (
                 <div
@@ -235,17 +313,28 @@ const NotificationPreferences = () => {
                     <p className="text-sm text-muted-foreground leading-snug">
                       {config.description}
                     </p>
+
+                    {/* Time Picker for supported categories */}
+                    {config.hasTime && isEnabled && (
+                      <div className="flex items-center gap-2 mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Label htmlFor={`time-${key}`} className="text-xs font-medium text-muted-foreground">
+                          Preferred Time:
+                        </Label>
+                        <div className="relative">
+                          <input
+                            id={`time-${key}`}
+                            type="time"
+                            value={preferredTime}
+                            onChange={(e) => updatePreferredTime(key, e.target.value)}
+                            className="bg-background border border-input rounded-md px-2 py-1 text-xs h-7 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            disabled={saving}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs h-8"
-                      onClick={() => testNotification(key)}
-                    >
-                      Test
-                    </Button>
                     <div className="flex-1 sm:flex-initial flex justify-end">
                       <Switch
                         checked={isEnabled}
@@ -269,22 +358,32 @@ const NotificationPreferences = () => {
                 Make sure you've granted browser permission to receive these notifications on your device.
               </p>
             </div>
-            <Button
-              variant="default"
-              size="sm"
-              className="w-full sm:w-auto rounded-lg shadow-lg shadow-primary/20"
-              onClick={() => {
-                notificationService.requestPermission().then(granted => {
-                  toast({
-                    title: granted ? "Permission Granted" : "Permission Denied",
-                    description: granted ? "You're all set to receive smart alerts." : "Please enable notifications in your browser settings.",
-                    variant: granted ? "default" : "destructive"
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={testGlobalNotification}
+              >
+                Test Alerts
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="w-full sm:w-auto rounded-lg shadow-lg shadow-primary/20"
+                onClick={() => {
+                  notificationService.requestPermission().then(granted => {
+                    toast({
+                      title: granted ? "Permission Granted" : "Permission Denied",
+                      description: granted ? "You're all set to receive smart alerts." : "Please enable notifications in your browser settings.",
+                      variant: granted ? "default" : "destructive"
+                    });
                   });
-                });
-              }}
-            >
-              Enable Device Alerts
-            </Button>
+                }}
+              >
+                Enable Device Alerts
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -293,4 +392,3 @@ const NotificationPreferences = () => {
 };
 
 export default NotificationPreferences;
-

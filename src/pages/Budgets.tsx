@@ -9,7 +9,7 @@ import { useTransactionData } from "@/hooks/useTransactionData";
 
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/ui/page-header";
-import { PlusCircle, Edit, Trash2, TrendingUp } from "lucide-react";
+import { PlusCircle, Edit, Trash2, TrendingUp, DollarSign } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -259,10 +259,16 @@ const BudgetsPage = () => {
         <PageHeader
           title="Budgets"
           actions={
-            <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2 flex-none whitespace-nowrap">
-              <PlusCircle className="h-4 w-4" />
-              Add Budget
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => navigate('/set-income')} variant="outline" className="flex items-center gap-2 flex-none whitespace-nowrap">
+                <DollarSign className="h-4 w-4" />
+                Set Income
+              </Button>
+              <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2 flex-none whitespace-nowrap">
+                <PlusCircle className="h-4 w-4" />
+                Add Budget
+              </Button>
+            </div>
           }
         />
 
