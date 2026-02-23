@@ -453,7 +453,7 @@ const TransactionsPage = () => {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0 bg-popover border-border z-50 max-h-[80vh] flex flex-col overflow-hidden" align="end">
+                  <PopoverContent className="w-80 p-0 bg-popover border-border z-50 max-h-[50vh] flex flex-col overflow-hidden" align="end">
                     <div className="p-4 border-b border-border bg-popover flex-shrink-0">
                       <h4 className="font-medium text-foreground mb-2">Categories</h4>
                       <div className="flex items-center justify-between">

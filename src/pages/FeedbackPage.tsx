@@ -121,7 +121,7 @@ const FeedbackPage = () => {
   }
 
   return (
-    <main className="min-h-[80vh] flex items-center justify-center p-4">
+    <main className="min-h-[60vh] flex items-center justify-center p-4">
       <div className="w-full max-w-2xl transform transition-all duration-500 animate-fadeIn">
         {/* Header Section */}
         <div className="text-center mb-12 space-y-4">
