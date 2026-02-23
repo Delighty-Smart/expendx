@@ -90,10 +90,10 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
 
         className={cn(
           "p-1",
-          position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+          position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]"
         )}
         style={{
-          maxHeight: 'min(70vh, 480px)',
+          maxHeight: 'min(60vh, 400px)',
           overflowY: 'auto',
           scrollBehavior: 'smooth',
           WebkitOverflowScrolling: 'touch',

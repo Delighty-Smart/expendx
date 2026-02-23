@@ -54,7 +54,7 @@ const DropdownMenuSubContent = React.forwardRef<
       className
     )}
     style={{
-      maxHeight: 'min(70vh, 480px)',
+      maxHeight: 'min(60vh, 400px)',
       overflowY: 'auto',
       scrollBehavior: 'smooth',
       WebkitOverflowScrolling: 'touch',
@@ -85,7 +85,7 @@ const DropdownMenuContent = React.forwardRef<
         className
       )}
       style={{
-        maxHeight: 'min(70vh, 480px)',
+        maxHeight: 'min(60vh, 400px)',
         overflowY: 'auto',
         scrollBehavior: 'smooth',
         WebkitOverflowScrolling: 'touch',
