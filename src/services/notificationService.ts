@@ -41,9 +41,13 @@ export const notificationService = {
     }
 
     try {
+      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const icon = isDarkMode ? '/notification-icon-dark.png' : '/notification-icon-light.png';
+
       const notification = new Notification(title, {
         body: message,
-        icon: '/notification-icon-light.png',
+        icon: icon,
+        badge: icon,
         ...options
       });
 
@@ -66,10 +70,14 @@ export const notificationService = {
     }
 
     try {
+      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const icon = isDarkMode ? '/notification-icon-dark.png' : '/notification-icon-light.png';
+
       const registration = await navigator.serviceWorker.ready;
       await registration.showNotification(title, {
         body: message,
-        icon: '/notification-icon-light.png',
+        icon: icon,
+        badge: icon,
         ...options
       });
       return true;
