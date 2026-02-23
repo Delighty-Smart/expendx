@@ -55,11 +55,18 @@ const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isPushActive, setIsPushActive] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPreferences();
+    checkPushStatus();
   }, []);
+
+  const checkPushStatus = async () => {
+    const subscription = await notificationService.getSubscription();
+    setIsPushActive(!!subscription);
+  };
 
   const fetchPreferences = async () => {
     try {
@@ -370,18 +377,35 @@ const NotificationPreferences = () => {
               <Button
                 variant="default"
                 size="sm"
-                className="w-full sm:w-auto rounded-lg shadow-lg shadow-primary/20"
-                onClick={() => {
-                  notificationService.requestPermission().then(granted => {
-                    toast({
-                      title: granted ? "Permission Granted" : "Permission Denied",
-                      description: granted ? "You're all set to receive smart alerts." : "Please enable notifications in your browser settings.",
-                      variant: granted ? "default" : "destructive"
-                    });
-                  });
+                className={cn(
+                  "w-full sm:w-auto rounded-lg shadow-lg",
+                  isPushActive ? "bg-green-600 hover:bg-green-700 shadow-green-900/20" : "shadow-primary/20"
+                )}
+                onClick={async () => {
+                  setSaving(true);
+                  try {
+                    const success = await notificationService.subscribeToPush();
+                    if (success) {
+                      setIsPushActive(true);
+                      toast({
+                        title: "Push Alerts Active",
+                        description: "You'll now receive background alerts even when the app is closed.",
+                      });
+                    } else {
+                      toast({
+                        title: "Setup Failed",
+                        description: "Could not enable push notifications. Check browser permissions.",
+                        variant: "destructive"
+                      });
+                    }
+                  } catch (err) {
+                    console.error('Push setup error:', err);
+                  } finally {
+                    setSaving(false);
+                  }
                 }}
               >
-                Enable Device Alerts
+                {isPushActive ? "Alerts Active ✅" : "Enable Device Alerts"}
               </Button>
             </div>
           </div>
