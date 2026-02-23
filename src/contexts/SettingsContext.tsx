@@ -114,6 +114,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     // Update HTML class for theme immediately
     document.documentElement.classList.toggle('dark', theme === 'dark');
 
+    // Update theme-color meta tag for PWA/Mobile
+    const themeColor = theme === 'dark' ? '#0f0f10' : '#ffffff';
+
+    // Update all theme-color meta tags (including those with media queries)
+    const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+    metaTags.forEach(tag => {
+      tag.setAttribute('content', themeColor);
+    });
+
     return () => clearTimeout(saveTimeout);
   }, [currency, theme, hideAmounts, user?.id]);
 
