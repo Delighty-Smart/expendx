@@ -56,10 +56,16 @@ export function useEnhancedTransactionData(filter?: {
       const from = pageParam * pageSize;
       const to = from + pageSize - 1;
 
+      // CACHE-FIRST LOGIC:
+      // If it's the first page and we're just starting, we can try to return cache immediately
+      // but React Query handles background updates well if we set staleTime correctly.
+
       // If online, attempt to fetch from Supabase
       if (navigator.onLine) {
         try {
-          console.log(`Fetching transactions from Supabase: user ${user.id}, page ${pageParam}`);
+          // Use a shorter timeout for the network request to ensure we fall back to cache quickly if slow
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
           let query = supabase.from("transactions")
             .select("*", { count: 'exact' })
@@ -86,19 +92,19 @@ export function useEnhancedTransactionData(filter?: {
 
           const { data, error } = await query
             .order("date", { ascending: false })
-            .range(from, to);
+            .range(from, to)
+            .abortSignal(controller.signal);
 
-          if (error) {
-            console.error("Supabase query error:", error);
-            throw error;
-          }
+          clearTimeout(timeoutId);
+
+          if (error) throw error;
 
           return (data || []).map(item => ({
             ...item,
             type: item.type as TransactionType
           }));
         } catch (fetchError) {
-          console.error("Supabase fetch failed, falling back to offline cache:", fetchError);
+          console.log("Supabase fetch slow or failed, using local cache:", fetchError);
           // Fallback to offline manager
           const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
           return allTransactions.slice(from, from + pageSize);
@@ -112,9 +118,8 @@ export function useEnhancedTransactionData(filter?: {
     },
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === 20 ? allPages.length : undefined;
-
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 30, // 30 seconds - keep it fresh but don't over-fetch
     gcTime: 1000 * 60 * 10,   // 10 minutes
   });
 

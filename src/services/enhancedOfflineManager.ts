@@ -635,28 +635,85 @@ class EnhancedOfflineManager {
     }
   }
 
-  // Storage methods
+  // Storage methods using IndexedDB for large payloads
   private async saveDataCache(): Promise<void> {
     try {
-      if (this.dataCache) {
-        localStorage.setItem(`${CACHE_PREFIX}data`, JSON.stringify(this.dataCache));
+      if (!this.dataCache) return;
+
+      // 1. Save metadata to localStorage (fast)
+      const { transactions, ...metadata } = this.dataCache;
+      localStorage.setItem(`${CACHE_PREFIX}metadata`, JSON.stringify(metadata));
+
+      // 2. Save transactions to IndexedDB (asynchronous, high capacity)
+      const db = await this.getDB();
+      const tx = db.transaction('transactions', 'readwrite');
+      const store = tx.objectStore('transactions');
+
+      // Clear existing first for a clean "full data sync" or use put for individual updates
+      // For a full sync replacement, clearing is safer
+      await new Promise<void>((resolve, reject) => {
+        const clearRequest = store.clear();
+        clearRequest.onsuccess = () => resolve();
+        clearRequest.onerror = () => reject(clearRequest.error);
+      });
+
+      // Batch add
+      for (const t of transactions) {
+        store.put(t);
       }
+
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+
+      console.log(`Saved ${transactions.length} transactions to IndexedDB`);
     } catch (error) {
-      console.error('Failed to save data cache:', error);
+      console.error('Failed to save data cache to IndexedDB:', error);
     }
   }
 
   private async loadDataCache(): Promise<void> {
     try {
-      const cached = localStorage.getItem(`${CACHE_PREFIX}data`);
-      if (cached) {
-        this.dataCache = JSON.parse(cached);
-        console.log('Loaded data cache:', this.dataCache?.transactions?.length, 'transactions');
+      // 1. Load metadata
+      const metaStr = localStorage.getItem(`${CACHE_PREFIX}metadata`);
+      if (!metaStr) {
+        this.dataCache = null;
+        return;
       }
+
+      const metadata = JSON.parse(metaStr);
+
+      // 2. Load transactions from IndexedDB
+      const db = await this.getDB();
+      const tx = db.transaction('transactions', 'readonly');
+      const store = tx.objectStore('transactions');
+
+      const transactions = await new Promise<Transaction[]>((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      this.dataCache = {
+        ...metadata,
+        transactions: transactions || []
+      };
+
+      console.log('Loaded data cache from IndexedDB:', this.dataCache?.transactions?.length, 'transactions');
     } catch (error) {
-      console.error('Failed to load data cache:', error);
+      console.error('Failed to load data cache from IndexedDB:', error);
       this.dataCache = null;
     }
+  }
+
+  private async getDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('expendx_offline', 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+      // Upgrade handled in offlineStorage.ts
+    });
   }
 
   private async saveSyncQueue(): Promise<void> {
