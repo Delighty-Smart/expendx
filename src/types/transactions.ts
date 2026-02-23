@@ -32,39 +32,53 @@ export interface SavingsGoal {
 // Default categories for each transaction type
 const DEFAULT_CATEGORIES = {
   credit: [
-    "Salary",
-    "Freelance",
-    "Business Income",
-    "Investment Returns",
+    "Asset Sales",
+    "Business Sales",
+    "Cash Gifts",
+    "Commissions Earned",
+    "Contract Income",
+    "Dividend Income",
+    "Freelance Income",
+    "Grant Funds",
+    "Interest Earned",
+    "Investment Gains",
+    "Pension Income",
     "Rental Income",
-    "Gifts Received",
-    "Refunds",
-    "Other Income"
+    "Royalties Received",
+    "Salary Wages",
+    "Tips Received"
   ],
   debit: [
-    "Food & Dining",
-    "Transportation",
-    "Shopping",
-    "Entertainment",
-    "Bills & Utilities",
-    "Healthcare",
-    "Education",
-    "Travel",
-    "Groceries",
-    "Rent/Mortgage",
-    "Insurance",
-    "Subscriptions",
-    "Other Expenses"
+    "Accommodation Rent",
+    "Airtime",
+    "Bank Charges",
+    "Clothing Apparel",
+    "Education Fees",
+    "Entertainment Leisure",
+    "Fuel Transport",
+    "Gift Donations",
+    "Groceries Food",
+    "Healthcare Medical",
+    "Home Maintenance",
+    "Household Supplies",
+    "Insurance Premiums",
+    "Internet Subscriptions",
+    "Personal Care",
+    "Taxes Levies",
+    "Tithes",
+    "Utility Bills"
   ],
   savings: [
-    "Emergency Fund",
-    "Retirement",
-    "Vacation Fund",
     "Education Fund",
-    "Investment",
-    "Home Down Payment",
-    "Car Fund",
-    "General Savings"
+    "Emergency Fund",
+    "Fixed Deposit",
+    "Goal Savings",
+    "Investment Contributions",
+    "Pension Contributions",
+    "Retirement Savings",
+    "Short Term Savings",
+    "Sinking Fund",
+    "Travel Fund"
   ]
 };
 
@@ -98,11 +112,11 @@ export async function getCategoriesForType(type: TransactionType): Promise<strin
     // Combine default and user categories, removing duplicates
     const defaultCategories = getDefaultCategoriesForType(type);
     const customCategories = userCategories?.map(cat => cat.name) || [];
-    
+
     const allCategories = [
       ...defaultCategories,
       ...customCategories.filter(cat => !defaultCategories.includes(cat))
-    ];
+    ].sort((a, b) => a.localeCompare(b));
 
     return allCategories;
   } catch (error) {
