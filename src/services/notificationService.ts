@@ -43,11 +43,11 @@ export const notificationService = {
     try {
       const notification = new Notification(title, {
         body: message,
-        icon: '/icons/icon-192x192.png',
+        icon: '/notification-icon-light.png',
         ...options
       });
 
-      notification.onclick = function() {
+      notification.onclick = function () {
         window.focus();
         notification.close();
       };
@@ -69,7 +69,7 @@ export const notificationService = {
       const registration = await navigator.serviceWorker.ready;
       await registration.showNotification(title, {
         body: message,
-        icon: '/icons/icon-192x192.png',
+        icon: '/notification-icon-light.png',
         ...options
       });
       return true;
