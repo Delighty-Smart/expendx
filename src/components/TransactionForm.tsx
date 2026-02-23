@@ -449,7 +449,7 @@ export const TransactionForm = ({
               </Button>
               <Button
                 type="submit"
-                className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all"
+                className="h-12 rounded-xl px-8 font-bold hover:scale-105 active:scale-95 transition-all"
                 disabled={loading}
               >
                 {loading ? "Saving..." : transaction ? 'Update' : 'Add Transaction'}

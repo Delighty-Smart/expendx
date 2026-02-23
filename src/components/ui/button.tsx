@@ -10,8 +10,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-black text-white hover:bg-black/90 active:scale-95 shadow-lg shadow-black/20", // Primary CTA
-        action: "bg-white text-black border border-transparent shadow-[0_6px_16px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)]", // Action Button
+        default: "bg-foreground text-background hover:bg-foreground/90 active:scale-95 shadow-lg shadow-foreground/10", // Primary CTA - Adapts to theme
+        action: "bg-background text-foreground border border-input shadow-[0_6px_16px_rgba(0,0,0,0.05)] hover:bg-accent hover:text-accent-foreground", // Action Button - Adapts to theme
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80",
         outline:

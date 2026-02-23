@@ -329,7 +329,7 @@ const UserManagement = () => {
             </div>
             <DialogFooter>
               <Button variant="ghost" className="h-12 rounded-xl px-6 font-bold" onClick={() => setCreateUserModalOpen(false)}>Cancel</Button>
-              <Button className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all" onClick={handleCreateUser}>Create User</Button>
+              <Button className="h-12 rounded-xl px-8 font-bold hover:scale-105 active:scale-95 transition-all" onClick={handleCreateUser}>Create User</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -373,7 +373,7 @@ const UserManagement = () => {
             </div>
             <DialogFooter>
               <Button variant="ghost" className="h-12 rounded-xl px-6 font-bold" onClick={() => setMessageModalOpen(false)}>Cancel</Button>
-              <Button className="h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all" onClick={handleSendMessage}>Send Message</Button>
+              <Button className="h-12 rounded-xl px-8 font-bold hover:scale-105 active:scale-95 transition-all" onClick={handleSendMessage}>Send Message</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

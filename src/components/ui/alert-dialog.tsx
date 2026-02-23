@@ -106,7 +106,7 @@ const AlertDialogAction = React.forwardRef<
     ref={ref}
     className={cn(
       buttonVariants(),
-      "h-12 rounded-xl px-8 font-bold bg-foreground text-background hover:scale-105 active:scale-95 transition-all",
+      "h-12 rounded-xl px-8 font-bold hover:scale-105 active:scale-95 transition-all",
       className
     )}
     {...props}
