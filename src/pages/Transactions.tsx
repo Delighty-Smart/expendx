@@ -453,7 +453,7 @@ const TransactionsPage = () => {
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0 bg-popover border-border z-50 max-h-[50vh] flex flex-col overflow-hidden" align="end">
+                  <PopoverContent className="w-80 p-0 bg-popover border-border z-50 max-h-[40vh] flex flex-col overflow-hidden" align="end">
                     <div className="p-4 border-b border-border bg-popover flex-shrink-0">
                       <h4 className="font-medium text-foreground mb-2">Categories</h4>
                       <div className="flex items-center justify-between">
@@ -488,7 +488,7 @@ const TransactionsPage = () => {
                       <div className="p-4 pb-2 bg-popover flex-shrink-0">
                         <h5 className="text-sm font-medium text-muted-foreground">Select Categories</h5>
                       </div>
-                      <div className="px-4 pb-4 flex-1 overflow-y-auto">
+                      <div className="px-4 pb-4 flex-1 overflow-y-auto" style={{ maxHeight: '240px' }}>
                         <div className="space-y-1">
                           {availableCategories.map((categoryItem) => {
                             const isSelected = selectedCategories.includes(categoryItem.name);
