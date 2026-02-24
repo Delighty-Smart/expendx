@@ -458,6 +458,11 @@ const NotificationPreferences = () => {
                         return;
                       }
 
+                      if (!Capacitor.isNativePlatform()) {
+                        toast({ title: "Native App Required", description: "Auto-tracking requires background capabilities. Please install the Android app to enable this.", variant: "destructive" });
+                        return;
+                      }
+
                       const res = await MessageReader.requestPermissions();
                       if (res.sms === 'granted') {
                         setSmsGranted(true);
@@ -481,6 +486,11 @@ const NotificationPreferences = () => {
                     try {
                       if (!isAndroidDevice) {
                         toast({ title: "Android Only", description: "App Alert tracking is only supported on Android devices.", variant: "destructive" });
+                        return;
+                      }
+
+                      if (!Capacitor.isNativePlatform()) {
+                        toast({ title: "Native App Required", description: "Auto-tracking requires background capabilities. Please install the Android app to enable this.", variant: "destructive" });
                         return;
                       }
 
