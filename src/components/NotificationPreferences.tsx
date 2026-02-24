@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,9 @@ import { notificationService } from "@/services/notificationService";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
+import { MessageReader } from "@solimanware/capacitor-sms-reader";
+import { NotificationsListener } from "capacitor-notifications-listener";
 
 interface NotificationPreference {
   id: string;
@@ -56,12 +59,31 @@ const NotificationPreferences = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPushActive, setIsPushActive] = useState(false);
+  const [smsGranted, setSmsGranted] = useState(false);
+  const [notificationGranted, setNotificationGranted] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPreferences();
     checkPushStatus();
+
+    if (Capacitor.getPlatform() === 'android') {
+      checkAndroidPermissions();
+    }
   }, []);
+
+  const checkAndroidPermissions = async () => {
+    try {
+      const smsAuth = await MessageReader.checkPermissions();
+      setSmsGranted(smsAuth.sms === 'granted');
+    } catch (e) { console.error('SMS permission check failed', e); }
+
+    try {
+      // Assuming posx plugin has this 
+      const notifAuth = (await NotificationsListener.checkPermissions()) as any;
+      if (notifAuth && notifAuth.display === 'granted') setNotificationGranted(true);
+    } catch (e) { console.error('Notification permission check failed', e); }
+  };
 
   const checkPushStatus = async () => {
     const subscription = await notificationService.getSubscription();
@@ -409,6 +431,54 @@ const NotificationPreferences = () => {
               </Button>
             </div>
           </div>
+
+          {(Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'web') && (
+            <div className="mt-6 p-6 rounded-lg bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              <div className="p-3 rounded-lg bg-background shadow-sm border border-border/50">
+                <Smartphone className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="text-sm font-bold">Auto-Track Bank Transactions</h4>
+                <p className="text-xs text-muted-foreground">
+                  Read SMS and Bank App notifications to automatically log transactions. Android only.
+                </p>
+              </div>
+              <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("w-full sm:w-auto", smsGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
+                  onClick={async () => {
+                    try {
+                      const res = await MessageReader.requestPermissions();
+                      if (res.sms === 'granted') {
+                        setSmsGranted(true);
+                        toast({ title: "SMS Access Granted", description: "expendX will auto-track bank SMS" });
+                      }
+                    } catch (e) { console.error(e) }
+                  }}
+                >
+                  {smsGranted ? "SMS Active ✅" : "Track SMS"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("w-full sm:w-auto", notificationGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
+                  onClick={async () => {
+                    try {
+                      const notifAuth = (await NotificationsListener.requestPermission()) as any;
+                      if (notifAuth && notifAuth.display === 'granted') {
+                        setNotificationGranted(true);
+                        toast({ title: "Notification Access Granted", description: "expendX will auto-track bank push alerts" });
+                      }
+                    } catch (e) { console.error(e) }
+                  }}
+                >
+                  {notificationGranted ? "App Alerts Active ✅" : "Track App Alerts"}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

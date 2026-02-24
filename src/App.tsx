@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/integrations/supabase/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -32,7 +33,27 @@ import { enhancedOfflineManager } from './services/enhancedOfflineManager';
 
 import Layout from '@/components/Layout'
 
+import { useAutoTracker } from './hooks/useAutoTracker';
+
 function App() {
+  const [userId, setUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useAutoTracker(userId);
+
   useEffect(() => {
     // Fix for mobile viewport height (100vh issue)
     const setVh = () => {
