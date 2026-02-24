@@ -450,12 +450,22 @@ const NotificationPreferences = () => {
                   className={cn("w-full sm:w-auto", smsGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
                   onClick={async () => {
                     try {
+                      if (Capacitor.getPlatform() !== 'android') {
+                        toast({ title: "Android Only", description: "SMS tracking is only supported on Android devices.", variant: "destructive" });
+                        return;
+                      }
+
                       const res = await MessageReader.requestPermissions();
                       if (res.sms === 'granted') {
                         setSmsGranted(true);
-                        toast({ title: "SMS Access Granted", description: "expendX will auto-track bank SMS" });
+                        toast({ title: "SMS Access Granted", description: "expendX will auto-track bank SMS messages based on specific formats." });
+                      } else {
+                        toast({ title: "Permission Denied", description: "Please allow SMS permissions in your device settings.", variant: "destructive" });
                       }
-                    } catch (e) { console.error(e) }
+                    } catch (e) {
+                      console.error(e);
+                      toast({ title: "Error", description: "Failed to request SMS tracking permissions.", variant: "destructive" });
+                    }
                   }}
                 >
                   {smsGranted ? "SMS Active ✅" : "Track SMS"}
@@ -466,12 +476,22 @@ const NotificationPreferences = () => {
                   className={cn("w-full sm:w-auto", notificationGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
                   onClick={async () => {
                     try {
+                      if (Capacitor.getPlatform() !== 'android') {
+                        toast({ title: "Android Only", description: "App Alert tracking is only supported on Android devices.", variant: "destructive" });
+                        return;
+                      }
+
                       const notifAuth = (await NotificationsListener.requestPermission()) as any;
                       if (notifAuth && notifAuth.display === 'granted') {
                         setNotificationGranted(true);
-                        toast({ title: "Notification Access Granted", description: "expendX will auto-track bank push alerts" });
+                        toast({ title: "Notification Access Granted", description: "expendX will auto-track bank push alerts based on specific formats." });
+                      } else {
+                        toast({ title: "Permission Denied", description: "Please allow Notification Access in your device settings.", variant: "destructive" });
                       }
-                    } catch (e) { console.error(e) }
+                    } catch (e) {
+                      console.error(e);
+                      toast({ title: "Error", description: "Failed to request App Alert tracking permissions.", variant: "destructive" });
+                    }
                   }}
                 >
                   {notificationGranted ? "App Alerts Active ✅" : "Track App Alerts"}
