@@ -4,6 +4,8 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { safelyUnwrapResponse } from '@/services/supabaseHelpers';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 
 import { updateUserStreak, getUserProfile } from '@/lib/streak';
 
@@ -98,6 +100,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (initialSession?.user) {
           cacheUserData(initialSession.user.id);
           await fetchProfile(initialSession.user.id);
+        }
+
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await GoogleSignIn.initialize({
+              clientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || 'YOUR_WEB_CLIENT_ID_HERE',
+            });
+          } catch (e) {
+            console.error("Failed to initialize GoogleSignIn", e);
+          }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -199,13 +211,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getRedirectUrl()
+      if (Capacitor.isNativePlatform()) {
+        const result = await GoogleSignIn.signIn();
+        if (result && result.idToken) {
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.idToken,
+          });
+          if (error) throw error;
+          if (data.user) {
+            cacheUserData(data.user.id);
+            await fetchProfile(data.user.id);
+          }
+          showToast({ title: "Welcome back!" });
+          return;
+        } else {
+          throw new Error("Google Sign-In failed or returned empty token.");
         }
-      });
-      if (error) throw error;
+      } else {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: getRedirectUrl(),
+          }
+        });
+        if (error) throw error;
+      }
     } catch (error: any) {
       console.error("Google sign in error caught:", error);
       showToast({
@@ -227,6 +258,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('expendx_onboarding_seen');
 
       await supabase.auth.signOut();
+      if (Capacitor.isNativePlatform()) {
+        try { await GoogleSignIn.signOut(); } catch (e) { }
+      }
 
       showToast({
         title: "Signed out",

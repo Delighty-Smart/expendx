@@ -86,7 +86,7 @@ const DeleteAccountSection = () => {
           description: "All your data has been deleted.",
         });
 
-        navigate('/');
+        navigate('/dashboard');
         window.location.reload();
       } else if (selectedOption === "account-and-data") {
         // Use the secure database function to delete account + all data

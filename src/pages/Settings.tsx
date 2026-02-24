@@ -105,8 +105,8 @@ const Settings = () => {
 
 
   return (
-    <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
-      <div className="space-y-6 pb-24">
+    <PullToRefresh onRefresh={refreshData} containerClassName="h-full min-h-[calc(100vh-100px)]">
+      <div className="space-y-6 pb-24 min-h-full">
         {/* Profile Header */}
         <div className="flex flex-col items-center text-center space-y-3 pt-4 pb-2">
           <div className="relative group">

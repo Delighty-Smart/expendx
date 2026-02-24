@@ -98,7 +98,7 @@ const AdminDashboard = () => {
             description: "You don't have permission to access the admin dashboard",
             variant: "destructive"
           });
-          navigate('/');
+          navigate('/dashboard');
           return;
         }
 
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
         fetchDashboardStats();
       } catch (error) {
         console.error("Error checking admin status:", error);
-        navigate('/');
+        navigate('/dashboard');
       }
     };
 
@@ -154,8 +154,8 @@ const AdminDashboard = () => {
               key={item.id}
               onClick={() => handleTabChange(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === item.id
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 }`}
             >
               <item.icon className="h-4 w-4" />

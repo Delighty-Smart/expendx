@@ -26,7 +26,7 @@ const Auth = () => {
           setView('onboarding');
         } else {
           console.log("Redirecting existing user to dashboard");
-          navigate('/');
+          navigate('/dashboard');
         }
       } else {
         // User not logged in, check if they've already seen onboarding in this sessions
@@ -90,7 +90,7 @@ const Auth = () => {
     sessionStorage.setItem('expendx_onboarding_seen', 'true');
     if (user) {
       // If they were already authenticated (e.g. just signed up), go to dashboard
-      navigate('/');
+      navigate('/dashboard');
     } else {
       // Go to login form
       setView('auth');

@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 
 import IndexPage from '@/pages/Index'
+import Landing from '@/pages/Landing'
 import Auth from '@/pages/Auth'
 import Transactions from '@/pages/Transactions'
 import AddTransaction from '@/pages/AddTransaction'
@@ -24,11 +25,14 @@ import Settings from '@/pages/Settings'
 import Admin from '@/pages/Admin'
 import AdminFeedback from '@/pages/AdminFeedback'
 import Feedback from '@/pages/FeedbackPage'
+import ProcessReceipt from '@/pages/ProcessReceipt'
 import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 import Subscriptions from '@/pages/Subscriptions'
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt'
+import PushOnboarding from '@/components/PushOnboarding'
+import { CapacitorShareTarget } from '@capgo/capacitor-share-target';
 
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
@@ -83,14 +87,22 @@ function AppContent() {
           // Note: using getSessionFromUrl for OAuth flow completions
           try {
             await supabase.auth.getSessionFromUrl({ url: event.url });
-            // Redirect to dashboard now that session is hydrated
-            navigate('/', { replace: true });
+            navigate('/dashboard', { replace: true });
           } catch (err) {
             console.error("Deep link Auth parsing Error", err);
           }
         }
       }).then(listener => {
         appUrlListener = listener;
+      });
+
+      // Share Target listener
+      CapacitorShareTarget.addListener('shareReceived', (event: any) => {
+        if (event.files && event.files.length > 0) {
+          // Take the first file and redirect to process page
+          const file = event.files[0];
+          navigate('/process-receipt', { state: { fileUri: file.uri, mimeType: file.type } });
+        }
       });
     }
 
@@ -108,10 +120,11 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<Landing />} />
 
         {/* Protected Routes with Persistent Layout */}
         <Route element={<Layout />}>
-          <Route path="/" element={<IndexPage />} />
+          <Route path="/dashboard" element={<IndexPage />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/add-transaction" element={<AddTransaction />} />
           <Route path="/budgets" element={<Budgets />} />
@@ -130,6 +143,7 @@ function AppContent() {
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/feedback" element={<AdminFeedback />} />
+          <Route path="/process-receipt" element={<ProcessReceipt />} />
         </Route>
 
         {/* Catch-all */}
@@ -145,6 +159,7 @@ function App() {
       <SettingsProvider>
         <BrowserRouter>
           <AppContent />
+          <PushOnboarding />
           <Toaster />
           <PWAUpdatePrompt />
         </BrowserRouter>

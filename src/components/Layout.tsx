@@ -135,7 +135,7 @@ const Layout = ({
   }
 
   const menuItems: MenuItem[] = [
-    { path: "/", label: "Dashboard", icon: Home },
+    { path: "/dashboard", label: "Dashboard", icon: Home },
     { path: "/transactions", label: "Transactions", icon: Receipt },
     { path: "/budgets", label: "Budgets", icon: DollarSign },
     { path: "/savings", label: "Savings", icon: PiggyBank },
@@ -167,7 +167,7 @@ const Layout = ({
             {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
 
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2">
             <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
           </Link>
 

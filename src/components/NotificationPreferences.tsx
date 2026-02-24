@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Clock, Smartphone, AlertTriangle, Award, TrendingUp } from "lucide-react";
+import { Bell, Clock, Smartphone, AlertTriangle, Award, TrendingUp, Info } from "lucide-react";
 import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationDescription, notificationScheduler } from "@/services/notificationScheduler";
 import { notificationService } from "@/services/notificationService";
 import { Switch } from "@/components/ui/switch";
@@ -13,8 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
-import { MessageReader } from "@solimanware/capacitor-sms-reader";
-import { NotificationsListener } from "capacitor-notifications-listener";
 
 interface NotificationPreference {
   id: string;
@@ -62,31 +60,12 @@ const NotificationPreferences = () => {
   const [isPushActive, setIsPushActive] = useState(false);
 
   const isAndroidDevice = Capacitor.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
-
-  const [smsGranted, setSmsGranted] = useState(false);
-  const [notificationGranted, setNotificationGranted] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchPreferences();
     checkPushStatus();
-
-    if (isAndroidDevice) {
-      checkAndroidPermissions();
-    }
   }, []);
-
-  const checkAndroidPermissions = async () => {
-    try {
-      const smsAuth = await MessageReader.checkPermissions();
-      setSmsGranted(smsAuth.messages === 'granted');
-    } catch (e) { console.error('SMS permission check failed', e); }
-
-    try {
-      const isListeningResult = await NotificationsListener.isListening();
-      setNotificationGranted(isListeningResult.value);
-    } catch (e) { console.error('Notification permission check failed', e); }
-  };
 
   const checkPushStatus = async () => {
     const subscription = await notificationService.getSubscription();
@@ -138,148 +117,77 @@ const NotificationPreferences = () => {
   const getPreferredTimeForCategory = (prefs: NotificationPreference | null, category: string) => {
     if (!prefs?.preferred_time) return "19:00";
     try {
-      // Try parsing as JSON first
       const timeObj = JSON.parse(prefs.preferred_time);
       return timeObj[category] || timeObj.default || "19:00";
     } catch {
-      // Fallback for legacy simple string format
       return prefs.preferred_time;
     }
   };
 
   const updatePreferredTime = async (category: string, newTime: string) => {
     if (!preferences) return;
-
     setSaving(true);
     try {
       let timePreference: Record<string, string> = { default: "19:00" };
-
       try {
         if (preferences.preferred_time) {
-          // If it's already JSON, parse it
           if (preferences.preferred_time.startsWith('{')) {
             timePreference = JSON.parse(preferences.preferred_time);
           } else {
-            // If it's a legacy string, use it as default
             timePreference = { default: preferences.preferred_time };
           }
         }
       } catch (e) {
-        console.warn("Could not parse existing time preference, starting fresh");
+        console.warn("Could not parse existing time preference");
       }
-
-      // Update the specific category
       timePreference[category] = newTime;
-      // Also update default if this is the first time setting or broad consistency
-      if (category === 'consistency') {
-        timePreference.default = newTime;
-      }
-
+      if (category === 'consistency') timePreference.default = newTime;
       const jsonString = JSON.stringify(timePreference);
-
       const { error } = await supabase
         .from('notification_preferences')
         .update({ preferred_time: jsonString })
         .eq('id', preferences.id);
 
       if (error) throw error;
-
       const updatedPrefs = { ...preferences, preferred_time: jsonString };
       setPreferences(updatedPrefs);
-
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        scheduleAllNotifications(user.id, updatedPrefs);
-      }
-
-      toast({
-        title: "Time updated",
-        description: `Notification time for ${CATEGORY_MAPPING[category].label} updated to ${newTime}.`,
-      });
+      if (user) scheduleAllNotifications(user.id, updatedPrefs);
+      toast({ title: "Time updated", description: `Notification time updated to ${newTime}.` });
     } catch (error) {
-      console.error('Error updating time:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update time preference.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to update time.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
-  const testGlobalNotification = () => {
-    notificationService.sendServiceWorkerNotification(
-      "Test Notification",
-      "This is how your alerts will appear on this device.",
-      {
-        tag: 'test-global',
-        requireInteraction: false
-      }
-    );
-    toast({
-      title: "Test sent",
-      description: "Check your device for the notification.",
-    });
-  };
-
   const scheduleAllNotifications = (userId: string, prefs: NotificationPreference) => {
     NOTIFICATION_SCHEDULES.forEach(schedule => {
-      // Map category to enable state
       const isEnabled = prefs[schedule.type as keyof NotificationPreference] ?? prefs[schedule.category] ?? false;
       const categoryTime = getPreferredTimeForCategory(prefs, schedule.category);
       const preferredTime = categoryTime || schedule.defaultTime;
-
-      notificationScheduler.scheduleNotification(
-        userId,
-        schedule.type,
-        preferredTime,
-        isEnabled
-      );
+      notificationScheduler.scheduleNotification(userId, schedule.type, preferredTime, isEnabled);
     });
   };
 
   const toggleCategory = async (category: string, enabled: boolean) => {
     if (!preferences) return;
-
     setSaving(true);
     try {
       const fieldsToUpdate: Record<string, boolean> = {};
       const categoryData = CATEGORY_MAPPING[category];
-
-      categoryData.fields.forEach(field => {
-        fieldsToUpdate[field] = enabled;
-      });
-
+      categoryData.fields.forEach(field => { fieldsToUpdate[field] = enabled; });
       const { error } = await supabase
         .from('notification_preferences')
         .update(fieldsToUpdate)
         .eq('id', preferences.id);
-
       if (error) throw error;
-
       const updatedPrefs = { ...preferences, ...fieldsToUpdate };
       setPreferences(updatedPrefs);
-
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        scheduleAllNotifications(user.id, updatedPrefs);
-      }
-
-      toast({
-        title: "Preferences updated",
-        description: `${categoryData.label} have been ${enabled ? 'enabled' : 'disabled'}.`,
-      });
-    } catch (error) {
-      console.error('Error updating preferences:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update preferences. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setSaving(false);
-    }
+      if (user) scheduleAllNotifications(user.id, updatedPrefs);
+      toast({ title: "Preferences updated", description: `${categoryData.label} ${enabled ? 'enabled' : 'disabled'}.` });
+    } finally { setSaving(false); }
   };
 
   if (loading) {
@@ -323,14 +231,10 @@ const NotificationPreferences = () => {
                   )}>
                     <Icon className="h-5 w-5" />
                   </div>
-
                   <div className="flex-1 space-y-0.5 min-w-0">
                     <Label className="text-sm font-bold block truncate">{config.label}</Label>
-                    <p className="text-[11px] text-muted-foreground leading-tight">
-                      {config.description}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{config.description}</p>
                   </div>
-
                   <Switch
                     checked={isEnabled}
                     onCheckedChange={(checked) => toggleCategory(key, checked)}
@@ -338,7 +242,6 @@ const NotificationPreferences = () => {
                     className="data-[state=on]:bg-primary"
                   />
                 </div>
-
                 {config.hasTime && isEnabled && (
                   <div className="flex items-center justify-between pt-3 border-t border-primary/10 animate-in fade-in slide-in-from-top-1 duration-200">
                     <Label htmlFor={`time-${key}`} className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
@@ -362,26 +265,7 @@ const NotificationPreferences = () => {
 
       <div className="space-y-4">
         <Label className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground px-1">Device Integration</Label>
-
         <div className="grid gap-3">
-          <div className="group flex items-center gap-4 p-4 rounded-2xl bg-background/40 border border-border/50 hover:bg-muted/30 transition-all duration-300">
-            <div className="p-2.5 rounded-xl bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-              <Bell className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <div className="text-xs font-bold">Standard Alerts</div>
-              <div className="text-[10px] text-muted-foreground">Test browser push notifications</div>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="rounded-full text-[10px] font-bold h-7 px-4"
-              onClick={testGlobalNotification}
-            >
-              Test
-            </Button>
-          </div>
-
           <div className={cn(
             "group flex flex-col gap-4 p-4 rounded-2xl border transition-all duration-300",
             isPushActive ? "bg-green-500/5 border-green-500/20" : "bg-background/40 border-border/50"
@@ -394,8 +278,8 @@ const NotificationPreferences = () => {
                 <Smartphone className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <div className="text-xs font-bold">Background Sync</div>
-                <div className="text-[10px] text-muted-foreground">Required for intelligent updates</div>
+                <div className="text-xs font-bold">Push Alerts</div>
+                <div className="text-[10px] text-muted-foreground">Budget & Streak reminders</div>
               </div>
               <Button
                 variant={isPushActive ? "ghost" : "default"}
@@ -421,83 +305,19 @@ const NotificationPreferences = () => {
       </div>
 
       {isAndroidDevice && (
-        <div className="space-y-4">
-          <Label className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground px-1">Native Tracking (Android)</Label>
-
-          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h4 className="text-xs font-bold">Automatic Ledger</h4>
-                <p className="text-[10px] text-muted-foreground leading-snug">Extract data from bank SMS and app alerts</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 rounded-full hover:bg-primary/10"
-                onClick={checkAndroidPermissions}
-              >
-                <TrendingUp className="h-4 w-4 text-primary" />
-              </Button>
+        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+          <div className="flex items-start gap-4">
+            <div className="p-2.5 rounded-xl bg-amber-500 text-white">
+              <Info className="h-5 w-5" />
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl text-[10px] font-bold h-10 border-none transition-all",
-                  smsGranted ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-background/80"
-                )}
-                onClick={async () => {
-                  if (!Capacitor.isNativePlatform()) {
-                    toast({ title: "Native App Required", variant: "destructive" });
-                    return;
-                  }
-                  const res = await MessageReader.requestPermissions();
-                  if (res.messages === 'granted') setSmsGranted(true);
-                }}
-              >
-                {smsGranted ? "SMS Active" : "Track SMS"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl text-[10px] font-bold h-10 border-none transition-all",
-                  notificationGranted ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-background/80"
-                )}
-                onClick={async () => {
-                  if (!Capacitor.isNativePlatform()) {
-                    toast({ title: "Native App Required", variant: "destructive" });
-                    return;
-                  }
-                  await NotificationsListener.requestPermission();
-                  toast({ title: "Action Required", description: "Enable Expendx in the list." });
-                }}
-              >
-                {notificationGranted ? "Apps Active" : "Track Alerts"}
-              </Button>
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold">Auto-Ledger Update</h4>
+              <p className="text-[11px] text-muted-foreground leading-tight">
+                Direct SMS/App tracking is currently suspended to ensure maximum stability on Android 13+.
+                <br /><br />
+                <span className="font-bold text-amber-600">Pro-Tip:</span> You can now <strong>"Share"</strong> bank receipts directly to Expendx to log them instantly!
+              </p>
             </div>
-
-            {!notificationGranted && (
-              <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 space-y-2 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-2 text-orange-600">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-tight">Security Bypass Required</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground leading-tight">
-                  Android 13+ may block "Notification Access". Tap below, then tap the three dots (⋮) and "Allow restricted settings".
-                </p>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full text-[10px] font-bold h-8 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 border-none shadow-none"
-                  onClick={() => App.openAppSettings()}
-                >
-                  Unlock Restricted Settings
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       )}
