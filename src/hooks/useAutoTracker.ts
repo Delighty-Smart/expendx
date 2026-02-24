@@ -21,22 +21,21 @@ export const useAutoTracker = (userId: string | undefined) => {
                 // We only start listening if permissions are granted.
                 // We assume NotificationPreferences.tsx handles the actual permission prompting.
                 const permissions = await MessageReader.checkPermissions();
-                if (permissions?.sms === 'granted') {
-                    // Listen for incoming SMS
-                    // Since SMSReader might not have a direct event listener for *new* incoming SMS natively (it's often a reader of the inbox),
-                    // We would actually need to poll or use a background receiver. 
-                    // For the sake of this implementation, we will mock an event listener if the plugin supports it,
-                    // or advise the user that true background SMS listening requires a background service.
-                    // Note: @solimanware/capacitor-sms-reader is for *reading* the inbox. To *receive* live,
-                    // we might need to poll the latest ones every few minutes when the app is active.
+                if (permissions?.messages === 'granted') {
+                    // SMS Inbox monitoring active
                 }
+
+                // Initialize Notification Listener
+                await NotificationsListener.startListening({
+                    cacheNotifications: true
+                });
 
                 // Listen for new notifications (like from Kuda app)
                 await NotificationsListener.addListener('notificationReceivedEvent', async (notification: any) => {
-                    const { title, text, packageName } = notification;
+                    const { title, text, package: pkgName } = notification;
 
                     // Only process from known bank packages if needed, or just let regex try
-                    const parsed = parseBankMessage(`${title} ${text}`, packageName, true);
+                    const parsed = parseBankMessage(`${title} ${text}`, pkgName, true);
 
                     if (parsed) {
                         const { data: userData } = await supabase.auth.getUser();

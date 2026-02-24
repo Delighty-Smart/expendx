@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SettingsProvider } from '@/contexts/SettingsContext'
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 
 import IndexPage from '@/pages/Index'
 import Auth from '@/pages/Auth'
@@ -35,8 +37,9 @@ import Layout from '@/components/Layout'
 
 import { useAutoTracker } from './hooks/useAutoTracker';
 
-function App() {
+function AppContent() {
   const [userId, setUserId] = useState<string | undefined>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -70,48 +73,78 @@ function App() {
       enhancedOfflineManager.forceSync().catch(console.error);
     }
 
+    // Handle deep links from App opening with custom scheme (for Supabase Redirects)
+    let appUrlListener: any;
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appUrlOpen', async (event) => {
+        // e.g. io.expendx.app://login-callback#access_token=....
+        if (event.url.includes('login-callback')) {
+          // Send the URL to supabase to extract the session
+          // Note: using getSessionFromUrl for OAuth flow completions
+          try {
+            await supabase.auth.getSessionFromUrl({ url: event.url });
+            // Redirect to dashboard now that session is hydrated
+            navigate('/', { replace: true });
+          } catch (err) {
+            console.error("Deep link Auth parsing Error", err);
+          }
+        }
+      }).then(listener => {
+        appUrlListener = listener;
+      });
+    }
+
     return () => {
       window.removeEventListener('resize', setVh);
       window.removeEventListener('orientationchange', setVh);
+      if (appUrlListener) {
+        appUrlListener.remove();
+      }
     };
-  }, []);
+  }, [navigate]);
 
+  return (
+    <div className="app-container">
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/auth" element={<Auth />} />
+
+        {/* Protected Routes with Persistent Layout */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<IndexPage />} />
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/add-transaction" element={<AddTransaction />} />
+          <Route path="/budgets" element={<Budgets />} />
+          <Route path="/add-budget" element={<AddBudget />} />
+          <Route path="/edit-budget" element={<EditBudget />} />
+          <Route path="/set-income" element={<SetIncome />} />
+          <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
+          <Route path="/savings" element={<Savings />} />
+          <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
+          <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/alerts" element={<Alerts />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/feedback" element={<AdminFeedback />} />
+        </Route>
+
+        {/* Catch-all */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
+  )
+}
+
+function App() {
   return (
     <TooltipProvider>
       <SettingsProvider>
         <BrowserRouter>
-          <div className="app-container">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/auth" element={<Auth />} />
-
-              {/* Protected Routes with Persistent Layout */}
-              <Route element={<Layout />}>
-                <Route path="/" element={<IndexPage />} />
-                <Route path="/transactions" element={<Transactions />} />
-                <Route path="/add-transaction" element={<AddTransaction />} />
-                <Route path="/budgets" element={<Budgets />} />
-                <Route path="/add-budget" element={<AddBudget />} />
-                <Route path="/edit-budget" element={<EditBudget />} />
-                <Route path="/set-income" element={<SetIncome />} />
-                <Route path="/set-savings-goal" element={<SetSavingsGoal />} />
-                <Route path="/savings" element={<Savings />} />
-                <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
-                <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/alerts" element={<Alerts />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/feedback" element={<Feedback />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/admin/feedback" element={<AdminFeedback />} />
-              </Route>
-
-              {/* Catch-all */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          <AppContent />
           <Toaster />
           <PWAUpdatePrompt />
         </BrowserRouter>

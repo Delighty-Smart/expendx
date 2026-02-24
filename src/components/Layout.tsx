@@ -156,7 +156,7 @@ const Layout = ({
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
       {/* Header for mobile */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 glass-effect border-b border-border/50 z-50">
+      <header className="lg:hidden fixed top-0 left-0 right-0 safe-h-header safe-pt glass-effect border-b border-border/50 z-50">
         <div className="container mx-auto h-full flex items-center justify-between px-4">
           <Button
             variant="ghost"
@@ -193,8 +193,8 @@ const Layout = ({
       </header>
 
       <aside className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col shadow-lg`}>
-        <div className="p-4 border-b border-border flex items-center justify-center">
-          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
+        <div className="p-4 safe-pt border-b border-border flex items-center justify-center">
+          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain mt-1" />
         </div>
 
         <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">
@@ -235,7 +235,7 @@ const Layout = ({
         </nav>
 
 
-        <div className="border-t border-border mt-auto p-2">
+        <div className="border-t border-border mt-auto p-2 safe-pb">
           <div className="flex items-center gap-1.5">
             <div className="flex-1 flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/50 cursor-pointer transition-all duration-200 group overflow-hidden" onClick={handleProfileClick}>
               <UserAvatar url={profile?.avatar_url} name={profile?.username || profile?.email || "User"} className="w-8 h-8 flex-shrink-0 shadow-sm ring-1 ring-border/50" />
@@ -258,8 +258,8 @@ const Layout = ({
         </div>
       </aside>
 
-      <main className={`pt-14 lg:pt-0 lg:pl-64 min-h-screen transition-all duration-300 ${isSidebarOpen ? "brightness-50 lg:brightness-100" : ""}`} onClick={() => isSidebarOpen && setIsSidebarOpen(false)}>
-        <div className="container mx-auto py-3 md:p-4 lg:p-6 animate-fadeIn">
+      <main className={`safe-pt-header lg:!pt-0 lg:pl-64 min-h-screen transition-all duration-300 ${isSidebarOpen ? "brightness-50 lg:brightness-100" : ""}`} onClick={() => isSidebarOpen && setIsSidebarOpen(false)}>
+        <div className="container mx-auto py-3 md:p-4 lg:p-6 animate-fadeIn safe-pb">
           {children || <Outlet />}
         </div>
       </main>

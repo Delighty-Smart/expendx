@@ -3,6 +3,7 @@ import React, { useState, useEffect, createContext, useContext, ReactNode } from
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { safelyUnwrapResponse } from '@/services/supabaseHelpers';
+import { Capacitor } from '@capacitor/core';
 
 import { updateUserStreak, getUserProfile } from '@/lib/streak';
 
@@ -133,6 +134,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const getRedirectUrl = () => {
+    return Capacitor.isNativePlatform() ? 'io.expendx.app://login-callback/' : window.location.origin;
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -165,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           data: metadata,
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: getRedirectUrl()
         }
       });
 
@@ -197,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: getRedirectUrl()
         }
       });
       if (error) throw error;

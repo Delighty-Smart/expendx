@@ -798,6 +798,28 @@
     min-height: 44px;
   }
 
+  .safe-pt {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-pl {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .safe-pr {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .safe-h-header {
+    height: calc(4rem + env(safe-area-inset-top, 0px)); /* slightly taller for comfort */
+  }
+  .safe-pt-header {
+    padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+  }
+  .safe-top-header {
+    top: calc(4rem + env(safe-area-inset-top, 0px));
+  }
+
   .mobile-button-sm {
     @apply h-10 px-3 text-sm md:h-9 md:px-2 md:text-xs;
     min-height: 40px;

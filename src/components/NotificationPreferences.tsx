@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
 import { MessageReader } from "@solimanware/capacitor-sms-reader";
 import { NotificationsListener } from "capacitor-notifications-listener";
 
@@ -78,13 +79,12 @@ const NotificationPreferences = () => {
   const checkAndroidPermissions = async () => {
     try {
       const smsAuth = await MessageReader.checkPermissions();
-      setSmsGranted(smsAuth.sms === 'granted');
+      setSmsGranted(smsAuth.messages === 'granted');
     } catch (e) { console.error('SMS permission check failed', e); }
 
     try {
-      // Assuming posx plugin has this 
-      const notifAuth = (await NotificationsListener.checkPermissions()) as any;
-      if (notifAuth && notifAuth.display === 'granted') setNotificationGranted(true);
+      const isListeningResult = await NotificationsListener.isListening();
+      setNotificationGranted(isListeningResult.value);
     } catch (e) { console.error('Notification permission check failed', e); }
   };
 
@@ -284,236 +284,223 @@ const NotificationPreferences = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-muted rounded w-1/2"></div>
-            <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-20 bg-muted rounded-lg"></div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="animate-pulse space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-16 bg-muted/50 rounded-2xl"></div>
+        ))}
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-b from-card to-card/50">
-        <CardHeader className="bg-primary/5 pb-8">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 rounded-lg bg-primary/20 text-primary">
-              <Bell className="h-6 w-6" />
-            </div>
-            Smart Notifications
-          </CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Focus on what matters. We've simplified notifications to keep you informed without the noise.
-          </p>
-        </CardHeader>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <Label className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground">Smart Alert Channels</Label>
+          <Badge variant="outline" className="text-[10px] font-bold border-primary/20 text-primary">AI Configured</Badge>
+        </div>
 
-        <CardContent className="p-6">
-          <div className="grid gap-4">
-            {Object.entries(CATEGORY_MAPPING).map(([key, config]) => {
-              const Icon = config.icon;
-              // Category is "enabled" if at least one of its primary fields is enabled
-              const isEnabled = preferences?.[config.fields[0]] ?? false;
-              const preferredTime = getPreferredTimeForCategory(preferences, key);
+        <div className="space-y-3">
+          {Object.entries(CATEGORY_MAPPING).map(([key, config]) => {
+            const Icon = config.icon;
+            const isEnabled = preferences?.[config.fields[0]] ?? false;
+            const preferredTime = getPreferredTimeForCategory(preferences, key);
 
-              return (
-                <div
-                  key={key}
-                  className={cn(
-                    "group relative flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg transition-all duration-300 border",
-                    isEnabled ? "bg-primary/5 border-primary/20" : "bg-card border-border/50 hover:border-border"
-                  )}
-                >
+            return (
+              <div
+                key={key}
+                className={cn(
+                  "relative flex flex-col gap-3 p-4 rounded-2xl transition-all duration-300 border backdrop-blur-sm",
+                  isEnabled
+                    ? "bg-primary/5 border-primary/20 shadow-lg shadow-primary/5"
+                    : "bg-background/40 border-border/50"
+                )}
+              >
+                <div className="flex items-center gap-4">
                   <div className={cn(
-                    "p-3 rounded-lg transition-colors",
-                    isEnabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                    "p-2.5 rounded-xl transition-colors duration-300",
+                    isEnabled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   )}>
-                    <Icon className="h-6 w-6" />
+                    <Icon className="h-5 w-5" />
                   </div>
 
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Label className="text-base font-bold cursor-pointer">{config.label}</Label>
-                      {isEnabled && <Badge variant="secondary" className="text-[10px] h-4 uppercase tracking-wider font-bold">Active</Badge>}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-snug">
+                  <div className="flex-1 space-y-0.5 min-w-0">
+                    <Label className="text-sm font-bold block truncate">{config.label}</Label>
+                    <p className="text-[11px] text-muted-foreground leading-tight">
                       {config.description}
                     </p>
-
-                    {/* Time Picker for supported categories */}
-                    {config.hasTime && isEnabled && (
-                      <div className="flex items-center gap-2 mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <Label htmlFor={`time-${key}`} className="text-xs font-medium text-muted-foreground">
-                          Preferred Time:
-                        </Label>
-                        <div className="relative">
-                          <input
-                            id={`time-${key}`}
-                            type="time"
-                            value={preferredTime}
-                            onChange={(e) => updatePreferredTime(key, e.target.value)}
-                            className="bg-background border border-input rounded-md px-2 py-1 text-xs h-7 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            disabled={saving}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                    <div className="flex-1 sm:flex-initial flex justify-end">
-                      <Switch
-                        checked={isEnabled}
-                        onCheckedChange={(checked) => toggleCategory(key, checked)}
-                        disabled={saving}
-                      />
-                    </div>
-                  </div>
+                  <Switch
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => toggleCategory(key, checked)}
+                    disabled={saving}
+                    className="data-[state=on]:bg-primary"
+                  />
                 </div>
-              );
-            })}
+
+                {config.hasTime && isEnabled && (
+                  <div className="flex items-center justify-between pt-3 border-t border-primary/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <Label htmlFor={`time-${key}`} className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" /> Scheduled for
+                    </Label>
+                    <input
+                      id={`time-${key}`}
+                      type="time"
+                      value={preferredTime}
+                      onChange={(e) => updatePreferredTime(key, e.target.value)}
+                      className="bg-primary/10 border-none rounded-lg px-3 py-1 text-xs font-bold text-primary focus:ring-0 w-24 h-8"
+                      disabled={saving}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <Label className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground px-1">Device Integration</Label>
+
+        <div className="grid gap-3">
+          <div className="group flex items-center gap-4 p-4 rounded-2xl bg-background/40 border border-border/50 hover:bg-muted/30 transition-all duration-300">
+            <div className="p-2.5 rounded-xl bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+              <Bell className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-xs font-bold">Standard Alerts</div>
+              <div className="text-[10px] text-muted-foreground">Test browser push notifications</div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full text-[10px] font-bold h-7 px-4"
+              onClick={testGlobalNotification}
+            >
+              Test
+            </Button>
           </div>
 
-          <div className="mt-8 p-6 rounded-lg bg-muted/30 border border-dashed border-border flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            <div className="p-3 rounded-lg bg-background shadow-sm border border-border/50">
-              <Smartphone className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <h4 className="text-sm font-bold">Ready for Device Alerts?</h4>
-              <p className="text-xs text-muted-foreground">
-                Make sure you've granted browser permission to receive these notifications on your device.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className={cn(
+            "group flex flex-col gap-4 p-4 rounded-2xl border transition-all duration-300",
+            isPushActive ? "bg-green-500/5 border-green-500/20" : "bg-background/40 border-border/50"
+          )}>
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "p-2.5 rounded-xl transition-colors",
+                isPushActive ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
+              )}>
+                <Smartphone className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs font-bold">Background Sync</div>
+                <div className="text-[10px] text-muted-foreground">Required for intelligent updates</div>
+              </div>
               <Button
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-                onClick={testGlobalNotification}
-              >
-                Test Alerts
-              </Button>
-              <Button
-                variant="default"
+                variant={isPushActive ? "ghost" : "default"}
                 size="sm"
                 className={cn(
-                  "w-full sm:w-auto rounded-lg shadow-lg",
-                  isPushActive ? "bg-green-600 hover:bg-green-700 shadow-green-900/20" : "shadow-primary/20"
+                  "rounded-full text-[10px] font-bold h-7 px-4",
+                  isPushActive ? "text-green-600 hover:bg-green-100/50" : ""
                 )}
                 onClick={async () => {
+                  if (isPushActive) return;
                   setSaving(true);
                   try {
                     const success = await notificationService.subscribeToPush();
-                    if (success) {
-                      setIsPushActive(true);
-                      toast({
-                        title: "Push Alerts Active",
-                        description: "You'll now receive background alerts even when the app is closed.",
-                      });
-                    } else {
-                      toast({
-                        title: "Setup Failed",
-                        description: "Could not enable push notifications. Check browser permissions.",
-                        variant: "destructive"
-                      });
-                    }
-                  } catch (err) {
-                    console.error('Push setup error:', err);
-                  } finally {
-                    setSaving(false);
-                  }
+                    if (success) setIsPushActive(true);
+                  } finally { setSaving(false); }
                 }}
               >
-                {isPushActive ? "Alerts Active ✅" : "Enable Device Alerts"}
+                {isPushActive ? "Active ✅" : "Enable"}
               </Button>
             </div>
           </div>
+        </div>
+      </div>
 
-          {isAndroidDevice && (
-            <div className="mt-6 p-6 rounded-lg bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-              <div className="p-3 rounded-lg bg-background shadow-sm border border-border/50">
-                <Smartphone className="h-6 w-6 text-primary" />
+      {isAndroidDevice && (
+        <div className="space-y-4">
+          <Label className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground px-1">Native Tracking (Android)</Label>
+
+          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-bold">Automatic Ledger</h4>
+                <p className="text-[10px] text-muted-foreground leading-snug">Extract data from bank SMS and app alerts</p>
               </div>
-              <div className="flex-1 space-y-1">
-                <h4 className="text-sm font-bold">Auto-Track Bank Transactions</h4>
-                <p className="text-xs text-muted-foreground">
-                  Read SMS and Bank App notifications to automatically log transactions. Android only.
-                </p>
-              </div>
-              <div className="flex items-center justify-center sm:justify-end gap-2 w-full sm:w-auto flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn("w-full sm:w-auto", smsGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
-                  onClick={async () => {
-                    try {
-                      if (!isAndroidDevice) {
-                        toast({ title: "Android Only", description: "SMS tracking is only supported on Android devices.", variant: "destructive" });
-                        return;
-                      }
-
-                      if (!Capacitor.isNativePlatform()) {
-                        toast({ title: "Native App Required", description: "Auto-tracking requires background capabilities. Please install the Android app to enable this.", variant: "destructive" });
-                        return;
-                      }
-
-                      const res = await MessageReader.requestPermissions();
-                      if (res.sms === 'granted') {
-                        setSmsGranted(true);
-                        toast({ title: "SMS Access Granted", description: "expendX will auto-track bank SMS messages based on specific formats." });
-                      } else {
-                        toast({ title: "Permission Denied", description: "Please allow SMS permissions in your device settings.", variant: "destructive" });
-                      }
-                    } catch (e) {
-                      console.error(e);
-                      toast({ title: "Error", description: "Failed to request SMS tracking permissions.", variant: "destructive" });
-                    }
-                  }}
-                >
-                  {smsGranted ? "SMS Active ✅" : "Track SMS"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn("w-full sm:w-auto", notificationGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
-                  onClick={async () => {
-                    try {
-                      if (!isAndroidDevice) {
-                        toast({ title: "Android Only", description: "App Alert tracking is only supported on Android devices.", variant: "destructive" });
-                        return;
-                      }
-
-                      if (!Capacitor.isNativePlatform()) {
-                        toast({ title: "Native App Required", description: "Auto-tracking requires background capabilities. Please install the Android app to enable this.", variant: "destructive" });
-                        return;
-                      }
-
-                      const notifAuth = (await NotificationsListener.requestPermission()) as any;
-                      if (notifAuth && notifAuth.display === 'granted') {
-                        setNotificationGranted(true);
-                        toast({ title: "Notification Access Granted", description: "expendX will auto-track bank push alerts based on specific formats." });
-                      } else {
-                        toast({ title: "Permission Denied", description: "Please allow Notification Access in your device settings.", variant: "destructive" });
-                      }
-                    } catch (e) {
-                      console.error(e);
-                      toast({ title: "Error", description: "Failed to request App Alert tracking permissions.", variant: "destructive" });
-                    }
-                  }}
-                >
-                  {notificationGranted ? "App Alerts Active ✅" : "Track App Alerts"}
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 rounded-full hover:bg-primary/10"
+                onClick={checkAndroidPermissions}
+              >
+                <TrendingUp className="h-4 w-4 text-primary" />
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "rounded-xl text-[10px] font-bold h-10 border-none transition-all",
+                  smsGranted ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-background/80"
+                )}
+                onClick={async () => {
+                  if (!Capacitor.isNativePlatform()) {
+                    toast({ title: "Native App Required", variant: "destructive" });
+                    return;
+                  }
+                  const res = await MessageReader.requestPermissions();
+                  if (res.messages === 'granted') setSmsGranted(true);
+                }}
+              >
+                {smsGranted ? "SMS Active" : "Track SMS"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "rounded-xl text-[10px] font-bold h-10 border-none transition-all",
+                  notificationGranted ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-background/80"
+                )}
+                onClick={async () => {
+                  if (!Capacitor.isNativePlatform()) {
+                    toast({ title: "Native App Required", variant: "destructive" });
+                    return;
+                  }
+                  await NotificationsListener.requestPermission();
+                  toast({ title: "Action Required", description: "Enable Expendx in the list." });
+                }}
+              >
+                {notificationGranted ? "Apps Active" : "Track Alerts"}
+              </Button>
+            </div>
+
+            {!notificationGranted && (
+              <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 space-y-2 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2 text-orange-600">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span className="text-[10px] font-bold uppercase tracking-tight">Security Bypass Required</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-tight">
+                  Android 13+ may block "Notification Access". Tap below, then tap the three dots (⋮) and "Allow restricted settings".
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full text-[10px] font-bold h-8 rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 border-none shadow-none"
+                  onClick={() => App.openAppSettings()}
+                >
+                  Unlock Restricted Settings
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
