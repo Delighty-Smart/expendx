@@ -11,8 +11,10 @@ export const useAutoTracker = (userId: string | undefined) => {
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        // Only run on native Android
-        if (Capacitor.getPlatform() !== 'android' || !userId) return;
+        if (!userId) return;
+
+        const isAndroidDevice = Capacitor.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
+        if (!isAndroidDevice) return;
 
         const setupListeners = async () => {
             try {

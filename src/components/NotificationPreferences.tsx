@@ -59,6 +59,9 @@ const NotificationPreferences = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPushActive, setIsPushActive] = useState(false);
+
+  const isAndroidDevice = Capacitor.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
+
   const [smsGranted, setSmsGranted] = useState(false);
   const [notificationGranted, setNotificationGranted] = useState(false);
   const { toast } = useToast();
@@ -67,7 +70,7 @@ const NotificationPreferences = () => {
     fetchPreferences();
     checkPushStatus();
 
-    if (Capacitor.getPlatform() === 'android') {
+    if (isAndroidDevice) {
       checkAndroidPermissions();
     }
   }, []);
@@ -432,7 +435,7 @@ const NotificationPreferences = () => {
             </div>
           </div>
 
-          {(Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'web') && (
+          {isAndroidDevice && (
             <div className="mt-6 p-6 rounded-lg bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
               <div className="p-3 rounded-lg bg-background shadow-sm border border-border/50">
                 <Smartphone className="h-6 w-6 text-primary" />
@@ -450,7 +453,7 @@ const NotificationPreferences = () => {
                   className={cn("w-full sm:w-auto", smsGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
                   onClick={async () => {
                     try {
-                      if (Capacitor.getPlatform() !== 'android') {
+                      if (!isAndroidDevice) {
                         toast({ title: "Android Only", description: "SMS tracking is only supported on Android devices.", variant: "destructive" });
                         return;
                       }
@@ -476,7 +479,7 @@ const NotificationPreferences = () => {
                   className={cn("w-full sm:w-auto", notificationGranted ? "bg-green-600/10 text-green-600 border-green-600/30" : "")}
                   onClick={async () => {
                     try {
-                      if (Capacitor.getPlatform() !== 'android') {
+                      if (!isAndroidDevice) {
                         toast({ title: "Android Only", description: "App Alert tracking is only supported on Android devices.", variant: "destructive" });
                         return;
                       }
