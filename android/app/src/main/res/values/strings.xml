@@ -4,4 +4,13 @@
     <string name="title_activity_main">Expendx</string>
     <string name="package_name">com.expendx.app</string>
     <string name="custom_url_scheme">com.expendx.app</string>
+
+    <!-- App Shortcut labels -->
+    <string name="shortcut_add_transaction_short">Add</string>
+    <string name="shortcut_add_transaction_long">Add Transaction</string>
+    <string name="shortcut_alerts_short">Alerts</string>
+    <string name="shortcut_alerts_long">View Alerts</string>
+    <string name="shortcut_receipt_short">Scan Receipt</string>
+    <string name="shortcut_receipt_long">Scan a Receipt</string>
 </resources>
+

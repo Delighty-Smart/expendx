@@ -861,3 +861,33 @@
     }
   }
 }
+
+/* ─── GPU Scroll Performance ─────────────────────────────────────────────────
+   Promotes scrollable lists and their immediate card children to their own
+   GPU compositor layers, which eliminates paint operations during scroll and
+   reduces jank on mid-range Android phones.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  /* Transaction list items, budget cards, savings cards */
+  .transaction-list-item,
+  .budget-card,
+  .savings-card,
+  .list-card {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Scrollable containers that hold these lists */
+  .list-scroll-container {
+    will-change: scroll-position;
+    -webkit-overflow-scrolling: touch;
+    contain: layout style;
+  }
+
+  /* Bottom nav bar — always on its own layer to avoid repaints */
+  nav[class*="fixed bottom-0"] {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}

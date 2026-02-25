@@ -7,8 +7,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User } from "lucide-react";
+import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { CategoryManagement } from "@/components/CategoryManagement";
@@ -23,6 +24,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import "../components/ui/smoothScroll.css";
 import DeleteAccountSection from "@/components/DeleteAccountSection";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
+import { useBiometricLock } from "@/hooks/useBiometricLock";
 
 const Settings = () => {
   const {
@@ -32,29 +35,28 @@ const Settings = () => {
     updateTheme
   } = useSettings();
   const { user } = useAuth();
-
-
   const { toast } = useToast();
   const { refreshData } = useRefresh();
+  const { isBiometricEnabled, setBiometricEnabled, checkBiometricAvailability } = useBiometricLock();
 
   const [search, setSearch] = useState("");
   const [openSection, setOpenSection] = useState<string>("");
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricOn, setBiometricOn] = useState(isBiometricEnabled());
   const isMobile = useIsMobile();
 
 
   // Auto-save search state to localStorage
   useEffect(() => {
     const savedSearch = localStorage.getItem('settings_currency_search');
-    if (savedSearch) {
-      setSearch(savedSearch);
-    }
+    if (savedSearch) setSearch(savedSearch);
 
-
-
-    // Load last opened section
     const savedSection = localStorage.getItem('settings_open_section');
-    if (savedSection) {
-      setOpenSection(savedSection);
+    if (savedSection) setOpenSection(savedSection);
+
+    // Check biometric hardware availability on native
+    if (Capacitor.isNativePlatform()) {
+      checkBiometricAvailability().then(setBiometricAvailable);
     }
   }, []);
 
@@ -104,6 +106,15 @@ const Settings = () => {
   };
 
 
+  const handleBiometricToggle = (checked: boolean) => {
+    setBiometricEnabled(checked);
+    setBiometricOn(checked);
+    toast({
+      title: checked ? 'Biometric lock enabled' : 'Biometric lock disabled',
+      description: checked ? 'The app will prompt fingerprint/face on resume.' : 'The app will open without biometric check.',
+    });
+  };
+
   return (
     <PullToRefresh onRefresh={refreshData} containerClassName="h-full min-h-[calc(100vh-100px)]">
       <div className="space-y-6 pb-24 min-h-full">
@@ -129,6 +140,7 @@ const Settings = () => {
             { id: "archive", label: "Data Archive", sub: "Review your history", icon: Archive },
             { id: "offline", label: "Storage & Performance", sub: "Offline data and caching", icon: HardDrive },
             { id: "data-export", label: "Security & Export", sub: "Backup your records", icon: Download },
+            ...(Capacitor.isNativePlatform() ? [{ id: "biometric", label: "Biometric Lock", sub: "Fingerprint or face unlock", icon: Fingerprint }] : []),
             { id: "delete-account", label: "Account Privacy", sub: "Manage account and data", icon: Trash2, destructive: true },
           ].map((item) => {
             const Icon = item.icon;
@@ -237,6 +249,32 @@ const Settings = () => {
                       {item.id === "offline" && <DebugSection />}
                       {item.id === "data-export" && <DataExportSection />}
                       {item.id === "delete-account" && <DeleteAccountSection />}
+                      {item.id === "biometric" && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Lock the app with fingerprint or face recognition when you return from the background.
+                          </p>
+                          {biometricAvailable ? (
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-border/40">
+                              <div className="flex items-center gap-3">
+                                <Fingerprint className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                                <div>
+                                  <p className="text-sm font-semibold">Biometric Lock</p>
+                                  <p className="text-xs text-muted-foreground">{biometricOn ? 'Active — prompts on resume' : 'Disabled'}</p>
+                                </div>
+                              </div>
+                              <Switch
+                                checked={biometricOn}
+                                onCheckedChange={handleBiometricToggle}
+                              />
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground bg-muted/40 rounded-xl p-3">
+                              ⚠️ Biometric authentication is not available on this device.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

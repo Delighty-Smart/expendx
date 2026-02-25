@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--  Android App Shortcuts — long-press the app icon to see quick actions -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Shortcut 1: Add Transaction -->
+    <shortcut
+        android:shortcutId="add_transaction"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_add_transaction_short"
+        android:shortcutLongLabel="@string/shortcut_add_transaction_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.expendx.app"
+            android:targetClass="com.expendx.app.MainActivity"
+            android:data="expendx://add-transaction" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <!-- Shortcut 2: View Alerts -->
+    <shortcut
+        android:shortcutId="view_alerts"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_bell"
+        android:shortcutShortLabel="@string/shortcut_alerts_short"
+        android:shortcutLongLabel="@string/shortcut_alerts_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.expendx.app"
+            android:targetClass="com.expendx.app.MainActivity"
+            android:data="expendx://alerts" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+    <!-- Shortcut 3: Scan Receipt -->
+    <shortcut
+        android:shortcutId="scan_receipt"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_camera"
+        android:shortcutShortLabel="@string/shortcut_receipt_short"
+        android:shortcutLongLabel="@string/shortcut_receipt_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.expendx.app"
+            android:targetClass="com.expendx.app.MainActivity"
+            android:data="expendx://process-receipt" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+
+</shortcuts>

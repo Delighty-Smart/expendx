@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Monochrome launcher icon for Android 13+ themed icons.
+    This is a simple stylized "X" with a coin silhouette representing expendX.
+    Used by the system to tint the icon to match the user's wallpaper color.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54m-46,0a46,46 0,1 1,92 0a46,46 0,1 1,-92 0" />
+
+    <!-- Stylized X mark representing "expend" -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M34,30 L44,30 L54,44 L64,30 L74,30 L59,52 L74,74 L64,74 L54,60 L44,74 L34,74 L49,52 Z" />
+
+    <!-- Coin accent at bottom-right indicating finance -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M68,58m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,58m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M66,55 L70,55 L70,57 L72,57 L72,59 L70,59 L70,61 L66,61 L66,59 L64,59 L64,57 L66,57 Z" />
+</vector>

@@ -43,6 +43,7 @@ import { enhancedOfflineManager } from './services/enhancedOfflineManager';
 import Layout from '@/components/Layout'
 
 import { useAutoTracker } from './hooks/useAutoTracker';
+import { useBiometricLock } from './hooks/useBiometricLock';
 
 function AppContent() {
   const [userId, setUserId] = useState<string | undefined>();
@@ -71,6 +72,7 @@ function AppContent() {
   }, []);
 
   useAutoTracker(userId);
+  useBiometricLock(); // Prompts biometric on app resume if user has enabled it
 
   useEffect(() => {
     // Fix for mobile viewport height (100vh issue)
