@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Capacitor } from '@capacitor/core';
 import Tesseract from 'tesseract.js';
+import { cn } from "@/lib/utils";
 
 interface ReceiptData {
     amount: number;

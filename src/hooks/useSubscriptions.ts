@@ -90,6 +90,8 @@ export function useSubscriptions() {
 
       if (error) throw error;
 
+      await fetchSubscriptions();
+
       toast({
         title: "Success",
         description: "Subscription added successfully"
@@ -114,6 +116,8 @@ export function useSubscriptions() {
 
       if (error) throw error;
 
+      await fetchSubscriptions();
+
       toast({
         title: "Success",
         description: "Subscription updated successfully"
@@ -137,6 +141,8 @@ export function useSubscriptions() {
         .eq('id', id);
 
       if (error) throw error;
+
+      await fetchSubscriptions();
 
       toast({
         title: "Success",

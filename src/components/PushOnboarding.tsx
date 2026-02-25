@@ -24,7 +24,11 @@ const PushOnboarding = () => {
 
             // If permissions are already granted (e.g., Android 12 and below), just register seamlessly and return
             if (permStatus.receive === 'granted') {
-                PushNotifications.register();
+                try {
+                    await PushNotifications.register();
+                } catch (e) {
+                    console.error("Auto registration error:", e);
+                }
                 return;
             }
 
@@ -42,9 +46,13 @@ const PushOnboarding = () => {
         setIsOpen(false);
 
         if (Capacitor.isNativePlatform()) {
-            const result = await PushNotifications.requestPermissions();
-            if (result.receive === 'granted') {
-                PushNotifications.register();
+            try {
+                const result = await PushNotifications.requestPermissions();
+                if (result.receive === 'granted') {
+                    await PushNotifications.register();
+                }
+            } catch (e) {
+                console.error("Push permission error:", e);
             }
         }
     };

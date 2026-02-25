@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NotificationPreference {
   id: string;
@@ -58,6 +59,7 @@ const NotificationPreferences = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isPushActive, setIsPushActive] = useState(false);
+  const { user } = useAuth();
 
   const isAndroidDevice = Capacitor.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
   const { toast } = useToast();
@@ -74,7 +76,6 @@ const NotificationPreferences = () => {
 
   const fetchPreferences = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -151,7 +152,6 @@ const NotificationPreferences = () => {
       if (error) throw error;
       const updatedPrefs = { ...preferences, preferred_time: jsonString };
       setPreferences(updatedPrefs);
-      const { data: { user } } = await supabase.auth.getUser();
       if (user) scheduleAllNotifications(user.id, updatedPrefs);
       toast({ title: "Time updated", description: `Notification time updated to ${newTime}.` });
     } catch (error) {
@@ -184,7 +184,6 @@ const NotificationPreferences = () => {
       if (error) throw error;
       const updatedPrefs = { ...preferences, ...fieldsToUpdate };
       setPreferences(updatedPrefs);
-      const { data: { user } } = await supabase.auth.getUser();
       if (user) scheduleAllNotifications(user.id, updatedPrefs);
       toast({ title: "Preferences updated", description: `${categoryData.label} ${enabled ? 'enabled' : 'disabled'}.` });
     } finally { setSaving(false); }

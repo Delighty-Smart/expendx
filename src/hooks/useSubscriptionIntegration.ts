@@ -23,53 +23,61 @@ export function useSubscriptionIntegration() {
     setSubscriptionOptions(options);
   }, [subscriptions]);
 
-  const updateSubscriptionStatus = async (subscriptionId: string, amount: number) => {
-    console.log('updateSubscriptionStatus called with:', { subscriptionId, amount });
+  const upsertSubscriptionFromTransaction = async (data: {
+    subscriptionId?: string;
+    amount: number;
+    service_provider: string;
+    card_type: string;
+    last_four_digits: string;
+    subscription_type: 'monthly' | 'annual';
+  }) => {
     try {
-      const subscription = subscriptions.find(sub => sub.id === subscriptionId);
-      if (!subscription) {
-        console.error('Subscription not found:', subscriptionId);
-        return;
-      }
-
-      console.log('Found subscription:', subscription);
-
-      // Calculate next billing date
       const today = new Date();
-      const nextBillingDate = subscription.subscription_type === 'monthly'
+      const nextBillingDate = data.subscription_type === 'monthly'
         ? addDays(today, 30)
         : addYears(today, 1);
 
-      console.log('Updating subscription with:', {
-        status: 'active',
+      const payload = {
+        service_provider: data.service_provider,
+        card_type: data.card_type,
+        last_four_digits: data.last_four_digits,
+        subscription_type: data.subscription_type,
+        amount: data.amount,
+        status: 'active' as const,
         last_transaction_date: today.toISOString().split('T')[0],
         next_billing_date: nextBillingDate.toISOString().split('T')[0]
-      });
+      };
 
-      // Update subscription to active status
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
-          status: 'active',
-          last_transaction_date: today.toISOString().split('T')[0],
-          next_billing_date: nextBillingDate.toISOString().split('T')[0]
-        })
-        .eq('id', subscriptionId);
+      if (data.subscriptionId) {
+        // Update existing subscription
+        const { error } = await supabase
+          .from('subscriptions')
+          .update(payload)
+          .eq('id', data.subscriptionId);
 
-      if (error) {
-        console.error('Database error updating subscription:', error);
-        throw error;
+        if (error) throw error;
+      } else {
+        // Need user_id for insert
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
+        const { error } = await supabase
+          .from('subscriptions')
+          .insert({
+            ...payload,
+            user_id: user.id
+          });
+
+        if (error) throw error;
       }
-
-      console.log('Subscription status updated successfully:', subscriptionId);
     } catch (error) {
-      console.error('Error updating subscription status:', error);
+      console.error('Error upserting subscription from transaction:', error);
       throw error;
     }
   };
 
   return {
     subscriptionOptions,
-    updateSubscriptionStatus
+    upsertSubscriptionFromTransaction
   };
 }

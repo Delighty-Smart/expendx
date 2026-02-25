@@ -15,6 +15,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
+import { SERVICE_PROVIDERS, CARD_TYPES, SUBSCRIPTION_TYPES } from "@/types/subscriptions";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
@@ -31,7 +32,24 @@ const transactionSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   type: z.enum(["credit", "debit", "savings"] as const),
   category: z.string().min(1, "Category is required"),
-  description: z.string().min(1, "Description is required")
+  description: z.string().min(1, "Description is required"),
+
+  // Subscription specific fields (optional)
+  service_provider: z.string().optional(),
+  custom_provider: z.string().optional(),
+  card_type: z.string().optional(),
+  last_four_digits: z.string().optional(),
+  subscription_type: z.enum(['monthly', 'annual']).optional(),
+}).refine(data => {
+  if (data.category === 'Subscriptions') {
+    if (!data.service_provider) return false;
+    if (data.service_provider === 'Other' && !data.custom_provider) return false;
+    if (!data.card_type || !data.last_four_digits || !data.subscription_type) return false;
+  }
+  return true;
+}, {
+  message: "All subscription fields are required",
+  path: ["category"] // Or global, depending on where we want to show it
 });
 
 interface TransactionFormProps {
@@ -52,7 +70,7 @@ export const TransactionForm = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<string>("");
-  const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
+  const { subscriptionOptions, upsertSubscriptionFromTransaction } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { getTransactionSyncStatus } = useEnhancedOfflineSync();
@@ -64,7 +82,12 @@ export const TransactionForm = ({
       amount: transaction?.amount.toString() || "",
       type: transaction?.type || "debit",
       category: transaction?.category || "",
-      description: transaction?.description || ""
+      description: transaction?.description || "",
+      service_provider: "",
+      custom_provider: "",
+      card_type: "",
+      last_four_digits: "",
+      subscription_type: "monthly"
     }
   });
 
@@ -138,7 +161,12 @@ export const TransactionForm = ({
           amount: "",
           type: "debit",
           category: "",
-          description: ""
+          description: "",
+          service_provider: "",
+          custom_provider: "",
+          card_type: "",
+          last_four_digits: "",
+          subscription_type: "monthly"
         });
         setTransactionType("debit");
         loadCategories("debit");
@@ -201,9 +229,18 @@ export const TransactionForm = ({
 
       console.log("Saving transaction with enhanced offline support:", transactionData);
 
-      // If this is a subscription transaction, update the subscription status
-      if (selectedSubscription && values.category === 'Subscriptions') {
-        await updateSubscriptionStatus(selectedSubscription, transactionData.amount);
+      // If this is a subscription transaction, update or link the subscription
+      if (values.category === 'Subscriptions') {
+        const finalProvider = values.service_provider === 'Other' ? values.custom_provider! : values.service_provider!;
+
+        await upsertSubscriptionFromTransaction({
+          subscriptionId: selectedSubscription || undefined,
+          amount: parseFloat(values.amount),
+          service_provider: finalProvider,
+          card_type: values.card_type!,
+          last_four_digits: values.last_four_digits!,
+          subscription_type: values.subscription_type!
+        });
       }
 
       if (transaction) {
@@ -392,25 +429,179 @@ export const TransactionForm = ({
               }}
             />
 
-            {form.watch('category') === 'Subscriptions' && subscriptionOptions.length > 0 && (
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold tracking-tight">Select Subscription</Label>
-                <Select
-                  value={selectedSubscription}
-                  onValueChange={setSelectedSubscription}
-                  disabled={loading}
-                >
-                  <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
-                    <SelectValue placeholder="Choose a subscription" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subscriptionOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {form.watch('category') === 'Subscriptions' && (
+              <div className="space-y-4 pt-2 border-t border-muted/20">
+                {subscriptionOptions.length > 0 && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold tracking-tight text-primary">Link to Existing Subscription (Optional)</Label>
+                    <Select
+                      value={selectedSubscription}
+                      onValueChange={(val) => {
+                        setSelectedSubscription(val);
+                        // Auto-fill details if an existing subscription is selected
+                        const existing = subscriptionOptions.find(opt => opt.id === val)?.subscription;
+                        if (existing) {
+                          form.setValue('amount', existing.amount.toString());
+
+                          // Check if it's a known provider or "Other"
+                          const isKnownProvider = SERVICE_PROVIDERS.includes(existing.service_provider);
+                          if (isKnownProvider) {
+                            form.setValue('service_provider', existing.service_provider);
+                            form.setValue('custom_provider', '');
+                          } else {
+                            form.setValue('service_provider', 'Other');
+                            form.setValue('custom_provider', existing.service_provider);
+                          }
+
+                          form.setValue('card_type', existing.card_type);
+                          form.setValue('last_four_digits', existing.last_four_digits);
+                          form.setValue('subscription_type', existing.subscription_type);
+                        }
+                      }}
+                      disabled={loading}
+                    >
+                      <SelectTrigger className="h-11 bg-primary/5 border border-primary/10 rounded-xl font-medium">
+                        <SelectValue placeholder="Choose a subscription to update" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subscriptionOptions.map((option) => (
+                          <SelectItem key={option.id} value={option.id}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="service_provider"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Provider</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
+                          <FormControl>
+                            <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
+                              <SelectValue placeholder="Select provider" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SERVICE_PROVIDERS.map(p => (
+                              <SelectItem key={p} value={p}>{p}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch('service_provider') === 'Other' && (
+                    <FormField
+                      control={form.control}
+                      name="custom_provider"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Custom Provider Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. ChatGPT Plus" {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} value={field.value || ''} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {form.watch('service_provider') !== 'Other' && (
+                    <FormField
+                      control={form.control}
+                      name="subscription_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Billing Cycle</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
+                            <FormControl>
+                              <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
+                                <SelectValue placeholder="Cycle" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {SUBSCRIPTION_TYPES.map(t => (
+                                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+
+                {form.watch('service_provider') === 'Other' && (
+                  <FormField
+                    control={form.control}
+                    name="subscription_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Billing Cycle</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
+                          <FormControl>
+                            <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
+                              <SelectValue placeholder="Cycle" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SUBSCRIPTION_TYPES.map(t => (
+                              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="card_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Method</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
+                          <FormControl>
+                            <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
+                              <SelectValue placeholder="Card type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {CARD_TYPES.map(t => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="last_four_digits"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last 4 Digits</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1234" maxLength={4} {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             )}
 

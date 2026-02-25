@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 import { createPortal } from "react-dom";
 
@@ -71,7 +71,7 @@ const IndexPage = () => {
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [fullscreenChartId, setFullscreenChartId] = useState<string | null>(null);
 
-  const [unreadAlerts, setUnreadAlerts] = useState(0);
+
 
 
   const today = new Date();
@@ -79,30 +79,26 @@ const IndexPage = () => {
   const lastDayOfMonth = format(endOfMonth(today), 'yyyy-MM-dd');
 
 
-  // Fetch unread alerts
-  useEffect(() => {
-    const fetchUnreadAlerts = async () => {
-      if (!user) return;
-      try {
-        const { data, error } = await supabase
-          .from('alerts')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('read', false);
-
-        if (error) throw error;
-        setUnreadAlerts(data?.length || 0);
-      } catch (error) {
-        console.error('Error fetching unread alerts:', error);
-      }
-    };
-
-    fetchUnreadAlerts();
-  }, [user]);
+  // Fetch unread alerts via useQuery for proper caching + deduplication
+  const { data: unreadAlertsData } = useQuery({
+    queryKey: ['unread_alerts', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('alerts')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('read', false);
+      if (error) throw error;
+      return data?.length || 0;
+    },
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+  const unreadAlerts = unreadAlertsData ?? 0;
 
 
-  // Utility function for formatting amounts with commas
-  const formatAmount = (amount: number) => {
+  // Memoized formatter — only recreated when hideAmounts changes
+  const formatAmount = useCallback((amount: number) => {
     if (hideAmounts) {
       return "***";
     }
@@ -110,21 +106,22 @@ const IndexPage = () => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-  };
+  }, [hideAmounts]);
 
-  const getGreeting = () => {
+  // Memoized greeting — computed once per mount (changes only ~3×/day)
+  const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
     return "Good evening";
-  };
+  }, []);
 
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
     queryKey: ["monthly_income", user?.id],
     enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes — income estimates rarely change mid-session
     queryFn: async () => {
-      console.log("Fetching monthly income estimate...");
       const { data, error } = await supabase
         .from("monthly_income_estimates")
         .select("*")
@@ -142,8 +139,8 @@ const IndexPage = () => {
   const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
     queryKey: ["user_streak", user?.id],
     enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes — streak data doesn't change every second
     queryFn: async () => {
-      console.log("Fetching user streak...");
       const { data, error } = await supabase
         .from("user_streaks")
         .select("*")
@@ -201,47 +198,40 @@ const IndexPage = () => {
 
   const transactions = transactionsData || [];
 
-  // Monthly totals calculated from the current filtered transactionsData
-  const monthlyIncomeTotal = transactions
-    .filter((t) => t.type === "credit")
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Memoized monthly totals — only recalculated when transactions changes
+  const { monthlyIncomeTotal, monthlyExpenses, monthlySavings } = useMemo(() => ({
+    monthlyIncomeTotal: transactions
+      .filter((t) => t.type === "credit")
+      .reduce((sum, t) => sum + t.amount, 0),
+    monthlyExpenses: transactions
+      .filter((t) => t.type === "debit")
+      .reduce((sum, t) => sum + t.amount, 0),
+    monthlySavings: transactions
+      .filter((t) => t.type === "savings")
+      .reduce((sum, t) => sum + t.amount, 0),
+  }), [transactions]);
 
-  const monthlyExpenses = transactions
-    .filter((t) => t.type === "debit")
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Memoized spending data for charts
+  const spendingData = useMemo(() => {
+    const byCategory = transactions
+      .filter((t) => t.type === "debit")
+      .reduce((acc, t) => {
+        acc[t.category] = (acc[t.category] || 0) + t.amount;
+        return acc;
+      }, {} as Record<string, number>);
 
-  const monthlySavings = transactions
-    .filter((t) => t.type === "savings")
-    .reduce((sum, t) => sum + t.amount, 0);
+    return Object.entries(byCategory)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [transactions]);
 
-  const progressPercentage = monthlyIncome > 0
-    ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
-    : 0;
-
-  // Spending by category calculation - only unarchived transactions
-  const spendingByCategory = transactions
-    ?.filter((t) => t.type === "debit")
-    .reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-  const spendingData = Object.entries(spendingByCategory || {})
-    .map(([name, amount]) => ({
-      name,
-      amount,
-    }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 5);
-
-  // Daily spending data - only unarchived transactions
-  const getDailySpendingData = () => {
+  // Memoized daily spending data — recalculates only when transactions or week changes
+  const dailyData = useMemo(() => {
     if (!transactions?.length) return [];
 
     const startDate = currentWeekStart;
     const endDate = addWeeks(startDate, 1);
-
-
     const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     return days.map(day => {
@@ -255,7 +245,6 @@ const IndexPage = () => {
         .filter(t => t.type === 'debit' && t.date.startsWith(dayStr))
         .reduce((sum, t) => sum + t.amount, 0);
 
-
       return {
         date: format(day, 'dd'),
         fullDate: format(day, 'MMM dd'),
@@ -263,7 +252,7 @@ const IndexPage = () => {
         expense: dayExpenses
       };
     });
-  };
+  }, [transactions, currentWeekStart]);
 
   const scrollToPreviousWeek = () => {
     setCurrentWeekStart(prevDate => subWeeks(prevDate, 1));
@@ -276,23 +265,18 @@ const IndexPage = () => {
     }
   };
 
-  const dailyData = getDailySpendingData();
-
-  // Trend data calculation - only unarchived transactions
-  const getTrendData = () => {
+  // Memoized trend data — recalculates only when transactions changes
+  const trendData = useMemo(() => {
     if (!transactions?.length) return [];
 
-    const today = new Date();
-    const startDate = startOfMonth(today);
-    const endDate = endOfMonth(today);
-
-
+    const now = new Date();
+    const startDate = startOfMonth(now);
+    const endDate = endOfMonth(now);
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     let runningBalance = 0;
 
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
-
       const dayTransactions = transactions.filter(t => t.date.startsWith(dayStr));
 
       const dayIncome = dayTransactions
@@ -309,15 +293,12 @@ const IndexPage = () => {
 
       runningBalance += dayIncome - dayExpense - daySavings;
 
-
       return {
         date: format(day, 'dd'),
         balance: runningBalance
       };
     });
-  };
-
-  const trendData = getTrendData();
+  }, [transactions]);
 
   const COLORS = ["#00AAFF", "#A3CE22", "#4B5563", "#9CA3AF", "#F59E0B"];
 
@@ -387,18 +368,16 @@ const IndexPage = () => {
     },
   });
 
-  const incomeProgress = monthlyIncome > 0
-    ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
-    : 0;
-
-  const expenseProgress = totalBudget && totalBudget > 0
-    ? Math.min((monthlyExpenses / totalBudget) * 100, 100)
-    : 0;
-
-  // ... (keeping existing charts setup)
-
-  // Calculate total amount for percentage calculations
-  const totalSpendingAmount = spendingData.reduce((sum, item) => sum + item.amount, 0);
+  // Memoized progress percentages and total
+  const { incomeProgress, expenseProgress, totalSpendingAmount } = useMemo(() => ({
+    incomeProgress: monthlyIncome > 0
+      ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
+      : 0,
+    expenseProgress: totalBudget && totalBudget > 0
+      ? Math.min((monthlyExpenses / totalBudget) * 100, 100)
+      : 0,
+    totalSpendingAmount: spendingData.reduce((sum, item) => sum + item.amount, 0),
+  }), [monthlyIncome, monthlyIncomeTotal, monthlyExpenses, totalBudget, spendingData]);
 
   return (
     <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
@@ -408,7 +387,7 @@ const IndexPage = () => {
         <div className="hidden lg:flex items-center justify-between pt-4 pb-2">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              {getGreeting()}, {profile?.first_name || profile?.username || "there"}
+              {greeting}, {profile?.first_name || profile?.username || "there"}
             </h1>
             <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
           </div>

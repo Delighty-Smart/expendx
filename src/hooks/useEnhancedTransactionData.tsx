@@ -1,7 +1,5 @@
 ﻿
-
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-
 import { useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,14 +15,12 @@ export function useEnhancedTransactionData(filter?: {
   startDate?: string,
   endDate?: string,
   category?: string,
-
   includeArchived?: boolean,
 }) {
   const { user } = useAuth();
   const { subscriptionOptions, updateSubscriptionStatus } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
 
   const queryKey = filter
     ? ['enhanced_transactions', user?.id, filter.type, filter.startDate, filter.endDate, filter.category, filter.includeArchived]
@@ -56,16 +52,10 @@ export function useEnhancedTransactionData(filter?: {
       const from = pageParam * pageSize;
       const to = from + pageSize - 1;
 
-      // CACHE-FIRST LOGIC:
-      // If it's the first page and we're just starting, we can try to return cache immediately
-      // but React Query handles background updates well if we set staleTime correctly.
-
-      // If online, attempt to fetch from Supabase
       if (navigator.onLine) {
         try {
-          // Use a shorter timeout for the network request to ensure we fall back to cache quickly if slow
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
 
           let query = supabase.from("transactions")
             .select("*", { count: 'exact' })
@@ -104,81 +94,49 @@ export function useEnhancedTransactionData(filter?: {
             type: item.type as TransactionType
           }));
         } catch (fetchError) {
-          console.log("Supabase fetch slow or failed, using local cache:", fetchError);
-          // Fallback to offline manager
           const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
           return allTransactions.slice(from, from + pageSize);
         }
       }
 
-      // If naturally offline, use cache
-      console.log("Device is offline, using local cache");
       const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
       return allTransactions.slice(from, from + pageSize);
     },
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === 20 ? allPages.length : undefined;
     },
-    staleTime: 1000 * 30, // 30 seconds - keep it fresh but don't over-fetch
+    staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 10,   // 10 minutes
   });
 
-
   // Flatten the pages for consumption
   const transactions = data?.pages.flatMap(page => page) || [];
-
 
   // Enhanced add transaction - handles online/offline automatically
   const addTransactionOffline = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {
     try {
       const tempId = await enhancedOfflineManager.addTransactionOffline(transactionData);
 
-
-
       // Check if this transaction matches any subscription and update status
       if (transactionData.category === 'Subscriptions' && transactionData.type === 'debit') {
-        console.log('Transaction is subscription type, checking for matches:', {
-          category: transactionData.category,
-          type: transactionData.type,
-          amount: transactionData.amount,
-          availableSubscriptions: subscriptionOptions.length
-        });
-
-
-
         const matchingSubscription = subscriptionOptions.find(option => {
           const amountMatch = Math.abs(parseFloat(option.subscription.amount.toString()) - transactionData.amount) < 0.01;
-          console.log('Checking subscription match:', {
-            subscriptionId: option.subscription.id,
-            subscriptionAmount: option.subscription.amount,
-            transactionAmount: transactionData.amount,
-            amountMatch
-          });
           return amountMatch;
         });
 
-
-
         if (matchingSubscription) {
-          console.log('Found matching subscription, updating status:', matchingSubscription.subscription.id);
           try {
             await updateSubscriptionStatus(matchingSubscription.subscription.id, transactionData.amount);
           } catch (subscriptionError) {
             console.error('Error updating subscription status:', subscriptionError);
-            // Don't throw here as the transaction was still added successfully
           }
-        } else {
-          console.log('No matching subscription found for amount:', transactionData.amount);
         }
       }
 
-
-
-      // Immediately update the query data
+      // Batch query invalidations
       queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
-
 
       const isOffline = !navigator.onLine;
       toast({
@@ -187,7 +145,6 @@ export function useEnhancedTransactionData(filter?: {
           "Transaction saved and will sync when you're back online" :
           "Transaction saved successfully"
       });
-
 
       return tempId;
     } catch (error: any) {
@@ -205,7 +162,6 @@ export function useEnhancedTransactionData(filter?: {
     try {
       await enhancedOfflineManager.updateTransactionOffline(id, updates);
 
-
       queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
@@ -215,7 +171,6 @@ export function useEnhancedTransactionData(filter?: {
         title: isOffline ? "Update Saved Offline" : "Transaction Updated",
         description: isOffline ?
           "Changes saved and will sync when you're back online" :
-
           "Transaction updated successfully"
       });
     } catch (error: any) {
@@ -233,7 +188,6 @@ export function useEnhancedTransactionData(filter?: {
     try {
       await enhancedOfflineManager.deleteTransactionOffline(id);
 
-
       queryClient.invalidateQueries({ queryKey: ['enhanced_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['monthly_income'] });
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
@@ -243,7 +197,6 @@ export function useEnhancedTransactionData(filter?: {
         title: isOffline ? "Deletion Saved Offline" : "Transaction Deleted",
         description: isOffline ?
           "Changes saved and will sync when you're back online" :
-
           "Transaction deleted successfully"
       });
     } catch (error: any) {
@@ -256,8 +209,6 @@ export function useEnhancedTransactionData(filter?: {
       throw error;
     }
   }, [toast, queryClient]);
-
-
 
   return {
     transactions,
@@ -275,4 +226,3 @@ export function useEnhancedTransactionData(filter?: {
     deleteTransactionOffline
   };
 }
-

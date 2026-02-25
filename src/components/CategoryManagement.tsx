@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TransactionType } from "@/types/transactions";
 import { Trash2, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserCategory {
   id: string;
@@ -24,6 +25,7 @@ export const CategoryManagement = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchUserCategories();
@@ -31,7 +33,6 @@ export const CategoryManagement = () => {
 
   const fetchUserCategories = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -42,14 +43,14 @@ export const CategoryManagement = () => {
         .order("name", { ascending: true });
 
       if (error) throw error;
-      
+
       // Type the data properly to ensure type is TransactionType
       const typedCategories: UserCategory[] = (data || []).map(category => ({
         id: category.id,
         name: category.name,
         type: category.type as TransactionType
       }));
-      
+
       setCategories(typedCategories);
     } catch (error: any) {
       console.error("Error fetching categories:", error);
@@ -73,7 +74,6 @@ export const CategoryManagement = () => {
 
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
       // Check if category already exists for this user and type
@@ -111,10 +111,10 @@ export const CategoryManagement = () => {
 
       setCategories(prev => [...prev, newCategory]);
       setNewCategoryName("");
-      
+
       // Invalidate queries to refresh category lists
       queryClient.invalidateQueries({ queryKey: ['userCategories'] });
-      
+
       toast({
         title: "Success",
         description: "Category added successfully"
@@ -134,7 +134,7 @@ export const CategoryManagement = () => {
   const deleteCategory = async (categoryId: string, categoryName: string) => {
     try {
       setLoading(true);
-      
+
       const { error } = await supabase
         .from("user_categories")
         .delete()
@@ -143,10 +143,10 @@ export const CategoryManagement = () => {
       if (error) throw error;
 
       setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-      
+
       // Invalidate queries to refresh category lists
       queryClient.invalidateQueries({ queryKey: ['userCategories'] });
-      
+
       toast({
         title: "Success",
         description: `Category "${categoryName}" deleted successfully`
@@ -181,7 +181,7 @@ export const CategoryManagement = () => {
     <Card className="p-4 md:p-6 space-y-6 glass-card">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Manage Categories</h3>
-        
+
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-2">
@@ -194,7 +194,7 @@ export const CategoryManagement = () => {
                 className="h-9 text-sm"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label className="text-sm">Type</Label>
               <Select value={newCategoryType} onValueChange={(value) => setNewCategoryType(value as TransactionType)}>
@@ -208,11 +208,11 @@ export const CategoryManagement = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label className="text-sm invisible">Action</Label>
-              <Button 
-                onClick={addCategory} 
+              <Button
+                onClick={addCategory}
                 disabled={loading || !newCategoryName.trim()}
                 className="h-9 w-full flex items-center gap-2"
               >
@@ -232,8 +232,8 @@ export const CategoryManagement = () => {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {categoriesByType[type]?.map(category => (
-                    <div 
-                      key={category.id} 
+                    <div
+                      key={category.id}
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-md border"
                     >
                       <span className="text-sm font-medium">{category.name}</span>

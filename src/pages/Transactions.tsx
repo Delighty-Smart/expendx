@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, SlidersHorizontal, X, TrendingUp, TrendingDown, PiggyBank, Shapes } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
@@ -269,16 +270,15 @@ const TransactionsPage = () => {
     }
   };
 
-  const filteredTransactions = transactions?.filter(transaction => {
-
+  // Memoized filtered transactions — avoids re-filtering on every unrelated state change
+  const filteredTransactions = useMemo(() => transactions?.filter(transaction => {
     const matchesSearch =
-
       transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
     const matchesType = selectedType === "all" || transaction.type === selectedType;
     return matchesSearch && matchesCategory && matchesType;
-  });
+  }), [transactions, searchQuery, selectedCategories, selectedType]);
 
   const toggleCategory = (category: string) => {
 
@@ -296,8 +296,8 @@ const TransactionsPage = () => {
     setSelectedCategories([]);
   };
 
-  // Group transactions by month, then by day
-  const groupedTransactions = filteredTransactions?.reduce((groups, transaction) => {
+  // Memoized grouped transactions — only recomputed when filtered list changes
+  const groupedTransactions = useMemo(() => filteredTransactions?.reduce((groups, transaction) => {
     const month = format(new Date(transaction.date), "MMMM yyyy");
     if (!groups[month]) {
       groups[month] = {};
@@ -308,7 +308,7 @@ const TransactionsPage = () => {
     }
     groups[month][day].push(transaction);
     return groups;
-  }, {} as Record<string, Record<string, any[]>>) || {};
+  }, {} as Record<string, Record<string, any[]>>) || {}, [filteredTransactions]);
 
   // Calculate monthly totals
   const getMonthlyTotals = (month: string) => {
@@ -331,12 +331,12 @@ const TransactionsPage = () => {
     return { income, expense };
   };
 
-  const formatAmount = (amount: number) => {
+  const formatAmount = useCallback((amount: number) => {
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
-  };
+  }, []);
 
   const renderTransactionIcon = (type: TransactionType) => {
     switch (type) {
@@ -566,8 +566,16 @@ const TransactionsPage = () => {
           )}
 
           {isLoading ? (
-            <div className="bg-card rounded-lg">
-              <LoadingState size="lg" message="Loading transactions..." />
+            <div className="space-y-0 divide-y divide-border/50">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="py-3 px-6 flex items-center gap-4">
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <Skeleton className="h-4 w-[55%]" />
+                    <Skeleton className="h-3 w-[35%]" />
+                  </div>
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
             </div>
           ) : Object.keys(groupedTransactions).length > 0 ? (
             <div className="space-y-4">
@@ -629,7 +637,11 @@ const TransactionsPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                              {dayTransactions.map((transaction) => {
+                              {dayTransactions.sort((a, b) => {
+                                const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                                const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                                return timeB - timeA;
+                              }).map((transaction) => {
                                 const syncStatus = getTransactionSyncStatus(transaction.id);
 
 

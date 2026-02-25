@@ -617,7 +617,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total In</p>
                   <p className="text-lg font-bold text-foreground truncate">
-                    {currency.symbol}{formatAmount(summaryMetrics.income)}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.income)}</>}
                   </p>
                 </div>
               </div>
@@ -634,7 +634,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Out</p>
                   <p className="text-lg font-bold text-foreground truncate">
-                    {currency.symbol}{formatAmount(summaryMetrics.expenses)}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.expenses)}</>}
                   </p>
                 </div>
               </div>
@@ -651,7 +651,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium">Savings</p>
                   <p className="text-lg font-bold text-foreground truncate">
-                    {currency.symbol}{formatAmount(summaryMetrics.savings)}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.savings)}</>}
                   </p>
                 </div>
               </div>
@@ -668,7 +668,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium">Net Balance</p>
                   <p className={`text-lg font-bold truncate ${summaryMetrics.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {currency.symbol}{formatAmount(summaryMetrics.net)}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.net)}</>}
                   </p>
                 </div>
               </div>

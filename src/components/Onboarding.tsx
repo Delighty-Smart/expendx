@@ -42,7 +42,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
         <Lock className="w-6 h-6 text-blue-400 absolute -top-2 -right-2" />
       </div>,
       title: "🛡️ Total Peace of Mind",
-      description: "Your financial secrets are yours alone. With military-grade encryption and full offline support, your data stays safe and accessible anywhere on earth.",
+      description: "Your financial secrets are yours alone. With advanced data protection and full offline support, your data stays safe and accessible anywhere on earth.",
       gradient: "from-blue-500/20 to-blue-500/5 dark:from-blue-500/30 dark:to-blue-500/10",
       accent: "text-blue-500"
     }
