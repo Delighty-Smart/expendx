@@ -6,6 +6,8 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { SettingsProvider } from '@/contexts/SettingsContext'
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 import IndexPage from '@/pages/Index'
 import Landing from '@/pages/Landing'
@@ -48,6 +50,11 @@ function AppContent() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user?.id);
+
+      // Hide splash screen once session is resolved — prevents flash of wrong UI
+      if (Capacitor.isNativePlatform()) {
+        SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => { });
+      }
     });
 
     const {
@@ -71,6 +78,12 @@ function AppContent() {
     setVh();
     window.addEventListener('resize', setVh);
     window.addEventListener('orientationchange', setVh);
+
+    // Set native status bar style from saved theme preference
+    if (Capacitor.isNativePlatform()) {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      StatusBar.setStyle({ style: savedTheme === 'dark' ? Style.Dark : Style.Light }).catch(() => { });
+    }
 
     // Initial sync for enhanced offline manager
     if (navigator.onLine) {

@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { currencies } from '@/lib/currencies';
 import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/hooks/useAuth';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 // Define type for the currency object
 interface Currency {
@@ -114,6 +116,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     // Update HTML class for theme immediately
     document.documentElement.classList.toggle('dark', theme === 'dark');
 
+    // Sync Android status bar style with app theme
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light }).catch(() => { });
+    }
+
     // Update theme-color meta tag for PWA/Mobile
     const themeColor = theme === 'dark' ? '#0f0f10' : '#ffffff';
 
@@ -143,7 +150,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         return;
       }
 
-      console.log('Fetching server settings for user:', user.id);
+
 
       // 1. Fetch Currency from user_settings table
       const settingsPromise = supabase
@@ -158,17 +165,14 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         console.error('Error fetching user_settings:', settingsError);
       } else if (settingsData?.currency_code) {
         // SERVER WINS: Update state and localStorage with server value
-        console.log('Applying server currency:', settingsData.currency_code);
         const currencyObj = currencies.find(c => c.code === settingsData.currency_code);
         if (currencyObj) {
           setCurrency(currencyObj);
           localStorage.setItem('expendx_currency', currencyObj.code);
         }
       } else {
-        // No server settings found, push local if it exists
         const localCurrency = localStorage.getItem('expendx_currency');
         if (localCurrency) {
-          console.log('Pushing local currency to server:', localCurrency);
           await supabase.from('user_settings').upsert({
             user_id: user.id,
             currency_code: localCurrency
@@ -180,14 +184,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       const metadata = user.user_metadata;
       if (metadata) {
         if (metadata.theme && (metadata.theme === 'light' || metadata.theme === 'dark')) {
-          console.log('Applying server theme:', metadata.theme);
           setTheme(metadata.theme);
           document.documentElement.classList.toggle('dark', metadata.theme === 'dark');
           localStorage.setItem('expendx_theme', metadata.theme);
         }
 
         if (typeof metadata.hideAmounts === 'boolean') {
-          console.log('Applying server hideAmounts:', metadata.hideAmounts);
           setHideAmounts(metadata.hideAmounts);
           localStorage.setItem('expendx_hideAmounts', metadata.hideAmounts.toString());
         }
@@ -195,7 +197,6 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
       // Mark as initialized so FUTURE changes trigger sync to server
       isInitialized.current = true;
-      console.log('Settings successfully initialized from server');
     } catch (error) {
       console.error('Error in fetchUserSettings:', error);
       // Fallback: still mark as initialized so user can save changes even if fetch failed
@@ -223,8 +224,6 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
       const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
 
       if (!user) return;
-
-      console.log('Syncing settings to server for user:', user.id);
 
       // Sync Currency (Table)
       const currencyPromise = supabase

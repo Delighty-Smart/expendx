@@ -13,6 +13,7 @@ import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/hooks/useAuth";
 import { notificationService } from "@/services/notificationService";
 import GlobalBanner from "@/components/GlobalBanner";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const Layout = ({
   children
@@ -192,6 +193,7 @@ const Layout = ({
         </div>
       </header>
 
+      {/* Desktop: sidebar nav (unchanged) */}
       <aside className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col shadow-lg`}>
         <div className="p-4 safe-pt border-b border-border flex items-center justify-center">
           <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain mt-1" />
@@ -259,12 +261,17 @@ const Layout = ({
       </aside>
 
       <main className={`safe-pt-header lg:!pt-0 lg:pl-64 min-h-screen transition-all duration-300 ${isSidebarOpen ? "brightness-50 lg:brightness-100" : ""}`} onClick={() => isSidebarOpen && setIsSidebarOpen(false)}>
-        <div className="container mx-auto py-3 md:p-4 lg:p-6 animate-fadeIn safe-pb">
+        <div className="container mx-auto py-3 md:p-4 lg:p-6 animate-fadeIn safe-pb pb-24 lg:pb-6">
           {children || <Outlet />}
         </div>
       </main>
 
       {isSidebarOpen && <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
+
+      {/* Mobile bottom navigation — only shown on mobile */}
+      <div className="lg:hidden">
+        <MobileBottomNav unreadAlerts={unreadAlerts} />
+      </div>
     </div>
   );
 };
