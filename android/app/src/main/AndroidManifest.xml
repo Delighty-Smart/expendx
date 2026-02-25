@@ -6,6 +6,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:hardwareAccelerated="true"
         android:theme="@style/AppTheme">
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
@@ -56,13 +57,27 @@
     </application>
 
     <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+    <!-- QUERY_ALL_PACKAGES removed: use targeted <queries> below for Play Store compliance -->
+
+    <!-- Targeted package visibility for notification auto-tracking -->
+    <queries>
+        <package android:name="com.kudabank.app" />
+        <package android:name="com.gtbank.main" />
+        <package android:name="com.accessbank.accessmobilebanking" />
+        <package android:name="com.zenithbank.mobilebanking" />
+        <package android:name="ng.opay.express" />
+        <package android:name="com.palmpay.app" />
+        <package android:name="com.firstbank.firstmobile" />
+        <package android:name="com.uba.mobile" />
+        <package android:name="com.wema.wema4me" />
+        <package android:name="com.moniepoint.businessbanking" />
+    </queries>
+
 </manifest>

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SettingsProvider } from '@/contexts/SettingsContext'
@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { useToast } from '@/hooks/use-toast';
 
 import IndexPage from '@/pages/Index'
 import Landing from '@/pages/Landing'
@@ -46,6 +47,9 @@ import { useAutoTracker } from './hooks/useAutoTracker';
 function AppContent() {
   const [userId, setUserId] = useState<string | undefined>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  const backPressedOnce = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -119,12 +123,35 @@ function AppContent() {
       });
     }
 
+    // Handle Android hardware back button
+    let backButtonListener: any;
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('backButton', () => {
+        const rootPaths = ['/', '/dashboard', '/auth'];
+        const isRoot = rootPaths.includes(location.pathname);
+
+        if (!isRoot) {
+          navigate(-1);
+        } else if (backPressedOnce.current) {
+          CapacitorApp.exitApp();
+        } else {
+          backPressedOnce.current = true;
+          toast({
+            title: 'Press back again to exit',
+            duration: 2000,
+          });
+          setTimeout(() => { backPressedOnce.current = false; }, 2000);
+        }
+      }).then(listener => {
+        backButtonListener = listener;
+      });
+    }
+
     return () => {
       window.removeEventListener('resize', setVh);
       window.removeEventListener('orientationchange', setVh);
-      if (appUrlListener) {
-        appUrlListener.remove();
-      }
+      if (appUrlListener) appUrlListener.remove();
+      if (backButtonListener) backButtonListener.remove();
     };
   }, [navigate]);
 

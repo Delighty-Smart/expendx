@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 interface MobileBottomNavProps {
     unreadAlerts: number;
@@ -136,6 +137,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                             <Link
                                 key={tab.path}
                                 to={tab.path}
+                                onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
                                 className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-all active:scale-95 group"
                             >
                                 <div
@@ -166,7 +168,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
 
                     {/* More button */}
                     <button
-                        onClick={() => setShowMore((v) => !v)}
+                        onClick={() => {
+                            Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
+                            setShowMore((v) => !v);
+                        }}
                         className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-all active:scale-95"
                     >
                         <div

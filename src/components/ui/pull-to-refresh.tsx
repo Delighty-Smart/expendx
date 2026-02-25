@@ -1,6 +1,7 @@
 ﻿
 import React, { useState, useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 
 interface PullToRefreshProps {
@@ -84,8 +85,11 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       setPullPixels(THRESHOLD); // Snap to threshold
 
       try {
-        // Haptic feedback if available (using Web Vibration API)
-        if (navigator.vibrate) navigator.vibrate(50);
+        // Native haptic feedback on successful pull refresh
+        await Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {
+          // Fallback to web vibration if haptics unavailable
+          if (navigator.vibrate) navigator.vibrate(50);
+        });
 
         await onRefresh();
       } catch (error) {
