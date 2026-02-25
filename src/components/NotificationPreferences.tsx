@@ -280,24 +280,46 @@ const NotificationPreferences = () => {
                 <div className="text-xs font-bold">Push Alerts</div>
                 <div className="text-[10px] text-muted-foreground">Budget & Streak reminders</div>
               </div>
-              <Button
-                variant={isPushActive ? "ghost" : "default"}
-                size="sm"
-                className={cn(
-                  "rounded-full text-[10px] font-bold h-7 px-4",
-                  isPushActive ? "text-green-600 hover:bg-green-100/50" : ""
+              <div className="flex gap-2">
+                <Button
+                  variant={isPushActive ? "default" : "secondary"}
+                  size="sm"
+                  className={cn(
+                    "rounded-full text-[10px] font-bold h-7 px-4",
+                    isPushActive ? "bg-green-600 hover:bg-green-700 text-white" : ""
+                  )}
+                  onClick={async () => {
+                    if (isPushActive) return;
+                    setSaving(true);
+                    try {
+                      const success = await notificationService.subscribeToPush();
+                      if (success) {
+                        setIsPushActive(true);
+                        toast({ title: "Push enabled", description: "You will now receive automatic platform alerts." });
+                      }
+                    } finally { setSaving(false); }
+                  }}
+                >
+                  {isPushActive ? "Active ✅" : "Enable"}
+                </Button>
+                {isPushActive && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-[10px] font-bold h-7 px-3 border-green-500/30 text-green-600 hover:bg-green-500/10"
+                    onClick={() => {
+                      notificationService.sendServiceWorkerNotification(
+                        "Test Configured! 🎉",
+                        "Your push alerts are working perfectly.",
+                        { requireInteraction: true }
+                      );
+                      toast({ title: "Test sent", description: "Check your device notifications." });
+                    }}
+                  >
+                    Test Alert
+                  </Button>
                 )}
-                onClick={async () => {
-                  if (isPushActive) return;
-                  setSaving(true);
-                  try {
-                    const success = await notificationService.subscribeToPush();
-                    if (success) setIsPushActive(true);
-                  } finally { setSaving(false); }
-                }}
-              >
-                {isPushActive ? "Active ✅" : "Enable"}
-              </Button>
+              </div>
             </div>
           </div>
         </div>
