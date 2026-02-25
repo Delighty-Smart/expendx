@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { updateUserStreak } from "@/lib/streak";
 import { useAuth } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Profile = () => {
   const { user, profile, refreshProfile, isLoading: authLoading } = useAuth();
@@ -62,7 +64,18 @@ const Profile = () => {
   if (!loading && (!userProfile || !userStreak)) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => signOut().then(() => navigate("/auth"))}
+            className="text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Log Out
+          </Button>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>Error Loading Profile</CardTitle>
@@ -79,7 +92,18 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => signOut().then(() => navigate("/auth"))}
+          className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/20 transition-colors"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Log Out
+        </Button>
+      </div>
 
       {loading ? (
         <div className="space-y-6 animate-skeleton-pulse">

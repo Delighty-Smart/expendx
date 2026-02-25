@@ -14,6 +14,7 @@ import {
     CreditCard,
     ChevronDown,
     Shield,
+    Plus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -24,14 +25,19 @@ interface MobileBottomNavProps {
     unreadAlerts: number;
 }
 
-const PRIMARY_TABS = [
+// The bottom nav now has 5 slots: Home, Transactions, Add (middle), Budgets, More.
+// Savings is moved to MORE_ITEMS.
+const LEFT_TABS = [
     { path: "/dashboard", label: "Home", icon: Home },
-    { path: "/transactions", label: "Transactions", icon: Receipt },
+    { path: "/transactions", label: "Txns", icon: Receipt },
+];
+
+const RIGHT_TABS = [
     { path: "/budgets", label: "Budgets", icon: DollarSign },
-    { path: "/savings", label: "Savings", icon: PiggyBank },
 ];
 
 const MORE_ITEMS = [
+    { path: "/savings", label: "Savings", icon: PiggyBank },
     { path: "/subscriptions", label: "Subscriptions", icon: CreditCard },
     { path: "/reports", label: "Reports", icon: BarChart },
     { path: "/alerts", label: "Alerts", icon: Bell },
@@ -126,11 +132,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
 
             {/* Bottom Tab Bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md border-t border-border z-40 flex items-center safe-pb"
+                className="fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md border-t border-border z-40 flex items-center safe-pb px-1"
                 style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
-                <div className="flex w-full">
-                    {PRIMARY_TABS.map((tab) => {
+                <div className="flex w-full items-end h-full py-1">
+                    {/* Left 2 Tabs */}
+                    {LEFT_TABS.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = location.pathname === tab.path;
                         return (
@@ -138,11 +145,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 key={tab.path}
                                 to={tab.path}
                                 onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
-                                className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-all active:scale-95 group"
+                                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full pb-1"
                             >
                                 <div
                                     className={cn(
-                                        "flex items-center justify-center w-10 h-6 rounded-full transition-all duration-200",
+                                        "flex items-center justify-center w-12 h-8 rounded-full transition-all duration-200",
                                         isActive ? "bg-primary/15" : "bg-transparent"
                                     )}
                                 >
@@ -156,7 +163,55 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 </div>
                                 <span
                                     className={cn(
-                                        "text-[10px] font-medium transition-colors duration-200",
+                                        "text-[10px] sm:text-xs font-medium transition-colors duration-200",
+                                        isActive ? "text-primary" : "text-muted-foreground"
+                                    )}
+                                >
+                                    {tab.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
+
+                    {/* Prominent Add Button (Center) */}
+                    <div className="flex-1 flex justify-center -translate-y-4">
+                        <Link
+                            to="/add-transaction"
+                            onClick={() => Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { })}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-background"
+                        >
+                            <Plus className="h-6 w-6" strokeWidth={2.5} />
+                        </Link>
+                    </div>
+
+                    {/* Right 1 Tab (Budgets) */}
+                    {RIGHT_TABS.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = location.pathname === tab.path;
+                        return (
+                            <Link
+                                key={tab.path}
+                                to={tab.path}
+                                onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
+                                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full pb-1"
+                            >
+                                <div
+                                    className={cn(
+                                        "flex items-center justify-center w-12 h-8 rounded-full transition-all duration-200",
+                                        isActive ? "bg-primary/15" : "bg-transparent"
+                                    )}
+                                >
+                                    <Icon
+                                        className={cn(
+                                            "h-5 w-5 transition-all duration-200",
+                                            isActive ? "text-primary" : "text-muted-foreground"
+                                        )}
+                                        strokeWidth={isActive ? 2.5 : 1.75}
+                                    />
+                                </div>
+                                <span
+                                    className={cn(
+                                        "text-[10px] sm:text-xs font-medium transition-colors duration-200",
                                         isActive ? "text-primary" : "text-muted-foreground"
                                     )}
                                 >
@@ -172,11 +227,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                             Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
                             setShowMore((v) => !v);
                         }}
-                        className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-all active:scale-95"
+                        className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 h-full pb-1"
                     >
                         <div
                             className={cn(
-                                "flex items-center justify-center w-10 h-6 rounded-full transition-all duration-200 relative",
+                                "flex items-center justify-center w-12 h-8 rounded-full transition-all duration-200 relative",
                                 isMoreActive || showMore ? "bg-primary/15" : "bg-transparent"
                             )}
                         >
@@ -195,7 +250,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                         </div>
                         <span
                             className={cn(
-                                "text-[10px] font-medium transition-colors duration-200",
+                                "text-[10px] sm:text-xs font-medium transition-colors duration-200",
                                 isMoreActive || showMore ? "text-primary" : "text-muted-foreground"
                             )}
                         >
