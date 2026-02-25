@@ -51,6 +51,9 @@ function AppContent() {
   const location = useLocation();
   const { toast } = useToast();
   const backPressedOnce = useRef(false);
+  // Keep a ref so the onAuthStateChange closure always sees the current pathname
+  const locationRef = useRef(location.pathname);
+  useEffect(() => { locationRef.current = location.pathname; }, [location.pathname]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -64,12 +67,21 @@ function AppContent() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUserId(session?.user?.id);
+
+      // On successful sign-in (including native Google Sign-In via signInWithIdToken),
+      // redirect to dashboard if the user is currently on a public route.
+      if (event === 'SIGNED_IN' && session?.user) {
+        const publicRoutes = ['/', '/auth'];
+        if (publicRoutes.includes(locationRef.current)) {
+          navigate('/dashboard', { replace: true });
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   useAutoTracker(userId);
   useBiometricLock(); // Prompts biometric on app resume if user has enabled it
