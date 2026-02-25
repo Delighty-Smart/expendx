@@ -241,8 +241,31 @@ const Layout = ({
               );
             })}
           </nav>
+
+          <div className="border-t border-border mt-auto p-2 safe-pb">
+            <div className="flex items-center gap-1.5">
+              <div className="flex-1 flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/50 cursor-pointer transition-all duration-200 group overflow-hidden" onClick={handleProfileClick}>
+                <UserAvatar url={profile?.avatar_url} name={profile?.username || profile?.email || "User"} className="w-8 h-8 flex-shrink-0 shadow-sm ring-1 ring-border/50" />
+                <div className="flex-1 min-w-0 flex flex-col justify-center gap-0">
+                  <p className="text-sm font-bold text-foreground truncate tracking-tighter leading-tight">
+                    {profile?.username || profile?.email || "User"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="h-8 w-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 flex-shrink-0 shadow-sm"
+                title="Log Out"
+              >
+                <LogOut className="h-4 w-4" strokeWidth={2} />
+              </Button>
+            </div>
+          </div>
         </aside>
-      )}
+      )
+      }
 
       <main className={`safe-pt-header lg:!pt-0 ${!isNative ? 'lg:pl-64' : ''} min-h-screen transition-all duration-300 ${isSidebarOpen ? "brightness-50 lg:brightness-100" : ""}`} onClick={() => isSidebarOpen && setIsSidebarOpen(false)}>
         <div className={`container mx-auto py-3 md:p-4 lg:p-6 animate-fadeIn safe-pb ${isNative ? 'pb-24' : 'lg:pb-6'}`}>

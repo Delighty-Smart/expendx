@@ -11,6 +11,7 @@ import { updateUserStreak } from "@/lib/streak";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
 
 const Profile = () => {
   const { user, profile, refreshProfile, isLoading: authLoading } = useAuth();
@@ -66,15 +67,17 @@ const Profile = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => signOut().then(() => navigate("/auth"))}
-            className="text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Log Out
-          </Button>
+          {Capacitor.isNativePlatform() && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signOut().then(() => navigate("/auth"))}
+              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Log Out
+            </Button>
+          )}
         </div>
         <Card>
           <CardHeader>
@@ -94,15 +97,17 @@ const Profile = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Your Profile</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => signOut().then(() => navigate("/auth"))}
-          className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/20 transition-colors"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Log Out
-        </Button>
+        {Capacitor.isNativePlatform() && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => signOut().then(() => navigate("/auth"))}
+            className="text-red-500 hover:text-red-600 hover:bg-red-500/10 border-red-500/20 transition-colors"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Log Out
+          </Button>
+        )}
       </div>
 
       {loading ? (
