@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Maximize2, ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, PieChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from "@capacitor/core";
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
@@ -516,7 +517,7 @@ const IndexPage = () => {
 
         {/* Floating Action Button (FAB) */}
         {/* Floating Action Button (FAB) - Portaled to escape Layout transforms */}
-        {createPortal(
+        {!Capacitor.isNativePlatform() && createPortal(
           <Button
             onClick={() => navigate("/add-transaction")}
             className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"

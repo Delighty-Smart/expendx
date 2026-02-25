@@ -132,7 +132,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
 
             {/* Bottom Tab Bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md border-t border-border z-40 flex items-center safe-pb px-1"
+                className="fixed bottom-0 left-0 right-0 h-[72px] bg-card/95 backdrop-blur-md border-t border-border z-40 flex items-center safe-pb px-1"
                 style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
                 <div className="flex w-full items-end h-full py-1">
@@ -155,7 +155,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 >
                                     <Icon
                                         className={cn(
-                                            "h-5 w-5 transition-all duration-200",
+                                            "h-[26px] w-[26px] transition-all duration-200",
                                             isActive ? "text-primary" : "text-muted-foreground"
                                         )}
                                         strokeWidth={isActive ? 2.5 : 1.75}
@@ -163,7 +163,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 </div>
                                 <span
                                     className={cn(
-                                        "text-[10px] sm:text-xs font-medium transition-colors duration-200",
+                                        "text-[11px] sm:text-xs font-medium transition-colors duration-200",
                                         isActive ? "text-primary" : "text-muted-foreground"
                                     )}
                                 >
@@ -178,9 +178,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                         <Link
                             to="/add-transaction"
                             onClick={() => Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { })}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-background"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 w-[60px] h-[60px] rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-background"
                         >
-                            <Plus className="h-6 w-6" strokeWidth={2.5} />
+                            <Plus className="h-8 w-8" strokeWidth={2.5} />
                         </Link>
                     </div>
 
@@ -203,7 +203,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 >
                                     <Icon
                                         className={cn(
-                                            "h-5 w-5 transition-all duration-200",
+                                            "h-[26px] w-[26px] transition-all duration-200",
                                             isActive ? "text-primary" : "text-muted-foreground"
                                         )}
                                         strokeWidth={isActive ? 2.5 : 1.75}
@@ -211,7 +211,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 </div>
                                 <span
                                     className={cn(
-                                        "text-[10px] sm:text-xs font-medium transition-colors duration-200",
+                                        "text-[11px] sm:text-xs font-medium transition-colors duration-200",
                                         isActive ? "text-primary" : "text-muted-foreground"
                                     )}
                                 >
@@ -237,7 +237,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                         >
                             <MoreHorizontal
                                 className={cn(
-                                    "h-5 w-5 transition-all duration-200",
+                                    "h-[26px] w-[26px] transition-all duration-200",
                                     isMoreActive || showMore ? "text-primary" : "text-muted-foreground"
                                 )}
                                 strokeWidth={isMoreActive || showMore ? 2.5 : 1.75}
@@ -250,7 +250,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                         </div>
                         <span
                             className={cn(
-                                "text-[10px] sm:text-xs font-medium transition-colors duration-200",
+                                "text-[11px] sm:text-xs font-medium transition-colors duration-200",
                                 isMoreActive || showMore ? "text-primary" : "text-muted-foreground"
                             )}
                         >
