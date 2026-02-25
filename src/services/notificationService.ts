@@ -22,6 +22,8 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 import { supabase } from '@/integrations/supabase/client';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 export const notificationService = {
   // Check if the browser supports notifications
@@ -29,8 +31,17 @@ export const notificationService = {
     return 'Notification' in window;
   },
 
-  // Request notification permission
   async requestPermission(): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const permStatus = await LocalNotifications.requestPermissions();
+        return permStatus.display === 'granted';
+      } catch (error) {
+        console.error('Error requesting native notification permission:', error);
+        return false;
+      }
+    }
+
     if (!this.isSupported()) {
       console.log('Notifications not supported in this browser');
       return false;
@@ -47,14 +58,22 @@ export const notificationService = {
   },
 
   // Check if we have permission to show notifications
-  hasPermission(): boolean {
+  async hasPermission(): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const status = await LocalNotifications.checkPermissions();
+        return status.display === 'granted';
+      } catch (e) {
+        return false;
+      }
+    }
     if (!this.isSupported()) return false;
     return Notification.permission === PERMISSION_GRANTED;
   },
 
-  // Send a notification with the given title and message
   async sendNotification(title: string, message: string, options: NotificationOptions = {}): Promise<boolean> {
-    if (!this.hasPermission()) {
+    const isPermitted = await this.hasPermission();
+    if (!isPermitted) {
       console.info('Notification permission not granted');
       return false;
     }
@@ -82,8 +101,29 @@ export const notificationService = {
     }
   },
 
-  // Try to send a notification through the service worker
   async sendServiceWorkerNotification(title: string, message: string, options: NotificationOptions = {}): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title,
+              body: message,
+              id: Math.floor(new Date().getTime() / 1000) % 2000000000, // 32-bit int safe
+              schedule: { at: new Date(Date.now() + 1000) }, // 1s from now for immediate effect
+              sound: 'beep.wav',
+              actionTypeId: options.tag || '',
+              extra: null
+            }
+          ]
+        });
+        return true;
+      } catch (error) {
+        console.error('Error sending local native notification:', error);
+        return false;
+      }
+    }
+
     if (!('serviceWorker' in navigator)) {
       return this.sendNotification(title, message, options);
     }
@@ -112,13 +152,21 @@ export const notificationService = {
     return 'serviceWorker' in navigator && 'PushManager' in window;
   },
 
-  async getSubscription(): Promise<PushSubscription | null> {
+  async getSubscription(): Promise<any | null> {
+    if (Capacitor.isNativePlatform()) {
+      const isGranted = await this.hasPermission();
+      return isGranted ? { endpoint: 'native_local' } : null;
+    }
     if (!this.isPushSupported()) return null;
     const registration = await navigator.serviceWorker.ready;
     return await registration.pushManager.getSubscription();
   },
 
   async subscribeToPush(): Promise<boolean> {
+    if (Capacitor.isNativePlatform()) {
+      return await this.requestPermission();
+    }
+
     if (!this.isPushSupported()) return false;
 
     try {
