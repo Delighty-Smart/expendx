@@ -241,7 +241,7 @@ export const ArchiveManagement = () => {
       dayTransactions.forEach(transaction => {
         if (transaction.type === 'credit') {
           income += transaction.amount;
-        } else if (transaction.type === 'debit') {
+        } else if (transaction.type === 'debit' || transaction.type === 'subscription') {
           expense += transaction.amount;
         }
       });
@@ -264,6 +264,8 @@ export const ArchiveManagement = () => {
         return <ArrowUp className="h-4 w-4 text-red-500" />;
       case 'savings':
         return <div className="h-3.5 w-3.5 rounded-full bg-blue-400"></div>;
+      case 'subscription':
+        return <ArrowUp className="h-4 w-4 text-purple-500" />;
       default:
         return null;
     }
@@ -340,6 +342,7 @@ export const ArchiveManagement = () => {
                 <SelectItem value="credit" className="text-foreground">Income</SelectItem>
                 <SelectItem value="debit" className="text-foreground">Expense</SelectItem>
                 <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
+                <SelectItem value="subscription" className="text-foreground">Subscriptions</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -445,13 +448,13 @@ export const ArchiveManagement = () => {
                                 <div
                                   className={`text-right ${transaction.type === "credit"
                                     ? "text-green-600 dark:text-green-400"
-                                    : transaction.type === "debit"
+                                    : transaction.type === "debit" || transaction.type === "subscription"
                                       ? "text-red-600 dark:text-red-400"
                                       : "text-blue-600 dark:text-blue-400"
                                     }`}
                                 >
                                   <p className="font-medium text-sm leading-tight">
-                                    {transaction.type === "credit" ? "+" : transaction.type === "debit" ? "-" : ""}
+                                    {transaction.type === "credit" ? "+" : (transaction.type === "debit" || transaction.type === "subscription") ? "-" : ""}
                                     {currencySymbol}{formatAmount(transaction.amount)}
                                   </p>
                                 </div>

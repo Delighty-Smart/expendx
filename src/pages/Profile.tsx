@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Capacitor } from "@capacitor/core";
 
 const Profile = () => {
-  const { user, profile, refreshProfile, isLoading: authLoading } = useAuth();
+  const { user, profile, refreshProfile, isLoading: authLoading, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(profile);
   const [userStreak, setUserStreak] = useState<any>(null);
   const [loading, setLoading] = useState(true);

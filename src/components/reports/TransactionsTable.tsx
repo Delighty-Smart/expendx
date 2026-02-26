@@ -69,6 +69,7 @@ const TransactionsTable = ({
   const { categories: expenseCategories } = useCategories('debit');
   const { categories: incomeCategories } = useCategories('credit');
   const { categories: savingsCategories } = useCategories('savings');
+  const { categories: subscriptionCategories } = useCategories('subscription');
 
 
   // Get available categories based on selected type
@@ -78,7 +79,7 @@ const TransactionsTable = ({
 
     if (selectedType === "all") {
       // Combine all categories and remove duplicates
-      const allCats = [...expenseCategories, ...incomeCategories, ...savingsCategories];
+      const allCats = [...expenseCategories, ...incomeCategories, ...savingsCategories, ...subscriptionCategories];
       categories = [...new Set(allCats)];
     } else if (selectedType === "debit") {
       categories = expenseCategories;
@@ -86,6 +87,8 @@ const TransactionsTable = ({
       categories = incomeCategories;
     } else if (selectedType === "savings") {
       categories = savingsCategories;
+    } else if (selectedType === "subscription") {
+      categories = subscriptionCategories;
     }
 
 
@@ -192,6 +195,8 @@ const TransactionsTable = ({
         return <ArrowUp className="h-4 w-4 text-red-500" strokeWidth={1.5} />;
       case 'savings':
         return <PiggyBank className="h-4 w-4 text-blue-600" strokeWidth={1.5} />;
+      case 'subscription':
+        return <TrendingDown className="h-4 w-4 text-purple-500" strokeWidth={1.5} />;
 
       default:
         return null;
@@ -229,6 +234,7 @@ const TransactionsTable = ({
               <SelectItem value="credit" className="text-foreground">Income</SelectItem>
               <SelectItem value="debit" className="text-foreground">Expense</SelectItem>
               <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
+              <SelectItem value="subscription" className="text-foreground">Subscriptions</SelectItem>
             </SelectContent>
           </Select>
 

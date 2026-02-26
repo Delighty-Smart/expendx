@@ -173,7 +173,7 @@ export default function Landing() {
                                 alt="expendX"
                                 className="h-7 sm:h-8 object-contain"
                             />
-                            <Badge className="bg-primary/20 text-emerald-400 text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider hidden xs:inline-flex rounded-full">Beta</Badge>
+                            <Badge className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 uppercase tracking-wider inline-flex rounded-full border border-emerald-500/20">Beta</Badge>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-4">
@@ -219,7 +219,7 @@ export default function Landing() {
                             </Link>
                         </Button>
                         <Button asChild size="lg" variant="outline" className="rounded-full w-full sm:w-auto px-8 h-14 text-base border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm transition-transform active:scale-95">
-                            <a href="#platforms">Download App</a>
+                            <Link to="/download">Download App</Link>
                         </Button>
                     </motion.div>
                 </motion.div>
@@ -237,7 +237,7 @@ export default function Landing() {
                 >
                     <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight">Tired of manual spreadsheets?</h2>
                     <p className="text-base md:text-xl text-white/60 leading-relaxed max-w-3xl mx-auto">
-                        Stop wasting hours trying to figure out where your money went. ExpendX provides intelligent categorizations, target pacing, and real-time reports to give you a crystal-clear picture of your wealth.
+                        Stop wasting hours trying to figure out where your money went. expendX provides intelligent categorizations, target pacing, and real-time reports to give you a crystal-clear picture of your wealth.
                     </p>
                 </motion.div>
             </section>
@@ -297,8 +297,9 @@ export default function Landing() {
                             </div>
 
                             {/* Total Balance */}
-                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-gradient-to-br from-primary/5 to-primary/10 border border-white/10 relative overflow-hidden">
-                                <div className="flex justify-between items-start w-full">
+                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-emerald-500/5 hover:bg-emerald-500/10 border-white/10 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
+                                <div className="relative z-10 flex justify-between items-start w-full">
                                     <div>
                                         <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">Total Balance</p>
                                         <div className="flex items-baseline gap-1 mt-1">
@@ -323,7 +324,7 @@ export default function Landing() {
                                         )}
                                     </button>
                                 </div>
-                                <div className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 w-fit">
+                                <div className="relative z-10 mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 w-fit">
                                     <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
                                     <span className="text-xs font-medium text-emerald-400">
                                         {hideAmounts ? "₦***" : "₦470,000.00"} Net Income this month
@@ -332,8 +333,9 @@ export default function Landing() {
                             </GlassCard>
 
                             {/* Monthly Income */}
-                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-gradient-to-br from-green-500/5 to-green-500/10 border border-white/10 relative">
-                                <div className="flex justify-between items-start w-full">
+                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-emerald-500/5 border-white/10 relative overflow-hidden">
+                                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+                                <div className="relative z-10 flex justify-between items-start w-full">
                                     <div>
                                         <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">Income THIS MONTH</p>
                                         <p className="text-2xl font-bold tracking-tight text-white mt-1">
@@ -349,14 +351,15 @@ export default function Landing() {
                                         <ArrowUpRight className="w-5 h-5" strokeWidth={2} />
                                     </div>
                                 </div>
-                                <div className="mt-4 text-xs font-medium text-white/50">
+                                <div className="relative z-10 mt-4 text-xs font-medium text-white/50">
                                     25% of target
                                 </div>
                             </GlassCard>
 
                             {/* Monthly Expenses */}
-                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-gradient-to-br from-red-500/5 to-red-500/10 border border-white/10 relative">
-                                <div className="flex justify-between items-start w-full">
+                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-rose-500/5 border-white/10 relative overflow-hidden">
+                                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-rose-500/20 to-transparent" />
+                                <div className="relative z-10 flex justify-between items-start w-full">
                                     <div>
                                         <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-1">Expenses THIS MONTH</p>
                                         <p className="text-2xl font-bold tracking-tight text-white mt-1">
@@ -372,7 +375,7 @@ export default function Landing() {
                                         <ArrowDownRight className="w-5 h-5" strokeWidth={2} />
                                     </div>
                                 </div>
-                                <div className="mt-4 text-xs font-medium text-white/50">
+                                <div className="relative z-10 mt-4 text-xs font-medium text-white/50">
                                     33% of budget
                                 </div>
                             </GlassCard>
@@ -561,10 +564,10 @@ export default function Landing() {
                         <motion.div variants={fadeUp}>
                             <PlatformCard
                                 icon={<Smartphone className="h-8 w-8" />}
-                                title="Android & iOS PWA"
-                                description="Install directly to your homescreen."
-                                link="/auth"
-                                linkText="Get Mobile App"
+                                title="Android App (APK)"
+                                description="Download the native Android app directly."
+                                link="/download"
+                                linkText="Get the App"
                             />
                         </motion.div>
                         <motion.div variants={fadeUp}>
@@ -592,9 +595,14 @@ export default function Landing() {
                     className="container mx-auto px-6 relative z-10 text-center"
                 >
                     <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-5xl font-bold mb-8 px-4 leading-tight">Ready to transform your finances?</h2>
-                    <Button asChild size="lg" className="rounded-full w-[calc(100%-2rem)] sm:w-auto px-10 h-14 text-base sm:text-lg bg-white text-black hover:bg-white/90 transition-transform active:scale-95 shadow-2xl shadow-primary/20">
-                        <Link to="/auth">Create your free account</Link>
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Button asChild size="lg" className="rounded-full w-full sm:w-auto px-10 h-14 text-base sm:text-lg bg-white text-black hover:bg-white/90 transition-transform active:scale-95 shadow-2xl shadow-primary/20">
+                            <Link to="/auth">Create your free account</Link>
+                        </Button>
+                        <Button asChild size="lg" variant="outline" className="rounded-full w-full sm:w-auto px-10 h-14 text-base border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm transition-transform active:scale-95">
+                            <Link to="/download">Download for Android</Link>
+                        </Button>
+                    </div>
                 </motion.div>
             </section>
 
@@ -604,12 +612,12 @@ export default function Landing() {
                     <div className="flex items-center gap-2 mb-4 md:mb-0">
                         <img
                             src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                            alt="ExpendX"
+                            alt="expendX"
                             className="h-6 object-contain opacity-50 grayscale"
                         />
                     </div>
                     <div className="text-sm text-white/40">
-                        © {new Date().getFullYear()} ExpendX. All rights reserved.
+                        © {new Date().getFullYear()} expendX. All rights reserved.
                     </div>
                 </div>
             </footer>
@@ -619,28 +627,31 @@ export default function Landing() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
     return (
-        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-6">
-                {icon}
+        <GlassCard className="p-8 rounded-[2rem] border-white/5 hover:border-primary/20 transition-all duration-500 h-full group relative overflow-hidden bg-white/[0.03]">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-700" />
+            <div className="relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                    {icon}
+                </div>
+                <h3 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-xl font-bold mb-3">{title}</h3>
+                <p className="text-white/50 leading-relaxed text-base">{description}</p>
             </div>
-            <h3 className="text-xl font-semibold mb-3">{title}</h3>
-            <p className="text-white/60 leading-relaxed">{description}</p>
-        </div>
+        </GlassCard>
     );
 }
 
 function PlatformCard({ icon, title, description, link, linkText, comingSoon }: { icon: React.ReactNode, title: string, description: string, link: string, linkText: string, comingSoon?: boolean }) {
     return (
-        <div className="p-8 rounded-3xl bg-black border border-white/10 flex flex-col items-center text-center hover:border-white/30 transition-colors relative overflow-hidden">
+        <GlassCard className="p-8 rounded-3xl border-white/10 flex flex-col items-center text-center hover:border-white/30 transition-all duration-300 relative overflow-hidden h-full">
             {comingSoon && (
                 <div className="absolute top-4 right-4 bg-white/10 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-full backdrop-blur-md">
                     Coming Soon
                 </div>
             )}
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6 text-white">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6 text-white group-hover:bg-primary/20 transition-colors">
                 {icon}
             </div>
-            <h3 className="text-xl font-semibold mb-3">{title}</h3>
+            <h3 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-xl font-semibold mb-3">{title}</h3>
             <p className="text-white/60 mb-8 flex-1">{description}</p>
             {comingSoon ? (
                 <Button disabled variant="outline" className="w-full rounded-full border-white/20 bg-transparent text-white/50 cursor-not-allowed">
@@ -655,7 +666,7 @@ function PlatformCard({ icon, title, description, link, linkText, comingSoon }: 
                     <a href={link}>{linkText}</a>
                 </Button>
             )}
-        </div>
+        </GlassCard>
     );
 }
 

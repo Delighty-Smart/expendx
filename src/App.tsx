@@ -34,6 +34,7 @@ import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 import Subscriptions from '@/pages/Subscriptions'
 import Trends from '@/pages/Trends'
+import Download from '@/pages/Download'
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt'
 import PushOnboarding from '@/components/PushOnboarding'
 import { CapacitorShareTarget } from '@capgo/capacitor-share-target';
@@ -201,6 +202,7 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route path="/auth" element={<Auth />} />
+        <Route path="/download" element={<Download />} />
         <Route path="/" element={<Landing />} />
 
         {/* Protected Routes with Persistent Layout */}

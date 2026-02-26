@@ -58,7 +58,7 @@ const FeedbackPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Feedback | ExpendX";
+    document.title = "Feedback | expendX";
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

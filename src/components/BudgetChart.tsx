@@ -30,10 +30,10 @@ interface BudgetChartProps {
 
 export function BudgetChart({ budgets, transactions, currency }: BudgetChartProps) {
   const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
-  
+
   // Only use debit transactions for spending chart
-  const expenseTransactions = transactions.filter(t => t.type === "debit");
-  
+  const expenseTransactions = transactions.filter(t => t.type === "debit" || t.type === "subscription");
+
   console.log(`BudgetChart: Found ${expenseTransactions.length} expense transactions`);
 
   // Prepare pie chart data from spending
@@ -43,10 +43,10 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
       const spent = expenseTransactions
         .filter(t => t.category === budget.category)
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       // Log each category and its spending for debugging
       console.log(`Category ${budget.category}: spent ${spent}`);
-      
+
       return {
         name: budget.category,
         value: spent,
@@ -108,7 +108,7 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
                   animationEasing="ease-out"
                 >
                   {data.map((entry, index) => (
-                    <Cell 
+                    <Cell
                       key={`cell-${index}`}
                       fill={`url(#gradient-${index % COLORS.length})`}
                       stroke="#FFFFFF"
@@ -148,7 +148,7 @@ export function BudgetChart({ budgets, transactions, currency }: BudgetChartProp
                   onMouseLeave={() => setHoveredLegendItem(null)}
                 >
                   <div className="flex items-center gap-3">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
                     />

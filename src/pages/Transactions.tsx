@@ -94,6 +94,7 @@ const TransactionsPage = () => {
   const { categories: expenseCategories } = useCategories('debit');
   const { categories: incomeCategories } = useCategories('credit');
   const { categories: savingsCategories } = useCategories('savings');
+  const { categories: subscriptionCategories } = useCategories('subscription');
 
 
 
@@ -103,7 +104,8 @@ const TransactionsPage = () => {
       const categoriesWithType = [
         ...expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType })),
         ...incomeCategories.map(cat => ({ name: cat, type: 'credit' as TransactionType })),
-        ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }))
+        ...savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType })),
+        ...subscriptionCategories.map(cat => ({ name: cat, type: 'subscription' as TransactionType }))
       ];
 
 
@@ -118,6 +120,8 @@ const TransactionsPage = () => {
       return expenseCategories.map(cat => ({ name: cat, type: 'debit' as TransactionType }));
     } else if (selectedType === "savings") {
       return savingsCategories.map(cat => ({ name: cat, type: 'savings' as TransactionType }));
+    } else if (selectedType === "subscription") {
+      return subscriptionCategories.map(cat => ({ name: cat, type: 'subscription' as TransactionType }));
     }
     return [];
   }, [selectedType, expenseCategories, incomeCategories, savingsCategories]);
@@ -321,7 +325,7 @@ const TransactionsPage = () => {
           dayTransactions.forEach(transaction => {
             if (transaction.type === 'credit') {
               income += transaction.amount;
-            } else if (transaction.type === 'debit') {
+            } else if (transaction.type === 'debit' || transaction.type === 'subscription') {
               expense += transaction.amount;
             }
           });
@@ -348,6 +352,8 @@ const TransactionsPage = () => {
 
       case 'savings':
         return <div className="h-3.5 w-3.5 rounded-full bg-blue-400"></div>;
+      case 'subscription':
+        return <TrendingDown className="h-4 w-4 text-purple-500" strokeWidth={1.5} />;
       default:
         return null;
     }
@@ -428,6 +434,7 @@ const TransactionsPage = () => {
                     <SelectItem value="credit" className="text-foreground">Income</SelectItem>
                     <SelectItem value="debit" className="text-foreground">Expense</SelectItem>
                     <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
+                    <SelectItem value="subscription" className="text-foreground">Subscriptions</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -684,7 +691,7 @@ const TransactionsPage = () => {
 
                                       className={`text-right ${transaction.type === "credit"
                                         ? "text-green-600 dark:text-green-400"
-                                        : transaction.type === "debit"
+                                        : transaction.type === "debit" || transaction.type === "subscription"
                                           ? "text-red-600 dark:text-red-400"
                                           : "text-blue-600 dark:text-blue-400"
                                         }`}
@@ -692,7 +699,7 @@ const TransactionsPage = () => {
                                       <p className="font-medium text-[15px] leading-tight">
                                         {transaction.type === "credit"
                                           ? "+"
-                                          : transaction.type === "debit"
+                                          : transaction.type === "debit" || transaction.type === "subscription"
                                             ? "-"
                                             : ""}
 

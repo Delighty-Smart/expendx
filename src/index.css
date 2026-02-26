@@ -378,7 +378,7 @@
 
 .dark .glass-card,
 .dark .glass-effect {
-  @apply bg-background/40 border-white/10;
+  @apply bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl;
 }
 
 /* Enhanced Dropdowns */
@@ -539,10 +539,7 @@
   color: hsl(215 20.2% 70%);
 }
 
-.dark .card {
-  background-color: hsl(217.2 32.6% 17.5%);
-  border-color: hsl(217.2 32.6% 22%);
-}
+/* .dark .card removed to allow glassmorphism and custom card styles */
 
 .dark input,
 .dark select,

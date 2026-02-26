@@ -47,7 +47,7 @@ interface TransactionData {
   updated_at: string;
 }
 
-type TransactionType = "credit" | "debit" | "savings";
+type TransactionType = "credit" | "debit" | "savings" | "subscription";
 
 // Function to handle adding transactions relocated inside component to use navigate
 
@@ -205,7 +205,7 @@ const IndexPage = () => {
       .filter((t) => t.type === "credit")
       .reduce((sum, t) => sum + t.amount, 0),
     monthlyExpenses: transactions
-      .filter((t) => t.type === "debit")
+      .filter((t) => t.type === "debit" || t.type === "subscription")
       .reduce((sum, t) => sum + t.amount, 0),
     monthlySavings: transactions
       .filter((t) => t.type === "savings")
@@ -215,7 +215,7 @@ const IndexPage = () => {
   // Memoized spending data for charts
   const spendingData = useMemo(() => {
     const byCategory = transactions
-      .filter((t) => t.type === "debit")
+      .filter((t) => t.type === "debit" || t.type === "subscription")
       .reduce((acc, t) => {
         acc[t.category] = (acc[t.category] || 0) + t.amount;
         return acc;
@@ -243,7 +243,7 @@ const IndexPage = () => {
         .reduce((sum, t) => sum + t.amount, 0);
 
       const dayExpenses = transactions
-        .filter(t => t.type === 'debit' && t.date.startsWith(dayStr))
+        .filter(t => (t.type === 'debit' || t.type === 'subscription') && t.date.startsWith(dayStr))
         .reduce((sum, t) => sum + t.amount, 0);
 
       return {
@@ -285,7 +285,7 @@ const IndexPage = () => {
         .reduce((sum, t) => sum + t.amount, 0);
 
       const dayExpense = dayTransactions
-        .filter(t => t.type === 'debit')
+        .filter(t => t.type === 'debit' || t.type === 'subscription')
         .reduce((sum, t) => sum + t.amount, 0);
 
       const daySavings = dayTransactions
