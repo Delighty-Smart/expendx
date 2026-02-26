@@ -175,7 +175,7 @@ const Layout = ({
             )}
             <Link to="/dashboard" className="flex items-center gap-2">
               <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
-              <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider hidden xs:inline-flex">Beta</Badge>
+              <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider inline-flex">Beta</Badge>
             </Link>
           </div>
 

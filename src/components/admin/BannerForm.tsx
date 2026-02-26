@@ -116,8 +116,21 @@ const BannerForm = ({ open, onOpenChange, banner, onSuccess }: BannerFormProps) 
                 return;
             }
 
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No user found");
+            // Try to get user via getUser() first (most secure)
+            let { data: { user }, error: userError } = await supabase.auth.getUser();
+
+            // Fallback to getSession() if getUser() fails or returns no user
+            // This is sometimes necessary in local dev or specific session states
+            if (!user || userError) {
+                console.warn("BannerForm: getUser() failed or returned null, trying getSession()...", userError);
+                const { data: { session } } = await supabase.auth.getSession();
+                user = session?.user || null;
+            }
+
+            if (!user) {
+                console.error("BannerForm: No authenticated user found in both getUser() and getSession()");
+                throw new Error("No authenticated session found. Please try refreshing or logging in again.");
+            }
 
             const payload = {
                 ...values,
