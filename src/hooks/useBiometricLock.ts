@@ -2,14 +2,15 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { BiometricAuth, BiometryError } from '@aparajita/capacitor-biometric-auth';
+import { PrivacyScreen } from '@capacitor-community/privacy-screen';
 
 const BIOMETRIC_ENABLED_KEY = 'expendx_biometric_enabled';
 
 /**
  * useBiometricLock
  *
- * Prompts biometric authentication when the app resumes from background,
- * if the user has opted-in via Settings.
+ * Prompts biometric authentication when the app loads or resumes from background,
+ * if the user has opted-in via Settings. Also enables/disables the system privacy screen.
  *
  * Returns helpers to check capability and toggle the setting.
  */
@@ -22,6 +23,13 @@ export const useBiometricLock = () => {
 
     const setBiometricEnabled = useCallback((enabled: boolean) => {
         localStorage.setItem(BIOMETRIC_ENABLED_KEY, String(enabled));
+        if (Capacitor.isNativePlatform()) {
+            if (enabled) {
+                PrivacyScreen.enable().catch(console.error);
+            } else {
+                PrivacyScreen.disable().catch(console.error);
+            }
+        }
     }, []);
 
     /** Returns true if the device supports biometric auth */
@@ -40,7 +48,7 @@ export const useBiometricLock = () => {
         if (!Capacitor.isNativePlatform()) return true;
         try {
             await BiometricAuth.authenticate({
-                reason: 'Verify your identity to access ExpendX',
+                reason: 'Verify your identity to access expendX',
                 cancelTitle: 'Cancel',
                 iosFallbackTitle: 'Use Passcode',
                 allowDeviceCredential: true,
@@ -56,6 +64,22 @@ export const useBiometricLock = () => {
 
     useEffect(() => {
         if (!Capacitor.isNativePlatform()) return;
+
+        // Apply Privacy Screen on initial load based on setting
+        if (isBiometricEnabled()) {
+            PrivacyScreen.enable().catch(console.error);
+
+            // Initial load biometric prompt
+            (async () => {
+                isLocked.current = true;
+                const ok = await authenticate();
+                if (ok) {
+                    isLocked.current = false;
+                }
+            })();
+        } else {
+            PrivacyScreen.disable().catch(console.error);
+        }
 
         let listener: any;
         CapacitorApp.addListener('appStateChange', async ({ isActive }) => {

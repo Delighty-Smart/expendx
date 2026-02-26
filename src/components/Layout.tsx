@@ -1,4 +1,4 @@
-﻿import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell, X, CreditCard } from "lucide-react";
+﻿import { Menu, LogOut, Flame, User, Moon, Sun, Home, Receipt, DollarSign, PiggyBank, BarChart, MessageSquare, Settings, Shield, Bell, X, CreditCard, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -144,6 +144,7 @@ const Layout = ({
     { path: "/savings", label: "Savings", icon: PiggyBank },
     { path: "/subscriptions", label: "Subscriptions", icon: CreditCard },
     { path: "/reports", label: "Reports", icon: BarChart },
+    { path: "/trends", label: "Trends", icon: TrendingUp },
     { path: "/alerts", label: "Alerts", icon: Bell, badge: unreadAlerts > 0 ? unreadAlerts : undefined },
     { path: "/feedback", label: "Feedback", icon: MessageSquare },
     { path: "/settings", label: "Settings", icon: Settings },
@@ -174,6 +175,7 @@ const Layout = ({
             )}
             <Link to="/dashboard" className="flex items-center gap-2">
               <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
+              <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider hidden xs:inline-flex">Beta</Badge>
             </Link>
           </div>
 
@@ -201,8 +203,9 @@ const Layout = ({
       {/* Desktop & PWA sidebar nav */}
       {!isNative && (
         <aside className={`fixed top-0 left-0 h-full w-[280px] md:w-64 bg-card border-r border-border transform transition-all duration-300 ease-in-out z-40 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 flex flex-col shadow-lg`}>
-          <div className="p-4 safe-pt border-b border-border flex items-center justify-center">
+          <div className="p-4 safe-pt border-b border-border flex items-center justify-center gap-2">
             <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain mt-1" />
+            <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider relative -top-2">Beta</Badge>
           </div>
 
           <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto">

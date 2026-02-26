@@ -133,7 +133,7 @@ const FeedbackPage = () => {
             Share your thoughts
           </h1>
           <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto">
-            Your feedback is the fuel that drives ExpendX forward.
+            Your feedback is the fuel that drives expendX forward.
           </p>
         </div>
 
@@ -240,7 +240,7 @@ const FeedbackPage = () => {
         </div>
 
         <p className="text-center mt-8 text-sm text-muted-foreground/60 font-medium">
-          ExpendX team reviews every piece of feedback manually.
+          expendX team reviews every piece of feedback manually.
         </p>
       </div>
     </main>

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Wallet, Target, Shield, ChevronRight, Zap, TrendingUp, Lock } from "lucide-react";
 import { ButtonLoading } from "@/components/ui/loading-state";
+import { Badge } from "@/components/ui/badge";
 
 interface OnboardingProps {
   onComplete: () => Promise<void>;
@@ -92,12 +93,15 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
 
         <CardHeader className="text-center pb-2 pt-6">
           {/* Logo */}
-          <div className="inline-flex items-center justify-center mb-4 mx-auto transform hover:scale-105 transition-transform">
-            <img
-              src="/app-icon.png"
-              alt="ExpendX"
-              className="h-12 w-12 object-contain shadow-lg rounded-lg"
-            />
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center justify-center gap-2 mb-4">
+              <img
+                src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
+                alt="expendX"
+                className="h-16 object-contain"
+              />
+              <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider relative -top-4">Beta</Badge>
+            </div>
           </div>
 
           {/* Progress indicators - more modern */}

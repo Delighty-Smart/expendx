@@ -76,8 +76,34 @@ export function useSubscriptionIntegration() {
     }
   };
 
+  const updateSubscriptionStatus = async (subscriptionId: string, amount: number) => {
+    try {
+      const option = subscriptionOptions.find(opt => opt.id === subscriptionId);
+      if (!option) return;
+
+      const today = new Date();
+      const nextBillingDate = option.subscription.subscription_type === 'monthly'
+        ? addDays(today, 30)
+        : addYears(today, 1);
+
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({
+          last_transaction_date: today.toISOString().split('T')[0],
+          next_billing_date: nextBillingDate.toISOString().split('T')[0]
+        })
+        .eq('id', subscriptionId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating subscription status:', error);
+      throw error;
+    }
+  };
+
   return {
     subscriptionOptions,
-    upsertSubscriptionFromTransaction
+    upsertSubscriptionFromTransaction,
+    updateSubscriptionStatus
   };
 }

@@ -117,7 +117,7 @@ export default function Landing() {
                 >
                     <img
                         src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                        alt="Loading ExpendX"
+                        alt="Loading expendX"
                         className="h-10 sm:h-12 object-contain"
                     />
                     <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
@@ -137,7 +137,7 @@ export default function Landing() {
     // Animation variants
     const fadeUp = {
         hidden: { opacity: 0, y: 30 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } }
     };
 
     const staggerContainer = {
@@ -150,6 +150,13 @@ export default function Landing() {
         }
     };
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning,";
+        if (hour < 18) return "Good afternoon,";
+        return "Good evening,";
+    };
+
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30 overflow-hidden">
             {/* Navigation */}
@@ -160,11 +167,14 @@ export default function Landing() {
             >
                 <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <img
-                            src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                            alt="ExpendX"
-                            className="h-7 sm:h-8 object-contain"
-                        />
+                        <div className="flex items-center gap-2">
+                            <img
+                                src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
+                                alt="expendX"
+                                className="h-7 sm:h-8 object-contain"
+                            />
+                            <Badge className="bg-primary/20 text-emerald-400 text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider hidden xs:inline-flex rounded-full">Beta</Badge>
+                        </div>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-4">
                         <Link to="/auth" className="hidden sm:inline-flex text-sm font-medium hover:text-white/80 transition-colors">
@@ -193,7 +203,7 @@ export default function Landing() {
                             Smarter Expense Tracking
                         </Badge>
                     </motion.div>
-                    <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-tight">
+                    <motion.h1 variants={fadeUp} style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-tight">
                         Take Control of Your <br className="hidden md:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
                             Finances, Effortlessly.
@@ -225,7 +235,7 @@ export default function Landing() {
                     variants={fadeUp}
                     className="container mx-auto px-6 max-w-5xl text-center relative z-10"
                 >
-                    <h2 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight">Tired of manual spreadsheets?</h2>
+                    <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight">Tired of manual spreadsheets?</h2>
                     <p className="text-base md:text-xl text-white/60 leading-relaxed max-w-3xl mx-auto">
                         Stop wasting hours trying to figure out where your money went. ExpendX provides intelligent categorizations, target pacing, and real-time reports to give you a crystal-clear picture of your wealth.
                     </p>
@@ -247,7 +257,7 @@ export default function Landing() {
                         <Badge className="mb-4 bg-primary/20 text-emerald-400 border-0 px-4 py-1.5 rounded-full text-sm font-medium">
                             Live Preview
                         </Badge>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">See your money in motion</h2>
+                        <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-4xl font-bold mb-4">See your money in motion</h2>
                         <p className="text-lg text-white/60 max-w-2xl mx-auto">
                             Transform raw numbers into stunning visuals. This is the exact layout you'll use inside to monitor, tweak, and master your financial flow.
                         </p>
@@ -266,7 +276,7 @@ export default function Landing() {
                             <div className="md:col-span-3 flex items-center justify-between mb-2">
                                 <div>
                                     <h3 className="text-xl md:text-2xl font-bold text-white flex items-center flex-wrap gap-x-2">
-                                        Good evening,
+                                        {getGreeting()}
                                         <div className="relative inline-block min-w-[120px] h-[32px] overflow-hidden ml-1 align-bottom">
                                             <AnimatePresence mode="popLayout">
                                                 <motion.span
@@ -474,7 +484,7 @@ export default function Landing() {
                         variants={fadeUp}
                         className="text-center mb-16"
                     >
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need</h2>
+                        <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-4xl font-bold mb-4">Everything you need</h2>
                         <p className="text-lg text-white/60">Powerful oversight tools designed for everyday life.</p>
                     </motion.div>
 
@@ -526,6 +536,7 @@ export default function Landing() {
                         whileInView="visible"
                         viewport={{ once: true }}
                         variants={fadeUp}
+                        style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
                         className="text-3xl md:text-4xl font-bold mb-16"
                     >
                         Available wherever you are
@@ -580,7 +591,7 @@ export default function Landing() {
                     variants={fadeUp}
                     className="container mx-auto px-6 relative z-10 text-center"
                 >
-                    <h2 className="text-3xl md:text-5xl font-bold mb-8 px-4 leading-tight">Ready to transform your finances?</h2>
+                    <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-5xl font-bold mb-8 px-4 leading-tight">Ready to transform your finances?</h2>
                     <Button asChild size="lg" className="rounded-full w-[calc(100%-2rem)] sm:w-auto px-10 h-14 text-base sm:text-lg bg-white text-black hover:bg-white/90 transition-transform active:scale-95 shadow-2xl shadow-primary/20">
                         <Link to="/auth">Create your free account</Link>
                     </Button>

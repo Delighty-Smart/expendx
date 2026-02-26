@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Subscription, SERVICE_PROVIDERS, CARD_TYPES, SUBSCRIPTION_TYPES, SUBSCRIPTION_STATUSES } from '@/types/subscriptions';
 import { useToast } from '@/hooks/use-toast';
+import { useCategories } from '@/hooks/useCategories';
 import { addDays, addYears } from 'date-fns';
 
 interface SubscriptionFormProps {
@@ -27,6 +28,8 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const { categories: customProviders } = useCategories('subscription');
 
   useEffect(() => {
     if (subscription) {
@@ -135,7 +138,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
                 <SelectValue placeholder="Select service provider" />
               </SelectTrigger>
               <SelectContent>
-                {SERVICE_PROVIDERS.map((provider) => (
+                {customProviders.map((provider) => (
                   <SelectItem key={provider} value={provider}>
                     {provider}
                   </SelectItem>

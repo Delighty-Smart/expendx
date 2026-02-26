@@ -205,6 +205,7 @@ export const CategoryManagement = () => {
                   <SelectItem value="debit">Expense</SelectItem>
                   <SelectItem value="credit">Income</SelectItem>
                   <SelectItem value="savings">Savings</SelectItem>
+                  <SelectItem value="subscription">Subscriptions</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -228,7 +229,7 @@ export const CategoryManagement = () => {
             {(Object.keys(categoriesByType) as TransactionType[]).map(type => (
               <div key={type} className="space-y-2">
                 <h4 className="font-medium text-sm capitalize">
-                  {type === 'debit' ? 'Expense' : type === 'credit' ? 'Income' : 'Savings'} Categories
+                  {type === 'debit' ? 'Expense' : type === 'credit' ? 'Income' : type === 'savings' ? 'Savings' : 'Subscription'} Categories
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {categoriesByType[type]?.map(category => (

@@ -75,7 +75,7 @@ const DeleteAccountSection = () => {
           throw error;
         }
 
-        // Clear only ExpendX-specific localStorage keys (preserve other apps/extensions)
+        // Clear only expendX-specific localStorage keys (preserve other apps/extensions)
         const keysToRemove = Object.keys(localStorage).filter(k =>
           k.startsWith('expendx_') || k.startsWith('cached_') || k.startsWith('settings_')
         );
@@ -101,7 +101,7 @@ const DeleteAccountSection = () => {
         // Sign out first (needs session token still in localStorage)
         await signOut();
 
-        // Clear only ExpendX-specific localStorage keys after sign out
+        // Clear only expendX-specific localStorage keys after sign out
         const keysToRemove = Object.keys(localStorage).filter(k =>
           k.startsWith('expendx_') || k.startsWith('cached_') || k.startsWith('settings_')
         );

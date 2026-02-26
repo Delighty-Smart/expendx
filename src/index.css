@@ -798,6 +798,11 @@
     min-height: 44px;
   }
 
+  /* Bricolage Grotesque — used for landing page headings only */
+  .font-bricolage {
+    font-family: 'Bricolage Grotesque', sans-serif !important;
+  }
+
   .safe-pt {
     padding-top: env(safe-area-inset-top, 0px);
   }

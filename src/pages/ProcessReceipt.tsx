@@ -164,11 +164,9 @@ const ProcessReceipt = () => {
                     user_id: user.id,
                     amount: data.amount,
                     date: data.date,
-                    description: data.description || "Shared Receipt", // Fixed invalid 'merchant' column
+                    description: data.description || "Shared Receipt",
                     category: data.category,
-                    type: data.type, // Explicitly declared to prevent missing type constraints
-                    payment_method: 'bank_transfer',
-                    notes: 'Auto-scanned via AI Receipt OCR'
+                    type: data.type
                 });
 
             if (insertError) throw insertError;
@@ -241,7 +239,7 @@ const ProcessReceipt = () => {
                                     placeholder="0.00"
                                     disabled={loading}
                                 />
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground text-xl">₵</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground text-xl">₦</span>
                             </div>
                         </div>
 

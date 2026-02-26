@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionIntegration } from "@/hooks/useSubscriptionIntegration";
+import { useCategories } from "@/hooks/useCategories";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -26,13 +27,18 @@ import { useSmartCategorization } from "@/hooks/useSmartCategorization";
 import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
 // import { ReceiptScanner } from "./ReceiptScanner";
 import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
   amount: z.string().min(1, "Amount is required"),
-  type: z.enum(["credit", "debit", "savings"] as const),
+  type: z.enum(["credit", "debit", "savings", "subscription"] as const),
   category: z.string().min(1, "Category is required"),
   description: z.string().min(1, "Description is required"),
+
+  // Optional unit pricing
+  unit_price: z.string().optional(),
+  quantity: z.string().optional(),
 
   // Subscription specific fields (optional)
   service_provider: z.string().optional(),
@@ -49,7 +55,7 @@ const transactionSchema = z.object({
   return true;
 }, {
   message: "All subscription fields are required",
-  path: ["category"] // Or global, depending on where we want to show it
+  path: ["category"]
 });
 
 interface TransactionFormProps {
@@ -70,10 +76,12 @@ export const TransactionForm = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<string>("");
+  const [showUnitPricing, setShowUnitPricing] = useState(false);
   const { subscriptionOptions, upsertSubscriptionFromTransaction } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { getTransactionSyncStatus } = useEnhancedOfflineSync();
+  const { categories: customProviders } = useCategories('subscription');
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -83,6 +91,8 @@ export const TransactionForm = ({
       type: transaction?.type || "debit",
       category: transaction?.category || "",
       description: transaction?.description || "",
+      unit_price: "",
+      quantity: "",
       service_provider: "",
       custom_provider: "",
       card_type: "",
@@ -94,6 +104,17 @@ export const TransactionForm = ({
   // Smart categorization - watch description after form is created
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
+
+  // Auto-calculate amount from unit_price × quantity
+  const watchedUnitPrice = form.watch("unit_price");
+  const watchedQuantity = form.watch("quantity");
+  useEffect(() => {
+    const up = parseFloat(watchedUnitPrice || "");
+    const qty = parseFloat(watchedQuantity || "");
+    if (!isNaN(up) && !isNaN(qty) && up > 0 && qty > 0) {
+      form.setValue("amount", (up * qty).toFixed(2));
+    }
+  }, [watchedUnitPrice, watchedQuantity, form]);
 
   /*
   const handleReceiptData = useCallback((data: {
@@ -151,7 +172,9 @@ export const TransactionForm = ({
           amount: transaction.amount.toString(),
           type: transaction.type,
           category: transaction.category,
-          description: transaction.description
+          description: transaction.description,
+          unit_price: "",
+          quantity: "",
         });
         setTransactionType(transaction.type);
         loadCategories(transaction.type);
@@ -162,6 +185,8 @@ export const TransactionForm = ({
           type: "debit",
           category: "",
           description: "",
+          unit_price: "",
+          quantity: "",
           service_provider: "",
           custom_provider: "",
           card_type: "",
@@ -218,13 +243,15 @@ export const TransactionForm = ({
         throw new Error("Unable to determine user ID. Please try again when online.");
       }
 
-      const transactionData = {
+      const transactionData: any = {
         date: values.date,
         amount: parseFloat(values.amount),
         type: values.type as TransactionType,
         category: values.category,
         description: values.description,
-        user_id: userId
+        user_id: userId,
+        unit_price: values.unit_price ? parseFloat(values.unit_price) : null,
+        quantity: values.quantity ? parseFloat(values.quantity) : null,
       };
 
       console.log("Saving transaction with enhanced offline support:", transactionData);
@@ -347,6 +374,70 @@ export const TransactionForm = ({
               />
             </div>
 
+            {/* Unit Pricing toggle */}
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowUnitPricing((v) => !v)}
+                className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showUnitPricing ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                Unit Pricing (optional) — auto-calculates Amount
+              </button>
+
+              {showUnitPricing && (
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/20 rounded-xl border border-border/50">
+                  <FormField
+                    control={form.control}
+                    name="unit_price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Unit Price</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            step="0.01"
+                            {...field}
+                            className="h-10 bg-muted/40 border-none rounded-xl text-sm"
+                            disabled={loading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Quantity</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="1"
+                            step="1"
+                            min="1"
+                            {...field}
+                            className="h-10 bg-muted/40 border-none rounded-xl text-sm"
+                            disabled={loading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {watchedUnitPrice && watchedQuantity && (
+                    <p className="col-span-2 text-xs text-primary font-medium">
+                      ✓ Amount auto-set to {parseFloat(watchedUnitPrice) * parseFloat(watchedQuantity)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+
             <FormField
               control={form.control}
               name="type"
@@ -367,6 +458,7 @@ export const TransactionForm = ({
                       <SelectItem value="credit">Credit (Income)</SelectItem>
                       <SelectItem value="debit">Debit (Expense)</SelectItem>
                       <SelectItem value="savings">Savings</SelectItem>
+                      <SelectItem value="subscription">Subscriptions</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -488,7 +580,7 @@ export const TransactionForm = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {SERVICE_PROVIDERS.map(p => (
+                            {customProviders.map(p => (
                               <SelectItem key={p} value={p}>{p}</SelectItem>
                             ))}
                           </SelectContent>

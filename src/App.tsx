@@ -33,6 +33,7 @@ import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 import Subscriptions from '@/pages/Subscriptions'
+import Trends from '@/pages/Trends'
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt'
 import PushOnboarding from '@/components/PushOnboarding'
 import { CapacitorShareTarget } from '@capgo/capacitor-share-target';
@@ -59,9 +60,18 @@ function AppContent() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user?.id);
 
-      // Hide splash screen once session is resolved — prevents flash of wrong UI
+      // Hide native plugins splash screen once session is resolved
       if (Capacitor.isNativePlatform()) {
         SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => { });
+
+        // Hide our custom HTML splash screen gracefully
+        const nativeSplash = document.getElementById('native-splash');
+        if (nativeSplash) {
+          nativeSplash.style.opacity = '0';
+          setTimeout(() => {
+            nativeSplash.remove();
+          }, 300); // Wait for the CSS transition to finish before dropping from DOM
+        }
       }
     });
 
@@ -115,10 +125,27 @@ function AppContent() {
         // e.g. io.expendx.app://login-callback#access_token=....
         if (event.url.includes('login-callback')) {
           // Send the URL to supabase to extract the session
-          // Note: using getSessionFromUrl for OAuth flow completions
           try {
-            await supabase.auth.getSessionFromUrl({ url: event.url });
-            navigate('/dashboard', { replace: true });
+            const urlObj = new URL(event.url);
+
+            // Check for PKCE code first
+            const code = urlObj.searchParams.get('code');
+            if (code) {
+              await supabase.auth.exchangeCodeForSession(code);
+              navigate('/dashboard', { replace: true });
+              return;
+            }
+
+            // Fallback to implicit flow tokens in hash
+            const hashFragment = urlObj.hash.substring(1);
+            const params = new URLSearchParams(hashFragment);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({ access_token, refresh_token });
+              navigate('/dashboard', { replace: true });
+            }
           } catch (err) {
             console.error("Deep link Auth parsing Error", err);
           }
@@ -190,6 +217,7 @@ function AppContent() {
           <Route path="/add-savings-goal" element={<AddSavingsGoal />} />
           <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/trends" element={<Trends />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/alerts" element={<Alerts />} />

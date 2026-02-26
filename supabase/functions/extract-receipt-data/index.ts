@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
         'X-Title': 'ExpendX', // Required by OpenRouter
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.0-flash-001',
         messages: [
           {
             role: 'user',

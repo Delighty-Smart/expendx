@@ -14,7 +14,8 @@ import {
     CreditCard,
     ChevronDown,
     Shield,
-    Plus
+    Plus,
+    TrendingUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ const MORE_ITEMS = [
     { path: "/savings", label: "Savings", icon: PiggyBank },
     { path: "/subscriptions", label: "Subscriptions", icon: CreditCard },
     { path: "/reports", label: "Reports", icon: BarChart },
+    { path: "/trends", label: "Trends", icon: TrendingUp },
     { path: "/alerts", label: "Alerts", icon: Bell },
     { path: "/feedback", label: "Feedback", icon: MessageSquare },
     { path: "/settings", label: "Settings", icon: Settings },

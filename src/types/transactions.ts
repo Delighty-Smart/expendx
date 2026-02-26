@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { SERVICE_PROVIDERS } from "@/types/subscriptions";
 
-export type TransactionType = "credit" | "debit" | "savings";
+export type TransactionType = "credit" | "debit" | "savings" | "subscription";
 
 // Category type
 export type TransactionCategory = string;
@@ -98,7 +98,8 @@ const DEFAULT_CATEGORIES = {
     "Travel Fund",
     "Vehicle Purchase",
     "Wealth Building"
-  ]
+  ],
+  subscription: SERVICE_PROVIDERS
 };
 
 // Export specific category arrays for backwards compatibility
