@@ -1,5 +1,4 @@
 declare const Deno: any;
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
@@ -7,7 +6,7 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: any) => {
+Deno.serve(async (req) => {
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });

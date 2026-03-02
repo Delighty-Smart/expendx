@@ -27,6 +27,8 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPi
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 import { Transaction } from "@/types/transactions";
+import { useCategories } from "@/hooks/useCategories";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AIInsights } from "@/components/reports/AIInsights";
