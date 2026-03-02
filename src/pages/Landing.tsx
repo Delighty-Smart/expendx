@@ -87,7 +87,8 @@ export default function Landing() {
 
     useEffect(() => {
         // If we are processing an OAuth callback, hold the redirect so Supabase can parse it
-        if (window.location.hash.includes('access_token') || window.location.search.includes('code=')) {
+        // but only if the user is not already authenticated
+        if (!user && (window.location.hash.includes('access_token') || window.location.search.includes('code='))) {
             return;
         }
 
