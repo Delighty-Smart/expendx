@@ -47,6 +47,7 @@ import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
 
 import { useAutoTracker } from './hooks/useAutoTracker';
 import { useBiometricLock } from './hooks/useBiometricLock';
+import { AuthGuard } from '@/components/AuthGuard';
 
 function AppContent() {
   const [userId, setUserId] = useState<string | undefined>();
@@ -207,7 +208,7 @@ function AppContent() {
         <Route path="/" element={<Landing />} />
 
         {/* Protected Routes with Persistent Layout */}
-        <Route element={<Layout />}>
+        <Route element={<AuthGuard><Layout /></AuthGuard>}>
           <Route path="/dashboard" element={<IndexPage />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/add-transaction" element={<AddTransaction />} />

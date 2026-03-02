@@ -2,7 +2,7 @@
 // Service Worker for ExpendX PWA
 // Auto-updates seamlessly — no prompt needed
 
-const CACHE_NAME = 'expendx-v1';
+const CACHE_NAME = 'expendx-v2';
 
 // Only cache the offline fallback and app shell during install
 const PRECACHE_URLS = [
@@ -87,11 +87,14 @@ self.addEventListener('fetch', (event) => {
     return; // Let the browser handle it normally
   }
 
-  // ── Navigation (HTML): NETWORK-FIRST ──
+  // ── Navigation (HTML): NETWORK-FIRST (bypassing HTTP Cache) ──
   // Always try to get fresh HTML so the PWA stays up-to-date
   if (isNavigationRequest(request)) {
+    // Use no-store to force the browser to ignore its own disk cache for HTML
+    const freshRequest = new Request(request.url, { cache: 'no-store' });
+
     event.respondWith(
-      fetch(request)
+      fetch(freshRequest)
         .then((response) => {
           // Cache the fresh HTML for offline fallback
           const clone = response.clone();
@@ -109,6 +112,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // ── Hashed assets (JS/CSS): CACHE-FIRST ──
+
   // Safe because Vite generates unique filenames per build
   if (isHashedAsset(url)) {
     event.respondWith(
