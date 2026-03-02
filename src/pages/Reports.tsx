@@ -27,10 +27,10 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPi
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 import { Transaction } from "@/types/transactions";
-import { useCategories } from "@/hooks/useCategories";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AIInsights } from "@/components/reports/AIInsights";
+import { useEnhancedBudgetData } from "@/hooks/useEnhancedBudgetData";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -56,6 +56,7 @@ const ReportsPage = () => {
   const { currency } = useSettings();
   const { user, isLoading: isAuthLoading } = useAuth();
   const { refreshData } = useRefresh();
+  const { budgets, isLoading: isBudgetsLoading } = useEnhancedBudgetData();
 
   // Get categories based on selected type
   const { categories: allIncomeCategories } = useCategories('credit');
@@ -482,6 +483,18 @@ const ReportsPage = () => {
             </DropdownMenu>
           }
         />
+
+        {/* AI Financial Insights */}
+        {!isLoading && (
+          <AIInsights
+            transactions={filteredTransactions}
+            budgets={budgets || []}
+            dateRange={{
+              from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : '',
+              to: dateTo ? format(dateTo, 'yyyy-MM-dd') : ''
+            }}
+          />
+        )}
 
         {/* Filters Card */}
 
