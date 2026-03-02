@@ -66,12 +66,12 @@ export default {
         },
         // Logo-inspired colors
         expendx: {
-          blue: "#00AAFF",
-          green: "#b6e600", // Updated to neon lime
+          blue: "hsl(var(--brand-blue))",
+          green: "hsl(var(--brand-lime))",
           gray: {
-            light: "#f4f4f6",
-            medium: "#6e6e73",
-            dark: "#222222"
+            light: "hsl(var(--bg-muted))",
+            medium: "hsl(var(--muted-foreground))",
+            dark: "hsl(240 10% 13%)"
           }
         },
       },

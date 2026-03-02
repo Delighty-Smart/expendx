@@ -25,7 +25,7 @@ import { PendingSyncIndicator } from "./PendingSyncIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { useSmartCategorization } from "@/hooks/useSmartCategorization";
 import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
-// import { ReceiptScanner } from "./ReceiptScanner";
+import { ReceiptScanner } from "./ReceiptScanner";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -116,7 +116,6 @@ export const TransactionForm = ({
     }
   }, [watchedUnitPrice, watchedQuantity, form]);
 
-  /*
   const handleReceiptData = useCallback((data: {
     amount: number;
     date?: string;
@@ -132,7 +131,6 @@ export const TransactionForm = ({
       form.setValue('category', data.category);
     }
   }, [form]);
-  */
 
   // Helper function to get cached user ID for offline use
   const getCachedUserId = (): string | null => {
@@ -342,6 +340,12 @@ export const TransactionForm = ({
             )}
           </DialogDescription>
         </DialogHeader>
+
+        {!transaction && (
+          <div className="mb-4">
+            <ReceiptScanner onDataExtracted={handleReceiptData} />
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

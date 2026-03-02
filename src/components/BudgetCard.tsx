@@ -33,8 +33,8 @@ export function BudgetCard({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const percentage = Math.min((spent / limit) * 100, 100);
-  const remaining = Math.max(limit - spent, 0);
   const isOverBudget = spent > limit;
+  const diffAmount = Math.abs(limit - spent);
 
   const formatAmount = (amount: number) => {
     return amount.toLocaleString('en-US', {
@@ -73,7 +73,7 @@ export function BudgetCard({
   };
 
   return (
-    <GlassCard className={`relative overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-blue-50/40 to-purple-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-blue-200/30 dark:border-slate-600/30 ${isOverBudget ? 'border-destructive/50' : ''}`}>
+    <GlassCard className={`relative overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-blue-50/40 to-indigo-50/20 dark:from-slate-800/50 dark:via-slate-800/30 dark:to-slate-900/20 border-blue-200/30 dark:border-slate-800/30 ${isOverBudget ? 'border-rose-500/50' : ''}`}>
       {isOverBudget && (
         <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-bl-lg">
           Over Budget
@@ -114,18 +114,18 @@ export function BudgetCard({
         </div>
 
         <div className="space-y-3">
-          <Progress 
-            value={percentage} 
-            className="h-2" 
-            indicatorClassName={isOverBudget ? 'bg-destructive' : 'bg-gradient-to-r from-blue-500 to-purple-600'} 
+          <Progress
+            value={percentage}
+            className="h-2"
+            indicatorClassName={isOverBudget ? 'bg-rose-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'}
           />
           <div className="flex justify-between text-xs">
             <p className="text-muted-foreground font-medium">
               {percentage.toFixed(0)}% used (Active only)
             </p>
-            <p className={`font-medium ${isOverBudget ? 'text-destructive' : 'text-muted-foreground'}`}>
+            <p className={`font-medium ${isOverBudget ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground'}`}>
               {isOverBudget ? 'Over by ' : 'Remaining '}
-              {currency.symbol}{formatAmount(remaining)}
+              {currency.symbol}{formatAmount(diffAmount)}
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic">

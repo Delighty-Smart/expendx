@@ -43,6 +43,7 @@ import { CapacitorShareTarget } from '@capgo/capacitor-share-target';
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
 
 import Layout from '@/components/Layout'
+import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
 
 import { useAutoTracker } from './hooks/useAutoTracker';
 import { useBiometricLock } from './hooks/useBiometricLock';
@@ -239,16 +240,18 @@ function AppContent() {
 
 function App() {
   return (
-    <TooltipProvider>
-      <SettingsProvider>
-        <BrowserRouter>
-          <AppContent />
-          <PushOnboarding />
-          <Toaster />
-          <PWAUpdatePrompt />
-        </BrowserRouter>
-      </SettingsProvider>
-    </TooltipProvider>
+    <GlobalErrorBoundary>
+      <TooltipProvider>
+        <SettingsProvider>
+          <BrowserRouter>
+            <AppContent />
+            <PushOnboarding />
+            <Toaster />
+            <PWAUpdatePrompt />
+          </BrowserRouter>
+        </SettingsProvider>
+      </TooltipProvider>
+    </GlobalErrorBoundary>
   )
 }
 

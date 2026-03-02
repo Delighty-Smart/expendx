@@ -493,8 +493,8 @@ const IndexPage = () => {
             isMonthlyTransactionsLoading || isMonthlyIncomeLoading
               ? "bg-muted text-muted-foreground"
               : (monthlyIncomeTotal - monthlyExpenses) >= 0
-                ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                : "bg-red-500/10 text-red-600 dark:text-red-400"
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
           )}>
             {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
               <Skeleton className="h-4 w-24" />
@@ -553,8 +553,8 @@ const IndexPage = () => {
                 </p>
               )}
             </div>
-            <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors self-start">
-              <ArrowUpRight className="w-4 h-4 text-green-600 dark:text-green-400" strokeWidth={2} />
+            <div className="p-2 bg-emerald-500/10 rounded-full group-hover:bg-emerald-500/20 transition-colors self-start">
+              <ArrowUpRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
             </div>
           </div>
 
@@ -578,8 +578,8 @@ const IndexPage = () => {
                 </p>
               )}
             </div>
-            <div className="p-2 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-colors self-start">
-              <ArrowDownRight className="w-4 h-4 text-red-600 dark:text-red-400" strokeWidth={2} />
+            <div className="p-2 bg-rose-500/10 rounded-full group-hover:bg-rose-500/20 transition-colors self-start">
+              <ArrowDownRight className="w-4 h-4 text-rose-600 dark:text-rose-400" strokeWidth={2} />
             </div>
           </div>
 

@@ -4,23 +4,17 @@
 
 @layer base {
   :root {
-    /* Base Colors from Design Brief */
-    --bg-primary: 240 8% 96%;
-    /* #f4f4f6 */
-    --bg-surface: 0 0% 100%;
-    /* #ffffff */
-    --bg-muted: 240 6% 94%;
-    /* #f0f0f2 */
-    --bg-dark-surface: 0 0% 13%;
-    /* #222222 */
+    /* Brand Foundation */
+    --brand-blue: 200 100% 50%;   /* #00AAFF - Electric Blue */
+    --brand-lime: 74 100% 45%;   /* #b6e600 - Lime Green */
 
-    --text-primary: 0 0% 13%;
-    /* #222222 */
-    --text-secondary: 247 3% 44%;
-    /* #6e6e73 */
+    /* Light Mode: Fintech UI Direction */
+    --bg-primary: 247 16% 98%;   /* Soft off-white / light cool gray */
+    --bg-surface: 0 0% 100%;     /* Pure white for layered cards */
+    --bg-muted: 240 6% 94%;      /* Light gray for low-emphasis areas */
 
-    --accent-primary: 74 100% 45%;
-    /* #b6e600 - Lime */
+    --text-primary: 240 10% 13%; /* Deep charcoal for primary text */
+    --text-secondary: 247 3% 44%; /* Mid-gray for secondary text */
 
     /* Shadcn Mapping */
     --background: var(--bg-primary);
@@ -32,9 +26,8 @@
     --popover: var(--bg-surface);
     --popover-foreground: var(--text-primary);
 
-    --primary: var(--accent-primary);
-    --primary-foreground: 0 0% 13%;
-    /* Soft black text on lime */
+    --primary: var(--brand-blue);
+    --primary-foreground: 0 0% 100%;
 
     --secondary: var(--bg-muted);
     --secondary-foreground: var(--text-primary);
@@ -42,66 +35,63 @@
     --muted: var(--bg-muted);
     --muted-foreground: var(--text-secondary);
 
-    --accent: 200 100% 50%;
-    /* #00AAFF - Shield Blue */
-    --accent-foreground: 0 0% 100%;
+    --accent: var(--brand-lime);
+    --accent-foreground: 240 10% 13%;
 
+    /* Status Colors (Refined) */
+    --income: 156 72% 35%;       /* Modern emerald */
+    --expense: 0 74% 65%;        /* Muted coral */
+    --savings: 180 100% 25%;      /* Calm teal */
+    --warning: 38 92% 50%;       /* Warm amber */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    /* Subtle Grey Border (approx #e4e4e7) */
     --border: 240 5% 90%;
     --input: 240 5% 90%;
-    --ring: var(--accent-primary);
+    --ring: var(--brand-blue);
 
-    --radius: 0.6rem;
-    /* Minimal modern radius for cards/buttons */
+    --radius: 0.75rem;
 
-    /* Modal overlay background */
-    --modal-overlay: 0 0% 0% / 0.5;
-
-    /* Glass effect variables */
+    /* Glass Effects */
     --glass-background: 255 255 255 / 0.8;
     --glass-border: 255 255 255 / 0.3;
     --glass-blur: 12px;
   }
 
   .dark {
-    --background: 240 6% 6%;
-    /* Dark layout bg */
+    /* Dark Mode: Intentional Layering */
+    --background: 240 10% 8%;    /* Deep charcoal, not pure black */
     --foreground: 210 40% 98%;
 
-    --card: 240 5% 10%;
-    /* Dark card bg */
+    --card: 240 10% 12%;        /* Slightly lighter than background */
     --card-foreground: 210 40% 98%;
 
-    --popover: 240 5% 10%;
+    --popover: 240 10% 12%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 74 100% 45%;
-    /* #b6e600 */
-    --primary-foreground: 0 0% 13%;
+    --brand-blue-dark: 200 100% 45%; /* Slightly desaturated for comfort */
+    --brand-lime-dark: 74 80% 40%;   /* Softened Lime */
 
-    --secondary: 240 4% 16%;
+    --primary: var(--brand-blue-dark);
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 10% 15%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 75%;
 
-    --accent: 74 100% 45%;
+    --accent: var(--brand-lime-dark);
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --income: 156 60% 45%;       /* Soft emerald */
+    --expense: 0 60% 60%;        /* Muted coral */
+    --savings: 180 80% 35%;      /* Deep teal-green */
 
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 74 100% 45%;
+    --border: 240 10% 18%;
+    --input: 240 10% 18%;
+    --ring: var(--brand-blue-dark);
 
-    /* Modal overlay background */
-    --modal-overlay: 0 0% 0% / 0.7;
-
-    /* Glass effect variables */
     --glass-background: 0 0 0 / 0.4;
     --glass-border: 255 255 255 / 0.1;
     --glass-blur: 16px;

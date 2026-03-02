@@ -23,7 +23,7 @@ Deno.serve(async (req: Request) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || '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';
+    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || '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';
 
     if (!OPENROUTER_API_KEY) {
       throw new Error('OPENROUTER_API_KEY is not configured');
@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
         'X-Title': 'ExpendX', // Required by OpenRouter
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
+        model: 'nvidia/nemotron-nano-12b-v2-vl:free',
         messages: [
           {
             role: 'user',
@@ -58,6 +58,7 @@ Deno.serve(async (req: Request) => {
             ]
           }
         ],
+        reasoning: { enabled: true },
         tools: [
           {
             type: 'function',
@@ -111,12 +112,29 @@ Deno.serve(async (req: Request) => {
     const message = data.choices?.[0]?.message;
     const toolCall = message?.tool_calls?.[0];
 
-    if (!toolCall) {
-      console.error('No tool call in AI response. Message content:', message?.content);
+    let extractedData;
+    if (toolCall) {
+      extractedData = JSON.parse(toolCall.function.arguments);
+    } else {
+      // Fallback: Try to parse JSON from the content if tool calling failed or wasn't used
+      const content = message?.content || '';
+      console.log('No tool call found, attempting to parse content:', content);
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          extractedData = JSON.parse(jsonMatch[0]);
+        } catch (e) {
+          console.error('Failed to parse JSON from content:', e);
+        }
+      }
+    }
+
+    if (!extractedData) {
+      console.error('Extraction failed. Message content:', message?.content);
       throw new Error('Receipt analysis failed: The AI could not find structured data. Please try a clearer photo.');
     }
 
-    const extractedData = JSON.parse(toolCall.function.arguments);
     console.log('Extracted data:', extractedData);
 
     return new Response(

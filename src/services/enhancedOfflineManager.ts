@@ -636,6 +636,37 @@ class EnhancedOfflineManager {
   }
 
   // Storage methods using IndexedDB for large payloads
+  private async getDB(): Promise<IDBDatabase> {
+    const DB_NAME = 'expendx_offline';
+    const DB_VERSION = 2; // Increment version to ensure clean upgrade for consolidated stores
+    const TRANSACTIONS_STORE = 'transactions';
+    const PENDING_CHANGES_STORE = 'pending_changes';
+
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+
+        // Create transactions store for cached data
+        if (!db.objectStoreNames.contains(TRANSACTIONS_STORE)) {
+          db.createObjectStore(TRANSACTIONS_STORE, { keyPath: 'id' });
+        }
+
+        // Create pending changes store for offline sync (replacing/augmenting syncQueue)
+        if (!db.objectStoreNames.contains(PENDING_CHANGES_STORE)) {
+          db.createObjectStore(PENDING_CHANGES_STORE, { keyPath: 'id' });
+        }
+      };
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => {
+        console.error('Failed to open IndexedDB:', request.error);
+        reject(request.error);
+      };
+    });
+  }
+
   private async saveDataCache(): Promise<void> {
     try {
       if (!this.dataCache) return;
@@ -649,25 +680,30 @@ class EnhancedOfflineManager {
       const tx = db.transaction('transactions', 'readwrite');
       const store = tx.objectStore('transactions');
 
-      // Clear existing first for a clean "full data sync" or use put for individual updates
-      // For a full sync replacement, clearing is safer
+      // Efficiently sync the store with the current transactions array
+      // Instead of clearing every time (which can be heavy), we'll do a batch update
+      // But for "Full Data Sync", clearing is often simpler to ensure no stale data
       await new Promise<void>((resolve, reject) => {
         const clearRequest = store.clear();
         clearRequest.onsuccess = () => resolve();
         clearRequest.onerror = () => reject(clearRequest.error);
       });
 
-      // Batch add
+      // Batch add items efficiently
       for (const t of transactions) {
         store.put(t);
       }
 
-      await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
+      return new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => {
+          console.log(`Successfully saved ${transactions.length} transactions to IndexedDB`);
+          resolve();
+        };
+        tx.onerror = () => {
+          console.error('IndexedDB transaction failed:', tx.error);
+          reject(tx.error);
+        };
       });
-
-      console.log(`Saved ${transactions.length} transactions to IndexedDB`);
     } catch (error) {
       console.error('Failed to save data cache to IndexedDB:', error);
     }
@@ -705,15 +741,6 @@ class EnhancedOfflineManager {
       console.error('Failed to load data cache from IndexedDB:', error);
       this.dataCache = null;
     }
-  }
-
-  private async getDB(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('expendx_offline', 1);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-      // Upgrade handled in offlineStorage.ts
-    });
   }
 
   private async saveSyncQueue(): Promise<void> {

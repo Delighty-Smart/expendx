@@ -19,52 +19,74 @@ export const useAutoTracker = (userId: string | undefined) => {
         const setupListeners = async () => {
             try {
                 // We only start listening if permissions are granted.
-                // We assume NotificationPreferences.tsx handles the actual permission prompting.
-                const permissions = await MessageReader.checkPermissions();
+                const permissions = await MessageReader.checkPermissions().catch(() => null);
                 if (permissions?.messages === 'granted') {
                     // SMS Inbox monitoring active
                 }
 
-                // Initialize Notification Listener
-                await NotificationsListener.startListening({
-                    cacheNotifications: true
-                });
+                // Initialize Notification Listener - catch errors to prevent crash
+                try {
+                    await NotificationsListener.startListening({
+                        cacheNotifications: true
+                    });
+                } catch (e) {
+                    console.error('Failed to start NotificationsListener:', e);
+                }
 
-                // Listen for new notifications (like from Kuda app)
-                await NotificationsListener.addListener('notificationReceivedEvent', async (notification: any) => {
-                    const { title, text, package: pkgName } = notification;
+                // Listen for new notifications
+                const listener = await NotificationsListener.addListener('notificationReceivedEvent', async (notification: any) => {
+                    try {
+                        const { title, text, package: pkgName } = notification;
+                        const parsed = parseBankMessage(`${title} ${text}`, pkgName, true);
 
-                    // Only process from known bank packages if needed, or just let regex try
-                    const parsed = parseBankMessage(`${title} ${text}`, pkgName, true);
+                        if (parsed) {
+                            const { data: userData, error: userError } = await supabase.auth.getUser();
+                            if (userError || !userData.user) return;
 
-                    if (parsed) {
-                        const { data: userData } = await supabase.auth.getUser();
-                        if (!userData.user) return;
+                            const { error: insertError } = await supabase.from('transactions').insert({
+                                user_id: userData.user.id,
+                                amount: parsed.amount,
+                                type: parsed.type,
+                                description: parsed.description,
+                                category_id: null,
+                                date: parsed.date.toISOString(),
+                            });
 
-                        await supabase.from('transactions').insert({
-                            user_id: userData.user.id,
-                            amount: parsed.amount,
-                            type: parsed.type,
-                            description: parsed.description,
-                            category_id: null, // Auto uncategorized or default
-                            date: parsed.date.toISOString(),
-                        });
+                            if (insertError) {
+                                console.error('Failed to insert auto-tracked transaction:', insertError);
+                                return;
+                            }
 
-                        toast.success(`New ${parsed.type} tracked from ${parsed.source}: NGN ${parsed.amount}`);
-                        queryClient.invalidateQueries({ queryKey: ['transactions'] });
-                        queryClient.invalidateQueries({ queryKey: ['all_transactions'] });
+                            toast.success(`New ${parsed.type} tracked from ${parsed.source}: NGN ${parsed.amount}`);
+                            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+                            queryClient.invalidateQueries({ queryKey: ['all_transactions'] });
+                        }
+                    } catch (innerError) {
+                        console.error('Error processing notification event:', innerError);
                     }
+                }).catch(e => {
+                    console.error('Failed to add notification listener:', e);
+                    return null;
                 });
 
+                return () => {
+                    if (listener) {
+                        listener.remove().catch(() => { });
+                    }
+                    NotificationsListener.removeAllListeners().catch(() => { });
+                };
             } catch (error) {
                 console.error('Error setting up auto-tracker listeners', error);
             }
         };
 
-        setupListeners();
+        let cleanupFn: (() => void) | undefined;
+        setupListeners().then(cleanup => {
+            cleanupFn = cleanup;
+        });
 
         return () => {
-            NotificationsListener.removeAllListeners();
+            if (cleanupFn) cleanupFn();
         };
     }, [userId, queryClient]);
 };
