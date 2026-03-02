@@ -9,8 +9,16 @@ interface ReceiptScannerProps {
   onDataExtracted: (data: {
     amount: number;
     date?: string;
-    description: string;
+    merchant: string;
+    summary: string;
     category?: string;
+    category_suggestions?: string[];
+    items?: {
+      name: string;
+      quantity: number;
+      unit_price?: number;
+      amount: number;
+    }[];
   }) => void;
 }
 

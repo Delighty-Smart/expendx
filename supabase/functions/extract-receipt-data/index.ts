@@ -44,11 +44,24 @@ Deno.serve(async (req: Request) => {
         model: 'nvidia/nemotron-nano-12b-v2-vl:free',
         messages: [
           {
+            role: 'system',
+            content: `You are an expert financial AI assistant. Your task is to analyze receipt images and extract precise, highly granular structured data.
+            
+INSTRUCTIONS:
+1. Deduce Context: Determine the true nature of the transaction based on merchant name and items bought.
+2. Formulate Summary: Create a highly descriptive 'summary' outlining what was actually purchased (e.g., 'Groceries at Whole Foods, including fresh produce and dairy').
+3. Itemize: Extract a list of explicit line items. If there is a quantity, calculate or extract the unit price. If a single item, extract it with quantity 1.
+4. Categorize: Select the MOST LIKELY category. Also provide 3 'category_suggestions' that are plausible alternatives. Use standard finance categories.
+5. Accuracy: The 'amount' MUST match the receipt's grand total.
+
+Respond STRICTLY with valid JSON matching the schema provided.`
+          },
+          {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Extract transaction details from this receipt. Return only valid JSON with no markdown formatting.'
+                text: 'Extract the complete transaction context, itemized breakdown, and relevant categories from this receipt.'
               },
               {
                 type: 'image_url',
@@ -65,28 +78,36 @@ Deno.serve(async (req: Request) => {
             type: 'function',
             function: {
               name: 'extract_receipt_data',
-              description: 'Extract structured transaction data from a receipt image',
+              description: 'Extract highly structured, itemized transaction data and qualitative summaries from a receipt image.',
               parameters: {
                 type: 'object',
                 properties: {
-                  amount: {
-                    type: 'number',
-                    description: 'Total amount on the receipt'
+                  amount: { type: 'number', description: 'Total exact amount on the receipt' },
+                  date: { type: 'string', description: 'Transaction date in YYYY-MM-DD format (if visible)' },
+                  summary: { type: 'string', description: 'Rich, descriptive summary detailing the underlying transaction context and main items bought' },
+                  merchant: { type: 'string', description: 'Name of the merchant, store, or vendor' },
+                  category: { type: 'string', description: 'The absolute best matching category (e.g., Food & Dining, Shopping, Transportation)' },
+                  category_suggestions: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '3 alternative category suggestions if the nature of the transaction is ambiguous'
                   },
-                  date: {
-                    type: 'string',
-                    description: 'Transaction date in YYYY-MM-DD format'
-                  },
-                  description: {
-                    type: 'string',
-                    description: 'Merchant name or description'
-                  },
-                  category: {
-                    type: 'string',
-                    description: 'Best matching category (e.g., Food & Dining, Shopping, Transportation, etc.)'
+                  items: {
+                    type: 'array',
+                    description: 'Explicit line-item breakdown of the receipt contents',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        name: { type: 'string', description: 'Item name or description' },
+                        quantity: { type: 'number', description: 'Number of units purchased (default to 1 if not specified)' },
+                        unit_price: { type: 'number', description: 'Price per single unit. Mathematical rule: quantity * unit_price should roughly equal amount if itemized correctly' },
+                        amount: { type: 'number', description: 'Total price for this line item (quantity * unit_price)' }
+                      },
+                      required: ['name', 'quantity', 'amount']
+                    }
                   }
                 },
-                required: ['amount', 'description'],
+                required: ['amount', 'summary', 'merchant', 'category', 'category_suggestions', 'items'],
                 additionalProperties: false
               }
             }

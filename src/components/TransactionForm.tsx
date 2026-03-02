@@ -46,6 +46,12 @@ const transactionSchema = z.object({
   card_type: z.string().optional(),
   last_four_digits: z.string().optional(),
   subscription_type: z.enum(['monthly', 'annual']).optional(),
+  items: z.array(z.object({
+    name: z.string(),
+    quantity: z.number(),
+    unit_price: z.number().optional(),
+    amount: z.number()
+  })).optional(),
 }).refine(data => {
   if (data.category === 'Subscriptions') {
     if (!data.service_provider) return false;
@@ -77,6 +83,7 @@ export const TransactionForm = ({
   const [loading, setLoading] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<string>("");
   const [showUnitPricing, setShowUnitPricing] = useState(false);
+  const [extraSuggestions, setExtraSuggestions] = useState<string[]>([]);
   const { subscriptionOptions, upsertSubscriptionFromTransaction } = useSubscriptionIntegration();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -105,7 +112,7 @@ export const TransactionForm = ({
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
 
-  // Auto-calculate amount from unit_price × quantity
+  // Auto-calculate amount from unit_price × quantity (single item)
   const watchedUnitPrice = form.watch("unit_price");
   const watchedQuantity = form.watch("quantity");
   useEffect(() => {
@@ -116,19 +123,53 @@ export const TransactionForm = ({
     }
   }, [watchedUnitPrice, watchedQuantity, form]);
 
+  // Auto-calculate amount from itemized list
+  const watchedItems = form.watch("items");
+  useEffect(() => {
+    if (watchedItems && watchedItems.length > 0) {
+      const total = watchedItems.reduce((acc, item) => acc + (item.amount || 0), 0);
+      if (total > 0) {
+        form.setValue("amount", total.toFixed(2));
+      }
+    }
+  }, [watchedItems, form]);
+
   const handleReceiptData = useCallback((data: {
     amount: number;
     date?: string;
-    description: string;
+    merchant: string;
+    summary: string;
     category?: string;
+    category_suggestions?: string[];
+    items?: {
+      name: string;
+      quantity: number;
+      unit_price?: number;
+      amount: number;
+    }[];
   }) => {
     form.setValue('amount', data.amount.toString());
-    form.setValue('description', data.description);
+    form.setValue('description', data.summary || data.merchant);
+
     if (data.date) {
       form.setValue('date', data.date);
     }
+
     if (data.category) {
       form.setValue('category', data.category);
+    }
+
+    if (data.category_suggestions) {
+      setExtraSuggestions(data.category_suggestions);
+    } else {
+      setExtraSuggestions([]);
+    }
+
+    if (data.items) {
+      form.setValue('items', data.items);
+      if (data.items.length > 1) {
+        setShowUnitPricing(false); // Hide single unit pricing if we have many items
+      }
     }
   }, [form]);
 
@@ -251,6 +292,14 @@ export const TransactionForm = ({
         unit_price: values.unit_price ? parseFloat(values.unit_price) : null,
         quantity: values.quantity ? parseFloat(values.quantity) : null,
       };
+
+      // If we have items from receipt, format them into description nicely
+      if (values.items && values.items.length > 0) {
+        const itemsList = values.items
+          .map(item => `- ${item.name}: ${item.quantity}x @ ${item.unit_price || (item.amount / item.quantity).toFixed(2)} = ${item.amount}`)
+          .join('\n');
+        transactionData.description = `${values.description}\n\nItemized Breakdown:\n${itemsList}`;
+      }
 
       console.log("Saving transaction with enhanced offline support:", transactionData);
 
@@ -508,10 +557,86 @@ export const TransactionForm = ({
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {extraSuggestions.length > 0 && !field.value && (
+                    <div className="flex gap-2 mt-3 flex-wrap animate-in fade-in slide-in-from-top-1 duration-500">
+                      <p className="w-full text-[10px] text-muted-foreground font-medium mb-1">AI Suggestions:</p>
+                      {extraSuggestions.map((suggestion) => (
+                        <Badge
+                          key={suggestion}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-emerald-500 hover:text-white rounded-lg py-1 px-2 text-[10px] border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
+                          onClick={() => field.onChange(suggestion)}
+                        >
+                          ✨ {suggestion}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Itemized Receipt List */}
+            {watchedItems && watchedItems.length > 0 && (
+              <div className="space-y-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 animate-in zoom-in-95 duration-300">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Scanned Items Breakdown</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[10px]"
+                    onClick={() => form.setValue('items', [])}
+                  >
+                    Clear Items
+                  </Button>
+                </div>
+                <ScrollArea className="h-[150px] pr-4">
+                  <div className="space-y-3">
+                    {watchedItems.map((item, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-center text-xs bg-background/50 p-2 rounded-lg border border-border/50">
+                        <div className="col-span-6 font-medium truncate" title={item.name}>{item.name}</div>
+                        <div className="col-span-2">
+                          <Input
+                            type="number"
+                            className="h-7 text-[10px] p-1 bg-transparent border-none focus-visible:ring-0 text-center"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newItems = [...watchedItems];
+                              newItems[index] = {
+                                ...item,
+                                quantity: parseFloat(e.target.value) || 0,
+                                amount: (parseFloat(e.target.value) || 0) * (item.unit_price || (item.amount / item.quantity))
+                              };
+                              form.setValue('items', newItems);
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-1 text-center text-muted-foreground">x</div>
+                        <div className="col-span-3 font-bold text-right">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            className="h-7 text-[10px] p-1 bg-transparent border-none focus-visible:ring-0 text-right font-bold"
+                            value={item.amount}
+                            onChange={(e) => {
+                              const newItems = [...watchedItems];
+                              newItems[index] = { ...item, amount: parseFloat(e.target.value) || 0 };
+                              form.setValue('items', newItems);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+                <div className="pt-2 border-t border-emerald-500/10 flex justify-between items-center text-sm">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Total</span>
+                  <span className="font-bold text-lg">${watchedItems.reduce((sum, i) => sum + (i.amount || 0), 0).toFixed(2)}</span>
+                </div>
+              </div>
+            )}
 
             <RecurringTemplateSelector
               transactionType={transactionType}
