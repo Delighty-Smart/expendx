@@ -43,11 +43,16 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                 }
             });
 
-            if (invokeError) throw invokeError;
+            if (invokeError) {
+                // Try to extract error message from the response body if it's a Supabase error
+                const errorBody = await (invokeError as any).context?.json?.().catch(() => null);
+                const message = errorBody?.error || invokeError.message || "Unknown error";
+                throw new Error(message);
+            }
             setInsights(data);
         } catch (err: any) {
             console.error("Failed to generate AI insights:", err);
-            setError("ExpendX AI is currently unavailable. Please try again later.");
+            setError(err.message || "ExpendX AI is currently unavailable. Please try again later.");
         } finally {
             setLoading(false);
         }
