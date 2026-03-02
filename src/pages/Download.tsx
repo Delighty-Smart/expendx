@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Download, ShieldAlert, ArrowLeft, Smartphone, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
 
 const DownloadPage = () => {
+    const [apkDate, setApkDate] = useState<Date | null>(null);
+
+    useEffect(() => {
+        const fetchApkInfo = async () => {
+            try {
+                // Use a HEAD request to efficiently get the headers without downloading the file
+                const response = await fetch('/expendx-latest.apk', { method: 'HEAD' });
+                const lastModified = response.headers.get('Last-Modified');
+                if (lastModified) {
+                    setApkDate(new Date(lastModified));
+                }
+            } catch (error) {
+                console.error("Failed to fetch APK info:", error);
+            }
+        };
+        fetchApkInfo();
+    }, []);
+
     const fadeUp = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } }
@@ -112,7 +131,12 @@ const DownloadPage = () => {
                             Copy Download Link
                         </Button>
                     </div>
-                    <p className="mt-6 text-xs text-white/40">
+                    {apkDate && (
+                        <p className="mt-6 text-sm text-emerald-400 font-medium">
+                            Latest version updated {formatDistanceToNow(apkDate, { addSuffix: true })}
+                        </p>
+                    )}
+                    <p className="mt-2 text-xs text-white/40">
                         Requires Android 8.0 or higher.
                     </p>
                 </motion.div>
