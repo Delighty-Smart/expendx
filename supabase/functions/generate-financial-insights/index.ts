@@ -17,7 +17,13 @@ Deno.serve(async (req: Request) => {
 
         const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
         if (!openRouterKey) {
-            throw new Error('OPENROUTER_API_KEY is not set');
+            console.error('OPENROUTER_API_KEY is not set in the environment');
+            return new Response(JSON.stringify({
+                error: 'AI service configuration missing. Please set OPENROUTER_API_KEY in Supabase Vault.'
+            }), {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
         }
 
         const systemPrompt = `You are a world-class financial advisor for "ExpendX", a modern fintech app. 
@@ -39,7 +45,7 @@ Your response MUST be a JSON object with the following structure:
 }`;
 
         const userPrompt = `Financial Data:
-Transactions: ${JSON.stringify(transactions.slice(0, 50))} // Limiting to top 50 for context
+Transactions: ${JSON.stringify(transactions.slice(0, 30))} // Limiting to top 30 for token safety
 Budgets: ${JSON.stringify(budgets)}
 Period: ${dateRange.from} to ${dateRange.to}`;
 
@@ -48,6 +54,8 @@ Period: ${dateRange.from} to ${dateRange.to}`;
             headers: {
                 "Authorization": `Bearer ${openRouterKey}`,
                 "Content-Type": "application/json",
+                "HTTP-Referer": "https://expendx.app",
+                "X-Title": "ExpendX",
             },
             body: JSON.stringify({
                 "model": "google/gemini-2.0-flash-001",
@@ -59,19 +67,40 @@ Period: ${dateRange.from} to ${dateRange.to}`;
             })
         });
 
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('OpenRouter error:', response.status, errorData);
+            throw new Error(`AI Provider Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+        }
+
         const result = await response.json();
+
+        if (!result.choices?.[0]?.message?.content) {
+            console.error('Malformed OpenRouter response:', result);
+            throw new Error('AI Provider returned an empty or malformed response.');
+        }
+
         const content = result.choices[0].message.content;
 
         // Clean up content if it's wrapped in markdown code blocks
         const jsonString = content.replace(/```json\n?|\n?```/g, '').trim();
-        const insights = JSON.parse(jsonString);
+        let insights;
+        try {
+            insights = JSON.parse(jsonString);
+        } catch (parseError) {
+            console.error('Failed to parse AI response as JSON:', jsonString);
+            throw new Error('AI returned invalid data format.');
+        }
 
         return new Response(JSON.stringify(insights), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
     } catch (error: any) {
         console.error('Error in generate-financial-insights:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({
+            error: error.message || 'Internal logic error',
+            details: error.stack
+        }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
