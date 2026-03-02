@@ -1,5 +1,6 @@
 declare const Deno: any;
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+// Deployment trigger: Secrets updated
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 
 const corsHeaders = {
