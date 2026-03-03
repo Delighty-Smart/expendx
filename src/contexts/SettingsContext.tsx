@@ -116,9 +116,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         // Update HTML class for theme immediately
         document.documentElement.classList.toggle('dark', theme === 'dark');
 
-        // Sync Android status bar style with app theme
+        // Sync Android status bar style with app theme (Style.Dark = dark text for light theme, Style.Light = light text for dark theme)
         if (Capacitor.isNativePlatform()) {
-            StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light }).catch(() => { });
+            StatusBar.setStyle({ style: theme === 'dark' ? Style.Light : Style.Dark }).catch(() => { });
         }
 
         // Update theme-color meta tag for PWA/Mobile

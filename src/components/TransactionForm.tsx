@@ -69,13 +69,17 @@ interface TransactionFormProps {
   onOpenChange: (open: boolean) => void;
   onTransactionAdded?: () => void;
   transaction?: Transaction | null;
+  sharedFileUri?: string | null;
+  sharedMimeType?: string | null;
 }
 
 export const TransactionForm = ({
   open,
   onOpenChange,
   onTransactionAdded,
-  transaction
+  transaction,
+  sharedFileUri,
+  sharedMimeType
 }: TransactionFormProps) => {
   const { toast } = useToast();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
@@ -392,7 +396,12 @@ export const TransactionForm = ({
 
         {!transaction && (
           <div className="mb-4">
-            <ReceiptScanner onDataExtracted={handleReceiptData} />
+            <ReceiptScanner
+              onDataExtracted={handleReceiptData}
+              categories={categories}
+              sharedFileUri={sharedFileUri}
+              sharedMimeType={sharedMimeType}
+            />
           </div>
         )}
 

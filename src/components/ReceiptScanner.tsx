@@ -1,11 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Capacitor } from '@capacitor/core';
 
 interface ReceiptScannerProps {
+  categories?: string[];
+  sharedFileUri?: string | null;
+  sharedMimeType?: string | null;
   onDataExtracted: (data: {
     amount: number;
     date?: string;
@@ -22,12 +26,40 @@ interface ReceiptScannerProps {
   }) => void;
 }
 
-export function ReceiptScanner({ onDataExtracted }: ReceiptScannerProps) {
+export function ReceiptScanner({ onDataExtracted, categories = [], sharedFileUri, sharedMimeType }: ReceiptScannerProps) {
   const { toast } = useToast();
   const [isScanning, setIsScanning] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const autoProcessedRef = useRef(false);
+
+  useEffect(() => {
+    const processSharedFile = async () => {
+      if (!sharedFileUri || autoProcessedRef.current) return;
+
+      autoProcessedRef.current = true;
+      try {
+        const webUrl = Capacitor.convertFileSrc(sharedFileUri);
+        setPreviewImage(webUrl); // Show early preview
+
+        const response = await fetch(webUrl);
+        const blob = await response.blob();
+        const file = new File([blob], "shared_receipt.jpg", { type: sharedMimeType || "image/jpeg" });
+
+        processImage(file);
+      } catch (error) {
+        console.error("Error processing shared file:", error);
+        toast({
+          title: "Error Loading File",
+          description: "Could not load the shared receipt. You can try uploading it manually.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    processSharedFile();
+  }, [sharedFileUri, sharedMimeType]);
 
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -106,10 +138,10 @@ export function ReceiptScanner({ onDataExtracted }: ReceiptScannerProps) {
         throw new Error("Invalid image format generated during compression");
       }
 
-      console.log("Step 2: Sending image payload...");
+      console.log("Step 2: Sending image payload with categories...");
       // Call edge function
       const { data, error } = await supabase.functions.invoke('extract-receipt-data', {
-        body: { imageBase64: compressedBase64 }
+        body: { imageBase64: compressedBase64, categories }
       });
 
       if (error) {

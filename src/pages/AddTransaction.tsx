@@ -11,9 +11,10 @@ const AddTransactionPage = () => {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(true);
 
-  // Get transaction from location state if editing
   const transaction = location.state?.transaction || null;
   const isEditing = !!transaction;
+  const sharedFileUri = location.state?.sharedFileUri || null;
+  const sharedMimeType = location.state?.mimeType || null;
 
   const handleTransactionAdded = () => {
     navigate("/transactions");
@@ -37,7 +38,7 @@ const AddTransactionPage = () => {
             Back
           </Button>
           <h1 className="text-xl md:text-2xl font-bold">
-            {isEditing ? 'Edit Transaction' : 'Add Transaction'}
+            {isEditing ? 'Edit Transaction' : sharedFileUri ? 'Scan Shared Receipt' : 'Add Transaction'}
           </h1>
         </div>
         <OfflineIndicator />
@@ -56,6 +57,8 @@ const AddTransactionPage = () => {
         onOpenChange={handleFormClose}
         onTransactionAdded={handleTransactionAdded}
         transaction={transaction}
+        sharedFileUri={sharedFileUri}
+        sharedMimeType={sharedMimeType}
       />
     </div>
   );

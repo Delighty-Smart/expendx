@@ -15,7 +15,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const json = await req.json().catch(() => ({}));
-    const { imageBase64 } = json;
+    const { imageBase64, categories } = json;
 
     if (!imageBase64) {
       return new Response(
@@ -30,6 +30,10 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log('Extracting receipt data from image via OpenRouter...');
+
+    const categoryRule = categories && categories.length > 0
+      ? `4. Categorize: You MUST select the 'category' STRICTLY from this exact list: [${categories.join(', ')}]. Do not invent new categories. Also provide 3 'category_suggestions' from this SAME list that are plausible alternatives.`
+      : `4. Categorize: Select the MOST LIKELY category. Also provide 3 'category_suggestions' that are plausible alternatives. Use standard finance categories.`;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -50,7 +54,7 @@ INSTRUCTIONS:
 1. Deduce Context: Determine the true nature of the transaction based on merchant name and items bought.
 2. Formulate Summary: Create a highly descriptive 'summary' outlining what was actually purchased (e.g., 'Groceries at Whole Foods, including fresh produce and dairy').
 3. Itemize: Extract a list of explicit line items. If there is a quantity, calculate or extract the unit price. If a single item, extract it with quantity 1.
-4. Categorize: Select the MOST LIKELY category. Also provide 3 'category_suggestions' that are plausible alternatives. Use standard finance categories.
+${categoryRule}
 5. Accuracy: The 'amount' MUST match the receipt's grand total.
 
 Respond STRICTLY with valid JSON matching the schema provided.`

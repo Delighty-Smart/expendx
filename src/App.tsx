@@ -110,10 +110,10 @@ function AppContent() {
     window.addEventListener('resize', setVh);
     window.addEventListener('orientationchange', setVh);
 
-    // Set native status bar style from saved theme preference
+    // Set native status bar style from saved theme preference (Style.Dark = dark text for light theme)
     if (Capacitor.isNativePlatform()) {
       const savedTheme = localStorage.getItem('theme') || 'dark';
-      StatusBar.setStyle({ style: savedTheme === 'dark' ? Style.Dark : Style.Light }).catch(() => { });
+      StatusBar.setStyle({ style: savedTheme === 'dark' ? Style.Light : Style.Dark }).catch(() => { });
     }
 
     // Initial sync for enhanced offline manager
@@ -160,9 +160,9 @@ function AppContent() {
       // Share Target listener
       CapacitorShareTarget.addListener('shareReceived', (event: any) => {
         if (event.files && event.files.length > 0) {
-          // Take the first file and redirect to process page
+          // Take the first file and redirect to add-transaction to use unified AI OCR
           const file = event.files[0];
-          navigate('/process-receipt', { state: { fileUri: file.uri, mimeType: file.type } });
+          navigate('/add-transaction', { state: { sharedFileUri: file.uri, mimeType: file.type } });
         }
       });
     }
@@ -229,7 +229,6 @@ function AppContent() {
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/feedback" element={<AdminFeedback />} />
-          <Route path="/process-receipt" element={<ProcessReceipt />} />
         </Route>
 
         {/* Catch-all */}
