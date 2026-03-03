@@ -1,13 +1,13 @@
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+declare const Deno: any;
+// @ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
-const corsHeaders = {
+export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req: any) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -33,7 +33,7 @@ serve(async (req) => {
 
     // Ensure the feedback_screenshots bucket exists
     const { data: buckets } = await supabase.storage.listBuckets()
-    if (!buckets?.find(bucket => bucket.name === 'feedback_screenshots')) {
+    if (!buckets?.find((bucket: any) => bucket.name === 'feedback_screenshots')) {
       await supabase.storage.createBucket('feedback_screenshots', {
         public: false,
         fileSizeLimit: 10485760, // 10MB
@@ -73,14 +73,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        message: 'File uploaded successfully', 
+      JSON.stringify({
+        message: 'File uploaded successfully',
         filePath,
         url: urlData.signedUrl
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error("Unexpected error:", error.message)
     return new Response(
       JSON.stringify({ error: 'An unexpected error occurred', details: error.message }),

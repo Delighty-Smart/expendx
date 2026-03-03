@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+declare const Deno: any;
+// @ts-ignore
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
@@ -13,7 +14,7 @@ interface PushPayload {
     tag?: string;
 }
 
-serve(async (req) => {
+Deno.serve(async (req: any) => {
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: { "Access-Control-Allow-Origin": "*" } });
     }

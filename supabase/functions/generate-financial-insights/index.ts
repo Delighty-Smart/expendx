@@ -1,7 +1,6 @@
 declare const Deno: any;
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
+export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-name',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -59,7 +58,7 @@ Period: ${dateRange.from} to ${dateRange.to}`;
                 "X-Title": "ExpendX",
             },
             body: JSON.stringify({
-                "model": "google/gemini-2.0-flash-001",
+                "model": "nvidia/nemotron-nano-12b-v2-vl:free",
                 "messages": [
                     { "role": "system", "content": systemPrompt },
                     { "role": "user", "content": userPrompt }
