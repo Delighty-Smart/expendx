@@ -331,10 +331,126 @@ const ReportsPage = () => {
 
       yPosition += 55;
 
+      // --- AI STRATEGIC INSIGHTS ---
+      let aiInsights = null;
+      try {
+        toast({
+          title: "Analyzing Data",
+          description: "ExpendX Intelligence is generating your insights...",
+        });
+
+        const { data: edgeData, error: invokeError } = await supabase.functions.invoke('generate-financial-insights', {
+          body: {
+            transactions: (allTransactions || []).slice(0, 50),
+            budgets: budgets || [],
+            dateRange: {
+              from: format(dateFrom, 'yyyy-MM-dd'),
+              to: format(dateTo, 'yyyy-MM-dd')
+            },
+            currency: currency.code
+          }
+        });
+
+        if (invokeError) throw invokeError;
+        aiInsights = edgeData;
+      } catch (aiErr) {
+        console.warn("AI Insights generation failed or timed out during PDF build:", aiErr);
+        // We catch and swallow this error so the PDF still generates even if AI fails
+      }
+
+      if (aiInsights && aiInsights.summary) {
+        // Check for page overflow
+        if (yPosition + 60 > pageHeight - 20) {
+          drawFooter(pdf.internal.pages.length - 1);
+          pdf.addPage();
+          yPosition = margin;
+        }
+
+        // Section Title
+        pdf.setTextColor(37, 99, 235); // primary blue
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("AI Strategic Insights", margin, yPosition);
+        yPosition += 8;
+
+        // Sentiment/Summary Block
+        pdf.setFillColor(248, 250, 252); // light slate background
+        if (aiInsights.sentiment === 'positive') pdf.setFillColor(236, 253, 245); // light emerald
+        if (aiInsights.sentiment === 'caution') pdf.setFillColor(255, 251, 235); // light amber
+
+        pdf.roundedRect(margin, yPosition, pageWidth - (margin * 2), 25, 2, 2, "F");
+
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(10);
+        pdf.setTextColor(50, 50, 50);
+
+        const splitSummary = pdf.splitTextToSize(`"${aiInsights.summary}"`, pageWidth - (margin * 2) - 10);
+        pdf.text(splitSummary, margin + 5, yPosition + 8);
+        yPosition += 35; // move past the background box
+
+        pdf.setFont("helvetica", "normal");
+
+        // Quantitative Observations
+        if (aiInsights.quantitative_analysis && aiInsights.quantitative_analysis.length > 0) {
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(0, 0, 0);
+          pdf.text("Key Observations:", margin, yPosition);
+          yPosition += 6;
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(9);
+          pdf.setTextColor(70, 70, 70);
+
+          aiInsights.quantitative_analysis.forEach((obs: string) => {
+            const splitObs = pdf.splitTextToSize(`• ${obs}`, pageWidth - (margin * 2) - 5);
+            pdf.text(splitObs, margin + 2, yPosition);
+            yPosition += (splitObs.length * 4) + 2;
+          });
+          yPosition += 4;
+        }
+
+        // Actionable Advice
+        if (aiInsights.actionable_advice && aiInsights.actionable_advice.length > 0) {
+          if (yPosition + 40 > pageHeight - 20) {
+            drawFooter(pdf.internal.pages.length - 1);
+            pdf.addPage();
+            yPosition = margin;
+          }
+
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(0, 0, 0);
+          pdf.text("Recommendations:", margin, yPosition);
+          yPosition += 6;
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(9);
+          pdf.setTextColor(70, 70, 70);
+
+          aiInsights.actionable_advice.forEach((advice: string) => {
+            const splitAdvice = pdf.splitTextToSize(`• ${advice}`, pageWidth - (margin * 2) - 5);
+            pdf.text(splitAdvice, margin + 2, yPosition);
+            yPosition += (splitAdvice.length * 4) + 2;
+          });
+        }
+
+        yPosition += 10;
+      }
+
+      // Check for page overflow before visual analytics
+      if (yPosition + 80 > pageHeight - 20) {
+        drawFooter(pdf.internal.pages.length - 1);
+        pdf.addPage();
+        yPosition = margin;
+      }
+
       // --- CHARTS SECTION ---
       pdf.setTextColor(0, 0, 0);
       pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
       pdf.text("Visual Analytics", margin, yPosition);
+      pdf.setFont("helvetica", "normal");
       yPosition += 10;
 
       const chartIds = [
