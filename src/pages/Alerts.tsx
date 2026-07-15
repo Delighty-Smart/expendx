@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -299,7 +299,7 @@ const Alerts = () => {
   const someSelected = selectedAlerts.size > 0;
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="space-y-6 pb-24">
       <PageHeader
         className="mb-6"
         title="Alerts & Notifications"

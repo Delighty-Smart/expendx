@@ -1,4 +1,4 @@
-﻿
+
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, GlassCard } from "@/components/ui/card";
@@ -28,7 +28,7 @@ interface Budget {
 }
 
 const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (budget: Budget) => void; onDelete: (budget: Budget) => void }) => {
-  const { currency } = useSettings();
+  const { currency, formatValue } = useSettings();
 
   const now = new Date();
 
@@ -69,7 +69,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
 
   return (
 
-    <GlassCard className="p-4 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-orange-50/40 to-red-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-orange-200/30 dark:border-slate-600/30 transition-all duration-300">
+    <Card className="p-5 relative group overflow-hidden transition-colors duration-200 border border-border/45 hover:border-primary/20">
       <div className="flex justify-between items-start mb-3">
         <h3 className="font-semibold text-lg text-foreground">{budget.category}</h3>
 
@@ -98,7 +98,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
       <div className="space-y-4">
         <div className="flex justify-between items-center text-sm">
           <span className="text-muted-foreground font-medium">Budget:</span>
-          <span className="font-bold text-lg text-foreground">{currency.symbol}{formatAmount(budget.monthly_limit)}</span>
+          <span className="font-bold text-lg text-foreground">{formatValue(budget.monthly_limit)}</span>
         </div>
         <BudgetProgress
           category={budget.category}
@@ -108,7 +108,7 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
           currency={currency}
         />
       </div>
-    </GlassCard>
+    </Card>
   );
 };
 
@@ -117,7 +117,7 @@ const BudgetsPage = () => {
   const [budgetToDelete, setBudgetToDelete] = useState<Budget | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currency } = useSettings();
+  const { currency, formatValue } = useSettings();
   const { toast } = useToast();
   const { refreshData } = useRefresh();
   const { user } = useAuth();
@@ -272,20 +272,19 @@ const BudgetsPage = () => {
           }
         />
 
-        <GlassCard className="p-6 bg-gradient-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10 border-orange-200/30 dark:border-orange-800/30">
+        <Card className="p-6">
           <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 dark:from-orange-400 dark:to-amber-500 flex items-center justify-center shadow-lg">
-              <TrendingUp className="h-8 w-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-brand-primary-subtle flex items-center justify-center">
+              <TrendingUp className="h-8 w-8 text-text-primary" />
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Budget</p>
-              <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent">
-                {currency.symbol}
-                {formatAmount(budgets?.reduce((sum, budget) => sum + budget.monthly_limit, 0) || 0)}
+              <p className="text-3xl font-bold text-text-primary">
+                {formatValue(budgets?.reduce((sum, budget) => sum + budget.monthly_limit, 0) || 0)}
               </p>
             </div>
           </div>
-        </GlassCard>
+        </Card>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {budgets?.map((budget) => (

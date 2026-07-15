@@ -59,9 +59,9 @@ const DownloadPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0A0B] text-white py-12 px-6 font-sans">
+        <div className="min-h-screen bg-bg-base text-text-primary py-12 px-6 font-sans">
             <div className="container mx-auto max-w-2xl">
-                <Link to="/" className="inline-flex items-center text-white/60 hover:text-white transition-colors mb-8 group">
+                <Link to="/" className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-8 group">
                     <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
                     Back to landing page
                 </Link>
@@ -76,7 +76,7 @@ const DownloadPage = () => {
                         <Smartphone className="w-12 h-12 text-primary" />
                     </div>
                     <h1 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-4xl font-bold mb-4">Install expendX for Android</h1>
-                    <p className="text-white/60 text-lg">
+                    <p className="text-text-secondary text-lg">
                         Experience smarter finance management directly on your mobile device.
                     </p>
                 </motion.div>
@@ -96,7 +96,7 @@ const DownloadPage = () => {
                             </div>
                             <div>
                                 <h3 className="text-lg font-semibold mb-1">{step.title}</h3>
-                                <p className="text-white/60 text-sm leading-relaxed">
+                                <p className="text-text-secondary text-sm leading-relaxed">
                                     {step.description}
                                 </p>
                             </div>
@@ -112,7 +112,7 @@ const DownloadPage = () => {
                     className="text-center bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-3xl p-8"
                 >
                     <h3 className="text-xl font-semibold mb-2">Ready to download?</h3>
-                    <p className="text-white/60 text-sm mb-8">
+                    <p className="text-text-secondary text-sm mb-8">
                         The latest version includes the new Trends analysis and glassmorphism UI.
                     </p>
                     <div className="flex flex-col gap-4">
@@ -136,7 +136,7 @@ const DownloadPage = () => {
                             Latest version updated {formatDistanceToNow(apkDate, { addSuffix: true })}
                         </p>
                     )}
-                    <p className="mt-2 text-xs text-white/40">
+                    <p className="mt-2 text-xs text-text-tertiary">
                         Requires Android 8.0 or higher.
                     </p>
                 </motion.div>

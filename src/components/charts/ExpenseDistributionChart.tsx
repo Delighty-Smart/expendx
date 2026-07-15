@@ -8,6 +8,7 @@ import {
     Tooltip
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface ExpenseDistributionChartProps {
     data: any[];
@@ -32,6 +33,7 @@ const ExpenseDistributionChart = ({
     setHoveredLegendItem,
     showLegend = true
 }: ExpenseDistributionChartProps) => {
+    const { showLifeHours } = useSettings();
     return (
         <div className="space-y-4 h-full flex flex-col">
             {/* Pie Chart */}
@@ -69,7 +71,7 @@ const ExpenseDistributionChart = ({
                             ))}
                         </Pie>
                         <Tooltip
-                            formatter={(value: number) => [hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`, `${((value / totalAmount) * 100).toFixed(1)}%`]}
+                            formatter={(value: number) => [hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(value)}`, `${((value / totalAmount) * 100).toFixed(1)}%`]}
                             contentStyle={{
                                 backgroundColor: "rgba(255, 255, 255, 0.95)",
                                 borderRadius: "0.5rem",
@@ -107,7 +109,7 @@ const ExpenseDistributionChart = ({
                                 </div>
                                 <div className="text-right">
                                     <div className="font-semibold text-xs">
-                                        {hideAmounts ? '***' : `${currencySymbol}${formatAmount(entry.amount)}`}
+                                        {hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(entry.amount)}`}
                                     </div>
                                     <div className="text-[10px] text-muted-foreground">
                                         {percentage}%

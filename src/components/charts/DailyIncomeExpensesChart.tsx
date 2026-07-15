@@ -10,13 +10,70 @@ import {
     Tooltip,
     Legend
 } from "recharts";
+import { useSettings } from "@/contexts/SettingsContext";
+
+interface DailyIncomeExpenseItem {
+    date: string;
+    fullDate: string;
+    income: number;
+    expense: number;
+}
 
 interface DailyIncomeExpensesChartProps {
-    data: any[];
+    data: DailyIncomeExpenseItem[];
     hideAmounts: boolean;
     currencySymbol: string;
     formatAmount: (amount: number) => string;
 }
+
+interface TooltipPayloadEntry {
+    name: string;
+    value: number;
+    stroke?: string;
+    color?: string;
+}
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: TooltipPayloadEntry[];
+    label?: string;
+    currencySymbol: string;
+    formatAmount: (amount: number) => string;
+    hideAmounts: boolean;
+}
+
+const CustomTooltip = ({ active, payload, label, currencySymbol, formatAmount, hideAmounts }: CustomTooltipProps) => {
+    const { showLifeHours } = useSettings();
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-bg-surface/90 dark:bg-bg-surface/90 border border-border-default shadow-xl rounded-[16px] p-3 flex flex-col gap-1.5 pointer-events-none select-none backdrop-blur-md">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-none">
+                    {label}
+                </span>
+                <div className="flex flex-col gap-1 mt-0.5">
+                    {payload.map((entry: TooltipPayloadEntry, index: number) => (
+                        <div key={index} className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-1.5">
+                                <span 
+                                    className="w-1.5 h-1.5 rounded-full" 
+                                    style={{ backgroundColor: entry.stroke || entry.color }} 
+                                />
+                                <span className="text-[11px] text-muted-foreground font-medium">
+                                    {entry.name}
+                                </span>
+                            </div>
+                            <span className="text-[11px] font-bold text-foreground font-numeric">
+                                {hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(entry.value)}`}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+            </div>
+        );
+    }
+    return null;
+};
 
 const DailyIncomeExpensesChart = ({
     data,
@@ -24,74 +81,77 @@ const DailyIncomeExpensesChart = ({
     currencySymbol,
     formatAmount
 }: DailyIncomeExpensesChartProps) => {
+    const { showLifeHours } = useSettings();
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <RechartAreaChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 30 }}>
+            <RechartAreaChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 10 }}>
                 <defs>
                     <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#A3CE22" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#A3CE22" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="expense-gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00AAFF" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#00AAFF" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#64748B" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#64748B" stopOpacity={0} />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <CartesianGrid stroke="var(--border-default)" strokeWidth={1} opacity={0.12} horizontal={true} vertical={false} strokeDasharray="3 3" />
                 <XAxis
                     dataKey="fullDate"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
                     tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: 'var(--border-default)', strokeWidth: 1 }}
                 />
 
                 <YAxis
-                    tickFormatter={(value) => hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`}
-                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(value)}`}
+                    tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
                     tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: 'var(--border-default)', strokeWidth: 1 }}
                 />
 
                 <Tooltip
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`, ""]}
-                    contentStyle={{
-                        backgroundColor: "rgba(255, 255, 255, 0.95)",
-                        backdropFilter: "blur(8px)",
-                        border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.75rem",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
+                    content={
+                        <CustomTooltip 
+                            currencySymbol={currencySymbol} 
+                            formatAmount={formatAmount} 
+                            hideAmounts={hideAmounts} 
+                        />
+                    }
+                    cursor={{ stroke: 'var(--border-default)', strokeWidth: 1.5, opacity: 0.4 }}
                 />
 
                 <Legend
                     verticalAlign="top"
+                    align="right"
                     height={36}
                     iconType="circle"
-                    iconSize={8}
+                    iconSize={6}
+                    wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}
                 />
 
                 <Area
-                    type="monotone"
+                    type="linear"
                     dataKey="income"
                     name="Income"
-                    stroke="#A3CE22"
+                    stroke="#10B981"
                     fillOpacity={1}
                     fill="url(#income-gradient)"
                     strokeWidth={2}
-                    activeDot={{ r: 6, stroke: "#A3CE22", strokeWidth: 2, fill: "white" }}
+                    activeDot={{ r: 5, stroke: "#10B981", strokeWidth: 2, fill: "var(--bg-card)" }}
                     animationDuration={1500}
                     animationEasing="ease-out"
                 />
 
                 <Area
-                    type="monotone"
+                    type="linear"
                     dataKey="expense"
                     name="Expense"
-                    stroke="#00AAFF"
+                    stroke="#64748B"
                     fillOpacity={1}
                     fill="url(#expense-gradient)"
                     strokeWidth={2}
-                    activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
+                    activeDot={{ r: 5, stroke: "#64748B", strokeWidth: 2, fill: "var(--bg-card)" }}
                     animationDuration={1500}
                     animationEasing="ease-out"
                     animationBegin={300}

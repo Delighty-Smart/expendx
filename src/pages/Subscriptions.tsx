@@ -13,12 +13,13 @@ import { getCurrencyByCode } from '@/lib/currencies';
 import { format, isAfter, isBefore, addDays } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { CircularProgress } from '@/components/ui/circular-progress';
 
 export default function Subscriptions() {
   const [showForm, setShowForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | undefined>();
   const { subscriptions, loading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
-  const { currency } = useSettings();
+  const { currency, formatValue } = useSettings();
 
   const handleAddSubscription = async (subscriptionData: Omit<Subscription, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     await addSubscription(subscriptionData);
@@ -101,7 +102,7 @@ export default function Subscriptions() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="space-y-6 pb-24">
         <PageHeader
           title="Subscriptions"
           actions={
@@ -158,7 +159,7 @@ export default function Subscriptions() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="space-y-6 pb-24">
       <PageHeader
         title={
           <>
@@ -194,7 +195,7 @@ export default function Subscriptions() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {currency.symbol}{totalMonthlySpend.toFixed(2)}
+              {formatValue(totalMonthlySpend)}
             </div>
           </CardContent>
         </Card>
@@ -232,81 +233,88 @@ export default function Subscriptions() {
             const daysUntilRenewal = getDaysUntilRenewal(subscription);
 
             return (
-              <Card key={subscription.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold">{subscription.service_provider}</h3>
+              <Card key={subscription.id} className="transition-colors duration-200 border border-border/40 hover:border-primary/20">
+                <CardContent className="p-5 flex gap-5 items-center">
+                  {subscription.status === 'active' && daysUntilRenewal !== null ? (
+                    <CircularProgress
+                      value={progress}
+                      size={60}
+                      strokeWidth={6}
+                      ringColor="text-primary"
+                      glow={false}
+                      className="flex-shrink-0"
+                    >
+                      <span className="text-[12px] font-extrabold tracking-tight font-numeric">
+                        {daysUntilRenewal}d
+                      </span>
+                    </CircularProgress>
+                  ) : (
+                    <div className="w-[60px] h-[60px] rounded-full bg-muted/50 border border-border-default flex items-center justify-center flex-shrink-0 text-muted-foreground">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <h3 className="text-lg font-bold truncate tracking-tight text-foreground leading-snug">
+                          {subscription.service_provider}
+                        </h3>
                         {getStatusBadge(subscription.status)}
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
-                        <div>
-                          <span className="font-medium">Card:</span> {subscription.card_type} ****{subscription.last_four_digits}
-                        </div>
-                        <div>
-                          <span className="font-medium">Type:</span> {subscription.subscription_type}
-                        </div>
-                        <div>
-                          <span className="font-medium">Amount:</span> {currency.symbol}{subscription.amount.toFixed(2)}
-                        </div>
-                        {subscription.next_billing_date && (
-                          <div>
-                            <span className="font-medium">Next Billing:</span> {format(new Date(subscription.next_billing_date), 'MMM dd, yyyy')}
-                          </div>
-                        )}
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditSubscription(subscription)}>
+                            Edit Subscription
+                          </DropdownMenuItem>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Subscription
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this subscription? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteSubscription(subscription.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
 
-                      {subscription.status === 'active' && daysUntilRenewal !== null && (
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-muted-foreground">
-                              Billing Cycle Progress
-                            </span>
-                            <span className="text-sm font-medium">
-                              {daysUntilRenewal} days until renewal
-                            </span>
-                          </div>
-                          <Progress value={progress} className="h-2" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1.5 text-xs text-muted-foreground font-medium">
+                      <div>
+                        <span className="text-muted-foreground/60 font-sans">Card:</span> <span className="font-semibold text-foreground">{subscription.card_type} ••••{subscription.last_four_digits}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground/60 font-sans">Billing:</span> <span className="font-semibold capitalize text-foreground">{subscription.subscription_type}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground/60 font-sans">Amount:</span> <span className="font-bold text-foreground font-numeric">{formatValue(subscription.amount)}</span>
+                      </div>
+                      {subscription.next_billing_date && (
+                        <div>
+                          <span className="text-muted-foreground/60 font-sans">Next renewal:</span> <span className="font-semibold text-foreground font-numeric">{format(new Date(subscription.next_billing_date), 'MMM dd, yyyy')}</span>
                         </div>
                       )}
                     </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditSubscription(subscription)}>
-                          Edit Subscription
-                        </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Subscription
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this subscription? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteSubscription(subscription.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>

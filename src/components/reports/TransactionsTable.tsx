@@ -1,4 +1,3 @@
-﻿
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { Currency } from "@/lib/currencies";
@@ -14,6 +13,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -32,6 +32,7 @@ const TransactionsTable = ({
   hasNextPage,
   isFetchingNextPage
 }: TransactionsTableProps) => {
+  const { showLifeHours, trueHourlyRate } = useSettings();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -124,6 +125,13 @@ const TransactionsTable = ({
   };
 
   const formatAmount = (amount: number) => {
+    if (showLifeHours) {
+      const hrs = amount / trueHourlyRate;
+      return hrs.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      }) + " hrs";
+    }
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -357,10 +365,10 @@ const TransactionsTable = ({
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                         <div>
-                          In: {currencySymbol}{formatAmount(income)}
+                          In: {!showLifeHours && currencySymbol}{formatAmount(income)}
                         </div>
                         <div>
-                          Out: {currencySymbol}{formatAmount(expense)}
+                          Out: {!showLifeHours && currencySymbol}{formatAmount(expense)}
                         </div>
                       </div>
                     </div>
@@ -378,10 +386,10 @@ const TransactionsTable = ({
                             {/* Summary Header */}
                             <div className="bg-white dark:bg-slate-900 rounded-t-[24px] px-6 py-4 flex justify-between items-center border-b border-border/5 shadow-sm">
                               <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                                In: <span className="ml-1 text-slate-500 dark:text-slate-400">{currencySymbol}{formatAmount(income)}</span>
+                                In: <span className="ml-1 text-slate-500 dark:text-slate-400">{!showLifeHours && currencySymbol}{formatAmount(income)}</span>
                               </span>
                               <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                                Out: <span className="ml-1 text-slate-500 dark:text-slate-400">{currencySymbol}{formatAmount(expense)}</span>
+                                Out: <span className="ml-1 text-slate-500 dark:text-slate-400">{!showLifeHours && currencySymbol}{formatAmount(expense)}</span>
                               </span>
                             </div>
 
@@ -418,7 +426,7 @@ const TransactionsTable = ({
                                     }`}>
                                     <p className="font-bold text-[15px] leading-tight">
                                       {transaction.type === "debit" ? "-" : transaction.type === "credit" ? "+" : ""}
-                                      {currencySymbol}{formatAmount(transaction.amount)}
+                                      {!showLifeHours && currencySymbol}{formatAmount(transaction.amount)}
                                     </p>
                                     <p className="text-[10px] text-slate-400/80 leading-none mt-1 font-medium">
                                       {format(new Date(transaction.date), "HH:mm")}

@@ -73,7 +73,7 @@ export function BudgetCard({
   };
 
   return (
-    <GlassCard className={`relative overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-white/80 via-blue-50/40 to-indigo-50/20 dark:from-slate-800/50 dark:via-slate-800/30 dark:to-slate-900/20 border-blue-200/30 dark:border-slate-800/30 ${isOverBudget ? 'border-rose-500/50' : ''}`}>
+    <GlassCard className={`p-5 relative group overflow-hidden transition-all duration-300 hover:shadow-lg border ${isOverBudget ? 'border-rose-500/50 hover:border-rose-500/80 dark:border-rose-500/50' : 'border-border/45 hover:border-primary/20'}`}>
       {isOverBudget && (
         <div className="absolute top-0 right-0 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-bl-lg">
           Over Budget

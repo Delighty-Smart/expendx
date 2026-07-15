@@ -41,7 +41,7 @@ interface TrackableItem {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const CHART_COLORS = ["#a3e635", "#38bdf8", "#fb923c", "#c084fc", "#f472b6"];
+const CHART_COLORS = ["#FF2D6B", "#137333", "#C5221F", "#F29900", "#1967D2"];
 const MAX_ITEMS = 5;
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -551,9 +551,9 @@ const Trends = () => {
                                 <ResponsiveContainer width="100%" height={300}>
                                     {chartType === "line" ? (
                                         <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-                                            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={48}
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-strong)" opacity={0.4} />
+                                            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} />
+                                            <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} width={48}
                                                 tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
                                             <Tooltip content={<CustomTooltip currency={currency.symbol} selected={selected} />} />
                                             <Legend formatter={(value) => selected.find((s) => s.id === value)?.label ?? value} />
@@ -565,9 +565,9 @@ const Trends = () => {
                                         </LineChart>
                                     ) : (
                                         <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} barCategoryGap="30%">
-                                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                                            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={48}
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-strong)" opacity={0.4} vertical={false} />
+                                            <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} />
+                                            <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} width={48}
                                                 tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
                                             <Tooltip content={<CustomTooltip currency={currency.symbol} selected={selected} />} />
                                             <Legend formatter={(value) => selected.find((s) => s.id === value)?.label ?? value} />

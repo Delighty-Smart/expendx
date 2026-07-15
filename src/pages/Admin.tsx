@@ -163,7 +163,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#09090b] text-white">
+    <div className="flex min-h-screen bg-bg-base text-text-primary">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:block w-72 border-r border-white/5 bg-black/40 backdrop-blur-xl p-6 space-y-8 sticky top-0 h-screen overflow-y-auto">
         <div className="flex items-center gap-3 px-2">
@@ -208,7 +208,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-gradient-to-b from-black to-[#09090b]">
+      <main className="flex-1 overflow-y-auto bg-bg-base">
         <div className="max-w-[1600px] mx-auto p-6 md:p-10">
           <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <motion.div
@@ -288,7 +288,7 @@ const AdminDashboard = () => {
 
                   <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                     {/* Activity Feed */}
-                    <Card className="xl:col-span-2 bg-[#0d0d0f] border-white/5 shadow-2xl rounded-3xl overflow-hidden border-none transition-all">
+                    <Card className="xl:col-span-2 bg-bg-card border-border-default shadow-2xl rounded-3xl overflow-hidden border transition-all">
                       <CardHeader className="border-b border-white/5 p-6 flex flex-row items-center justify-between">
                         <div>
                           <CardTitle className="text-xl font-bold text-white">Recent System Activity</CardTitle>
@@ -303,7 +303,7 @@ const AdminDashboard = () => {
 
                     {/* Quick Stats/Summary */}
                     <div className="space-y-6">
-                      <Card className="bg-[#0d0d0f] border-white/5 shadow-2xl rounded-3xl overflow-hidden border-none transition-all">
+                      <Card className="bg-bg-card border-border-default shadow-2xl rounded-3xl overflow-hidden border transition-all">
                         <CardHeader className="p-6">
                           <CardTitle className="text-xl font-bold text-white">System Status</CardTitle>
                         </CardHeader>
@@ -332,7 +332,7 @@ const AdminDashboard = () => {
                 </TabsContent>
 
                 <TabsContent value="users" className="m-0 outline-none border-none">
-                  <Card className="bg-[#0d0d0f] border-white/5 shadow-2xl rounded-3xl overflow-hidden min-h-[600px] border-none">
+                  <Card className="bg-bg-card border-border-default shadow-2xl rounded-3xl overflow-hidden min-h-[600px] border">
                     <CardContent className="p-8">
                       <UserManagement />
                     </CardContent>
@@ -340,7 +340,7 @@ const AdminDashboard = () => {
                 </TabsContent>
 
                 <TabsContent value="feedback" className="m-0 outline-none border-none">
-                  <Card className="bg-[#0d0d0f] border-white/5 shadow-2xl rounded-3xl overflow-hidden min-h-[600px] border-none">
+                  <Card className="bg-bg-card border-border-default shadow-2xl rounded-3xl overflow-hidden min-h-[600px] border">
                     <CardContent className="p-8">
                       <FeedbackManagement />
                     </CardContent>
@@ -348,7 +348,7 @@ const AdminDashboard = () => {
                 </TabsContent>
 
                 <TabsContent value="banners" className="m-0 outline-none border-none">
-                  <Card className="bg-[#0d0d0f] border-white/5 shadow-2xl rounded-3xl overflow-hidden min-h-[600px] border-none">
+                  <Card className="bg-bg-card border-border-default shadow-2xl rounded-3xl overflow-hidden min-h-[600px] border">
                     <CardContent className="p-8">
                       <BannerManagement />
                     </CardContent>
@@ -410,7 +410,7 @@ const StatsCard = ({ title, value, icon: Icon, trend, color, chartData }: any) =
   const hexColor = color === 'blue' ? '#3b82f6' : color === 'emerald' ? '#10b981' : color === 'amber' ? '#f59e0b' : color === 'violet' ? '#8b5cf6' : '#3b82f6';
 
   return (
-    <Card className="bg-[#0d0d0f] border-white/5 hover:border-white/10 transition-all duration-300 shadow-2xl rounded-[2rem] overflow-hidden border-none group">
+    <Card className="bg-bg-card border-border-default hover:border-brand-primary/50 transition-all duration-300 shadow-2xl rounded-[2rem] overflow-hidden border group">
       <div className={`p-6 bg-gradient-to-b ${colorClasses[color]}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="p-3 rounded-2xl bg-white/5 group-hover:scale-110 transition-all duration-300">

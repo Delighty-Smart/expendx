@@ -1,21 +1,21 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     Home,
-    Receipt,
-    DollarSign,
-    PiggyBank,
+    Banknote,
+    Wallet,
+    Landmark,
     MoreHorizontal,
     Bell,
-    BarChart,
+    BarChart3,
     Settings,
     MessageSquare,
-    CreditCard,
+    Repeat,
     ChevronDown,
     Shield,
-    Plus,
-    TrendingUp
+    CirclePlus,
+    TrendingUp,
+    Hourglass
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -30,18 +30,19 @@ interface MobileBottomNavProps {
 // Savings is moved to MORE_ITEMS.
 const LEFT_TABS = [
     { path: "/dashboard", label: "Home", icon: Home },
-    { path: "/transactions", label: "Txns", icon: Receipt },
+    { path: "/transactions", label: "Txns", icon: Banknote },
 ];
 
 const RIGHT_TABS = [
-    { path: "/budgets", label: "Budgets", icon: DollarSign },
+    { path: "/budgets", label: "Budgets", icon: Wallet },
 ];
 
 const MORE_ITEMS = [
-    { path: "/savings", label: "Savings", icon: PiggyBank },
-    { path: "/subscriptions", label: "Subscriptions", icon: CreditCard },
-    { path: "/reports", label: "Reports", icon: BarChart },
+    { path: "/savings", label: "Savings", icon: Landmark },
+    { path: "/subscriptions", label: "Subscriptions", icon: Repeat },
+    { path: "/reports", label: "Reports", icon: BarChart3 },
     { path: "/trends", label: "Trends", icon: TrendingUp },
+    { path: "/life-energy", label: "Life Energy", icon: Hourglass },
     { path: "/alerts", label: "Alerts", icon: Bell },
     { path: "/feedback", label: "Feedback", icon: MessageSquare },
     { path: "/settings", label: "Settings", icon: Settings },
@@ -84,7 +85,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
             {/* More sheet backdrop */}
             {showMore && (
                 <div
-                    className="fixed inset-0 bg-background/60 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-bg-base/60 backdrop-blur-sm z-40"
                     onClick={() => setShowMore(false)}
                 />
             )}
@@ -93,13 +94,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
             <div
                 ref={sheetRef}
                 className={cn(
-                    "fixed bottom-[64px] left-0 right-0 bg-card border-t border-border z-50 px-4 pt-3 pb-4 rounded-t-2xl shadow-xl transition-all duration-300 ease-out",
+                    "fixed bottom-[64px] left-0 right-0 bg-bg-surface border-t border-border-default z-50 px-4 pt-3 pb-4 rounded-t-[32px] shadow-xl transition-all duration-300 ease-out",
                     showMore
                         ? "translate-y-0 opacity-100"
                         : "translate-y-full opacity-0 pointer-events-none"
                 )}
             >
-                <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+                <div className="w-10 h-1 bg-border-strong rounded-full mx-auto mb-4" />
                 <div className="grid grid-cols-3 gap-2">
                     {allMoreItems.map((item) => {
                         const Icon = item.icon;
@@ -109,21 +110,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 key={item.path}
                                 to={item.path}
                                 className={cn(
-                                    "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all active:scale-95",
+                                    "flex flex-col items-center gap-1.5 py-3 px-2 rounded-[20px] transition-all active:scale-95",
                                     isActive
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-muted-foreground hover:bg-accent"
+                                        ? "bg-brand-primary-subtle text-brand-primary"
+                                        : "text-icon-muted hover:bg-bg-sidebar-hover"
                                 )}
                             >
                                 <div className="relative">
-                                    <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 1.75} />
+                                    <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 1.75} />
                                     {item.path === "/alerts" && unreadAlerts > 0 && (
-                                        <span className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                                        <span className="absolute -top-1.5 -right-1.5 bg-semantic-danger-bg text-semantic-danger-text text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                                             {unreadAlerts > 9 ? "9+" : unreadAlerts}
                                         </span>
                                     )}
                                 </div>
-                                <span className={cn("text-[10px] font-medium", isActive && "text-primary")}>
+                                <span className={cn("text-[10px] font-semibold", isActive && "text-brand-primary")}>
                                     {item.label}
                                 </span>
                             </Link>
@@ -134,10 +135,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
 
             {/* Bottom Tab Bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 h-[72px] bg-card/95 backdrop-blur-md border-t border-border z-40 flex items-center safe-pb px-1"
+                className="fixed bottom-0 left-0 right-0 h-[64px] bg-bg-surface border-t border-border-default z-40 flex items-center safe-pb px-4"
                 style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
-                <div className="flex w-full items-end h-full py-1">
+                <div className="flex w-full items-center justify-between h-full">
                     {/* Left 2 Tabs */}
                     {LEFT_TABS.map((tab) => {
                         const Icon = tab.icon;
@@ -147,26 +148,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 key={tab.path}
                                 to={tab.path}
                                 onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
-                                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full pb-1"
+                                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full"
                             >
-                                <div
+                                <Icon
                                     className={cn(
-                                        "flex items-center justify-center w-12 h-8 rounded-full transition-all duration-200",
-                                        isActive ? "bg-primary/15" : "bg-transparent"
+                                        "h-6 w-6 transition-all duration-200",
+                                        isActive ? "text-brand-primary" : "text-icon-muted"
                                     )}
-                                >
-                                    <Icon
-                                        className={cn(
-                                            "h-[26px] w-[26px] transition-all duration-200",
-                                            isActive ? "text-primary" : "text-muted-foreground"
-                                        )}
-                                        strokeWidth={isActive ? 2.5 : 1.75}
-                                    />
-                                </div>
+                                    strokeWidth={isActive ? 2.5 : 1.75}
+                                />
                                 <span
                                     className={cn(
-                                        "text-[11px] sm:text-xs font-medium transition-colors duration-200",
-                                        isActive ? "text-primary" : "text-muted-foreground"
+                                        "text-[10px] font-semibold transition-colors duration-200",
+                                        isActive ? "text-brand-primary" : "text-icon-muted"
                                     )}
                                 >
                                     {tab.label}
@@ -176,13 +170,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                     })}
 
                     {/* Prominent Add Button (Center) */}
-                    <div className="flex-1 flex justify-center -translate-y-4">
+                    <div className="flex-1 flex justify-center -translate-y-6">
                         <Link
                             to="/add-transaction"
                             onClick={() => Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { })}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 w-[60px] h-[60px] rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-background"
+                            className="bg-brand-primary hover:bg-brand-primary-hover text-white shadow-brand w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-bg-base"
                         >
-                            <Plus className="h-8 w-8" strokeWidth={2.5} />
+                            <CirclePlus className="h-6 w-6" strokeWidth={2} />
                         </Link>
                     </div>
 
@@ -195,26 +189,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 key={tab.path}
                                 to={tab.path}
                                 onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
-                                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full pb-1"
+                                className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full"
                             >
-                                <div
+                                <Icon
                                     className={cn(
-                                        "flex items-center justify-center w-12 h-8 rounded-full transition-all duration-200",
-                                        isActive ? "bg-primary/15" : "bg-transparent"
+                                        "h-6 w-6 transition-all duration-200",
+                                        isActive ? "text-brand-primary" : "text-icon-muted"
                                     )}
-                                >
-                                    <Icon
-                                        className={cn(
-                                            "h-[26px] w-[26px] transition-all duration-200",
-                                            isActive ? "text-primary" : "text-muted-foreground"
-                                        )}
-                                        strokeWidth={isActive ? 2.5 : 1.75}
-                                    />
-                                </div>
+                                    strokeWidth={isActive ? 2.5 : 1.75}
+                                />
                                 <span
                                     className={cn(
-                                        "text-[11px] sm:text-xs font-medium transition-colors duration-200",
-                                        isActive ? "text-primary" : "text-muted-foreground"
+                                        "text-[10px] font-semibold transition-colors duration-200",
+                                        isActive ? "text-brand-primary" : "text-icon-muted"
                                     )}
                                 >
                                     {tab.label}
@@ -229,31 +216,26 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                             Haptics.impact({ style: ImpactStyle.Light }).catch(() => { });
                             setShowMore((v) => !v);
                         }}
-                        className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 h-full pb-1"
+                        className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 h-full relative"
                     >
-                        <div
-                            className={cn(
-                                "flex items-center justify-center w-12 h-8 rounded-full transition-all duration-200 relative",
-                                isMoreActive || showMore ? "bg-primary/15" : "bg-transparent"
-                            )}
-                        >
+                        <div className="relative">
                             <MoreHorizontal
                                 className={cn(
-                                    "h-[26px] w-[26px] transition-all duration-200",
-                                    isMoreActive || showMore ? "text-primary" : "text-muted-foreground"
+                                    "h-6 w-6 transition-all duration-200",
+                                    isMoreActive || showMore ? "text-brand-primary" : "text-icon-muted"
                                 )}
                                 strokeWidth={isMoreActive || showMore ? 2.5 : 1.75}
                             />
                             {unreadAlerts > 0 && (
-                                <span className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center">
+                                <span className="absolute -top-1.5 -right-1.5 bg-semantic-danger-bg text-semantic-danger-text text-[9px] font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center border border-bg-surface">
                                     {unreadAlerts > 9 ? "9+" : unreadAlerts}
                                 </span>
                             )}
                         </div>
                         <span
                             className={cn(
-                                "text-[11px] sm:text-xs font-medium transition-colors duration-200",
-                                isMoreActive || showMore ? "text-primary" : "text-muted-foreground"
+                                "text-[10px] font-semibold transition-colors duration-200",
+                                isMoreActive || showMore ? "text-brand-primary" : "text-icon-muted"
                             )}
                         >
                             More

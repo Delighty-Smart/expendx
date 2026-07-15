@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { PROFILE_GRADIENTS } from "@/lib/gradients";
+import { PROFILE_AVATARS } from "@/lib/gradients";
 import UserAvatar from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -134,7 +134,7 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
 
       toast({
         title: "Profile style updated",
-        description: "Your new profile gradient has been saved.",
+        description: "Your new profile avatar has been saved.",
       });
     } catch (error: any) {
       console.error("Error updating gradient:", error);
@@ -187,26 +187,26 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
       {isEditing && (
         <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500 p-4 rounded-lg bg-muted/20 border border-border/40">
           <div className="flex flex-col gap-1">
-            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/70">Choose Profile Style</Label>
-            <p className="text-xs text-muted-foreground">Select a gradient that reflects your style</p>
+            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/70">Choose Profile Avatar</Label>
+            <p className="text-xs text-muted-foreground">Select a 2D avatar that reflects your style</p>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-            {PROFILE_GRADIENTS.map((grad) => {
-              const isSelected = profile.avatar_url === grad.class;
+            {PROFILE_AVATARS.map((avatar) => {
+              const isSelected = profile.avatar_url === avatar.url;
               return (
                 <button
-                  key={grad.id}
-                  onClick={() => handleGradientSelect(grad.class)}
+                  key={avatar.id}
+                  onClick={() => handleGradientSelect(avatar.url)}
                   disabled={updatingGradient}
                   className={cn(
-                    "relative h-12 w-12 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 shadow-sm overflow-hidden",
-                    grad.class,
+                    "relative h-12 w-12 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 shadow-sm overflow-hidden border border-border-default bg-muted",
                     isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105" : "hover:ring-2 hover:ring-primary/40 hover:ring-offset-1 hover:ring-offset-background"
                   )}
-                  title={grad.label}
+                  title={avatar.label}
                 >
+                  <img src={avatar.url} alt={avatar.label} className="w-full h-full object-cover" />
                   {isSelected && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/15 backdrop-blur-[0.5px]">
                       <Check className="h-5 w-5 text-white drop-shadow-md" strokeWidth={3} />
                     </div>
                   )}

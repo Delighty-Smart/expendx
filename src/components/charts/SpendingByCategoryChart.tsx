@@ -10,14 +10,48 @@ import {
     Tooltip,
     Cell
 } from "recharts";
+import { useSettings } from "@/contexts/SettingsContext";
+
+interface SpendingCategoryItem {
+    name: string;
+    amount: number;
+}
 
 interface SpendingByCategoryChartProps {
-    data: any[];
+    data: SpendingCategoryItem[];
     hideAmounts: boolean;
     currencySymbol: string;
     formatAmount: (amount: number) => string;
     colors: string[];
 }
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        payload: SpendingCategoryItem;
+    }>;
+    currencySymbol: string;
+    formatAmount: (amount: number) => string;
+    hideAmounts: boolean;
+}
+
+const CustomTooltip = ({ active, payload, currencySymbol, formatAmount, hideAmounts }: CustomTooltipProps) => {
+    const { showLifeHours } = useSettings();
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div className="bg-bg-surface/90 dark:bg-bg-surface/90 border border-border-default shadow-xl rounded-[16px] p-3 flex flex-col gap-0.5 pointer-events-none select-none backdrop-blur-md">
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-none">
+                    {data.name}
+                </span>
+                <span className="text-sm font-bold text-foreground font-numeric leading-none mt-1">
+                    {hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(data.amount)}`}
+                </span>
+            </div>
+        );
+    }
+    return null;
+};
 
 const SpendingByCategoryChart = ({
     data,
@@ -26,65 +60,61 @@ const SpendingByCategoryChart = ({
     formatAmount,
     colors
 }: SpendingByCategoryChartProps) => {
+    const { showLifeHours } = useSettings();
     return (
         <ResponsiveContainer width="100%" height="100%">
             <BarChart
                 data={data}
-                margin={{ top: 20, right: 30, left: 5, bottom: 20 }}
-                barSize={50}
-                layout="vertical"
+                margin={{ top: 20, right: 10, left: 10, bottom: 10 }}
+                barSize={20}
             >
                 <defs>
                     {colors.map((color, index) => (
-                        <linearGradient key={`bar-gradient-${index}`} id={`bar-gradient-${index}`} x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor={color} stopOpacity={0.8} />
-                            <stop offset="100%" stopColor={color} stopOpacity={0.4} />
+                        <linearGradient key={`bar-gradient-${index}`} id={`bar-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+                            <stop offset="100%" stopColor={color} stopOpacity={0.6} />
                         </linearGradient>
                     ))}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} horizontal={true} vertical={false} />
-
-                <YAxis
-                    dataKey="name"
-                    type="category"
-                    tick={{ fontSize: 12 }}
-                    tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
-                    width={100}
-                />
+                <CartesianGrid stroke="var(--border-default)" strokeWidth={1} opacity={0.12} horizontal={true} vertical={false} strokeDasharray="3 3" />
 
                 <XAxis
-                    type="number"
-                    tickFormatter={(value) => hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`}
-                    tick={{ fontSize: 12 }}
+                    dataKey="name"
+                    tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
                     tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: 'var(--border-default)', strokeWidth: 1 }}
+                />
+
+                <YAxis
+                    tickFormatter={(value) => hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(value)}`}
+                    tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
+                    tickLine={false}
+                    axisLine={{ stroke: 'var(--border-default)', strokeWidth: 1 }}
                 />
 
                 <Tooltip
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`, "Amount"]}
-                    contentStyle={{
-                        backgroundColor: "rgba(255, 255, 255, 0.95)",
-                        backdropFilter: "blur(8px)",
-                        border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.75rem",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
-                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                    content={
+                        <CustomTooltip 
+                            currencySymbol={currencySymbol} 
+                            formatAmount={formatAmount} 
+                            hideAmounts={hideAmounts} 
+                        />
+                    }
+                    cursor={{ fill: 'var(--border-default)', opacity: 0.1 }}
                 />
 
                 <Bar
                     dataKey="amount"
                     animationDuration={1500}
                     animationEasing="ease-out"
-                    radius={[0, 4, 4, 0]}
+                    radius={[6, 6, 0, 0]}
                 >
                     {data.map((entry, index) => (
                         <Cell
                             key={`cell-${index}`}
                             fill={`url(#bar-gradient-${index % colors.length})`}
                             stroke={colors[index % colors.length]}
-                            strokeWidth={1}
+                            strokeWidth={0.5}
                         />
                     ))}
                 </Bar>

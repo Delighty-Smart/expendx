@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
+import { MessageReader } from '@solimanware/capacitor-sms-reader';
+import { NotificationsListener } from 'capacitor-notifications-listener';
 
 const PushOnboarding = () => {
     useEffect(() => {
@@ -8,22 +10,32 @@ const PushOnboarding = () => {
             if (!Capacitor.isNativePlatform()) return;
 
             try {
-                // Check current status
+                // 1. Push notifications
                 let permStatus = await PushNotifications.checkPermissions();
-
                 if (permStatus.receive === 'prompt') {
-                    // Trigger the native Android 13+ OS prompt directly
                     await PushNotifications.requestPermissions();
                 }
+
+                // 2. SMS Inbox Sync
+                const smsPerm = await MessageReader.checkPermissions().catch(() => null);
+                if (smsPerm?.messages !== 'granted') {
+                    await MessageReader.requestPermissions().catch(() => null);
+                }
+
+                // 3. Special app access notification listener
+                const isListening = await NotificationsListener.isListening().catch(() => ({ value: false }));
+                if (!isListening.value) {
+                    await NotificationsListener.requestPermission().catch(() => null);
+                }
             } catch (e) {
-                console.error("Native push permission error:", e);
+                console.error("Native permission onboarding error:", e);
             }
         };
 
         requestNativePermissions();
     }, []);
 
-    // Return nothing; the prompt is handled entirely by the native OS now
+    // Return nothing; handling occurs natively
     return null;
 };
 

@@ -28,13 +28,13 @@ import Settings from '@/pages/Settings'
 import Admin from '@/pages/Admin'
 import AdminFeedback from '@/pages/AdminFeedback'
 import Feedback from '@/pages/FeedbackPage'
-import ProcessReceipt from '@/pages/ProcessReceipt'
 import NotFound from '@/pages/NotFound'
 import AddSavingsGoal from '@/pages/AddSavingsGoal'
 import SavingsWithdrawal from '@/pages/SavingsWithdrawal'
 import Subscriptions from '@/pages/Subscriptions'
 import Trends from '@/pages/Trends'
 import Download from '@/pages/Download'
+import LifeEnergy from '@/pages/LifeEnergy'
 import PWAUpdatePrompt from '@/components/PWAUpdatePrompt'
 import PushOnboarding from '@/components/PushOnboarding'
 import { CapacitorShareTarget } from '@capgo/capacitor-share-target';
@@ -222,6 +222,7 @@ function AppContent() {
           <Route path="/savings-withdrawal" element={<SavingsWithdrawal />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/trends" element={<Trends />} />
+          <Route path="/life-energy" element={<LifeEnergy />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/alerts" element={<Alerts />} />

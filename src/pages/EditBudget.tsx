@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -110,14 +111,14 @@ const EditBudgetPage = () => {
 
   if (!budget) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="space-y-6">
         <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -130,7 +131,7 @@ const EditBudgetPage = () => {
         <h1 className="text-2xl font-bold">Edit Budget Limit</h1>
       </div>
 
-      <div className="bg-card rounded-lg shadow-sm border p-6">
+      <Card className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -191,7 +192,7 @@ const EditBudgetPage = () => {
             </div>
           </form>
         </Form>
-      </div>
+      </Card>
     </div>
   );
 };

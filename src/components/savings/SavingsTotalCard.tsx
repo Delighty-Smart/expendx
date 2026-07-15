@@ -1,21 +1,14 @@
 
 import { GlassCard } from "@/components/ui/card";
 import { PiggyBank } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface SavingsTotalCardProps {
   totalSavings: number;
-  currency: {
-    symbol: string;
-  };
 }
 
-export function SavingsTotalCard({ totalSavings, currency }: SavingsTotalCardProps) {
-  const formatAmount = (amount: number) => {
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
+export function SavingsTotalCard({ totalSavings }: SavingsTotalCardProps) {
+  const { formatValue } = useSettings();
 
   return (
     <GlassCard className="p-6 bg-gradient-to-br from-green-50/80 via-emerald-50/60 to-teal-50/40 dark:from-green-950/30 dark:via-emerald-950/20 dark:to-teal-950/10 border-green-200/30 dark:border-green-800/30">
@@ -26,7 +19,7 @@ export function SavingsTotalCard({ totalSavings, currency }: SavingsTotalCardPro
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">Total Savings</p>
           <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
-            {currency.symbol}{formatAmount(totalSavings)}
+            {formatValue(totalSavings)}
           </p>
         </div>
       </div>

@@ -26,7 +26,7 @@ const AddTransactionPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Button

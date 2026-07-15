@@ -2,13 +2,14 @@
 import React from 'react';
 import {
     ResponsiveContainer,
-    LineChart as RechartLineChart,
-    Line,
+    AreaChart as RechartAreaChart,
+    Area,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip
 } from "recharts";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface BalanceTrendChartProps {
     data: any[];
@@ -17,54 +18,82 @@ interface BalanceTrendChartProps {
     formatAmount: (amount: number) => string;
 }
 
+const CustomTooltip = ({ active, payload, currencySymbol, formatAmount, hideAmounts }: any) => {
+    const { showLifeHours } = useSettings();
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div className="bg-bg-surface/90 dark:bg-bg-surface/90 border border-border-default shadow-xl rounded-[16px] p-3 flex flex-col gap-0.5 pointer-events-none select-none backdrop-blur-md">
+                <span className="text-sm font-bold text-foreground font-numeric leading-none">
+                    {hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(data.balance)}`}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-medium leading-none mt-0.5">
+                    {data.fullDate || `Day ${data.date}`}
+                </span>
+            </div>
+        );
+    }
+    return null;
+};
+
 const BalanceTrendChart = ({
     data,
     hideAmounts,
     currencySymbol,
     formatAmount
 }: BalanceTrendChartProps) => {
+    const { showLifeHours } = useSettings();
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <RechartLineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+            <RechartAreaChart data={data} margin={{ top: 25, right: 30, left: 15, bottom: 5 }}>
+                <defs>
+                    <linearGradient id="balance-area-gradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0084FF" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#0084FF" stopOpacity={0} />
+                    </linearGradient>
+                </defs>
+                {/* Thin, vertical-only grid lines corresponding to each data point */}
+                <CartesianGrid stroke="var(--border-default)" strokeWidth={1} opacity={0.15} horizontal={false} vertical={true} />
 
                 <XAxis
                     dataKey="date"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
                     tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: 'var(--border-default)', strokeWidth: 1 }}
                 />
 
                 <YAxis
-                    tickFormatter={(value) => hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`}
-                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(value)}`}
+                    tick={{ fontSize: 10, fill: 'var(--text-secondary)' }}
                     tickLine={false}
-                    axisLine={{ stroke: '#E5E7EB', strokeWidth: 1 }}
+                    axisLine={{ stroke: 'var(--border-default)', strokeWidth: 1 }}
                 />
 
                 <Tooltip
-                    formatter={(value: number) => [hideAmounts ? '***' : `${currencySymbol}${formatAmount(value)}`, "Balance"]}
-                    contentStyle={{
-                        backgroundColor: "rgba(255, 255, 255, 0.95)",
-                        backdropFilter: "blur(8px)",
-                        border: "1px solid rgba(229, 231, 235, 0.5)",
-                        borderRadius: "0.75rem",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    }}
+                    content={
+                        <CustomTooltip 
+                            currencySymbol={currencySymbol} 
+                            formatAmount={formatAmount} 
+                            hideAmounts={hideAmounts} 
+                        />
+                    }
+                    cursor={{ stroke: '#0084FF', strokeWidth: 1.5, opacity: 0.6 }}
                 />
 
-                <Line
-                    type="monotone"
+                <Area
+                    type="linear"
                     dataKey="balance"
-                    stroke="#00AAFF"
-                    strokeWidth={3}
+                    stroke="#0084FF"
+                    strokeWidth={2}
+                    fill="url(#balance-area-gradient)"
+                    fillOpacity={1}
                     connectNulls={true}
-                    dot={false}
-                    activeDot={{ r: 6, stroke: "#00AAFF", strokeWidth: 2, fill: "white" }}
-                    animationDuration={2000}
+                    dot={{ r: 4, stroke: "#0084FF", strokeWidth: 2, fill: "var(--bg-card)" }}
+                    activeDot={{ r: 6, stroke: "#0084FF", strokeWidth: 2, fill: "var(--bg-card)" }}
+                    animationDuration={1500}
                     animationEasing="ease-out"
                 />
-            </RechartLineChart>
+            </RechartAreaChart>
         </ResponsiveContainer>
     );
 };

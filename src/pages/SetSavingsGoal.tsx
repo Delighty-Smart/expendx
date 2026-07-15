@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -100,7 +101,7 @@ const SetSavingsGoalPage = () => {
   }, [toast, navigate, queryClient, savingsCategory]);
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -113,7 +114,7 @@ const SetSavingsGoalPage = () => {
         <h1 className="text-2xl font-bold">Set Savings Goal</h1>
       </div>
 
-      <div className="bg-card rounded-lg shadow-sm border p-6">
+      <Card className="p-6">
         <div className="flex justify-center mb-6">
           <div className="p-3 rounded-full bg-green-500/20">
             <PiggyBank className="h-12 w-12 text-green-500" />
@@ -165,7 +166,7 @@ const SetSavingsGoalPage = () => {
             </div>
           </form>
         </Form>
-      </div>
+      </Card>
     </div>
   );
 };

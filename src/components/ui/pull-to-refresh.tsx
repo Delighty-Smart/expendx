@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useRef, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
@@ -21,7 +21,19 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const [startY, setStartY] = useState(0);
   const [pullPixels, setPullPixels] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (pullPixels > 0 || refreshing) {
+      setIsTranslating(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsTranslating(false);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [pullPixels, refreshing]);
 
   // Track if the current touch gesture is a valid pull-to-refresh attempt
   const activeTouchRef = useRef<{ startY: number; isValid: boolean }>({ startY: 0, isValid: false });
@@ -160,7 +172,7 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({
       {/* Content */}
       <div
         style={{
-          transform: `translateY(${pullPixels}px)`,
+          transform: isTranslating ? `translateY(${pullPixels}px)` : undefined,
           transition: (pullPixels === 0 || refreshing) ? 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none'
         }}
       >

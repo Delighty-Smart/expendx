@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint } from "lucide-react";
+import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,6 +26,7 @@ import DeleteAccountSection from "@/components/DeleteAccountSection";
 import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
 import { useBiometricLock } from "@/hooks/useBiometricLock";
+import { LifeEnergySettings } from "@/components/LifeEnergySettings";
 
 const Settings = () => {
   const {
@@ -135,6 +136,7 @@ const Settings = () => {
           {/* Settings List */}
           {[
             { id: "general", label: "General & Theme", sub: "Currency and display settings", icon: Palette },
+            { id: "life-energy", label: "Life Energy & Freedom", sub: "Calculate True Hourly Wage & Passive Income", icon: TrendingUp },
             { id: "notifications", label: "Notification Centre", sub: "Smart alerts and auto-tracking", icon: Bell },
             { id: "categories", label: "Financial Structure", sub: "Categories and organization", icon: Shapes },
             { id: "archive", label: "Data Archive", sub: "Review your history", icon: Archive },
@@ -243,6 +245,7 @@ const Settings = () => {
                         </div>
                       )}
 
+                      {item.id === "life-energy" && <LifeEnergySettings />}
                       {item.id === "notifications" && <NotificationPreferences />}
                       {item.id === "categories" && <CategoryManagement />}
                       {item.id === "archive" && <ArchiveManagement />}

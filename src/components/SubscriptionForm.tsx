@@ -8,6 +8,7 @@ import { Subscription, SERVICE_PROVIDERS, CARD_TYPES, SUBSCRIPTION_TYPES, SUBSCR
 import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/hooks/useCategories';
 import { addDays, addYears } from 'date-fns';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface SubscriptionFormProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface SubscriptionFormProps {
 }
 
 export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }: SubscriptionFormProps) {
+  const { currency } = useSettings();
   const [formData, setFormData] = useState({
     service_provider: '',
     card_type: '',
@@ -128,39 +130,41 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="service_provider">Service Provider</Label>
-            <Select
-              value={formData.service_provider}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, service_provider: value }))}
-            >
-              <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
-                <SelectValue placeholder="Select service provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {customProviders.map((provider) => (
-                  <SelectItem key={provider} value={provider}>
-                    {provider}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Large Prominent centered Amount Input */}
+          <div className="space-y-1 text-center py-2">
+            <Label htmlFor="amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Amount</Label>
+            <div className="relative flex items-center justify-center">
+              <span className="text-3xl font-extrabold text-muted-foreground/60 mr-1 select-none font-numeric">
+                {currency?.symbol || "$"}
+              </span>
+              <input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                className="bg-transparent border-none text-center text-4xl font-extrabold tracking-tight focus:outline-none focus:ring-0 w-48 text-foreground placeholder:text-muted-foreground/30 font-numeric"
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="card_type">Card Type</Label>
+              <Label htmlFor="service_provider" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Service Provider</Label>
               <Select
-                value={formData.card_type}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, card_type: value }))}
+                value={formData.service_provider}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, service_provider: value }))}
+                disabled={loading}
               >
                 <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
-                  <SelectValue placeholder="Select card type" />
+                  <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CARD_TYPES.map((cardType) => (
-                    <SelectItem key={cardType} value={cardType}>
-                      {cardType}
+                  {customProviders.map((provider) => (
+                    <SelectItem key={provider} value={provider}>
+                      {provider}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -168,30 +172,13 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="last_four_digits">Last 4 Digits</Label>
-              <Input
-                id="last_four_digits"
-                type="text"
-                placeholder="1234"
-                maxLength={4}
-                className="h-11 bg-muted/30 border-none rounded-xl font-medium"
-                value={formData.last_four_digits}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  setFormData(prev => ({ ...prev, last_four_digits: value }));
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="subscription_type">Type</Label>
+              <Label htmlFor="subscription_type" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Billing Cycle</Label>
               <Select
                 value={formData.subscription_type}
                 onValueChange={(value: 'monthly' | 'annual') =>
                   setFormData(prev => ({ ...prev, subscription_type: value }))
                 }
+                disabled={loading}
               >
                 <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
                   <SelectValue />
@@ -205,17 +192,43 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="card_type" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Payment Method</Label>
+              <Select
+                value={formData.card_type}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, card_type: value }))}
+                disabled={loading}
+              >
+                <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                  <SelectValue placeholder="Card type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CARD_TYPES.map((cardType) => (
+                    <SelectItem key={cardType} value={cardType}>
+                      {cardType}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="last_four_digits" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Last 4 Digits</Label>
               <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                className="h-11 bg-muted/30 border-none rounded-xl font-bold"
-                value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                id="last_four_digits"
+                type="text"
+                placeholder="1234"
+                maxLength={4}
+                className="h-11 bg-muted/30 border-none rounded-xl font-medium"
+                value={formData.last_four_digits}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  setFormData(prev => ({ ...prev, last_four_digits: value }));
+                }}
+                disabled={loading}
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-﻿
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -10,9 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-
-      "rounded-lg border border-border/50 bg-card text-card-foreground shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] transition-all duration-300",
-
+      "card flex flex-col",
       className
     )}
     {...props}
@@ -27,7 +25,7 @@ const GlassCard = React.forwardRef<
   <Card
     ref={ref}
     className={cn(
-      "backdrop-blur-2xl bg-card/40 border border-white/10 text-card-foreground shadow-2xl transition-all duration-300",
+      "backdrop-blur-2xl bg-bg-card/40 border border-white/10 text-text-primary transition-colors duration-200",
       className
     )}
     {...props}
@@ -41,7 +39,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1 p-4", className)}
+    className={cn("flex flex-col space-y-1 p-5", className)}
     {...props}
   />
 ))
@@ -54,7 +52,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
+      "text-lg font-semibold leading-none tracking-tight text-text-primary",
       className
     )}
     {...props}
@@ -68,7 +66,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-text-secondary", className)}
     {...props}
   />
 ))

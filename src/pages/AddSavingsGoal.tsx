@@ -15,7 +15,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, PiggyBank } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { GlassCard } from "@/components/ui/card";
+import { Card, GlassCard } from "@/components/ui/card";
 
 const savingsGoalSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -160,7 +160,7 @@ const AddSavingsGoalPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -173,10 +173,10 @@ const AddSavingsGoalPage = () => {
         <h1 className="text-xl font-bold">{isEditing ? 'Edit' : 'Add'} Savings Goal</h1>
       </div>
 
-      <GlassCard className="p-6 bg-gradient-to-br from-white/80 via-green-50/40 to-emerald-50/20 dark:from-slate-800/50 dark:via-slate-700/30 dark:to-slate-600/20 border-green-200/30 dark:border-slate-600/30 shadow-lg">
+      <Card className="p-6">
         <div className="flex justify-center mb-5">
-          <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-400 dark:to-emerald-500 flex items-center justify-center shadow-lg">
-            <PiggyBank className="h-8 w-8 text-white" />
+          <div className="w-16 h-16 rounded-2xl bg-brand-primary-subtle flex items-center justify-center">
+            <PiggyBank className="h-8 w-8 text-text-primary" />
           </div>
         </div>
 
@@ -258,7 +258,7 @@ const AddSavingsGoalPage = () => {
             </div>
           </form>
         </Form>
-      </GlassCard>
+      </Card>
     </div>
   );
 };

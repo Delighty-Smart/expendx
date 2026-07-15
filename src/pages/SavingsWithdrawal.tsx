@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,7 +131,7 @@ const SavingsWithdrawalPage = () => {
   const availableSavings = categoryField ? calculateSavingsByCategory(categoryField) : 0;
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Button
@@ -154,7 +155,7 @@ const SavingsWithdrawalPage = () => {
         </div>
       )}
 
-      <div className="bg-card rounded-lg shadow-sm border p-6">
+      <Card className="p-6">
         <div className="flex justify-center mb-6">
           <div className="p-3 rounded-full bg-primary/20">
             <ArrowDownToLine className="h-12 w-12 text-primary" />
@@ -238,7 +239,7 @@ const SavingsWithdrawalPage = () => {
             </div>
           </form>
         </Form>
-      </div>
+      </Card>
     </div>
   );
 };

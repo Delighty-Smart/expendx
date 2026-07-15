@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { SERVICE_PROVIDERS, CARD_TYPES, SUBSCRIPTION_TYPES } from "@/types/subscriptions";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import { RecurringTemplateSelector } from "./RecurringTemplateSelector";
 import { ReceiptScanner } from "./ReceiptScanner";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const transactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
@@ -35,6 +36,7 @@ const transactionSchema = z.object({
   type: z.enum(["credit", "debit", "savings", "subscription"] as const),
   category: z.string().min(1, "Category is required"),
   description: z.string().min(1, "Description is required"),
+  fulfillment_rating: z.string().optional(),
 
   // Optional unit pricing
   unit_price: z.string().optional(),
@@ -82,6 +84,7 @@ export const TransactionForm = ({
   sharedMimeType
 }: TransactionFormProps) => {
   const { toast } = useToast();
+  const { currency } = useSettings();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -108,13 +111,26 @@ export const TransactionForm = ({
       custom_provider: "",
       card_type: "",
       last_four_digits: "",
-      subscription_type: "monthly"
+      subscription_type: "monthly",
+      fulfillment_rating: ""
     }
   });
 
   // Smart categorization - watch description after form is created
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
+
+  const trueHourlyRate = useMemo(() => {
+    const rate = parseFloat(localStorage.getItem("expendx_true_hourly_rate") || "");
+    return isNaN(rate) || rate <= 0 ? 15.63 : rate;
+  }, []);
+
+  const watchedAmount = form.watch("amount");
+  const lifeHoursCost = useMemo(() => {
+    const amt = parseFloat(watchedAmount || "");
+    if (isNaN(amt) || amt <= 0) return 0;
+    return amt / trueHourlyRate;
+  }, [watchedAmount, trueHourlyRate]);
 
   // Auto-calculate amount from unit_price × quantity (single item)
   const watchedUnitPrice = form.watch("unit_price");
@@ -210,14 +226,24 @@ export const TransactionForm = ({
   useEffect(() => {
     if (open) {
       if (transaction) {
+        const ratingMatch = transaction.description.match(/\[Fulfillment:\s*([1-5])\]/);
+        const rating = ratingMatch ? ratingMatch[1] : "";
+        const cleanDesc = transaction.description.replace(/\[Fulfillment:\s*[1-5]\]/g, "").trim();
+
         form.reset({
           date: transaction.date,
           amount: transaction.amount.toString(),
           type: transaction.type,
           category: transaction.category,
-          description: transaction.description,
+          description: cleanDesc,
           unit_price: "",
           quantity: "",
+          service_provider: "",
+          custom_provider: "",
+          card_type: "",
+          last_four_digits: "",
+          subscription_type: "monthly",
+          fulfillment_rating: rating,
         });
         setTransactionType(transaction.type);
         loadCategories(transaction.type);
@@ -234,7 +260,8 @@ export const TransactionForm = ({
           custom_provider: "",
           card_type: "",
           last_four_digits: "",
-          subscription_type: "monthly"
+          subscription_type: "monthly",
+          fulfillment_rating: "",
         });
         setTransactionType("debit");
         loadCategories("debit");
@@ -286,12 +313,27 @@ export const TransactionForm = ({
         throw new Error("Unable to determine user ID. Please try again when online.");
       }
 
-      const transactionData: any = {
+      let finalDescription = values.description;
+      if (values.fulfillment_rating) {
+        finalDescription = finalDescription.replace(/\[Fulfillment:\s*[1-5]\]/g, "").trim();
+        finalDescription = `${finalDescription}\n\n[Fulfillment: ${values.fulfillment_rating}]`;
+      }
+
+      const transactionData: {
+        date: string;
+        amount: number;
+        type: TransactionType;
+        category: string;
+        description: string;
+        user_id: string;
+        unit_price: number | null;
+        quantity: number | null;
+      } = {
         date: values.date,
         amount: parseFloat(values.amount),
         type: values.type as TransactionType,
         category: values.category,
-        description: values.description,
+        description: finalDescription,
         user_id: userId,
         unit_price: values.unit_price ? parseFloat(values.unit_price) : null,
         quantity: values.quantity ? parseFloat(values.quantity) : null,
@@ -352,17 +394,17 @@ export const TransactionForm = ({
       if (onTransactionAdded) {
         onTransactionAdded();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Transaction submission error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
-  }, [toast, transaction, onOpenChange, onTransactionAdded, queryClient]);
+  }, [toast, transaction, onOpenChange, onTransactionAdded, queryClient, selectedSubscription, upsertSubscriptionFromTransaction]);
 
   const syncStatus = transaction ? getTransactionSyncStatus(transaction.id) : 'synced';
 
@@ -407,13 +449,88 @@ export const TransactionForm = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Large Prominent centered Amount Input */}
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem className="space-y-1 text-center py-2">
+                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Amount</FormLabel>
+                  <FormControl>
+                    <div className="relative flex items-center justify-center">
+                      <span className="text-3xl font-extrabold text-muted-foreground/60 mr-1 select-none font-numeric">
+                        {currency?.symbol || "$"}
+                      </span>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        step="0.01"
+                        {...field}
+                        disabled={loading}
+                        className="bg-transparent border-none text-center text-4xl font-extrabold tracking-tight focus:outline-none focus:ring-0 w-48 text-foreground placeholder:text-muted-foreground/30 font-numeric"
+                      />
+                    </div>
+                  </FormControl>
+                  {lifeHoursCost > 0 && (
+                    <p className="text-xs text-primary font-bold mt-1 text-center">
+                      ⌛ Costs {lifeHoursCost.toFixed(1)} hours of your life energy
+                    </p>
+                  )}
+                  <FormMessage className="text-center" />
+                </FormItem>
+              )}
+            />
+
+            {/* Segmented sliding control for type */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Transaction Type</FormLabel>
+                  <FormControl>
+                    <div className="grid grid-cols-4 gap-1 p-1 bg-muted/40 rounded-xl border border-border/10">
+                      {(["credit", "debit", "savings", "subscription"] as const).map((type) => {
+                        const isActive = transactionType === type;
+                        const label = {
+                          credit: "Income",
+                          debit: "Expense",
+                          savings: "Savings",
+                          subscription: "Subs"
+                        }[type];
+                        
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => handleTypeChange(type)}
+                            className={cn(
+                              "h-9 text-xs font-semibold rounded-lg transition-all duration-200 select-none",
+                              isActive
+                                ? "bg-white dark:bg-card text-foreground shadow-sm scale-[1.02]"
+                                : "text-muted-foreground hover:text-foreground hover:bg-white/10 dark:hover:bg-card/10"
+                            )}
+                            disabled={loading}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Grid for Date & Category */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date</FormLabel>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} />
                     </FormControl>
@@ -421,20 +538,76 @@ export const TransactionForm = ({
                   </FormItem>
                 )}
               />
+              
               <FormField
                 control={form.control}
-                name="amount"
+                name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0.00" step="0.01" {...field} className="h-11 bg-muted/30 border-none rounded-xl font-bold" disabled={loading} />
-                    </FormControl>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Category</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={loading || categories.length === 0}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            {/* Category Suggestions Under Grid */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <div className="space-y-0">
+                  {suggestions.length > 0 && !field.value && (
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {suggestions.map((suggestion) => (
+                        <Badge
+                          key={suggestion.category}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground rounded-lg py-1 px-2 text-[10px]"
+                          onClick={() => field.onChange(suggestion.category)}
+                        >
+                          ✨ {suggestion.category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {extraSuggestions.length > 0 && !field.value && (
+                    <div className="flex gap-2 mt-3 flex-wrap animate-in fade-in slide-in-from-top-1 duration-500">
+                      <p className="w-full text-[10px] text-muted-foreground font-medium mb-1">AI Suggestions:</p>
+                      {extraSuggestions.map((suggestion) => (
+                        <Badge
+                          key={suggestion}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-emerald-500 hover:text-white rounded-lg py-1 px-2 text-[10px] border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
+                          onClick={() => field.onChange(suggestion)}
+                        >
+                          ✨ {suggestion}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            />
 
             {/* Unit Pricing toggle */}
             <div className="space-y-3">
@@ -498,94 +671,6 @@ export const TransactionForm = ({
                 </div>
               )}
             </div>
-
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select
-                    onValueChange={handleTypeChange}
-                    value={transactionType}
-                    disabled={loading}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="credit">Credit (Income)</SelectItem>
-                      <SelectItem value="debit">Debit (Expense)</SelectItem>
-                      <SelectItem value="savings">Savings</SelectItem>
-                      <SelectItem value="subscription">Subscriptions</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  {suggestions.length > 0 && !field.value && (
-                    <div className="flex gap-2 mb-3 flex-wrap">
-                      {suggestions.map((suggestion) => (
-                        <Badge
-                          key={suggestion.category}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground rounded-lg py-1 px-2 text-[10px]"
-                          onClick={() => field.onChange(suggestion.category)}
-                        >
-                          ✨ {suggestion.category}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={loading || categories.length === 0}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
-                        <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {extraSuggestions.length > 0 && !field.value && (
-                    <div className="flex gap-2 mt-3 flex-wrap animate-in fade-in slide-in-from-top-1 duration-500">
-                      <p className="w-full text-[10px] text-muted-foreground font-medium mb-1">AI Suggestions:</p>
-                      {extraSuggestions.map((suggestion) => (
-                        <Badge
-                          key={suggestion}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-emerald-500 hover:text-white rounded-lg py-1 px-2 text-[10px] border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                          onClick={() => field.onChange(suggestion)}
-                        >
-                          ✨ {suggestion}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             {/* Itemized Receipt List */}
             {watchedItems && watchedItems.length > 0 && (
@@ -833,6 +918,48 @@ export const TransactionForm = ({
                   />
                 </div>
               </div>
+            )}
+
+            {transactionType !== "credit" && (
+              <FormField
+                control={form.control}
+                name="fulfillment_rating"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Fulfillment Rating</FormLabel>
+                    <FormControl>
+                      <div className="flex items-center justify-around bg-muted/20 p-2.5 rounded-xl border border-border/50">
+                        {[
+                          { rating: "1", emoji: "💔", label: "Waste" },
+                          { rating: "2", emoji: "😐", label: "Neutral" },
+                          { rating: "3", emoji: "😊", label: "Good" },
+                          { rating: "4", emoji: "💖", label: "Joy" },
+                          { rating: "5", emoji: "🌟", label: "Fulfillment" }
+                        ].map((item) => {
+                          const isActive = field.value === item.rating;
+                          return (
+                            <button
+                              key={item.rating}
+                              type="button"
+                              onClick={() => field.onChange(item.rating)}
+                              className={cn(
+                                "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 hover:scale-105",
+                                isActive
+                                  ? "bg-primary/20 scale-110 border border-primary/30"
+                                  : "opacity-60 hover:opacity-100"
+                              )}
+                            >
+                              <span className="text-xl">{item.emoji}</span>
+                              <span className="text-[9px] font-bold text-muted-foreground">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <FormField

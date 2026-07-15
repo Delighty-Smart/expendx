@@ -1,4 +1,4 @@
-﻿
+
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -20,7 +20,7 @@ import { Plus, Target, TrendingUp } from "lucide-react";
 
 
 const SavingsPage = () => {
-  const { currency } = useSettings();
+  const { currency, formatValue } = useSettings();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { refreshData } = useRefresh();
@@ -123,16 +123,12 @@ const SavingsPage = () => {
       <div className="space-y-6 pb-24">
         <SavingsHeader onAddGoalClick={() => setIsAddGoalOpen(true)} />
 
-        <SavingsTotalCard totalSavings={totalSavings} currency={currency} />
-        <div className="flex items-center justify-between">
+        <SavingsTotalCard totalSavings={totalSavings} />
+        <div className="flex items-center justify-between mt-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Savings Goals</h1>
-            <p className="text-sm text-muted-foreground mt-1">Track your progress towards financial goals</p>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">Savings Goals</h2>
+            <p className="text-xs text-muted-foreground">Track your progress towards financial goals</p>
           </div>
-          <Button onClick={() => setIsAddGoalOpen(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" strokeWidth={1.5} />
-            New Goal
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -154,7 +150,7 @@ const SavingsPage = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Saved</p>
-                <p className="text-2xl font-bold">{currency.symbol}{(totalSavings || 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatValue(totalSavings || 0)}</p>
               </div>
             </div>
           </div>

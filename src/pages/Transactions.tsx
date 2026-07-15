@@ -1,5 +1,6 @@
-﻿
+
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, PlusCircle, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Plus, Trash2, Edit, Calendar, SlidersHorizontal, X, TrendingUp, TrendingDown, PiggyBank, Shapes } from "lucide-react";
+import { Search, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Trash2, Edit, Calendar, X, TrendingUp, TrendingDown, PiggyBank, Upload, Banknote, Landmark, ArrowDownToLine, ArrowUpFromLine, Repeat, LayoutGrid, ListFilter, FileUp, CirclePlus, BoxSelect, ArchiveRestore, Wallet, CreditCard, Receipt, Filter, SlidersHorizontal, Shapes } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,13 +35,15 @@ import {
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { PendingSyncIndicator } from "@/components/PendingSyncIndicator";
+import { StatementImporter } from "@/components/reports/StatementImporter";
 
 const TransactionsPage = () => {
-  const { currency } = useSettings();
+  const { currency, formatValue } = useSettings();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<"all" | TransactionType>("all");
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -125,6 +128,8 @@ const TransactionsPage = () => {
     }
     return [];
   }, [selectedType, expenseCategories, incomeCategories, savingsCategories]);
+
+  const [showFilters, setShowFilters] = useState(false);
 
   // Reset selected categories when type changes
   const handleTypeChange = (value: "all" | TransactionType) => {
@@ -342,20 +347,18 @@ const TransactionsPage = () => {
     });
   }, []);
 
-  const renderTransactionIcon = (type: TransactionType) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case 'credit':
-
-        return <ArrowDown className="h-4 w-4 text-green-500" strokeWidth={1.5} />;
+        return <ArrowDownToLine className="h-4 w-4 text-emerald-500" strokeWidth={1.5} />;
       case 'debit':
-        return <ArrowUp className="h-4 w-4 text-red-500" strokeWidth={1.5} />;
-
+        return <ArrowUpFromLine className="h-4 w-4 text-rose-500" strokeWidth={1.5} />;
       case 'savings':
-        return <div className="h-3.5 w-3.5 rounded-full bg-blue-400"></div>;
+        return <Landmark className="h-4 w-4 text-sky-500" strokeWidth={1.5} />;
       case 'subscription':
-        return <TrendingDown className="h-4 w-4 text-purple-500" strokeWidth={1.5} />;
+        return <Repeat className="h-4 w-4 text-violet-500" strokeWidth={1.5} />;
       default:
-        return null;
+        return <Banknote className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />;
     }
   };
 
@@ -365,7 +368,7 @@ const TransactionsPage = () => {
     <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
       <div className="space-y-6 pb-24">
 
-        <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="relative md:sticky md:top-0 z-20 bg-background/95 backdrop-blur-md pb-3 mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
             <OfflineIndicator />
@@ -376,16 +379,16 @@ const TransactionsPage = () => {
                 <Button
                   variant="outline"
                   size="compact"
-                  className="flex items-center gap-1.5 text-sm border-orange-500 text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-950"
+                  className="flex items-center gap-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border-none rounded-lg px-3.5 py-1.5 transition-all"
                   onClick={() => setConfirmArchiveOpen(true)}
                 >
-                  <Archive className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <ArchiveRestore className="h-3.5 w-3.5" strokeWidth={1.5} />
                   Archive ({selectedTransactions.length})
                 </Button>
                 <Button
                   variant="destructive"
                   size="compact"
-                  className="flex items-center gap-1.5 text-sm"
+                  className="flex items-center gap-1.5 text-xs border-none rounded-lg px-3.5 py-1.5 transition-all"
                   onClick={() => setConfirmDeleteOpen(true)}
                 >
                   <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -394,47 +397,66 @@ const TransactionsPage = () => {
               </>
             )}
             <Button
+              variant="outline"
               size="compact"
-              className="flex items-center gap-1.5 text-sm touch-manipulation"
+              className="flex items-center gap-1.5 text-xs bg-muted/40 hover:bg-muted/65 text-foreground border-none rounded-lg px-3.5 py-1.5 transition-all"
+              onClick={() => setIsImportOpen(true)}
+            >
+              <FileUp className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Import
+            </Button>
+            <Button
+              size="compact"
+              className="flex items-center gap-1.5 text-xs border-none rounded-lg px-3.5 py-1.5 transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => navigate("/add-transaction")}
             >
-              <PlusCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <CirclePlus className="h-3.5 w-3.5" strokeWidth={1.5} />
               Add
             </Button>
           </div>
         </div>
 
 
-        <Card className="bg-card border-border">
-          <div className="p-4 border-b border-border bg-card">
-            <div className="flex flex-col sm:flex-row gap-4">
+        {/* Filter Toolbar */}
+        <div className="p-3.5 bg-card/40 backdrop-blur-sm rounded-2xl">
+            <div className="flex gap-2 w-full">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
 
                 <Input
                   placeholder="Search transactions..."
-                  className="pl-9 bg-background border-input text-foreground placeholder:text-muted-foreground"
+                  className="pl-9 bg-background/50 hover:bg-background/85 focus-visible:bg-background border-none rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:ring-0 focus-visible:ring-offset-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <Button
+                variant={showFilters ? "secondary" : "outline"}
+                onClick={() => setShowFilters(!showFilters)}
+                size="icon"
+                className="rounded-xl border-none bg-background/50 h-10 w-10 shrink-0"
+                title="Toggle Filters"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </div>
 
+            {(showFilters || searchQuery) && (
+              <div className="flex flex-wrap gap-2 mt-3 animate-fadeIn">
                 <Select
-
                   value={selectedType}
                   onValueChange={handleTypeChange}
                 >
-                  <SelectTrigger className="w-full min-w-[100px] sm:w-[140px] bg-background border-input text-foreground">
+                  <SelectTrigger className="w-[125px] bg-background/50 hover:bg-background/85 border-none rounded-xl text-xs text-foreground transition-all focus:ring-0 focus:ring-offset-0 h-9">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border">
-                    <SelectItem value="all" className="text-foreground">All Types</SelectItem>
-                    <SelectItem value="credit" className="text-foreground">Income</SelectItem>
-                    <SelectItem value="debit" className="text-foreground">Expense</SelectItem>
-                    <SelectItem value="savings" className="text-foreground">Savings</SelectItem>
-                    <SelectItem value="subscription" className="text-foreground">Subscriptions</SelectItem>
+                  <SelectContent className="bg-popover border-none shadow-lg rounded-xl">
+                    <SelectItem value="all" className="text-foreground text-xs">All Types</SelectItem>
+                    <SelectItem value="credit" className="text-foreground text-xs">Income</SelectItem>
+                    <SelectItem value="debit" className="text-foreground text-xs">Expense</SelectItem>
+                    <SelectItem value="savings" className="text-foreground text-xs">Savings</SelectItem>
+                    <SelectItem value="subscription" className="text-foreground text-xs">Subscriptions</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -443,25 +465,22 @@ const TransactionsPage = () => {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-
                       size="compact"
-                      className="w-full min-w-[100px] sm:w-[140px] justify-between bg-background border-input text-foreground hover:bg-accent"
+                      className="w-[125px] justify-between bg-background/50 hover:bg-background/85 border-none rounded-xl text-xs text-foreground transition-all hover:text-foreground h-9"
                     >
-                      <div className="flex items-center gap-2">
-
-                        <SlidersHorizontal className="h-4 w-4" strokeWidth={1.5} />
-
+                      <div className="flex items-center gap-1">
+                        <ListFilter className="h-3.5 w-3.5" strokeWidth={1.5} />
                         Categories
                       </div>
                       {selectedCategories.length > 0 && (
-                        <Badge variant="secondary" className="ml-2 h-5 text-xs">
+                        <Badge variant="secondary" className="ml-1 h-4 text-[9px] px-1">
                           {selectedCategories.length}
                         </Badge>
                       )}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0 bg-popover border-border z-50 max-h-[45vh] flex flex-col overflow-hidden" align="end">
-                    <div className="p-4 border-b border-border bg-popover flex-shrink-0">
+                  <PopoverContent className="w-80 p-0 bg-popover border-none shadow-lg rounded-xl z-50 max-h-[45vh] flex flex-col overflow-hidden" align="end">
+                    <div className="p-4 bg-popover flex-shrink-0">
                       <h4 className="font-medium text-foreground mb-2">Categories</h4>
                       <div className="flex items-center justify-between">
 
@@ -472,7 +491,7 @@ const TransactionsPage = () => {
                             }`}
                           onClick={clearAllCategories}
                         >
-                          <Shapes className="h-4 w-4 mr-3" strokeWidth={1.5} />
+                          <LayoutGrid className="h-4 w-4 mr-3" strokeWidth={1.5} />
                           <span>All Categories</span>
                         </div>
                         {selectedCategories.length > 0 && (
@@ -510,7 +529,7 @@ const TransactionsPage = () => {
                                   }`}
                                 onClick={() => toggleCategory(categoryItem.name)}
                               >
-                                <Shapes className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" strokeWidth={1.5} />
+                                <LayoutGrid className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" strokeWidth={1.5} />
 
                                 <span className="truncate flex-1">
                                   {categoryItem.name}
@@ -531,16 +550,19 @@ const TransactionsPage = () => {
 
 
                 <Button
-
                   variant={selectionMode ? "secondary" : "outline"}
                   onClick={toggleSelectionMode}
-                  size="sm"
-                  className={selectionMode ? "bg-secondary text-secondary-foreground" : "bg-background border-input text-foreground hover:bg-accent"}
+                  size="compact"
+                  className={cn(
+                    "border-none rounded-xl text-xs transition-all h-9 px-3",
+                    selectionMode ? "bg-secondary text-secondary-foreground" : "bg-background/50 hover:bg-background/85 text-foreground hover:text-foreground"
+                  )}
                 >
+                  <BoxSelect className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                   {selectionMode ? "Cancel" : "Select"}
                 </Button>
               </div>
-            </div>
+            )}
 
 
             {selectedCategories.length > 0 && (
@@ -549,7 +571,7 @@ const TransactionsPage = () => {
                   <Badge
                     key={category}
                     variant="secondary"
-                    className="flex items-center gap-1 bg-primary/10 text-primary border-primary/20"
+                    className="flex items-center gap-1 bg-primary/10 text-primary border-none rounded-lg px-2 py-0.5"
                   >
                     {category}
                     <X
@@ -564,18 +586,21 @@ const TransactionsPage = () => {
             )}
           </div>
 
+        {/* Transactions List */}
+        <Card className="bg-card/25 border-none shadow-none rounded-2xl overflow-hidden">
+
           {!navigator.onLine && (
-            <div className="px-4 py-2 bg-orange-50 dark:bg-orange-950 border-b border-orange-200 dark:border-orange-800">
-              <p className="text-sm text-orange-700 dark:text-orange-300">
+            <div className="mx-4 my-2 px-4 py-2.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl border-none">
+              <p className="text-sm">
                 You're offline. Changes will sync when connection is restored.
               </p>
             </div>
           )}
 
           {isLoading ? (
-            <div className="space-y-0 divide-y divide-border/50">
+            <div className="space-y-2 px-6">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="py-3 px-6 flex items-center gap-4">
+                <div key={i} className="py-3 flex items-center gap-4">
                   <div className="flex-1 flex flex-col gap-1.5">
                     <Skeleton className="h-4 w-[55%]" />
                     <Skeleton className="h-3 w-[35%]" />
@@ -592,18 +617,18 @@ const TransactionsPage = () => {
 
 
                 return (
-                  <div key={month} className="transaction-month-group border-t border-border/50 first:border-t-0">
+                  <div key={month} className="transaction-month-group mt-6 first:mt-2">
                     <div
-                      className={`px-6 pt-6 pb-2 ${selectionMode ? 'cursor-pointer' : ''}`}
+                      className={`px-6 pt-4 pb-2 ${selectionMode ? 'cursor-pointer' : ''}`}
                       onClick={(e) => selectionMode ? selectAllInMonth(allDayTransactions, e) : undefined}
                     >
                       <div className="flex flex-col">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-semibold text-foreground uppercase tracking-wider">{month}</span>
+                          <span className="text-sm font-bold text-foreground uppercase tracking-wider">{month}</span>
                           {selectionMode && (
 
-                            <div className={`h-4 w-4 rounded-sm border-2 border-primary ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
-                              ? 'bg-primary'
+                            <div className={`h-4 w-4 rounded border border-primary/45 ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                              ? 'bg-primary border-none'
                               : allDayTransactions.some(t => selectedTransactions.includes(t.id))
                                 ? 'bg-primary/30'
                                 : 'bg-background'
@@ -613,8 +638,8 @@ const TransactionsPage = () => {
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground mt-0.5">
                           <div className="flex gap-4">
-                            <span>In: {currencySymbol}{formatAmount(income)}</span>
-                            <span>Out: {currencySymbol}{formatAmount(expense)}</span>
+                            <span>In: {formatValue(income)}</span>
+                            <span>Out: {formatValue(expense)}</span>
                           </div>
                         </div>
                       </div>
@@ -633,8 +658,8 @@ const TransactionsPage = () => {
                               <span>{format(new Date(day), "EEEE, MMM d")}</span>
 
                               {selectionMode && (
-                                <div className={`h-4 w-4 rounded-sm border-2 border-primary ${dayTransactions.every(t => selectedTransactions.includes(t.id))
-                                  ? 'bg-primary'
+                                <div className={`h-4 w-4 rounded border border-primary/45 ${dayTransactions.every(t => selectedTransactions.includes(t.id))
+                                  ? 'bg-primary border-none'
                                   : dayTransactions.some(t => selectedTransactions.includes(t.id))
                                     ? 'bg-primary/30'
                                     : 'bg-background'
@@ -643,7 +668,7 @@ const TransactionsPage = () => {
                               )}
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-1 px-4">
                               {dayTransactions.sort((a, b) => {
                                 const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
                                 const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -655,7 +680,7 @@ const TransactionsPage = () => {
                                 return (
                                   <div
                                     key={transaction.id}
-                                    className={`transaction-row py-3 px-6 flex items-center gap-4 bg-transparent hover:bg-accent/10 transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
+                                    className={`transaction-row py-2.5 px-3 flex items-center gap-4 bg-transparent hover:bg-accent/10 rounded-xl transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
                                     onClick={() => selectionMode
                                       ? toggleTransactionSelection(transaction.id)
 
@@ -665,13 +690,16 @@ const TransactionsPage = () => {
                                     {selectionMode && (
 
                                       <div
-                                        className={`h-5 w-5 shrink-0 rounded-sm border-2 border-primary ${selectedTransactions.includes(transaction.id) ? 'bg-primary' : 'bg-background'
+                                        className={`h-4.5 w-4.5 shrink-0 rounded border border-primary/45 ${selectedTransactions.includes(transaction.id) ? 'bg-primary border-none' : 'bg-background'
                                           }`}
 
                                       />
                                     )}
 
 
+                                    <div className="h-9 w-9 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
+                                      {getTypeIcon(transaction.type)}
+                                    </div>
                                     <div className="flex-1 flex flex-col gap-0.5">
                                       <div className="flex items-center gap-2">
                                         <p className="font-medium text-[15px] leading-tight text-foreground">
@@ -690,10 +718,10 @@ const TransactionsPage = () => {
                                     <div
 
                                       className={`text-right ${transaction.type === "credit"
-                                        ? "text-green-600 dark:text-green-400"
+                                        ? "text-emerald-600 dark:text-emerald-400"
                                         : transaction.type === "debit" || transaction.type === "subscription"
-                                          ? "text-red-600 dark:text-red-400"
-                                          : "text-blue-600 dark:text-blue-400"
+                                          ? "text-rose-600 dark:text-rose-400"
+                                          : "text-sky-600 dark:text-sky-400"
                                         }`}
                                     >
                                       <p className="font-medium text-[15px] leading-tight">
@@ -702,9 +730,7 @@ const TransactionsPage = () => {
                                           : transaction.type === "debit" || transaction.type === "subscription"
                                             ? "-"
                                             : ""}
-
-                                        {currencySymbol}
-                                        {formatAmount(transaction.amount)}
+                                        {formatValue(transaction.amount)}
                                       </p>
                                     </div>
                                   </div>
@@ -720,7 +746,7 @@ const TransactionsPage = () => {
             </div>
           ) : (
             <EmptyState
-              icon={PlusCircle}
+              icon={Receipt}
               title="No transactions found"
               description="Start tracking your finances by adding your first transaction. You can add income, expenses, or savings."
               actionLabel="Add your first transaction"
@@ -738,7 +764,7 @@ const TransactionsPage = () => {
       </div>
 
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent className="bg-card border-none shadow-lg rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Confirm Deletion</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
@@ -749,8 +775,8 @@ const TransactionsPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+            <AlertDialogCancel className="bg-background border-none rounded-xl text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 rounded-xl text-white">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -758,7 +784,7 @@ const TransactionsPage = () => {
       </AlertDialog>
 
       <AlertDialog open={confirmArchiveOpen} onOpenChange={setConfirmArchiveOpen}>
-        <AlertDialogContent className="bg-card border-border">
+        <AlertDialogContent className="bg-card border-none shadow-lg rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Confirm Archive</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
@@ -769,13 +795,19 @@ const TransactionsPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-background border-input text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive} className="bg-orange-600 hover:bg-orange-700 text-white">
+            <AlertDialogCancel className="bg-background border-none rounded-xl text-foreground hover:bg-accent">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive} className="bg-orange-600 hover:bg-orange-700 rounded-xl text-white">
               Archive
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <StatementImporter 
+        open={isImportOpen} 
+        onOpenChange={setIsImportOpen} 
+        onImportComplete={refetchTransactions} 
+      />
     </PullToRefresh>
   );
 };

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode, useRef } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { currencies } from '@/lib/currencies';
 import { notificationService } from '@/services/notificationService';
@@ -21,6 +21,10 @@ interface SettingsContextType {
     updateCurrency: (currencyCode: string) => void;
     hideAmounts: boolean;
     toggleHideAmounts: () => void;
+    showLifeHours: boolean;
+    toggleShowLifeHours: () => void;
+    trueHourlyRate: number;
+    formatValue: (amount: number) => string;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -68,6 +72,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     const [hideAmounts, setHideAmounts] = useState<boolean>(() => {
         return localStorage.getItem('expendx_hideAmounts') === 'true';
     });
+
+    const [showLifeHours, setShowLifeHours] = useState<boolean>(() => {
+        return localStorage.getItem('expendx_show_life_hours') === 'true';
+    });
+
+    const trueHourlyRate = useMemo(() => {
+        const rate = parseFloat(localStorage.getItem('expendx_true_hourly_rate') || '');
+        return isNaN(rate) || rate <= 0 ? 15.63 : rate;
+    }, []);
 
     const isInitialized = useRef<boolean>(false);
     const { user } = useAuth();
@@ -272,6 +285,29 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         setHideAmounts(prev => !prev);
     };
 
+    const toggleShowLifeHours = () => {
+        setShowLifeHours(prev => {
+            const next = !prev;
+            localStorage.setItem('expendx_show_life_hours', next.toString());
+            return next;
+        });
+    };
+
+    const formatValue = (amount: number) => {
+        if (hideAmounts) return '***';
+        if (showLifeHours) {
+            const hrs = amount / trueHourlyRate;
+            return hrs.toLocaleString('en-US', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }) + ' hrs';
+        }
+        return currency.symbol + amount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
     const contextValue: SettingsContextType = {
         currency,
         setCurrency,
@@ -279,7 +315,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         updateTheme,
         updateCurrency,
         hideAmounts,
-        toggleHideAmounts
+        toggleHideAmounts,
+        showLifeHours,
+        toggleShowLifeHours,
+        trueHourlyRate,
+        formatValue
     };
 
     return (

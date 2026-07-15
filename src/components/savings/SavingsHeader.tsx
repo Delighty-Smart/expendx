@@ -1,4 +1,4 @@
-﻿
+
 import { Button } from "@/components/ui/button";
 
 import { Plus, ArrowDownToLine } from "lucide-react";
@@ -13,7 +13,7 @@ export function SavingsHeader({ onAddGoalClick }: SavingsHeaderProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="sticky top-14 lg:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="relative md:sticky md:top-0 z-20 bg-background pb-4 mb-4 border-b border-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <h1 className="text-2xl font-bold">Savings</h1>
       <div className="flex flex-wrap gap-2">
 

@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Shapes, FileSpreadsheet } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ const ReportsPage = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [hoveredLegendItem, setHoveredLegendItem] = useState<string | null>(null);
-  const { currency } = useSettings();
+  const { currency, showLifeHours, trueHourlyRate } = useSettings();
   const { user, isLoading: isAuthLoading } = useAuth();
   const { refreshData } = useRefresh();
   const { budgets, isLoading: isBudgetsLoading } = useEnhancedBudgetData();
@@ -194,6 +194,13 @@ const ReportsPage = () => {
   const { toast } = useToast();
 
   const formatAmount = (amount: number) => {
+    if (showLifeHours) {
+      const hrs = amount / trueHourlyRate;
+      return hrs.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      }) + " hrs";
+    }
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
@@ -568,7 +575,7 @@ const ReportsPage = () => {
   };
 
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
+  const COLORS = ['#FF2D6B', '#137333', '#C5221F', '#F29900', '#1967D2', '#8b5cf6', '#a3e635', '#f472b6'];
 
   const totalAmount = categoryData.reduce((sum, item) => sum + item.amount, 0);
 
@@ -748,7 +755,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total In</p>
                   <p className="text-lg font-bold text-foreground truncate">
-                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.income)}</>}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{!showLifeHours && currency.symbol}{formatAmount(summaryMetrics.income)}</>}
                   </p>
                 </div>
               </div>
@@ -765,7 +772,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Out</p>
                   <p className="text-lg font-bold text-foreground truncate">
-                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.expenses)}</>}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{!showLifeHours && currency.symbol}{formatAmount(summaryMetrics.expenses)}</>}
                   </p>
                 </div>
               </div>
@@ -782,7 +789,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium">Savings</p>
                   <p className="text-lg font-bold text-foreground truncate">
-                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.savings)}</>}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{!showLifeHours && currency.symbol}{formatAmount(summaryMetrics.savings)}</>}
                   </p>
                 </div>
               </div>
@@ -799,7 +806,7 @@ const ReportsPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground font-medium">Net Balance</p>
                   <p className={`text-lg font-bold truncate ${summaryMetrics.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{currency.symbol}{formatAmount(summaryMetrics.net)}</>}
+                    {isLoading ? <Skeleton className="h-6 w-28 mt-0.5" /> : <>{!showLifeHours && currency.symbol}{formatAmount(summaryMetrics.net)}</>}
                   </p>
                 </div>
               </div>
@@ -851,9 +858,18 @@ const ReportsPage = () => {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <YAxis 
+                        tickFormatter={(value) => showLifeHours ? `${(value / trueHourlyRate).toFixed(1)} hrs` : `${currency.symbol}${value.toLocaleString()}`}
+                        tick={{ fontSize: 12 }} 
+                      />
 
                       <Tooltip
+                        formatter={(value: number) => [
+                          showLifeHours 
+                            ? `${(value / trueHourlyRate).toFixed(1)} hrs` 
+                            : `${currency.symbol}${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                          'Amount'
+                        ]}
                         contentStyle={{
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
                           border: 'none',
@@ -893,9 +909,18 @@ const ReportsPage = () => {
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <YAxis 
+                        tickFormatter={(value) => showLifeHours ? `${(value / trueHourlyRate).toFixed(1)} hrs` : `${currency.symbol}${value.toLocaleString()}`}
+                        tick={{ fontSize: 12 }} 
+                      />
 
                       <Tooltip
+                        formatter={(value: number) => [
+                          showLifeHours 
+                            ? `${(value / trueHourlyRate).toFixed(1)} hrs` 
+                            : `${currency.symbol}${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                          'Amount'
+                        ]}
                         contentStyle={{
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
                           border: 'none',
@@ -969,7 +994,7 @@ const ReportsPage = () => {
                               </Pie>
 
                               <Tooltip
-                                formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
+                                formatter={(value: number) => [`${!showLifeHours ? currency.symbol : ''}${formatAmount(value)}`, 'Amount']}
                                 contentStyle={{
                                   backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                   border: 'none',
@@ -1008,7 +1033,7 @@ const ReportsPage = () => {
                                 </div>
                                 <div className="text-right">
                                   <div className="font-semibold text-sm">
-                                    {currency.symbol}{formatAmount(entry.amount)}
+                                    {!showLifeHours && currency.symbol}{formatAmount(entry.amount)}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
                                     {percentage}%
@@ -1032,11 +1057,15 @@ const ReportsPage = () => {
                         <ResponsiveContainer width="100%" height="100%" id="top-categories-chart">
                           <BarChart data={categoryData.slice(0, 8)} layout="horizontal">
                             <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                            <XAxis type="number" tick={{ fontSize: 12 }} />
+                            <XAxis 
+                              type="number" 
+                              tickFormatter={(value) => showLifeHours ? `${(value / trueHourlyRate).toFixed(1)} hrs` : `${currency.symbol}${value.toLocaleString()}`}
+                              tick={{ fontSize: 12 }} 
+                            />
 
                             <YAxis dataKey="category" type="category" tick={{ fontSize: 10 }} />
                             <Tooltip
-                              formatter={(value: number) => [`${currency.symbol}${formatAmount(value)}`, 'Amount']}
+                              formatter={(value: number) => [`${!showLifeHours ? currency.symbol : ''}${formatAmount(value)}`, 'Amount']}
                               contentStyle={{
                                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                                 border: 'none',

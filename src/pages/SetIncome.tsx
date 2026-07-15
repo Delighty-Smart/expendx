@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -91,7 +92,7 @@ const SetIncomePage = () => {
   }, [toast, navigate, queryClient, monthlyIncome]);
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
+    <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
       <div className="flex items-center mb-6">
         <Button
           variant="ghost"
@@ -104,7 +105,7 @@ const SetIncomePage = () => {
         <h1 className="text-2xl font-bold">Set Income Target</h1>
       </div>
 
-      <div className="bg-card rounded-lg shadow-sm border p-6">
+      <Card className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -146,7 +147,7 @@ const SetIncomePage = () => {
             </div>
           </form>
         </Form>
-      </div>
+      </Card>
     </div>
   );
 };
