@@ -171,7 +171,7 @@ const AdminDashboard = () => {
             <LayoutDashboard className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-xl tracking-tighter text-white">ExpendX <span className="text-primary text-xs ml-1 uppercase bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">Admin</span></h1>
+            <h1 className="font-bold text-xl tracking-tighter text-white">Lucent <span className="text-primary text-xs ml-1 uppercase bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">Admin</span></h1>
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5">Control Panel v2.0</p>
           </div>
         </div>

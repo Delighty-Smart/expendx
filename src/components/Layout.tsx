@@ -149,23 +149,23 @@ const Layout = ({
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
       {/* Header for mobile */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-bg-surface/90 backdrop-blur-lg border-b border-border-default pt-[calc(max(env(safe-area-inset-top,0px),24px)+6px)] pb-3 px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-bg-surface/90 backdrop-blur-lg border-b border-border-default pt-[calc(max(env(safe-area-inset-top,0px),8px))] pb-1.5 px-3.5">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <img src={theme === "dark" ? "/lucent-header-dark.png" : "/lucent-header-light.png"} alt="Lucent" className="h-8 object-contain" />
+            <Link to="/dashboard" className="flex items-center gap-1.5">
+              <img src={theme === "dark" ? "/lucent-header-dark.png?v=2" : "/lucent-header-light.png?v=2"} alt="Lucent" className="h-[18px] sm:h-[20px] max-w-[118px] object-contain" />
             </Link>
           </div>
 
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary rounded-full transition-colors">
-              {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-7.5 w-7.5 text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary rounded-full transition-colors p-0 flex items-center justify-center">
+              {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleProfileClick}
-              className="ml-1 rounded-full overflow-hidden border border-border-default active:scale-95 transition-transform h-8 w-8"
+              className="ml-0.5 rounded-full overflow-hidden border border-border-default active:scale-95 transition-transform h-7 w-7 p-0"
             >
               <UserAvatar
                 url={profile?.avatar_url}
@@ -181,7 +181,7 @@ const Layout = ({
       {/* Desktop sidebar nav (Hidden on lg < screens) */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default z-40 hidden lg:flex flex-col`}>
         <div className="p-4 safe-pt border-b border-border-default flex items-center justify-center gap-2 h-[72px]">
-          <img src={theme === "dark" ? "/lucent-header-dark.png" : "/lucent-header-light.png"} alt="Lucent" className="h-8 object-contain mt-1" />
+          <img src={theme === "dark" ? "/lucent-header-dark.png?v=2" : "/lucent-header-light.png?v=2"} alt="Lucent" className="h-[22px] max-w-[135px] object-contain mt-1" />
         </div>
 
         <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto scrollable-container">
@@ -243,7 +243,7 @@ const Layout = ({
       </aside>
 
       <main className={`flex-1 lg:pl-64 safe-pt-main min-h-screen transition-all duration-300 pb-20 lg:pb-6`}>
-        <div className="container mx-auto px-6 py-4 md:p-6 lg:p-8 animate-fadeIn max-w-7xl">
+        <div className="container mx-auto px-3.5 py-1.5 md:p-6 lg:p-8 animate-fadeIn max-w-7xl">
           {children || <Outlet />}
         </div>
       </main>

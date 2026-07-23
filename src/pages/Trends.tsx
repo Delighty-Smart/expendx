@@ -448,7 +448,7 @@ const Trends = () => {
     return (
         <div className="space-y-5 pb-8">
             {/* ── Header ── */}
-            <PageHeader title="Trends" />
+            <PageHeader title="Trends" backTo="/dashboard" />
 
             <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 items-start">
                 {/* ── Left: Selector + selected chips ── */}

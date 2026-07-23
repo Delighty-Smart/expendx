@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -58,7 +58,7 @@ const FeedbackPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Feedback | expendX";
+    document.title = "Feedback | Lucent";
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,7 +133,7 @@ const FeedbackPage = () => {
             Share your thoughts
           </h1>
           <p className="text-lg text-muted-foreground font-medium max-w-md mx-auto">
-            Your feedback is the fuel that drives expendX forward.
+            Your feedback is the fuel that drives Lucent forward.
           </p>
         </div>
 
@@ -240,7 +240,7 @@ const FeedbackPage = () => {
         </div>
 
         <p className="text-center mt-8 text-sm text-muted-foreground/60 font-medium">
-          expendX team reviews every piece of feedback manually.
+          Lucent team reviews every piece of feedback manually.
         </p>
       </div>
     </main>

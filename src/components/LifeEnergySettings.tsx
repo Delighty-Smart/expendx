@@ -86,9 +86,10 @@ export const LifeEnergySettings: React.FC = () => {
       ...data,
       trueHourlyRate: Number(computedTrueRate.toFixed(2)),
     };
-    setData(updatedData);
     localStorage.setItem("lucent_life_energy_data", JSON.stringify(updatedData));
+    localStorage.setItem("expendx_life_energy_data", JSON.stringify(updatedData));
     localStorage.setItem("lucent_true_hourly_rate", updatedData.trueHourlyRate.toString());
+    localStorage.setItem("expendx_true_hourly_rate", updatedData.trueHourlyRate.toString());
     
     // Dispatch storage event to sync all listeners globally
     window.dispatchEvent(new Event("storage"));

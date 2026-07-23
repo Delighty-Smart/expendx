@@ -255,6 +255,7 @@ const BudgetsPage = () => {
 
         <PageHeader
           title="Budgets"
+          backTo="/dashboard"
           actions={
             <div className="flex items-center gap-2">
               <Button onClick={() => navigate('/set-income')} variant="outline" className="flex items-center gap-2 flex-none whitespace-nowrap">

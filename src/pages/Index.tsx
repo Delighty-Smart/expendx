@@ -637,7 +637,15 @@ const IndexPage = () => {
         </div>
 
         {/* Circular Fintech Actions */}
-        <div className="flex items-center justify-around py-2.5 px-2 bg-card rounded-[20px] select-none">
+        <div className="flex items-center justify-around py-2.5 px-2 bg-card rounded-[20px] select-none relative">
+          <svg width="0" height="0" className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
+            <defs>
+              <linearGradient id="lucent-45deg-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="24" x2="24" y2="0">
+                <stop offset="0%" stopColor="#3F95BF" />
+                <stop offset="100%" stopColor="#91C13F" />
+              </linearGradient>
+            </defs>
+          </svg>
           {[
             { label: "Transactions", icon: Banknote, path: "/transactions" },
             { label: "Budgets", icon: Wallet, path: "/budgets" },
@@ -651,8 +659,8 @@ const IndexPage = () => {
                 onClick={() => navigate(action.path)}
                 className="flex flex-col items-center gap-1.5 group transition-all active:scale-95 duration-200"
               >
-                <div className="w-10 h-10 rounded-full bg-muted/60 dark:bg-muted/30 border border-border-default flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white dark:group-hover:text-black transition-all shadow-none">
-                  <Icon className="h-4.5 w-4.5 stroke-[1.5] group-hover:scale-110 transition-transform text-foreground" />
+                <div className="w-10 h-10 rounded-full bg-muted/60 dark:bg-muted/30 border border-border-default/60 flex items-center justify-center group-hover:scale-110 transition-all shadow-xs">
+                  <Icon className="h-5 w-5 stroke-[2] transition-transform group-hover:scale-110" style={{ stroke: "url(#lucent-45deg-gradient)" }} />
                 </div>
                 <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors tracking-tight">
                   {action.label}

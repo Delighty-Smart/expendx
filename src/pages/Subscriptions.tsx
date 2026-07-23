@@ -161,11 +161,8 @@ export default function Subscriptions() {
   return (
     <div className="space-y-6 pb-24">
       <PageHeader
-        title={
-          <>
-            Subscriptions
-          </>
-        }
+        title="Subscriptions"
+        backTo="/dashboard"
         actions={
           <Button onClick={() => setShowForm(true)} className="gap-2 flex-none whitespace-nowrap">
             <Plus className="h-4 w-4" />

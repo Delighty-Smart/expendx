@@ -48,7 +48,7 @@ export const useBiometricLock = () => {
         if (!Capacitor.isNativePlatform()) return true;
         try {
             await BiometricAuth.authenticate({
-                reason: 'Verify your identity to access expendX',
+                reason: 'Verify your identity to access Lucent',
                 cancelTitle: 'Cancel',
                 iosFallbackTitle: 'Use Passcode',
                 allowDeviceCredential: true,

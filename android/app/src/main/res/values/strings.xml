@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Expendx</string>
-    <string name="title_activity_main">Expendx</string>
+    <string name="app_name">Lucent</string>
+    <string name="title_activity_main">Lucent</string>
     <string name="package_name">com.expendx.app</string>
     <string name="custom_url_scheme">com.expendx.app</string>
 

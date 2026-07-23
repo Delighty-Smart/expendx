@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Trash2, Edit, Calendar, X, TrendingUp, TrendingDown, PiggyBank, Upload, Banknote, Landmark, ArrowDownToLine, ArrowUpFromLine, Repeat, LayoutGrid, ListFilter, FileUp, CirclePlus, BoxSelect, ArchiveRestore, Wallet, CreditCard, Receipt, Filter, SlidersHorizontal, Shapes, Lock } from "lucide-react";
+import { Search, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Trash2, Edit, Calendar, X, TrendingUp, TrendingDown, PiggyBank, Upload, Banknote, Landmark, ArrowDownToLine, ArrowUpFromLine, Repeat, LayoutGrid, ListFilter, FileUp, CirclePlus, BoxSelect, ArchiveRestore, Wallet, CreditCard, Receipt, Filter, SlidersHorizontal, Shapes, Lock, Check } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -371,6 +371,7 @@ const TransactionsPage = () => {
 
         <PageHeader
           title="Transactions"
+          backTo="/dashboard"
           actions={
             <div className="flex gap-1.5">
               {selectionMode && selectedTransactions.length > 0 && (
@@ -625,87 +626,104 @@ const TransactionsPage = () => {
                       <div className="flex flex-col">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-bold text-foreground uppercase tracking-wider">{month}</span>
-                          {selectionMode && (
+                           {selectionMode && (
+                             <div className={cn(
+                               "h-4.5 w-4.5 rounded border flex items-center justify-center transition-all",
+                               allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                                 ? 'bg-primary border-primary text-primary-foreground'
+                                 : allDayTransactions.some(t => selectedTransactions.includes(t.id))
+                                   ? 'bg-primary/30 border-primary/50'
+                                   : 'bg-background border-primary/45'
+                             )}>
+                               {allDayTransactions.every(t => selectedTransactions.includes(t.id)) && (
+                                 <Check className="h-3 w-3 stroke-[3] text-primary-foreground" />
+                               )}
+                             </div>
+                           )}
+                         </div>
+                         <div className="flex items-center justify-between text-xs text-muted-foreground mt-0.5">
+                           <div className="flex gap-4">
+                             <span>In: {formatValue(income)}</span>
+                             <span>Out: {formatValue(expense)}</span>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
 
-                            <div className={`h-4 w-4 rounded border border-primary/45 ${allDayTransactions.every(t => selectedTransactions.includes(t.id))
-                              ? 'bg-primary border-none'
-                              : allDayTransactions.some(t => selectedTransactions.includes(t.id))
-                                ? 'bg-primary/30'
-                                : 'bg-background'
-                              }`}></div>
+                     <div className="space-y-4">
+                       {Object.entries(days)
+                         .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
+                         .map(([day, dayTransactions]) => (
+                           <div key={day} className="transaction-day-group">
 
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-0.5">
-                          <div className="flex gap-4">
-                            <span>In: {formatValue(income)}</span>
-                            <span>Out: {formatValue(expense)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                             <div
+                               className={`px-6 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between ${selectionMode ? 'cursor-pointer' : ''}`}
+                               onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
+                             >
+                               <span>{format(new Date(day), "EEEE, MMM d")}</span>
 
-                    <div className="space-y-4">
-                      {Object.entries(days)
-                        .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
-                        .map(([day, dayTransactions]) => (
-                          <div key={day} className="transaction-day-group">
+                               {selectionMode && (
+                                 <div className={cn(
+                                   "h-4.5 w-4.5 rounded border flex items-center justify-center transition-all",
+                                   dayTransactions.every(t => selectedTransactions.includes(t.id))
+                                     ? 'bg-primary border-primary text-primary-foreground'
+                                     : dayTransactions.some(t => selectedTransactions.includes(t.id))
+                                       ? 'bg-primary/30 border-primary/50'
+                                       : 'bg-background border-primary/45'
+                                 )}>
+                                   {dayTransactions.every(t => selectedTransactions.includes(t.id)) && (
+                                     <Check className="h-3 w-3 stroke-[3] text-primary-foreground" />
+                                   )}
+                                 </div>
+                               )}
+                             </div>
 
-                            <div
-                              className={`px-6 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between ${selectionMode ? 'cursor-pointer' : ''}`}
-                              onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
-                            >
-                              <span>{format(new Date(day), "EEEE, MMM d")}</span>
+                             <div className="space-y-1 px-4">
+                               {dayTransactions.sort((a, b) => {
+                                 const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                                 const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                                 return timeB - timeA;
+                               }).map((transaction) => {
+                                 const syncStatus = getTransactionSyncStatus(transaction.id);
+                                 const isSelected = selectedTransactions.includes(transaction.id);
 
-                              {selectionMode && (
-                                <div className={`h-4 w-4 rounded border border-primary/45 ${dayTransactions.every(t => selectedTransactions.includes(t.id))
-                                  ? 'bg-primary border-none'
-                                  : dayTransactions.some(t => selectedTransactions.includes(t.id))
-                                    ? 'bg-primary/30'
-                                    : 'bg-background'
-                                  }`}></div>
-
-                              )}
-                            </div>
-
-                            <div className="space-y-1 px-4">
-                              {dayTransactions.sort((a, b) => {
-                                const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
-                                const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
-                                return timeB - timeA;
-                              }).map((transaction) => {
-                                const syncStatus = getTransactionSyncStatus(transaction.id);
-
-
-                                return (
-                                  <div
-                                    key={transaction.id}
-                                    className={`transaction-row py-2.5 px-3 flex items-center gap-4 bg-transparent rounded-xl transition-all ${
-                                      transaction.is_locked
-                                        ? 'opacity-85 cursor-not-allowed hover:bg-transparent'
-                                        : 'hover:bg-accent/10 ' + (selectionMode ? 'cursor-pointer' : '')
-                                    }`}
-                                    onClick={() => {
-                                      if (transaction.is_locked) {
-                                        toast({
-                                          title: "Read-Only Transaction 🔒",
-                                          description: "This transaction is locked to protect your Fresh Start financial baseline.",
-                                        });
-                                        return;
-                                      }
-                                      if (selectionMode) {
-                                        toggleTransactionSelection(transaction.id);
-                                      } else {
-                                        handleEdit(transaction);
-                                      }
-                                    }}
-                                  >
-                                    {selectionMode && (
-                                      <div
-                                        className={`h-4.5 w-4.5 shrink-0 rounded border border-primary/45 ${selectedTransactions.includes(transaction.id) ? 'bg-primary border-none' : 'bg-background'
-                                          }`}
-                                      />
-                                    )}
+                                 return (
+                                   <div
+                                     key={transaction.id}
+                                     className={`transaction-row py-2.5 px-3 flex items-center gap-4 rounded-xl transition-all ${
+                                       transaction.is_locked
+                                         ? 'opacity-85 cursor-not-allowed hover:bg-transparent'
+                                         : isSelected
+                                           ? 'bg-primary/15 dark:bg-primary/25 border border-primary/40 shadow-xs'
+                                           : 'bg-transparent border border-transparent hover:bg-accent/10 ' + (selectionMode ? 'cursor-pointer' : '')
+                                     }`}
+                                     onClick={() => {
+                                       if (transaction.is_locked) {
+                                         toast({
+                                           title: "Read-Only Transaction 🔒",
+                                           description: "This transaction is locked to protect your Fresh Start financial baseline.",
+                                         });
+                                         return;
+                                       }
+                                       if (selectionMode) {
+                                         toggleTransactionSelection(transaction.id);
+                                       } else {
+                                         handleEdit(transaction);
+                                       }
+                                     }}
+                                   >
+                                     {selectionMode && (
+                                       <div
+                                         className={cn(
+                                           "h-5 w-5 shrink-0 rounded-md border flex items-center justify-center transition-all",
+                                           isSelected
+                                             ? "bg-primary border-primary text-primary-foreground shadow-xs"
+                                             : "bg-background border-primary/45 hover:border-primary"
+                                         )}
+                                       >
+                                         {isSelected && <Check className="h-3.5 w-3.5 stroke-[3] text-primary-foreground" />}
+                                       </div>
+                                     )}
 
                                     <div className="h-9 w-9 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
                                       {getTypeIcon(transaction.type)}

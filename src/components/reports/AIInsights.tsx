@@ -52,7 +52,7 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
             setInsights(data);
         } catch (err: any) {
             console.error("Failed to generate AI insights:", err);
-            setError(err.message || "ExpendX AI is currently unavailable. Please try again later.");
+            setError(err.message || "Lucent AI is currently unavailable. Please try again later.");
         } finally {
             setLoading(false);
         }
@@ -85,7 +85,7 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                     </div>
                     <div>
                         <CardTitle className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-expendx-blue to-expendx-lime">
-                            ExpendX Intelligence
+                            Lucent Intelligence
                         </CardTitle>
                         <p className="text-xs text-muted-foreground">AI-Powered Financial Feedback</p>
                     </div>

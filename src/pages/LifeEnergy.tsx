@@ -129,7 +129,9 @@ const LifeEnergy = () => {
         trueHourlyRate: wizardCalculations.trueHourly,
       };
       localStorage.setItem("lucent_life_energy_data", JSON.stringify(savedData));
+      localStorage.setItem("expendx_life_energy_data", JSON.stringify(savedData));
       localStorage.setItem("lucent_true_hourly_rate", wizardCalculations.trueHourly.toString());
+      localStorage.setItem("expendx_true_hourly_rate", wizardCalculations.trueHourly.toString());
       
       // Dispatch storage change event to sync headers & settings immediately
       window.dispatchEvent(new Event("storage"));
@@ -493,6 +495,7 @@ const LifeEnergy = () => {
       {/* Page Header */}
       <PageHeader
         title="Life Energy & Freedom"
+        backTo="/dashboard"
         actions={
           <Button 
             variant="outline" 

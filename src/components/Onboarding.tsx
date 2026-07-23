@@ -91,7 +91,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
             <img
               src="/lucent-header-dark.png"
               alt="Lucent"
-              className="h-10 object-contain"
+              className="h-6 object-contain"
             />
           </div>
 

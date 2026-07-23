@@ -623,11 +623,11 @@ span.relative.flex.h-8.w-8.shrink-0.overflow-hidden.rounded-full span {
 /* Upgrade mobile top header layout for a clean, minimalist fintech bar */
 header.lg\:hidden.fixed {
   height: auto !important;
-  min-height: calc(52px + max(env(safe-area-inset-top, 0px), 24px)) !important;
-  padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
-  padding-bottom: 10px !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  min-height: calc(36px + max(env(safe-area-inset-top, 0px), 8px)) !important;
+  padding-top: max(env(safe-area-inset-top, 0px), 8px) !important;
+  padding-bottom: 6px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
   box-shadow: none !important;
 }
 
@@ -732,7 +732,7 @@ header.lg\:hidden.fixed .container {
 }
 
 .safe-pt-main {
-  padding-top: calc(62px + max(env(safe-area-inset-top, 0px), 24px)) !important;
+  padding-top: calc(42px + max(env(safe-area-inset-top, 0px), 8px)) !important;
 }
 
 @media (min-width: 1024px) {

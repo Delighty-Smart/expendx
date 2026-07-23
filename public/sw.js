@@ -2,7 +2,7 @@
 // Service Worker for ExpendX PWA
 // Auto-updates seamlessly — no prompt needed
 
-const CACHE_NAME = 'expendx-v2';
+const CACHE_NAME = 'lucent-v3';
 
 // Only cache the offline fallback and app shell during install
 const PRECACHE_URLS = [

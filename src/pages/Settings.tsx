@@ -126,7 +126,7 @@ const Settings = () => {
   return (
     <PullToRefresh onRefresh={refreshData} containerClassName="h-full min-h-[calc(100vh-100px)]">
       <div className="space-y-6 pb-24 min-h-full">
-        <PageHeader title="Settings" />
+        <PageHeader title="Settings" backTo="/dashboard" />
         <div className="flex flex-col items-center text-center space-y-3 pt-4 pb-2">
           <div className="relative group cursor-pointer" onClick={() => navigate('/profile')}>
             <UserAvatar

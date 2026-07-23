@@ -303,6 +303,7 @@ const Alerts = () => {
       <PageHeader
         className="mb-6"
         title="Alerts & Notifications"
+        backTo="/dashboard"
         actions={
           <>
             {selectionMode ? (

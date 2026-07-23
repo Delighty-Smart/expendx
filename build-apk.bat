@@ -1,7 +1,13 @@
 @echo off
 echo ===================================================
-echo   Expendx Automated Android APK Compiler
+echo   Lucent Automated Android APK Compiler (Lean Build)
 echo ===================================================
+echo.
+
+echo 0. Cleaning APK files from public and dist folders to prevent self-bundling bloat...
+if exist "public\*.apk" del /F /Q "public\*.apk"
+if exist "dist\*.apk" del /F /Q "dist\*.apk"
+if exist "android\app\src\main\assets\public\*.apk" del /F /Q "android\app\src\main\assets\public\*.apk"
 echo.
 
 echo 1. Setting up Java Environment...
@@ -42,19 +48,28 @@ if %errorlevel% neq 0 (
 cd ..
 echo.
 
-echo 5. Copying built APK to root folder...
+echo 5. Copying built APK to root and dist folders...
+copy "android\app\build\outputs\apk\debug\app-debug.apk" "lucent-latest.apk" /Y
+copy "android\app\build\outputs\apk\debug\app-debug.apk" "expendx-latest.apk" /Y
 copy "android\app\build\outputs\apk\debug\app-debug.apk" "expendx-debug.apk" /Y
+if exist "dist" (
+    copy "android\app\build\outputs\apk\debug\app-debug.apk" "dist\lucent-latest.apk" /Y
+    copy "android\app\build\outputs\apk\debug\app-debug.apk" "dist\expendx-latest.apk" /Y
+)
+
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Failed to copy APK to root folder!
+    echo [ERROR] Failed to copy APK outputs!
     pause
     exit /b %errorlevel%
 )
 echo.
 
 echo ===================================================
-echo   SUCCESS! The updated APK is ready!
-echo   Location: expendx-debug.apk (in the root folder)
+echo   SUCCESS! The lean Lucent APK is ready!
+echo   Locations:
+echo     - lucent-latest.apk (root)
+echo     - expendx-latest.apk (root)
+echo     - expendx-debug.apk (root)
 echo ===================================================
 echo.
-pause

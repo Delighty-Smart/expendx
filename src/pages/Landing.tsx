@@ -182,7 +182,7 @@ export default function Landing() {
                             <img
                                 src="/lucent-header-dark.png"
                                 alt="Lucent"
-                                className="h-7 sm:h-8 object-contain"
+                                className="h-5 sm:h-6 object-contain"
                             />
                         </div>
                     </div>

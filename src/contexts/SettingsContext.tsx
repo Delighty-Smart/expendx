@@ -24,6 +24,7 @@ interface SettingsContextType {
     showLifeHours: boolean;
     toggleShowLifeHours: () => void;
     trueHourlyRate: number;
+    updateTrueHourlyRate: (rate: number) => void;
     formatValue: (amount: number) => string;
 }
 
@@ -77,9 +78,28 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         return localStorage.getItem('expendx_show_life_hours') === 'true';
     });
 
-    const trueHourlyRate = useMemo(() => {
-        const rate = parseFloat(localStorage.getItem('expendx_true_hourly_rate') || '');
+    const [trueHourlyRate, setTrueHourlyRate] = useState<number>(() => {
+        const saved = localStorage.getItem('lucent_true_hourly_rate') || localStorage.getItem('expendx_true_hourly_rate');
+        const rate = parseFloat(saved || '');
         return isNaN(rate) || rate <= 0 ? 15.63 : rate;
+    });
+
+    const updateTrueHourlyRate = (newRate: number) => {
+        const validRate = isNaN(newRate) || newRate <= 0 ? 15.63 : newRate;
+        setTrueHourlyRate(validRate);
+        localStorage.setItem('lucent_true_hourly_rate', validRate.toString());
+        localStorage.setItem('expendx_true_hourly_rate', validRate.toString());
+        window.dispatchEvent(new Event('storage'));
+    };
+
+    useEffect(() => {
+        const handleRateSync = () => {
+            const saved = localStorage.getItem('lucent_true_hourly_rate') || localStorage.getItem('expendx_true_hourly_rate');
+            const rate = parseFloat(saved || '');
+            setTrueHourlyRate(isNaN(rate) || rate <= 0 ? 15.63 : rate);
+        };
+        window.addEventListener('storage', handleRateSync);
+        return () => window.removeEventListener('storage', handleRateSync);
     }, []);
 
     const isInitialized = useRef<boolean>(false);
@@ -122,9 +142,9 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         // Update HTML class for theme immediately
         document.documentElement.classList.toggle('dark', theme === 'dark');
 
-        // Sync Android status bar style with app theme (Style.Dark = white text for dark theme, Style.Light = dark text for light theme)
+        // Sync Android status bar style with app theme (Style.Light = light text for dark theme, Style.Dark = dark text for light theme)
         if (Capacitor.isNativePlatform()) {
-            StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light }).catch(() => { });
+            StatusBar.setStyle({ style: theme === 'dark' ? Style.Light : Style.Dark }).catch(() => { });
         }
 
         // Update theme-color meta tag for PWA/Mobile
@@ -319,6 +339,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         showLifeHours,
         toggleShowLifeHours,
         trueHourlyRate,
+        updateTrueHourlyRate,
         formatValue
     };
 

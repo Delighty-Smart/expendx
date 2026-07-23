@@ -127,7 +127,7 @@ const Auth = () => {
             <img
               src="/lucent-app-icon.png"
               alt="Lucent"
-              className="h-20 object-contain"
+              className="h-12 object-contain"
             />
           </div>
           <p className="text-muted-foreground">Your Smart Finance Companion</p>

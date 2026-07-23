@@ -98,6 +98,7 @@ const Profile = () => {
     <div className="space-y-6">
       <PageHeader
         title="Your Profile"
+        backTo="/dashboard"
         actions={
           Capacitor.isNativePlatform() ? (
             <Button

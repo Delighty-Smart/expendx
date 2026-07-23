@@ -84,7 +84,7 @@ export const TransactionForm = ({
   sharedMimeType
 }: TransactionFormProps) => {
   const { toast } = useToast();
-  const { currency } = useSettings();
+  const { currency, trueHourlyRate } = useSettings();
   const [transactionType, setTransactionType] = useState<TransactionType>(transaction?.type || "debit");
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -120,10 +120,7 @@ export const TransactionForm = ({
   const description = form.watch("description") || "";
   const { suggestions } = useSmartCategorization(description, transactionType);
 
-  const trueHourlyRate = useMemo(() => {
-    const rate = parseFloat(localStorage.getItem("expendx_true_hourly_rate") || "");
-    return isNaN(rate) || rate <= 0 ? 15.63 : rate;
-  }, []);
+
 
   const watchedAmount = form.watch("amount");
   const lifeHoursCost = useMemo(() => {
