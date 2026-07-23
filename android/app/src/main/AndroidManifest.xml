@@ -44,39 +44,11 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
-        <service
-            android:name="com.capacitor.notifications.listener.NotificationService"
-            android:label="Expendx Notification Listener"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:directBootAware="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
     </application>
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
-    <!-- QUERY_ALL_PACKAGES removed: use targeted <queries> below for Play Store compliance -->
-
-    <!-- Targeted package visibility for notification auto-tracking -->
-    <queries>
-        <package android:name="com.kudabank.app" />
-        <package android:name="com.gtbank.main" />
-        <package android:name="com.accessbank.accessmobilebanking" />
-        <package android:name="com.zenithbank.mobilebanking" />
-        <package android:name="ng.opay.express" />
-        <package android:name="com.palmpay.app" />
-        <package android:name="com.firstbank.firstmobile" />
-        <package android:name="com.uba.mobile" />
-        <package android:name="com.wema.wema4me" />
-        <package android:name="com.moniepoint.businessbanking" />
-    </queries>
 </manifest>

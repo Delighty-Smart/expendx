@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .glass-surface {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "outline-variant": "#c4c7c7",
+            "tertiary-container": "#002113",
+            "tertiary-fixed": "#6ffbbe",
+            "on-surface-variant": "#444748",
+            "primary-fixed-dim": "#c8c6c5",
+            "inverse-on-surface": "#f4f0ef",
+            "on-secondary": "#ffffff",
+            "background": "#fdf8f8",
+            "on-secondary-fixed": "#151c27",
+            "on-tertiary-fixed-variant": "#005236",
+            "surface": "#fdf8f8",
+            "tertiary": "#000000",
+            "surface-container-highest": "#e5e2e1",
+            "error": "#ba1a1a",
+            "primary-container": "#1c1b1b",
+            "tertiary-fixed-dim": "#4edea3",
+            "secondary-fixed-dim": "#c0c7d6",
+            "surface-tint": "#5f5e5e",
+            "on-tertiary-fixed": "#002113",
+            "secondary-fixed": "#dce2f3",
+            "on-tertiary-container": "#009668",
+            "surface-container-lowest": "#ffffff",
+            "surface-dim": "#ddd9d8",
+            "primary-fixed": "#e5e2e1",
+            "surface-variant": "#e5e2e1",
+            "primary": "#000000",
+            "on-secondary-container": "#5e6572",
+            "error-container": "#ffdad6",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#404754",
+            "secondary": "#585f6c",
+            "on-error-container": "#93000a",
+            "on-primary-fixed": "#1c1b1b",
+            "surface-container-high": "#ebe7e6",
+            "secondary-container": "#dce2f3",
+            "inverse-surface": "#313030",
+            "on-background": "#1c1b1b",
+            "inverse-primary": "#c8c6c5",
+            "surface-container-low": "#f7f3f2",
+            "on-primary-fixed-variant": "#474646",
+            "on-primary-container": "#858383",
+            "surface-container": "#f1edec",
+            "on-primary": "#ffffff",
+            "surface-bright": "#fdf8f8",
+            "on-surface": "#1c1b1b",
+            "on-tertiary": "#ffffff",
+            "outline": "#747878"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "12px",
+            "2xl": "24px",
+            "full": "9999px"
+          },
+          "spacing": {
+            "lg": "24px",
+            "container-padding": "32px",
+            "gutter": "24px",
+            "xl": "48px",
+            "sm": "8px",
+            "xs": "4px",
+            "md": "16px",
+            "unit": "4px"
+          },
+          "fontFamily": {
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "display": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "data-tabular": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-lg h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high ring-1 ring-outline-variant/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional male corporate headshot with soft studio lighting and a clean white background. The image has a high-end, clinical look with subtle tonal shifts that match a premium minimalist fintech interface. The atmosphere is reliable and sophisticated, capturing a sense of calm intelligence and modern professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZl_KaChVpL7oxtFYfi3In3jf7GhL_h_yFy6peomIcc-99W9TCFDkEGgobsPJgTeNSsmeFHbX-KvG7Ups9GWswP1BHLOcchb4fzmj6lq0vmumRggX5BRW21HyhOBKI3-1TvK9AQL7NWy-dMoS6p2JxIhLVQ4jrRL5pdJkUy7wtYt83Ez4PL_xKFa-kKFWiX8VOrhL_8DsN9tvY9nYvuEYgAkB-hyuVVNe0zAYDAEW6LsONE68uG2yAh28dcWypVFWcK7D9dZbsPRM"/>
+</div>
+<span class="font-display text-headline-md tracking-tight text-primary">ExpendX</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-md md:px-lg max-w-7xl mx-auto min-h-screen">
+<!-- Hero Section: Total Savings -->
+<section class="mb-xl text-center md:text-left">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-xs">Aggregate Portfolio Value</p>
+<h1 class="font-display text-display text-primary tabular-nums tracking-tighter">$142,850.42</h1>
+<div class="flex flex-wrap items-center justify-center md:justify-start gap-md mt-md">
+<div class="flex items-center gap-xs px-md py-1.5 bg-tertiary-fixed text-on-tertiary-fixed rounded-full">
+<span class="material-symbols-outlined text-[18px]">trending_up</span>
+<span class="font-label-md text-label-md">+4.2% YoY</span>
+</div>
+<div class="flex items-center gap-xs px-md py-1.5 bg-surface-container-low text-on-surface-variant rounded-full border border-outline-variant/30">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+<span class="font-label-md text-label-md">6 Accounts Synced</span>
+</div>
+</div>
+</section>
+<!-- Bento Grid Metrics -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-gutter mb-xl">
+<!-- Portfolio Strength Card -->
+<div class="md:col-span-7 bg-surface-container-lowest p-lg rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-lg">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Portfolio Strength</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Your savings resilience score is exceptional.</p>
+</div>
+<span class="text-on-tertiary-container font-headline-md text-headline-md">94/100</span>
+</div>
+<div class="space-y-md">
+<div class="flex justify-between text-label-md font-label-md text-on-surface-variant mb-xs">
+<span>Liquidity Ratio</span>
+<span class="text-primary tabular-nums">0.82</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[82%]"></div>
+</div>
+<div class="flex justify-between text-label-md font-label-md text-on-surface-variant mb-xs">
+<span>Risk Diversification</span>
+<span class="text-primary tabular-nums">High</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[95%]"></div>
+</div>
+</div>
+</div>
+<!-- Quick Action / Insight -->
+<div class="md:col-span-5 flex flex-col gap-gutter">
+<div class="flex-1 bg-primary text-on-primary p-lg rounded-2xl shadow-lg relative overflow-hidden group hover:opacity-95 transition-all cursor-pointer">
+<div class="relative z-10">
+<span class="material-symbols-outlined text-4xl mb-md">auto_awesome</span>
+<h4 class="font-headline-md text-headline-md mb-xs">Smart Reallocate</h4>
+<p class="font-body-md text-body-md opacity-80">Optimize your $4,200 idle cash for higher APY yields.</p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10 transform group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-[160px]" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Goal Cards (Asymmetric Layout) -->
+<section class="mb-xl">
+<div class="flex justify-between items-end mb-lg">
+<h2 class="font-headline-lg text-headline-lg text-primary">Strategic Goals</h2>
+<button class="text-primary font-label-md text-label-md hover:underline">View All Goals</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Tesla Goal -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex flex-col">
+<div class="w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center mb-lg">
+<span class="material-symbols-outlined text-primary">electric_car</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Tesla Model S</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">Autonomous performance fund.</p>
+<div class="space-y-sm">
+<div class="flex justify-between font-data-tabular text-data-tabular">
+<span class="text-on-surface-variant">$62,000 / $85,000</span>
+<span class="text-primary">73%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[73%] transition-all duration-1000 ease-out" id="progress-tesla"></div>
+</div>
+</div>
+</div>
+<!-- Tokyo Goal -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex flex-col">
+<div class="w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center mb-lg">
+<span class="material-symbols-outlined text-primary">flight_takeoff</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Tokyo Trip</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">Luxury cultural immersion in Ginza.</p>
+<div class="space-y-sm">
+<div class="flex justify-between font-data-tabular text-data-tabular">
+<span class="text-on-surface-variant">$11,200 / $12,000</span>
+<span class="text-primary">93%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[93%] transition-all duration-1000 ease-out"></div>
+</div>
+</div>
+</div>
+<!-- Home Renovation -->
+<div class="bg-surface-container-lowest p-lg rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex flex-col">
+<div class="w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center mb-lg">
+<span class="material-symbols-outlined text-primary">home_work</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Home Renovation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">Minimalist kitchen redesign.</p>
+<div class="space-y-sm">
+<div class="flex justify-between font-data-tabular text-data-tabular">
+<span class="text-on-surface-variant">$38,000 / $120,000</span>
+<span class="text-primary">31%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[31%] transition-all duration-1000 ease-out"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Recent Portfolio Activity -->
+<section>
+<h2 class="font-headline-md text-headline-md text-primary mb-lg">Recent Adjustments</h2>
+<div class="bg-surface-container-lowest rounded-2xl overflow-hidden border border-outline-variant/10">
+<div class="divide-y divide-outline-variant/10">
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container">add</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Recurring Deposit</p>
+<p class="font-body-md text-body-md text-on-surface-variant">To Tokyo Trip Fund</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-tabular text-data-tabular text-primary">+$1,500.00</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Today</p>
+</div>
+</div>
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">trending_up</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Market Appreciation</p>
+<p class="font-body-md text-body-md text-on-surface-variant">Vanguard Index Portfolio</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-tabular text-data-tabular text-primary">+$842.12</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Yesterday</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-md shadow-lg">
+<div class="flex justify-around items-center px-md py-sm w-full max-w-7xl mx-auto h-16">
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-4 py-1 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-label-md text-label-md">Insights</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-label-md text-label-md">Transact</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Budgets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Interactive Particles Script for Atmospheric Effect -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Micro-interaction for goal progress animation on load
+      const progressBars = document.querySelectorAll('.h-full.bg-primary');
+      progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+          bar.style.width = width;
+        }, 100);
+      });
+
+      // Subtle parallax on card hover
+      const cards = document.querySelectorAll('.bg-surface-container-lowest');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const rotateX = (y - centerY) / 25;
+          const rotateY = (centerX - x) / 25;
+          
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+        });
+      });
+    });
+  </script>
+</body></html>

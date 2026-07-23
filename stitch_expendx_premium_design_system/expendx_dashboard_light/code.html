@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX | Financial Intelligence</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#c4c7c7",
+                    "tertiary-container": "#002113",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#444748",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "inverse-on-surface": "#f4f0ef",
+                    "on-secondary": "#ffffff",
+                    "background": "#fdf8f8",
+                    "on-secondary-fixed": "#151c27",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface": "#fdf8f8",
+                    "tertiary": "#000000",
+                    "surface-container-highest": "#e5e2e1",
+                    "error": "#ba1a1a",
+                    "primary-container": "#1c1b1b",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "secondary-fixed-dim": "#c0c7d6",
+                    "surface-tint": "#5f5e5e",
+                    "on-tertiary-fixed": "#002113",
+                    "secondary-fixed": "#dce2f3",
+                    "on-tertiary-container": "#009668",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-dim": "#ddd9d8",
+                    "primary-fixed": "#e5e2e1",
+                    "surface-variant": "#e5e2e1",
+                    "primary": "#000000",
+                    "on-secondary-container": "#5e6572",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#404754",
+                    "secondary": "#585f6c",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#1c1b1b",
+                    "surface-container-high": "#ebe7e6",
+                    "secondary-container": "#dce2f3",
+                    "inverse-surface": "#313030",
+                    "on-background": "#1c1b1b",
+                    "inverse-primary": "#c8c6c5",
+                    "surface-container-low": "#f7f3f2",
+                    "on-primary-fixed-variant": "#474646",
+                    "on-primary-container": "#858383",
+                    "surface-container": "#f1edec",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#fdf8f8",
+                    "on-surface": "#1c1b1b",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#747878"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "container-padding": "32px",
+                    "gutter": "24px",
+                    "xl": "48px",
+                    "sm": "8px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "data-tabular": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #F8F9FB;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        .glass-card {
+            background: #FFFFFF;
+            border: 1px solid rgba(0,0,0,0.03);
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.02);
+            border-radius: 24px;
+        }
+        .active-nav-glow {
+            position: relative;
+        }
+        .active-nav-glow::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface pb-32 md:pb-0 pt-20">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+<nav class="flex justify-between items-center px-lg h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="font-display text-headline-md tracking-tight text-primary dark:text-primary-fixed">ExpendX</span>
+</div>
+<!-- Desktop Nav -->
+<div class="hidden md:flex gap-8 items-center">
+<a class="font-label-md text-label-md text-primary font-bold active-nav-glow" href="#">Home</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:opacity-80 transition-opacity" href="#">Insights</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:opacity-80 transition-opacity" href="#">Budgets</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:opacity-80 transition-opacity" href="#">Settings</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-95" data-icon="notifications">notifications</button>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden border border-outline-variant/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a refined individual in a minimalist studio. The lighting is soft and high-key, creating a clean light-mode aesthetic. The individual has a serene expression, reflecting a high-net-worth persona in a premium, clinical financial environment with monochromatic tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEL__J_7gwAB1twmMcxWFkAAoZO3WNwjTJKY-UPaIoCbuFn7THFXH3suNa8yK2k0nqKdfeX1ZJuEeZrMMRvKq0qNPh_Ljvl0h4DEeL1VX6U7A_Ss4DNndxdkYHgTbZVIbyTgYXvuSa3WtiVRGwZ2NTMkZ6zWSymGttuOLwDJGdCzY7Ey-zG9acRJ6T2ihvS4KEsS2ZWO9e33kO4gqX-q_ecKS0Npiw8MF-dYaDVdXx49EdWE4Wv3m5h1f6oN43Mx748rJagEwKfmU"/>
+</div>
+</div>
+</nav>
+</header>
+<!-- Main Content Area -->
+<main class="max-w-7xl mx-auto px-lg md:px-xl py-lg">
+<!-- Hero: Bento Grid Header -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+<!-- Total Balance Card (Primary Anchor) -->
+<div class="md:col-span-2 glass-card p-xl flex flex-col justify-between min-h-[240px]">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Available Balance</span>
+<div class="flex items-baseline gap-sm mt-sm">
+<h1 class="font-display text-display tabular-nums">$12,450.85</h1>
+<span class="flex items-center gap-xs px-md py-1 bg-tertiary-container text-on-tertiary-container rounded-full text-xs font-bold tabular-nums">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_upward">arrow_upward</span>
+                            12.4%
+                        </span>
+</div>
+</div>
+<div class="flex gap-md mt-lg">
+<button class="flex items-center gap-sm px-xl py-md bg-primary text-on-primary rounded-full font-label-md text-label-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-md" data-icon="add">add</span>
+                        Add Funds
+                    </button>
+<button class="flex items-center gap-sm px-xl py-md bg-surface-container border border-outline-variant/30 text-on-surface rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-md" data-icon="send">send</span>
+                        Transfer
+                    </button>
+</div>
+</div>
+<!-- Savings Goal: Tesla Model 3 -->
+<div class="glass-card p-lg flex flex-col justify-between overflow-hidden relative">
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-md">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Savings Goal</span>
+<h3 class="font-headline-md text-headline-md">Tesla Model 3</h3>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="electric_car">electric_car</span>
+</div>
+<div class="mt-xl">
+<div class="flex justify-between font-data-tabular text-data-tabular mb-sm">
+<span>$34,200</span>
+<span class="text-on-surface-variant">72%</span>
+</div>
+<div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: 72%"></div>
+</div>
+</div>
+</div>
+<!-- Abstract visual element -->
+<div class="absolute -right-8 -bottom-8 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+</div>
+</div>
+<!-- Secondary Stats & Transactions -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left Column: Transactions -->
+<div class="lg:col-span-8">
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-md text-headline-md">Recent Transactions</h2>
+<button class="text-label-md font-label-md text-on-surface-variant hover:text-primary underline underline-offset-4">View Statement</button>
+</div>
+<div class="glass-card overflow-hidden">
+<div class="divide-y divide-outline-variant/10">
+<!-- Transaction Item -->
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors group">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+</div>
+<div>
+<h4 class="font-data-tabular text-data-tabular">Apple Store</h4>
+<p class="font-label-md text-label-md text-on-surface-variant">Electronics • Today, 10:45 AM</p>
+</div>
+</div>
+<span class="font-data-tabular text-data-tabular text-error">-$1,299.00</span>
+</div>
+<!-- Transaction Item -->
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors group">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="local_cafe">local_cafe</span>
+</div>
+<div>
+<h4 class="font-data-tabular text-data-tabular">Coffee House</h4>
+<p class="font-label-md text-label-md text-on-surface-variant">Food &amp; Drink • Yesterday</p>
+</div>
+</div>
+<span class="font-data-tabular text-data-tabular text-error">-$6.50</span>
+</div>
+<!-- Transaction Item -->
+<div class="p-lg flex items-center justify-between hover:bg-surface-container-low transition-colors group">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<div>
+<h4 class="font-data-tabular text-data-tabular">Freelance Payment</h4>
+<p class="font-label-md text-label-md text-on-surface-variant">Income • Oct 24, 2023</p>
+</div>
+</div>
+<span class="font-data-tabular text-data-tabular text-on-tertiary-container">+$4,500.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Visual Summary & Quick Stats -->
+<div class="lg:col-span-4 space-y-lg">
+<h2 class="font-headline-md text-headline-md mb-lg">Overview</h2>
+<!-- Income Stat Card -->
+<div class="glass-card p-lg border-l-4 border-l-on-tertiary-container/50">
+<div class="flex justify-between items-center mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Monthly Income</span>
+<span class="material-symbols-outlined text-on-tertiary-container" data-icon="trending_up">trending_up</span>
+</div>
+<p class="font-headline-md text-headline-md tabular-nums">$18,200.00</p>
+<p class="font-label-md text-label-md text-on-surface-variant mt-xs">+5.2% vs last month</p>
+</div>
+<!-- Expense Stat Card -->
+<div class="glass-card p-lg border-l-4 border-l-error/50">
+<div class="flex justify-between items-center mb-md">
+<span class="font-label-md text-label-md text-on-surface-variant">Monthly Expenses</span>
+<span class="material-symbols-outlined text-error" data-icon="trending_down">trending_down</span>
+</div>
+<p class="font-headline-md text-headline-md tabular-nums">$5,749.15</p>
+<p class="font-label-md text-label-md text-on-surface-variant mt-xs">-2.1% vs last month</p>
+</div>
+<!-- Visual Chart Placeholder -->
+<div class="glass-card p-lg aspect-square flex flex-col justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant">Spending by Category</span>
+<div class="flex-1 flex items-center justify-center p-md">
+<!-- Simulated Ring Chart -->
+<div class="relative w-32 h-32 rounded-full border-[12px] border-surface-container-highest">
+<div class="absolute inset-0 rounded-full border-[12px] border-primary border-t-transparent border-r-transparent rotate-45"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="font-data-tabular text-data-tabular">Top</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-xs font-label-md text-on-surface-variant">Essentials</span>
+</div>
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-surface-container-highest"></div>
+<span class="text-xs font-label-md text-on-surface-variant">Lifestyle</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface/90 backdrop-blur-md pb-safe border-t border-outline-variant/10 shadow-lg">
+<div class="flex justify-around items-center px-md py-sm w-full h-16">
+<button class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-4 py-1 active:scale-90 duration-200">
+<span class="material-symbols-outlined text-md" data-icon="home">home</span>
+<span class="font-label-md text-[10px]">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined text-md" data-icon="analytics">analytics</span>
+<span class="font-label-md text-[10px]">Insights</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined text-md" data-icon="add_circle" style="font-variation-settings: 'opsz' 40;">add_circle</span>
+<span class="font-label-md text-[10px]">Transact</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined text-md" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-md text-[10px]">Budgets</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined text-md" data-icon="settings">settings</span>
+<span class="font-label-md text-[10px]">Settings</span>
+</button>
+</div>
+</nav>
+<script>
+        // Micro-interactions for transaction items
+        document.querySelectorAll('.glass-card div div').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.style.transform = 'translateX(4px)';
+                item.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'translateX(0)';
+            });
+        });
+
+        // Atmospheric fade-in for cards
+        window.addEventListener('load', () => {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 80);
+            });
+        });
+    </script>
+</body></html>

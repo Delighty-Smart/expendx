@@ -352,9 +352,12 @@ class EnhancedOfflineManager {
   private async addTransactionOnline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
     const userId = await this.getCurrentUserId();
 
+    // Clean payload to ensure compatibility with standard schema columns
+    const { is_locked, is_system_adjustment, ...dbPayload } = transactionData as any;
+
     const { data, error } = await supabase
       .from('transactions')
-      .insert({ ...transactionData, user_id: userId })
+      .insert({ ...dbPayload, user_id: userId })
       .select()
       .single();
 
@@ -588,10 +591,11 @@ class EnhancedOfflineManager {
     const userId = await this.getCurrentUserId();
 
     switch (type) {
-      case 'INSERT':
+      case 'INSERT': {
+        const { is_locked, is_system_adjustment, ...cleanData } = data || {};
         const { data: insertedData, error: insertError } = await supabase
           .from('transactions')
-          .insert({ ...data, user_id: userId })
+          .insert({ ...cleanData, user_id: userId })
           .select()
           .single();
 
@@ -609,16 +613,19 @@ class EnhancedOfflineManager {
           }
         }
         break;
+      }
 
-      case 'UPDATE':
+      case 'UPDATE': {
+        const { is_locked, is_system_adjustment, id, ...cleanUpdateData } = data || {};
         const { error: updateError } = await supabase
           .from('transactions')
-          .update(data)
-          .eq('id', data.id)
+          .update(cleanUpdateData)
+          .eq('id', id)
           .eq('user_id', userId);
 
         if (updateError) throw updateError;
         break;
+      }
 
       case 'DELETE':
         const { error: deleteError } = await supabase

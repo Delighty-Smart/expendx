@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(17, 20, 21, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "surface-variant": "#323537",
+                "surface-dim": "#111415",
+                "on-secondary-container": "#003a5c",
+                "primary-fixed-dim": "#c8c5c9",
+                "border-subtle": "rgba(255, 255, 255, 0.03)",
+                "tertiary-fixed": "#bef521",
+                "inverse-on-surface": "#2e3132",
+                "inverse-surface": "#e1e2e4",
+                "tertiary-fixed-dim": "#a5d700",
+                "error": "#ffb4ab",
+                "background": "#111415",
+                "surface-container-high": "#282a2c",
+                "on-tertiary": "#263500",
+                "outline-variant": "#47464b",
+                "error-container": "#93000a",
+                "on-surface-variant": "#c8c5cb",
+                "carbon-surface": "#0E0E11",
+                "finance-debt": "#FB923C",
+                "inverse-primary": "#5f5e61",
+                "surface-bright": "#37393b",
+                "primary-container": "#050507",
+                "finance-income": "#34D399",
+                "surface-container-low": "#191c1e",
+                "primary": "#c8c5c9",
+                "surface-container-lowest": "#0c0f10",
+                "on-primary": "#313033",
+                "surface-container-highest": "#323537",
+                "on-background": "#e1e2e4",
+                "border-strong": "#242429",
+                "secondary": "#93ccff",
+                "finance-expense": "#F87171",
+                "on-surface": "#e1e2e4",
+                "on-secondary-fixed-variant": "#004b73",
+                "on-error": "#690005",
+                "surface": "#111415",
+                "secondary-fixed-dim": "#93ccff",
+                "surface-tint": "#c8c5c9",
+                "on-primary-fixed": "#1c1b1e",
+                "finance-savings": "#60A5FA",
+                "on-tertiary-container": "#628200",
+                "on-tertiary-fixed": "#151f00",
+                "secondary-fixed": "#cce5ff",
+                "secondary-container": "#00a9fd",
+                "on-primary-container": "#78777a",
+                "outline": "#929095",
+                "tertiary": "#a5d700",
+                "primary-fixed": "#e5e1e5",
+                "obsidian-card": "#121216",
+                "on-secondary-fixed": "#001d31",
+                "surface-container": "#1d2022",
+                "on-tertiary-fixed-variant": "#394d00",
+                "on-primary-fixed-variant": "#47464a",
+                "on-error-container": "#ffdad6",
+                "tertiary-container": "#030600",
+                "on-secondary": "#003351"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "compact-sm": "0.625rem",
+                "margin-desktop": "32px",
+                "unit": "4px",
+                "margin-mobile": "20px",
+                "compact-md": "0.875rem",
+                "gutter": "16px",
+                "compact-xs": "0.375rem"
+              },
+              "fontFamily": {
+                "body-md": ["Plus Jakarta Sans"],
+                "headline-lg": ["Plus Jakarta Sans"],
+                "headline-sm": ["Plus Jakarta Sans"],
+                "label-tabular": ["Plus Jakarta Sans"],
+                "headline-md": ["Plus Jakarta Sans"],
+                "body-sm": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased select-none">
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full h-[64px] z-50 bg-background/80 backdrop-blur-xl border-b border-white/[0.03] flex justify-between items-center px-margin-mobile md:px-margin-desktop">
+<div class="flex items-center gap-2">
+<span class="text-headline-lg font-headline-lg tracking-tighter text-on-surface">ExpendX</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-8 mr-8">
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors" href="#">Dashboard</a>
+<a class="text-on-surface font-bold font-body-md" href="#">Wealth</a>
+<a class="text-on-surface-variant font-body-md hover:text-on-surface transition-colors" href="#">Reports</a>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-surface-bright/10 hover:bg-surface-bright/20 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-on-surface">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a young entrepreneur in a minimalist studio setting. The lighting is soft and cinematic, highlighting clean lines and a modern obsidian-themed atmosphere. The subject conveys trustworthiness and precision, fitting for a premium fintech user interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiiZdsBWTbGIgN88yoVHVypjegr_2EgLI1imwPER_NImd0-xk3QisAhZ2C1-6PKzzeHz-bGwM86VuweMWHPEiuznPaoqYeYU6NLukqM9WNo0WMIJTEjVk9cmkFvWa409shgjYeOxSoo6_DNfWJyUn2_fDaJmeud4fe-KyzVtXPuxgQZC7wzY1dbID3rK1wk3LfOk8mq0F-UlZ9D5wkGtYQR9OMCASBJLNAIx400-euHX6YSVNwl17y93pTjvZlXqwMjvRHx-jE2pY"/>
+</div>
+</div>
+</header>
+<main class="pt-[84px] pb-[100px] px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto">
+<!-- Hero Section: Total Balance -->
+<section class="mb-8">
+<div class="bg-obsidian-card p-8 rounded-[24px] border border-white/[0.03] relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-8">
+<span class="material-symbols-outlined text-on-surface-variant/20 text-8xl">account_balance_wallet</span>
+</div>
+<div class="relative z-10">
+<p class="text-on-surface-variant font-body-sm mb-1 uppercase tracking-widest">Total Savings Portfolio</p>
+<h1 class="text-5xl md:text-6xl font-headline-lg tabular-nums tracking-tighter mb-4 text-on-surface">
+                        $142,850.<span class="text-on-surface-variant/50 text-3xl">42</span>
+</h1>
+<div class="flex flex-wrap gap-4 mt-6">
+<div class="px-4 py-2 bg-finance-savings/10 rounded-full flex items-center gap-2 border border-finance-savings/20">
+<span class="material-symbols-outlined text-finance-savings text-sm" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span class="text-finance-savings font-label-tabular text-body-sm">+12.4% vs last month</span>
+</div>
+<div class="px-4 py-2 bg-surface-bright/10 rounded-full flex items-center gap-2 border border-white/[0.05]">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">flag</span>
+<span class="text-on-surface-variant font-label-tabular text-body-sm">4 Active Goals</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid for Savings Goals -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
+<!-- Tesla Model 3 Card -->
+<div class="lg:col-span-8 bg-obsidian-card rounded-[24px] border border-white/[0.03] p-6 hover:border-primary/20 transition-all duration-300 group">
+<div class="flex justify-between items-start mb-8">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+<span class="material-symbols-outlined text-3xl text-on-surface">electric_car</span>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface">Tesla Model 3</h3>
+<p class="text-on-surface-variant font-body-sm">Automobile Fund • Estimated Dec 2024</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-bright/20 transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">edit</span>
+</button>
+</div>
+<div class="mb-6">
+<div class="flex justify-between items-end mb-3">
+<div class="flex flex-col">
+<span class="text-on-surface-variant font-body-sm">Current Progress</span>
+<span class="text-2xl font-headline-md tabular-nums text-on-surface">$32,500 <span class="text-on-surface-variant/50 text-lg">/ $45,000</span></span>
+</div>
+<span class="text-headline-sm font-headline-sm text-finance-savings">72%</span>
+</div>
+<div class="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-finance-savings w-[72%] rounded-full shadow-[0_0_12px_rgba(96,165,250,0.4)] transition-all duration-1000"></div>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-white/5">
+<div>
+<p class="text-on-surface-variant font-body-sm mb-1">Monthly Avg</p>
+<p class="font-label-tabular text-on-surface">$1,450</p>
+</div>
+<div>
+<p class="text-on-surface-variant font-body-sm mb-1">Remaining</p>
+<p class="font-label-tabular text-on-surface">$12,500</p>
+</div>
+<div>
+<p class="text-on-surface-variant font-body-sm mb-1">Status</p>
+<p class="font-label-tabular text-finance-income">On Track</p>
+</div>
+<div class="flex justify-end">
+<button class="px-6 py-2 bg-on-surface text-surface-dim rounded-full font-label-tabular hover:bg-primary transition-colors active:scale-95">Add Funds</button>
+</div>
+</div>
+</div>
+<!-- Stats Card (Bento Side) -->
+<div class="lg:col-span-4 bg-surface-container-low rounded-[24px] border border-white/[0.03] p-6 flex flex-col justify-between">
+<div>
+<h4 class="text-headline-sm font-headline-sm mb-6">Portfolio Strength</h4>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-body-sm">Risk Profile</span>
+<span class="text-on-surface font-label-tabular">Conservative</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-body-sm">Avg. APY</span>
+<span class="text-finance-income font-label-tabular">4.85%</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant font-body-sm">Diversification</span>
+<span class="text-on-surface font-label-tabular">High</span>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-white/5">
+<img class="w-full h-32 object-cover rounded-xl opacity-80" data-alt="A clean, minimalist financial chart visualization with glowing blue and green lines over a deep obsidian black background. The style is sophisticated and high-fidelity, using glassmorphism effects and ultra-subtle grid lines. The lighting is low-key with focused highlights on the upward trending data curves, creating a sense of growth and security." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDtTTtXiikmhtaWydj1z-KCHA805m1L3m9ZH4iaVeItzcDNIG_QiVctrfkyxyfS9bTiMHms2_1MjwitTBLhSRPuYDBNskQlcA9Bb0l5O_R7d6glT2GG4332DLKM8q-lJ8VJA1JJPu7deTAu_0bYagukPNXMIcV5h5yOS3BNWbBIAe7UpM15qyW5On-YHwkTtEXL9Jyn7gbSqcP6H1BD8qr2wnijXzO2SLO9cQgf1E1ErkCuXnYDw9rNefNFAig48Hizr4ZNWCJa5A"/>
+</div>
+</div>
+<!-- Tokyo Trip Card -->
+<div class="lg:col-span-6 bg-obsidian-card rounded-[24px] border border-white/[0.03] p-6 hover:border-primary/20 transition-all duration-300 group">
+<div class="flex justify-between items-start mb-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-tertiary/10 flex items-center justify-center border border-tertiary/20">
+<span class="material-symbols-outlined text-2xl text-tertiary">flight_takeoff</span>
+</div>
+<div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Tokyo Trip</h3>
+<p class="text-on-surface-variant font-body-sm">Leisure • Oct 2024</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-bright/20 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">edit</span>
+</button>
+</div>
+<div class="mb-4">
+<div class="flex justify-between items-end mb-2">
+<span class="text-2xl font-headline-md tabular-nums text-on-surface">$6,400 <span class="text-on-surface-variant/50 text-sm">/ $8,000</span></span>
+<span class="text-headline-sm font-headline-sm text-tertiary">80%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[80%] rounded-full shadow-[0_0_12px_rgba(165,215,0,0.3)] transition-all duration-1000"></div>
+</div>
+</div>
+</div>
+<!-- Home Renovation Card -->
+<div class="lg:col-span-6 bg-obsidian-card rounded-[24px] border border-white/[0.03] p-6 hover:border-primary/20 transition-all duration-300 group">
+<div class="flex justify-between items-start mb-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center border border-secondary/20">
+<span class="material-symbols-outlined text-2xl text-secondary">home_repair_service</span>
+</div>
+<div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Home Renovation</h3>
+<p class="text-on-surface-variant font-body-sm">Asset Management • Long-term</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-bright/20 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">edit</span>
+</button>
+</div>
+<div class="mb-4">
+<div class="flex justify-between items-end mb-2">
+<span class="text-2xl font-headline-md tabular-nums text-on-surface">$18,200 <span class="text-on-surface-variant/50 text-sm">/ $50,000</span></span>
+<span class="text-headline-sm font-headline-sm text-secondary">36%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[36%] rounded-full shadow-[0_0_12px_rgba(147,204,255,0.3)] transition-all duration-1000"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-margin-mobile md:right-margin-desktop w-14 h-14 bg-on-surface text-surface-dim rounded-full shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-90 z-40 group">
+<span class="material-symbols-outlined text-3xl font-bold">add</span>
+<span class="absolute right-full mr-4 bg-surface-bright px-3 py-1.5 rounded-lg text-body-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">New Goal</span>
+</button>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 w-full h-[72px] pb-safe z-50 bg-background/80 backdrop-blur-md border-t border-white/[0.03] flex justify-around items-center px-4 shadow-sm">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-sm text-body-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Budget</span>
+</a>
+<div class="relative -top-4">
+<button class="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg active:scale-90 transition-transform border-4 border-background">
+<span class="material-symbols-outlined text-on-primary">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center justify-center text-on-surface font-semibold hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span class="font-body-sm text-body-sm">Wealth</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple Micro-interaction: Update progress bar on load
+        window.addEventListener('load', () => {
+            const progressBars = document.querySelectorAll('.h-full');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300);
+            });
+        });
+
+        // Hover effect for cards to simulate micro-elevation
+        document.querySelectorAll('.bg-obsidian-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.boxShadow = '0 10px 30px -10px rgba(0,0,0,0.5)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = 'none';
+            });
+        });
+    </script>
+</body></html>

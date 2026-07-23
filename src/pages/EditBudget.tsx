@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
+import PageHeader from "@/components/ui/page-header";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -119,17 +120,7 @@ const EditBudgetPage = () => {
 
   return (
     <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="ghost"
-          className="mr-2"
-          onClick={() => navigate("/budgets")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold">Edit Budget Limit</h1>
-      </div>
+      <PageHeader title="Edit Budget Limit" backTo="/budgets" />
 
       <Card className="p-6">
         <Form {...form}>

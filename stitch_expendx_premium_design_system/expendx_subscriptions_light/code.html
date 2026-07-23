@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX | Subscriptions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#c4c7c7",
+                    "tertiary-container": "#002113",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#444748",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "inverse-on-surface": "#f4f0ef",
+                    "on-secondary": "#ffffff",
+                    "background": "#fdf8f8",
+                    "on-secondary-fixed": "#151c27",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface": "#fdf8f8",
+                    "tertiary": "#000000",
+                    "surface-container-highest": "#e5e2e1",
+                    "error": "#ba1a1a",
+                    "primary-container": "#1c1b1b",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "secondary-fixed-dim": "#c0c7d6",
+                    "surface-tint": "#5f5e5e",
+                    "on-tertiary-fixed": "#002113",
+                    "secondary-fixed": "#dce2f3",
+                    "on-tertiary-container": "#009668",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-dim": "#ddd9d8",
+                    "primary-fixed": "#e5e2e1",
+                    "surface-variant": "#e5e2e1",
+                    "primary": "#000000",
+                    "on-secondary-container": "#5e6572",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#404754",
+                    "secondary": "#585f6c",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#1c1b1b",
+                    "surface-container-high": "#ebe7e6",
+                    "secondary-container": "#dce2f3",
+                    "inverse-surface": "#313030",
+                    "on-background": "#1c1b1b",
+                    "inverse-primary": "#c8c6c5",
+                    "surface-container-low": "#f7f3f2",
+                    "on-primary-fixed-variant": "#474646",
+                    "on-primary-container": "#858383",
+                    "surface-container": "#f1edec",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#fdf8f8",
+                    "on-surface": "#1c1b1b",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#747878"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "container-padding": "32px",
+                    "gutter": "24px",
+                    "xl": "48px",
+                    "sm": "8px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "data-tabular": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .glass-surface { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); }
+        .optimizer-gradient { background: linear-gradient(135deg, #111111 0%, #333333 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm h-16">
+<div class="flex justify-between items-center px-lg h-full w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a sophisticated user in a high-key studio environment. The lighting is soft and directional, emphasizing clean skin textures and a neutral, calm expression. The background is a seamless, minimalist white, aligning with a premium light-mode UI aesthetic that values clarity and clinical precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCi0udcHIysJl6Y9khJw2r-iKHJ0UYRgvJmAsSe8D87N3CTbD3XD069YCV5y_Py19uojWAjP4iWJ91fmSNkiRouBAR4JmGB_c_xjGkWf22tdMzhSXjSKavhyroLxV5eesvtQ7wy_U8XaMlPd8hoQ6D3jtql_UvC5mVqTDMCA-OmetlrCrLG9BytJi7XKBt80bJ-q-AlIWjwKHjQPobfbdR-xk1S1ai81i890p87URcGp8Pov-KRv8Y49Qsq85NIlfxXwhPWlgGBIgM"/>
+</div>
+<h1 class="font-display text-headline-md tracking-tight text-primary">ExpendX</h1>
+</div>
+<div class="flex items-center">
+<button class="active:scale-95 transition-transform hover:opacity-80">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-md max-w-7xl mx-auto">
+<!-- Overhead Summary -->
+<section class="mb-xl">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-xs">Monthly Overhead</p>
+<div class="flex items-baseline gap-sm">
+<h2 class="font-display text-display tabular-nums">$284.50</h2>
+<span class="font-label-md text-label-md text-on-tertiary-container bg-tertiary-fixed/20 px-sm py-xs rounded-full">+2.4% vs LY</span>
+</div>
+</section>
+<!-- Optimizer Banner (Bento Style) -->
+<section class="mb-xl">
+<div class="optimizer-gradient rounded-xl p-lg text-on-primary flex flex-col md:flex-row items-center justify-between gap-lg relative overflow-hidden">
+<div class="z-10">
+<h3 class="font-headline-md text-headline-md mb-sm">Optimizer Active</h3>
+<p class="font-body-md text-body-md text-primary-fixed-dim max-w-md">We identified $42.00 in redundant monthly spending across three inactive digital services. Tap to automate cancellation.</p>
+</div>
+<button class="z-10 bg-white text-black px-xl py-md rounded-full font-label-md text-label-md hover:scale-105 transition-transform active:scale-95 whitespace-nowrap">
+                    Review Savings
+                </button>
+<!-- Decorative Abstract Shape -->
+<div class="absolute -right-16 -top-16 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+</div>
+</section>
+<!-- Category Tabs -->
+<nav class="flex gap-md mb-lg overflow-x-auto pb-sm no-scrollbar">
+<button class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-md text-label-md whitespace-nowrap">All Services</button>
+<button class="bg-surface-container-low text-on-surface-variant px-lg py-sm rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors whitespace-nowrap">Entertainment</button>
+<button class="bg-surface-container-low text-on-surface-variant px-lg py-sm rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors whitespace-nowrap">Health</button>
+<button class="bg-surface-container-low text-on-surface-variant px-lg py-sm rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors whitespace-nowrap">Software</button>
+<button class="bg-surface-container-low text-on-surface-variant px-lg py-sm rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors whitespace-nowrap">Utilities</button>
+</nav>
+<!-- Subscription Grid/List -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Netflix -->
+<div class="bg-white p-lg rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer group">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">movie</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold">Netflix</h4>
+<p class="font-body-md text-label-md text-on-surface-variant">Premium Ultra HD</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-tabular text-data-tabular tabular-nums">$19.99</p>
+<p class="font-label-md text-xs text-on-surface-variant">Next: Oct 12</p>
+</div>
+</div>
+<!-- Spotify -->
+<div class="bg-white p-lg rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">music_note</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold">Spotify</h4>
+<p class="font-body-md text-label-md text-on-surface-variant">Family Plan</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-tabular text-data-tabular tabular-nums">$16.99</p>
+<p class="font-label-md text-xs text-on-surface-variant">Next: Oct 15</p>
+</div>
+</div>
+<!-- Gym -->
+<div class="bg-white p-lg rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">fitness_center</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold">Equinox Gym</h4>
+<p class="font-body-md text-label-md text-on-surface-variant">Global Access</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-tabular text-data-tabular tabular-nums">$185.00</p>
+<p class="font-label-md text-xs text-on-surface-variant">Next: Oct 01</p>
+</div>
+</div>
+<!-- Adobe -->
+<div class="bg-white p-lg rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-outline-variant/10 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">architecture</span>
+</div>
+<div>
+<h4 class="font-headline-md text-body-lg font-bold">Adobe CC</h4>
+<p class="font-body-md text-label-md text-on-surface-variant">Creative Suite</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-data-tabular text-data-tabular tabular-nums">$52.52</p>
+<p class="font-label-md text-xs text-on-surface-variant">Next: Oct 22</p>
+</div>
+</div>
+</div>
+<!-- Secondary Insights (Asymmetric Card) -->
+<section class="mt-xl grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="md:col-span-2 bg-surface-container rounded-xl p-lg flex flex-col justify-between min-h-[200px]">
+<div>
+<h5 class="font-headline-md text-body-lg mb-sm">Annual Forecast</h5>
+<p class="font-body-md text-body-md text-on-surface-variant">Based on your current subscription velocity, you are projected to spend <span class="text-primary font-bold tabular-nums">$3,414.00</span> in the next 12 months.</p>
+</div>
+<div class="w-full bg-outline-variant/20 h-2 rounded-full mt-lg overflow-hidden">
+<div class="bg-primary h-full w-[65%]"></div>
+</div>
+</div>
+<div class="bg-primary-container p-lg rounded-xl text-on-primary flex flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-headline-lg mb-md">verified_user</span>
+<p class="font-label-md text-label-md uppercase tracking-widest mb-xs opacity-70">Safety Score</p>
+<h6 class="font-display text-headline-md">98.4</h6>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe shadow-lg bg-surface/90 backdrop-blur-md">
+<div class="flex justify-around items-center px-md py-sm w-full bg-surface border-t border-outline-variant/10">
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Insights</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-4 py-1 active:scale-90 duration-200">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-label-md text-label-md">Transact</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Budgets</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</button>
+</div>
+</nav>
+<script>
+        // Micro-interaction for cards
+        document.querySelectorAll('.cursor-pointer').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Tab selection logic
+        const tabs = document.querySelectorAll('nav button');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('bg-primary', 'text-on-primary');
+                    t.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+                });
+                tab.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+                tab.classList.add('bg-primary', 'text-on-primary');
+            });
+        });
+    </script>
+</body></html>

@@ -192,86 +192,107 @@ export function ReceiptScanner({ onDataExtracted, categories = [], sharedFileUri
     setIsScanning(false);
   };
 
-  return (
-    <Card className="p-3 border-dashed">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-medium">Scan Receipt</h3>
-          {previewImage && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearPreview}
-              disabled={isScanning}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+  const [showOptions, setShowOptions] = useState(false);
 
-        {previewImage ? (
+  return (
+    <div className="w-full">
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {previewImage ? (
+        <Card className="p-3 relative border border-muted/60 bg-muted/10 rounded-2xl">
           <div className="relative">
             <img
               src={previewImage}
               alt="Receipt preview"
-              className="w-full h-48 object-contain rounded-lg bg-muted"
+              className="w-full h-40 object-contain rounded-lg bg-black/10"
             />
-            {isScanning && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Scanning receipt...</p>
+            {isScanning ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/85 rounded-lg">
+                <div className="flex flex-col items-center gap-1.5">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <p className="text-xs text-muted-foreground font-medium">Extracting receipt data...</p>
                 </div>
               </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClearPreview}
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 shadow-md text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             )}
           </div>
-        ) : (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {!showOptions ? (
             <Button
               type="button"
-              variant="outline"
-              className="flex-1 h-10 sm:h-9"
-              onClick={() => cameraInputRef.current?.click()}
-              disabled={isScanning}
+              variant="action"
+              size="xs"
+              className="w-full h-9 rounded-xl flex items-center justify-center gap-2 border border-border-default/45"
+              onClick={() => setShowOptions(true)}
             >
-              <Camera className="h-4 w-4 mr-2" />
-              Take Photo
+              <Camera className="h-4 w-4" />
+              <span>Scan or Upload Receipt</span>
             </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 h-10 sm:h-9"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isScanning}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Image
-            </Button>
-          </div>
-        )}
-
-
-        <p className="text-xs text-muted-foreground text-center">
-          AI will extract amount, date, merchant, and category from your receipt
-        </p>
-      </div>
-    </Card>
+          ) : (
+            <div className="flex gap-2 items-center bg-muted/10 p-2 rounded-2xl border border-dashed border-border/40">
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                className="flex-1 h-8 rounded-lg"
+                onClick={() => {
+                  cameraInputRef.current?.click();
+                  setShowOptions(false);
+                }}
+              >
+                <Camera className="h-3.5 w-3.5 mr-1" />
+                Camera
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                className="flex-1 h-8 rounded-lg"
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setShowOptions(false);
+                }}
+              >
+                <Upload className="h-3.5 w-3.5 mr-1" />
+                Upload
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="h-8 w-8 p-0 rounded-full"
+                onClick={() => setShowOptions(false)}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

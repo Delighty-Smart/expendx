@@ -150,17 +150,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
                                 className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full"
                             >
-                                <Icon
-                                    className={cn(
-                                        "h-6 w-6 transition-all duration-200",
-                                        isActive ? "text-brand-primary" : "text-icon-muted"
-                                    )}
-                                    strokeWidth={isActive ? 2.5 : 1.75}
-                                />
+                                <div className={cn(
+                                    "p-1.5 rounded-[12px] transition-all",
+                                    isActive ? "bg-black text-white dark:bg-white dark:text-black" : "text-icon-muted"
+                                )}>
+                                    <Icon
+                                        className="h-5 w-5"
+                                        strokeWidth={isActive ? 2.5 : 1.8}
+                                    />
+                                </div>
                                 <span
                                     className={cn(
-                                        "text-[10px] font-semibold transition-colors duration-200",
-                                        isActive ? "text-brand-primary" : "text-icon-muted"
+                                        "text-[9px] font-semibold transition-colors duration-200",
+                                        isActive ? "text-text-primary" : "text-icon-muted"
                                     )}
                                 >
                                     {tab.label}
@@ -174,9 +176,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                         <Link
                             to="/add-transaction"
                             onClick={() => Haptics.impact({ style: ImpactStyle.Medium }).catch(() => { })}
-                            className="bg-brand-primary hover:bg-brand-primary-hover text-white shadow-brand w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-bg-base"
+                            className="bg-black dark:bg-white text-white dark:text-black shadow-brand w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95 border-4 border-bg-base"
                         >
-                            <CirclePlus className="h-6 w-6" strokeWidth={2} />
+                            <CirclePlus className="h-6 w-6" strokeWidth={1.8} />
                         </Link>
                     </div>
 
@@ -191,17 +193,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                                 onClick={() => Haptics.impact({ style: ImpactStyle.Light }).catch(() => { })}
                                 className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 group h-full"
                             >
-                                <Icon
-                                    className={cn(
-                                        "h-6 w-6 transition-all duration-200",
-                                        isActive ? "text-brand-primary" : "text-icon-muted"
-                                    )}
-                                    strokeWidth={isActive ? 2.5 : 1.75}
-                                />
+                                <div className={cn(
+                                    "p-1.5 rounded-[12px] transition-all",
+                                    isActive ? "bg-black text-white dark:bg-white dark:text-black" : "text-icon-muted"
+                                )}>
+                                    <Icon
+                                        className="h-5 w-5"
+                                        strokeWidth={isActive ? 2.5 : 1.8}
+                                    />
+                                </div>
                                 <span
                                     className={cn(
-                                        "text-[10px] font-semibold transition-colors duration-200",
-                                        isActive ? "text-brand-primary" : "text-icon-muted"
+                                        "text-[9px] font-semibold transition-colors duration-200",
+                                        isActive ? "text-text-primary" : "text-icon-muted"
                                     )}
                                 >
                                     {tab.label}
@@ -218,24 +222,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
                         }}
                         className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95 h-full relative"
                     >
-                        <div className="relative">
+                        <div className={cn(
+                            "p-1.5 rounded-[12px] transition-all",
+                            isMoreActive || showMore ? "bg-black text-white dark:bg-white dark:text-black" : "text-icon-muted"
+                        )}>
                             <MoreHorizontal
-                                className={cn(
-                                    "h-6 w-6 transition-all duration-200",
-                                    isMoreActive || showMore ? "text-brand-primary" : "text-icon-muted"
-                                )}
-                                strokeWidth={isMoreActive || showMore ? 2.5 : 1.75}
+                                className="h-5 w-5"
+                                strokeWidth={isMoreActive || showMore ? 2.5 : 1.8}
                             />
-                            {unreadAlerts > 0 && (
-                                <span className="absolute -top-1.5 -right-1.5 bg-semantic-danger-bg text-semantic-danger-text text-[9px] font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center border border-bg-surface">
-                                    {unreadAlerts > 9 ? "9+" : unreadAlerts}
-                                </span>
-                            )}
                         </div>
                         <span
                             className={cn(
-                                "text-[10px] font-semibold transition-colors duration-200",
-                                isMoreActive || showMore ? "text-brand-primary" : "text-icon-muted"
+                                "text-[9px] font-semibold transition-colors duration-200",
+                                isMoreActive || showMore ? "text-text-primary" : "text-icon-muted"
                             )}
                         >
                             More

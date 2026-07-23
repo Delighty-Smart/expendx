@@ -8,7 +8,8 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend
+    Legend,
+    ReferenceArea
 } from "recharts";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -17,6 +18,7 @@ interface DailyIncomeExpenseItem {
     fullDate: string;
     income: number;
     expense: number;
+    isUntracked?: boolean;
 }
 
 interface DailyIncomeExpensesChartProps {
@@ -46,7 +48,15 @@ const CustomTooltip = ({ active, payload, label, currencySymbol, formatAmount, h
     const { showLifeHours } = useSettings();
     if (active && payload && payload.length) {
         return (
-            <div className="bg-bg-surface/90 dark:bg-bg-surface/90 border border-border-default shadow-xl rounded-[16px] p-3 flex flex-col gap-1.5 pointer-events-none select-none backdrop-blur-md">
+            <div 
+                className="rounded-xl p-3 flex flex-col gap-1.5 pointer-events-none select-none"
+                style={{
+                    backgroundColor: 'var(--bg-card)',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+                }}
+            >
                 <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-none">
                     {label}
                 </span>
@@ -87,8 +97,8 @@ const DailyIncomeExpensesChart = ({
             <RechartAreaChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 10 }}>
                 <defs>
                     <linearGradient id="income-gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#2FA8A0" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#2FA8A0" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="expense-gradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#64748B" stopOpacity={0.15} />
@@ -118,6 +128,8 @@ const DailyIncomeExpensesChart = ({
                             hideAmounts={hideAmounts} 
                         />
                     }
+                    contentStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}
+                    wrapperStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', outline: 'none' }}
                     cursor={{ stroke: 'var(--border-default)', strokeWidth: 1.5, opacity: 0.4 }}
                 />
 
@@ -130,15 +142,27 @@ const DailyIncomeExpensesChart = ({
                     wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}
                 />
 
+                {data.some(d => d.isUntracked) && (
+                    <ReferenceArea
+                        x1={data.find(d => d.isUntracked)?.fullDate}
+                        x2={data.slice().reverse().find(d => d.isUntracked)?.fullDate}
+                        stroke="var(--border-default)"
+                        strokeDasharray="3 3"
+                        fill="var(--bg-overlay)"
+                        fillOpacity={0.4}
+                        label={{ value: "Untracked Period", fill: "var(--text-tertiary)", fontSize: 10, position: "insideTop" }}
+                    />
+                )}
+
                 <Area
                     type="linear"
                     dataKey="income"
                     name="Income"
-                    stroke="#10B981"
+                    stroke="#2FA8A0"
                     fillOpacity={1}
                     fill="url(#income-gradient)"
                     strokeWidth={2}
-                    activeDot={{ r: 5, stroke: "#10B981", strokeWidth: 2, fill: "var(--bg-card)" }}
+                    activeDot={{ r: 5, stroke: "#2FA8A0", strokeWidth: 2, fill: "var(--bg-card)" }}
                     animationDuration={1500}
                     animationEasing="ease-out"
                 />

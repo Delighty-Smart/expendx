@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<title>Carbon Wealth | Subscriptions</title>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #111415;
+            -webkit-font-smoothing: antialiased;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        .glass-header {
+            background: rgba(13, 13, 13, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .carbon-border {
+            border-color: rgba(255, 255, 255, 0.03);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Scrollbar for desktop density */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0c0f10;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #323537;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#313033",
+                      "on-error": "#690005",
+                      "finance-savings": "#60A5FA",
+                      "surface-container-highest": "#323537",
+                      "surface-container": "#1d2022",
+                      "on-tertiary-fixed-variant": "#394d00",
+                      "on-tertiary-fixed": "#151f00",
+                      "on-secondary-container": "#003a5c",
+                      "tertiary-fixed-dim": "#a5d700",
+                      "secondary": "#93ccff",
+                      "surface-variant": "#323537",
+                      "tertiary-fixed": "#bef521",
+                      "finance-debt": "#FB923C",
+                      "tertiary-container": "#030600",
+                      "obsidian-card": "#121216",
+                      "surface-bright": "#37393b",
+                      "on-primary-fixed": "#1c1b1e",
+                      "secondary-fixed-dim": "#93ccff",
+                      "surface": "#111415",
+                      "border-strong": "#242429",
+                      "tertiary": "#a5d700",
+                      "surface-container-low": "#191c1e",
+                      "surface-container-high": "#282a2c",
+                      "on-error-container": "#ffdad6",
+                      "surface-tint": "#c8c5c9",
+                      "on-secondary-fixed": "#001d31",
+                      "carbon-surface": "#0E0E11",
+                      "on-tertiary": "#263500",
+                      "on-primary-container": "#78777a",
+                      "primary-container": "#050507",
+                      "inverse-primary": "#5f5e61",
+                      "error": "#ffb4ab",
+                      "on-secondary": "#003351",
+                      "error-container": "#93000a",
+                      "secondary-container": "#00a9fd",
+                      "on-secondary-fixed-variant": "#004b73",
+                      "on-surface": "#e1e2e4",
+                      "inverse-on-surface": "#2e3132",
+                      "primary-fixed": "#e5e1e5",
+                      "inverse-surface": "#e1e2e4",
+                      "border-subtle": "rgba(255, 255, 255, 0.03)",
+                      "outline-variant": "#47464b",
+                      "finance-expense": "#F87171",
+                      "surface-container-lowest": "#0c0f10",
+                      "on-tertiary-container": "#628200",
+                      "surface-dim": "#111415",
+                      "on-surface-variant": "#c8c5cb",
+                      "primary": "#c8c5c9",
+                      "finance-income": "#34D399",
+                      "on-background": "#e1e2e4",
+                      "secondary-fixed": "#cce5ff",
+                      "primary-fixed-dim": "#c8c5c9",
+                      "outline": "#929095",
+                      "on-primary-fixed-variant": "#47464a",
+                      "background": "#111415"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "compact-md": "0.875rem",
+                      "unit": "4px",
+                      "compact-xs": "0.375rem",
+                      "compact-sm": "0.625rem",
+                      "gutter": "16px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "label-tabular": ["Plus Jakarta Sans"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "body-sm": ["Plus Jakarta Sans"],
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "headline-sm": ["Plus Jakarta Sans"],
+                      "body-md": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "label-tabular": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600" }],
+                      "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+                      "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400" }],
+                      "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700" }],
+                      "headline-sm": ["15px", { "lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+                      "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400" }]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Sidebar Section -->
+<aside class="w-64 h-full fixed left-0 top-0 flex flex-col py-gutter px-compact-md border-r border-border-subtle bg-surface-container-lowest z-50">
+<div class="mb-10 px-4">
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface">Carbon Wealth</h1>
+<p class="font-label-tabular text-on-surface-variant uppercase tracking-widest text-[10px]">Private Banking</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-body-md text-body-md">Markets</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-primary font-bold border-r-2 border-primary bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-body-md text-body-md">Transactions</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="lock_person">lock_person</span>
+<span class="font-body-md text-body-md">Wealth Vault</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-high transition-colors duration-200 text-on-surface-variant font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full py-3 rounded-full bg-primary text-on-primary font-label-tabular text-label-tabular scale-100 hover:scale-105 active:scale-95 transition-all">
+                Connect Advisor
+            </button>
+</div>
+</aside>
+<!-- Header Section -->
+<header class="flex justify-between items-center h-16 w-full pl-72 pr-margin-desktop bg-surface/80 backdrop-blur-xl border-b border-border-subtle sticky top-0 z-40">
+<div class="flex items-center gap-8">
+<div class="flex gap-6">
+<a class="font-label-tabular text-on-surface-variant hover:text-on-surface transition-opacity font-medium" href="#">Dashboard</a>
+<a class="font-label-tabular text-on-surface-variant hover:text-on-surface transition-opacity font-medium" href="#">Strategy</a>
+<a class="font-label-tabular text-on-surface font-bold border-b-2 border-primary pb-1" href="#">Reports</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="bg-surface-container-low border border-border-subtle rounded-full py-1.5 pl-10 pr-4 text-sm w-64 focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="Search wealth..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest overflow-hidden border border-border-subtle">
+<img alt="Executive User Profile" class="w-full h-full object-cover" data-alt="A close-up portrait of a professional executive with a confident expression, set against a blurred, high-end office background. The lighting is dramatic and warm, reflecting a premium dark-mode aesthetic with soft highlights. The image quality is crisp and high-fidelity, conveying reliability and expertise in a modern carbon-themed interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7mJG4nXU4SsnfJ_8YHNJL0nbeaYqpOfvdilqiUUR2EeLchuyj2SDHW8qrTfZYwnxA3sMIYAkopmLcZ5SNZv--uSfs6CmGCiMmpDBA9qwb8zVunBtUxMfP-PntinNduH5qSXed1rvoP2BtxpSC9o0OI805zYJsMITKCfSQOlKZZDWzi9gI3GLLUeERxHjEtQDYavf62IFaivp-TWoaptHjWccbfgeBhU72AsIl4nrSS6Y-pdgZVzu-aTl8wfXUW5wOXOwhoLhsDXc"/>
+</div>
+<button class="bg-primary px-6 py-2 rounded-full text-on-primary font-label-tabular text-label-tabular">
+                    Deposit Funds
+                </button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-8 px-margin-desktop pb-12">
+<div class="flex flex-col gap-2 mb-8">
+<h2 class="font-headline-lg text-headline-lg">Active Subscriptions</h2>
+<p class="font-body-md text-on-surface-variant">Manage and optimize your recurring capital outflows.</p>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Primary Column -->
+<div class="col-span-12 lg:col-span-8 space-y-4">
+<!-- Subscription List Header -->
+<div class="grid grid-cols-12 px-6 py-2 text-on-surface-variant font-label-tabular text-[12px] uppercase tracking-wider">
+<div class="col-span-5">Service</div>
+<div class="col-span-2">Status</div>
+<div class="col-span-3">Next Billing</div>
+<div class="col-span-2 text-right">Amount</div>
+</div>
+<!-- Subscription Items -->
+<div class="space-y-3">
+<!-- Netflix -->
+<div class="grid grid-cols-12 items-center bg-carbon-surface border border-border-subtle p-5 rounded-[24px] hover:translate-y-[-2px] hover:border-primary/20 transition-all cursor-pointer">
+<div class="col-span-5 flex items-center gap-4">
+<div class="h-12 w-12 rounded-xl bg-red-950/20 flex items-center justify-center border border-red-500/10">
+<span class="material-symbols-outlined text-red-500" data-icon="play_circle">play_circle</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm">Netflix Premium</h4>
+<p class="font-body-sm text-on-surface-variant">4K UHD + Spatial Audio</p>
+</div>
+</div>
+<div class="col-span-2">
+<span class="px-3 py-1 bg-finance-income/10 text-finance-income text-[11px] font-bold rounded-full uppercase tracking-tight">Active</span>
+</div>
+<div class="col-span-3">
+<p class="font-label-tabular text-label-tabular tabular-nums">Oct 24, 2023</p>
+</div>
+<div class="col-span-2 text-right">
+<p class="font-headline-sm text-headline-sm tabular-nums">$19.99<span class="text-xs text-on-surface-variant font-normal">/mo</span></p>
+</div>
+</div>
+<!-- Spotify -->
+<div class="grid grid-cols-12 items-center bg-carbon-surface border border-border-subtle p-5 rounded-[24px] hover:translate-y-[-2px] hover:border-primary/20 transition-all cursor-pointer">
+<div class="col-span-5 flex items-center gap-4">
+<div class="h-12 w-12 rounded-xl bg-green-950/20 flex items-center justify-center border border-green-500/10">
+<span class="material-symbols-outlined text-finance-income" data-icon="music_note">music_note</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm">Spotify Family</h4>
+<p class="font-body-sm text-on-surface-variant">6 Premium Accounts</p>
+</div>
+</div>
+<div class="col-span-2">
+<span class="px-3 py-1 bg-finance-income/10 text-finance-income text-[11px] font-bold rounded-full uppercase tracking-tight">Active</span>
+</div>
+<div class="col-span-3">
+<p class="font-label-tabular text-label-tabular tabular-nums">Oct 28, 2023</p>
+</div>
+<div class="col-span-2 text-right">
+<p class="font-headline-sm text-headline-sm tabular-nums">$16.99<span class="text-xs text-on-surface-variant font-normal">/mo</span></p>
+</div>
+</div>
+<!-- Iron Works Gym -->
+<div class="grid grid-cols-12 items-center bg-carbon-surface border border-border-subtle p-5 rounded-[24px] hover:translate-y-[-2px] hover:border-primary/20 transition-all cursor-pointer">
+<div class="col-span-5 flex items-center gap-4">
+<div class="h-12 w-12 rounded-xl bg-blue-950/20 flex items-center justify-center border border-blue-500/10">
+<span class="material-symbols-outlined text-blue-400" data-icon="fitness_center">fitness_center</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm">Iron Works Gym</h4>
+<p class="font-body-sm text-on-surface-variant">Elite Access Membership</p>
+</div>
+</div>
+<div class="col-span-2">
+<span class="px-3 py-1 bg-amber-500/10 text-amber-500 text-[11px] font-bold rounded-full uppercase tracking-tight">Pending</span>
+</div>
+<div class="col-span-3">
+<p class="font-label-tabular text-label-tabular tabular-nums">Nov 01, 2023</p>
+</div>
+<div class="col-span-2 text-right">
+<p class="font-headline-sm text-headline-sm tabular-nums">$120.00<span class="text-xs text-on-surface-variant font-normal">/mo</span></p>
+</div>
+</div>
+<!-- Adobe CC -->
+<div class="grid grid-cols-12 items-center bg-carbon-surface border border-border-subtle p-5 rounded-[24px] hover:translate-y-[-2px] hover:border-primary/20 transition-all cursor-pointer">
+<div class="col-span-5 flex items-center gap-4">
+<div class="h-12 w-12 rounded-xl bg-purple-950/20 flex items-center justify-center border border-purple-500/10">
+<span class="material-symbols-outlined text-purple-400" data-icon="brush">brush</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm">Adobe Creative Cloud</h4>
+<p class="font-body-sm text-on-surface-variant">All Apps - Annual Plan</p>
+</div>
+</div>
+<div class="col-span-2">
+<span class="px-3 py-1 bg-finance-income/10 text-finance-income text-[11px] font-bold rounded-full uppercase tracking-tight">Active</span>
+</div>
+<div class="col-span-3">
+<p class="font-label-tabular text-label-tabular tabular-nums">Nov 14, 2023</p>
+</div>
+<div class="col-span-2 text-right">
+<p class="font-headline-sm text-headline-sm tabular-nums">$54.99<span class="text-xs text-on-surface-variant font-normal">/mo</span></p>
+</div>
+</div>
+<!-- ChatGPT -->
+<div class="grid grid-cols-12 items-center bg-carbon-surface border border-border-subtle p-5 rounded-[24px] hover:translate-y-[-2px] hover:border-primary/20 transition-all cursor-pointer">
+<div class="col-span-5 flex items-center gap-4">
+<div class="h-12 w-12 rounded-xl bg-teal-950/20 flex items-center justify-center border border-teal-500/10">
+<span class="material-symbols-outlined text-teal-400" data-icon="smart_toy">smart_toy</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm">OpenAI ChatGPT Plus</h4>
+<p class="font-body-sm text-on-surface-variant">GPT-4 Turbo Access</p>
+</div>
+</div>
+<div class="col-span-2">
+<span class="px-3 py-1 bg-finance-income/10 text-finance-income text-[11px] font-bold rounded-full uppercase tracking-tight">Active</span>
+</div>
+<div class="col-span-3">
+<p class="font-label-tabular text-label-tabular tabular-nums">Nov 19, 2023</p>
+</div>
+<div class="col-span-2 text-right">
+<p class="font-headline-sm text-headline-sm tabular-nums">$20.00<span class="text-xs text-on-surface-variant font-normal">/mo</span></p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Subscription Overhead Card -->
+<div class="bg-carbon-surface border border-border-subtle p-6 rounded-[24px] relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
+<p class="font-label-tabular text-on-surface-variant text-[12px] uppercase tracking-widest mb-4">Total Monthly Overhead</p>
+<div class="flex items-end gap-3 mb-6">
+<h3 class="font-headline-lg text-4xl tabular-nums tracking-tight">$284.50</h3>
+<div class="flex items-center gap-1 text-finance-expense font-label-tabular mb-1 text-[13px]">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_upward">arrow_upward</span>
+<span>4.2%</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 border-t border-border-subtle pt-6">
+<div>
+<p class="text-[11px] text-on-surface-variant uppercase mb-1">Active services</p>
+<p class="font-headline-sm tabular-nums">12</p>
+</div>
+<div>
+<p class="text-[11px] text-on-surface-variant uppercase mb-1">Potential Savings</p>
+<p class="font-headline-sm text-finance-savings tabular-nums">$42.15</p>
+</div>
+</div>
+</div>
+<!-- Optimizer AI Card -->
+<div class="bg-gradient-to-br from-carbon-surface to-surface-container-low border border-border-subtle p-6 rounded-[24px]">
+<div class="flex items-center gap-3 mb-5">
+<div class="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h4 class="font-headline-sm">Subscription Optimizer</h4>
+</div>
+<div class="space-y-4">
+<div class="bg-surface/40 p-4 rounded-xl border border-white/5">
+<div class="flex justify-between items-start mb-2">
+<p class="font-label-tabular text-sm">Low Usage Detected</p>
+<span class="bg-amber-500/20 text-amber-500 text-[10px] px-2 py-0.5 rounded-full font-bold">INSIGHT</span>
+</div>
+<p class="text-sm text-on-surface-variant mb-3">You haven't used Hulu in 45 days. Canceling could save you $14.99/mo.</p>
+<button class="w-full py-2 bg-surface-container-highest rounded-full text-xs font-bold hover:bg-surface-bright transition-colors">Action Suggestion</button>
+</div>
+<div class="flex items-center justify-between px-2">
+<p class="text-xs text-on-surface-variant italic">2 more optimizations available</p>
+<span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Annual Forecast Chart Summary -->
+<div class="bg-carbon-surface border border-border-subtle p-6 rounded-[24px]">
+<h4 class="font-headline-sm mb-4">Annual Forecast</h4>
+<div class="h-32 flex items-end justify-between gap-1 mb-6 px-1">
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 60%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 55%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 70%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 65%"></div>
+<div class="w-full bg-primary/20 border-t-2 border-primary rounded-t-lg transition-all" style="height: 85%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 50%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 45%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 80%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 90%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 60%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 55%"></div>
+<div class="w-full bg-surface-container-high rounded-t-lg transition-all hover:bg-primary/40" style="height: 75%"></div>
+</div>
+<div class="flex justify-between items-center text-xs text-on-surface-variant font-label-tabular">
+<span>EST. YEARLY COST</span>
+<span class="text-on-surface font-bold tabular-nums">$3,414.00</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for hover states
+        document.querySelectorAll('.bg-carbon-surface').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.98)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    card.style.transform = 'translateY(-2px)';
+                }, 150);
+            });
+        });
+    </script>
+</body></html>

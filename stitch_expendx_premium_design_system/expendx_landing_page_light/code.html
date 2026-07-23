@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX — Absolute control over your capital</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#c4c7c7",
+                    "tertiary-container": "#002113",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#444748",
+                    "primary-fixed-dim": "#c8c6c5",
+                    "inverse-on-surface": "#f4f0ef",
+                    "on-secondary": "#ffffff",
+                    "background": "#fdf8f8",
+                    "on-secondary-fixed": "#151c27",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface": "#fdf8f8",
+                    "tertiary": "#000000",
+                    "surface-container-highest": "#e5e2e1",
+                    "error": "#ba1a1a",
+                    "primary-container": "#1c1b1b",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "secondary-fixed-dim": "#c0c7d6",
+                    "surface-tint": "#5f5e5e",
+                    "on-tertiary-fixed": "#002113",
+                    "secondary-fixed": "#dce2f3",
+                    "on-tertiary-container": "#009668",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-dim": "#ddd9d8",
+                    "primary-fixed": "#e5e2e1",
+                    "surface-variant": "#e5e2e1",
+                    "primary": "#000000",
+                    "on-secondary-container": "#5e6572",
+                    "error-container": "#ffdad6",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed-variant": "#404754",
+                    "secondary": "#585f6c",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#1c1b1b",
+                    "surface-container-high": "#ebe7e6",
+                    "secondary-container": "#dce2f3",
+                    "inverse-surface": "#313030",
+                    "on-background": "#1c1b1b",
+                    "inverse-primary": "#c8c6c5",
+                    "surface-container-low": "#f7f3f2",
+                    "on-primary-fixed-variant": "#474646",
+                    "on-primary-container": "#858383",
+                    "surface-container": "#f1edec",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#fdf8f8",
+                    "on-surface": "#1c1b1b",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#747878"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "container-padding": "32px",
+                    "gutter": "24px",
+                    "xl": "48px",
+                    "sm": "8px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "data-tabular": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "data-tabular": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #F8F9FB;
+            color: #1c1b1b;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .glass-card {
+            background: #FFFFFF;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.05);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .carbon-button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .carbon-button:active {
+            transform: scale(0.96);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F8F9FB;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e5e2e1;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased selection:bg-primary-container selection:text-white">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-lg h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<span class="font-display text-headline-md tracking-tight text-primary">ExpendX</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label-md text-label-md text-on-surface-variant hover:opacity-80 transition-opacity" href="#features">Features</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:opacity-80 transition-opacity" href="#pricing">Pricing</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:opacity-80 transition-opacity" href="#">Enterprise</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="carbon-button font-label-md text-label-md px-6 py-2 rounded-full border border-outline-variant/30 bg-white text-primary hover:bg-surface-container-low transition-colors">Log In</button>
+<button class="carbon-button font-label-md text-label-md px-6 py-2 rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity">Get Started</button>
+</div>
+</div>
+</header>
+<main class="pt-16">
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-24 pb-48 px-container-padding">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="z-10">
+<span class="inline-block px-4 py-1 rounded-full bg-secondary-container text-on-secondary-fixed-variant font-label-md text-[12px] mb-6 uppercase tracking-wider">The Standard for Capital Control</span>
+<h1 class="font-display text-[56px] lg:text-[72px] leading-[1.1] text-primary tracking-tighter mb-8">
+                        Absolute control over your <span class="text-on-primary-container">capital.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-xl">
+                        A clinical approach to high-fidelity financial management. Spend, track, and optimize with institutional-grade precision. Designed for those who demand clarity.
+                    </p>
+<div class="flex flex-wrap gap-4">
+<button class="carbon-button flex items-center gap-2 bg-primary text-on-primary px-8 py-4 rounded-full font-label-md text-label-md">
+<span class="material-symbols-outlined">ios</span>
+                            Download on App Store
+                        </button>
+<button class="carbon-button flex items-center gap-2 bg-white border border-outline-variant/30 text-primary px-8 py-4 rounded-full font-label-md text-label-md">
+<span class="material-symbols-outlined">play_arrow</span>
+                            Get it on Play Store
+                        </button>
+</div>
+<div class="mt-12 flex items-center gap-6 grayscale opacity-40">
+<span class="font-label-md text-[14px]">Trusted by</span>
+<span class="font-display text-headline-md tracking-tighter">FINANCE.CO</span>
+<span class="font-display text-headline-md tracking-tighter">EQUITY.</span>
+<span class="font-display text-headline-md tracking-tighter">SECURE.</span>
+</div>
+</div>
+<div class="relative">
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+<div class="glass-card rounded-[32px] p-4 relative z-10 overflow-hidden aspect-square lg:aspect-auto">
+<img alt="Fintech Interface" class="w-full h-full object-cover rounded-[24px]" data-alt="A macro close-up of a high-end digital financial dashboard displayed on a sleek glass tablet surface. The interface shows minimalist line charts and clean typography in a monochrome black and white palette with subtle emerald accents. Soft, natural studio lighting emphasizes the clinical precision and expansive negative space of the 'Carbon' design philosophy. The overall mood is sophisticated, professional, and technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCUBb_ic1OtnVHF-zzXRKOjr4udyJIH-3EeEFc_17L8cXqszNUnlcrlZ-tuojuBPsyW0F6rxxqLDCrB5GLDrWzm6rfcK-loFmh2XKkqO-aK2LLDOUzEbnXtXO7pmB-ofKuB6KLPzcJc2lvCFUlbb_xJQjSOxfKjNfYBQBCverxR-V3ip7flbxlx8bRW_rUhJ_mHQO0TKO-ZR3h6OXIFTTgj5rIuureznLllosHbNnUIjvhHVhgpFz2ft6x4ttOK47KK7CnWITN7vM"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Features (Bento Grid) -->
+<section class="py-xl px-container-padding bg-surface" id="features">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-24">
+<h2 class="font-display text-headline-lg text-primary mb-4">Precision Engineering</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Built for high-net-worth performance. Every feature is a deliberate choice in structural clarity.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Smart Tracking -->
+<div class="md:col-span-8 glass-card rounded-[24px] p-lg flex flex-col justify-between overflow-hidden group">
+<div class="mb-12">
+<span class="material-symbols-outlined text-primary text-[40px] mb-4">track_changes</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Smart Tracking</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md">Automated categorization with 99.9% accuracy. Machine learning that understands your unique capital flow without manual input.</p>
+</div>
+<div class="relative h-64 -mb-lg -mx-lg bg-surface-container-low overflow-hidden">
+<img alt="Analytics visualization" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" data-alt="A clean, abstract architectural shot of high-end white marble floors meeting dark, matte carbon walls, symbolizing structural precision and financial stability. The lighting is cold and clinical, creating sharp contrasts and long, elegant shadows. The composition is minimalist and spacious, perfectly capturing the high-fidelity and expansive aesthetic of a modern fintech platform's data tracking architecture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEFpZD1UCbJjVlwLb8T_CNDKogOyYUjOIxgXPQM9bZ__xTfbmdsihurfPWI_Dcl6qkYfk3vzSO0htcHxZvO7kE5JC1mBeEaGAew9JGzAhgdRbu1lDC5fHw0pCmf9JASNh3cJyEJgHj1bhde9y4Sk5ROyiv_VqZV1p8L3IUb_-B47GHc7q9UHxdL-IC6rMr8vvOJ8KkgvG29V0avtdBRufbmVGj6ieBc5x6P90Nt83aUgyeyfbtNzCVKevPvXxyqw0WMAPxHRawt_M"/>
+</div>
+</div>
+<!-- Deep Analytics -->
+<div class="md:col-span-4 glass-card rounded-[24px] p-lg flex flex-col">
+<span class="material-symbols-outlined text-primary text-[40px] mb-4">analytics</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Deep Analytics</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">Granular insight into every dollar. Tabular data reporting that satisfies institutional standards.</p>
+<div class="mt-auto space-y-4">
+<div class="h-1 bg-primary w-full rounded-full"></div>
+<div class="h-1 bg-outline-variant w-2/3 rounded-full"></div>
+<div class="h-1 bg-outline-variant w-1/2 rounded-full"></div>
+</div>
+</div>
+<!-- Encryption -->
+<div class="md:col-span-4 glass-card rounded-[24px] p-lg flex flex-col bg-primary text-on-primary">
+<span class="material-symbols-outlined text-on-primary text-[40px] mb-4" style="font-variation-settings: 'FILL' 1;">lock</span>
+<h3 class="font-headline-md text-headline-md mb-4">Encryption</h3>
+<p class="font-body-md text-body-md opacity-80">AES-256 military-grade security at rest and in transit. Your financial data is an island.</p>
+</div>
+<!-- Global Reach -->
+<div class="md:col-span-8 glass-card rounded-[24px] p-lg flex flex-col md:flex-row gap-8 items-center bg-surface-container-low border-none">
+<div class="flex-1">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Global Settlement</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time multi-currency support with live FX parity. Manage global assets from a single point of truth.</p>
+</div>
+<div class="w-full md:w-64 h-32 rounded-xl bg-white/50 border border-outline-variant/10 flex items-center justify-center">
+<span class="font-data-tabular text-data-tabular tracking-widest text-primary">USD / EUR / GBP / JPY</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Matrices -->
+<section class="py-xl px-container-padding" id="pricing">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-24">
+<h2 class="font-display text-headline-lg text-primary mb-4">Transparent Tiers</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xl mx-auto">Choose the level of control that matches your professional or personal capital velocity.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Basic -->
+<div class="glass-card rounded-[32px] p-xl flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant mb-4">Essential</span>
+<div class="flex items-baseline gap-1 mb-8">
+<span class="font-display text-headline-lg text-primary">$0</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-12 flex-1">
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                Up to 3 Linked Accounts
+                            </li>
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                Basic Categorization
+                            </li>
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant opacity-40">
+<span class="material-symbols-outlined text-[20px]">do_not_disturb_on</span>
+                                Custom Data Export
+                            </li>
+</ul>
+<button class="carbon-button w-full py-4 rounded-full border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">Start Free</button>
+</div>
+<!-- Pro -->
+<div class="glass-card rounded-[32px] p-xl flex flex-col border-primary/10 bg-white ring-1 ring-primary/5 scale-105 relative">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-4 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest">Recommended</div>
+<span class="font-label-md text-label-md text-on-surface-variant mb-4">Professional</span>
+<div class="flex items-baseline gap-1 mb-8">
+<span class="font-display text-headline-lg text-primary">$12</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-12 flex-1">
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                Unlimited Connections
+                            </li>
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                AI-Powered Insights
+                            </li>
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                Priority 24/7 Support
+                            </li>
+</ul>
+<button class="carbon-button w-full py-4 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:opacity-90 transition-opacity shadow-lg shadow-primary/10">Get Professional</button>
+</div>
+<!-- Elite -->
+<div class="glass-card rounded-[32px] p-xl flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant mb-4">Elite</span>
+<div class="flex items-baseline gap-1 mb-8">
+<span class="font-display text-headline-lg text-primary">$29</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mo</span>
+</div>
+<ul class="space-y-4 mb-12 flex-1">
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                Custom Data Architectures
+                            </li>
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                Dedicated Account Lead
+                            </li>
+<li class="flex items-center gap-3 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+                                On-Premise Data Nodes
+                            </li>
+</ul>
+<button class="carbon-button w-full py-4 rounded-full border border-outline-variant text-primary font-label-md text-label-md hover:bg-surface-container-low transition-colors">Contact Sales</button>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-xl px-container-padding">
+<div class="max-w-7xl mx-auto glass-card rounded-[40px] p-xl text-center bg-primary text-on-primary overflow-hidden relative">
+<div class="absolute inset-0 opacity-10">
+<div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+</div>
+<div class="relative z-10 py-12">
+<h2 class="font-display text-[48px] leading-tight mb-8">Ready to reclaim your capital?</h2>
+<p class="font-body-lg text-body-lg mb-12 opacity-70 max-w-2xl mx-auto">Join 50,000+ professionals managing billions with clinical precision every day.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="carbon-button px-10 py-5 bg-white text-primary rounded-full font-label-md text-label-md shadow-xl hover:bg-surface-container-low">Get Started for Free</button>
+<button class="carbon-button px-10 py-5 border border-white/20 text-white rounded-full font-label-md text-label-md hover:bg-white/10">Request Demo</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-surface py-xl border-t border-outline-variant/20 px-container-padding">
+<div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12">
+<div class="col-span-2">
+<span class="font-display text-headline-md tracking-tight text-primary mb-6 block">ExpendX</span>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs">High-fidelity capital management for the modern elite. Pure minimalist performance.</p>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary mb-6 font-bold">Product</h4>
+<ul class="space-y-4 font-body-md text-body-md text-on-surface-variant">
+<li><a class="hover:text-primary" href="#">Features</a></li>
+<li><a class="hover:text-primary" href="#">Security</a></li>
+<li><a class="hover:text-primary" href="#">Roadmap</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary mb-6 font-bold">Company</h4>
+<ul class="space-y-4 font-body-md text-body-md text-on-surface-variant">
+<li><a class="hover:text-primary" href="#">About</a></li>
+<li><a class="hover:text-primary" href="#">Careers</a></li>
+<li><a class="hover:text-primary" href="#">Legal</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-primary mb-6 font-bold">Connect</h4>
+<ul class="space-y-4 font-body-md text-body-md text-on-surface-variant">
+<li><a class="hover:text-primary" href="#">Twitter</a></li>
+<li><a class="hover:text-primary" href="#">LinkedIn</a></li>
+<li><a class="hover:text-primary" href="#">Support</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-7xl mx-auto mt-24 pt-8 border-t border-outline-variant/10 flex flex-col md:flex-row justify-between items-center gap-4">
+<span class="font-label-md text-[12px] text-on-surface-variant">© 2024 ExpendX Global Systems Inc.</span>
+<div class="flex gap-8 font-label-md text-[12px] text-on-surface-variant">
+<a class="hover:text-primary" href="#">Privacy Policy</a>
+<a class="hover:text-primary" href="#">Terms of Service</a>
+<a class="hover:text-primary" href="#">Cookie Settings</a>
+</div>
+</div>
+</footer>
+<!-- Interactive Layer: Simple Scroll Observer -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-8');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.glass-card').forEach(card => {
+                card.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-8');
+                observer.observe(card);
+            });
+        });
+    </script>
+</body></html>

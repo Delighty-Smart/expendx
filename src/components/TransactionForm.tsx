@@ -408,111 +408,168 @@ export const TransactionForm = ({
 
   const syncStatus = transaction ? getTransactionSyncStatus(transaction.id) : 'synced';
 
-  return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) {
-        form.reset();
-      }
-      onOpenChange(open);
-    }}>
-      <DialogContent
-        className={cn(
-          isMobile ? "w-[calc(100%-2rem)]" : "sm:max-w-[480px]",
-          "max-h-[95vh]"
-        )}
-      >
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <DialogTitle>{transaction ? 'Edit' : 'Add'} Transaction</DialogTitle>
-            <PendingSyncIndicator status={syncStatus} />
-          </div>
-          <DialogDescription>
-            Enter the details of your transaction below.
-            {!navigator.onLine && (
-              <span className="block text-orange-600 dark:text-orange-400 mt-3 font-semibold px-4 py-2 bg-orange-500/10 rounded-xl border border-orange-500/10">
-                You're offline - changes will sync when connection is restored.
-              </span>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-
-        {!transaction && (
-          <div className="mb-4">
-            <ReceiptScanner
-              onDataExtracted={handleReceiptData}
-              categories={categories}
-              sharedFileUri={sharedFileUri}
-              sharedMimeType={sharedMimeType}
-            />
-          </div>
-        )}
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Large Prominent centered Amount Input */}
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem className="space-y-1 text-center py-2">
-                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Amount</FormLabel>
-                  <FormControl>
-                    <div className="relative flex items-center justify-center">
-                      <span className="text-3xl font-extrabold text-muted-foreground/60 mr-1 select-none font-numeric">
-                        {currency?.symbol || "$"}
-                      </span>
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        step="0.01"
-                        {...field}
-                        disabled={loading}
-                        className="bg-transparent border-none text-center text-4xl font-extrabold tracking-tight focus:outline-none focus:ring-0 w-48 text-foreground placeholder:text-muted-foreground/30 font-numeric"
-                      />
-                    </div>
-                  </FormControl>
-                  {lifeHoursCost > 0 && (
-                    <p className="text-xs text-primary font-bold mt-1 text-center">
-                      ⌛ Costs {lifeHoursCost.toFixed(1)} hours of your life energy
-                    </p>
-                  )}
-                  <FormMessage className="text-center" />
-                </FormItem>
+  const formContent = (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-sm mx-auto">
+        {/* Amount Area */}
+        <FormField
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem className="space-y-1 text-center py-2 bg-transparent border-none shadow-none">
+              <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/45">Amount</FormLabel>
+              <FormControl>
+                <div className="relative flex items-center justify-center h-12">
+                  <span className="text-2xl font-medium text-muted-foreground/50 mr-1.5 select-none font-numeric">
+                    {currency?.symbol || "$"}
+                  </span>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    step="0.01"
+                    {...field}
+                    disabled={loading}
+                    className="bg-transparent border-none text-center text-4xl font-bold tracking-tight focus:outline-none focus:ring-0 min-w-[120px] text-foreground placeholder:text-muted-foreground/20 font-numeric"
+                  />
+                </div>
+              </FormControl>
+              {lifeHoursCost > 0 && (
+                <p className="text-[10px] text-muted-foreground font-semibold">
+                  ⌛ {lifeHoursCost.toFixed(1)} hours of life energy
+                </p>
               )}
-            />
+              <FormMessage className="text-center text-xs" />
+            </FormItem>
+          )}
+        />
 
-            {/* Segmented sliding control for type */}
+        {/* Info Grid - Type, Date, Category */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {/* Type selector */}
             <FormField
               control={form.control}
               name="type"
               render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Type</FormLabel>
+                  <Select
+                    onValueChange={(val) => handleTypeChange(val as TransactionType)}
+                    value={field.value}
+                    disabled={loading}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-semibold px-3 focus:ring-0">
+                        <SelectValue placeholder="Select Type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="credit" className="text-xs">Income (In)</SelectItem>
+                      <SelectItem value="debit" className="text-xs">Expense (Out)</SelectItem>
+                      <SelectItem value="savings" className="text-xs">Savings (Save)</SelectItem>
+                      <SelectItem value="subscription" className="text-xs">Subscription (Sub)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Category dropdown */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Category</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={loading || categories.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-semibold px-3 focus:ring-0">
+                        <SelectValue placeholder={categories.length === 0 ? "Loading..." : "Select"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category} className="text-xs">
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-medium px-3" disabled={loading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Description area */}
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Notes</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Specify merchant details or notes..."
+                    {...field}
+                    className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-medium px-3"
+                    disabled={loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Fulfillment Rating section */}
+          {transactionType !== "credit" && (
+            <FormField
+              control={form.control}
+              name="fulfillment_rating"
+              render={({ field }) => (
                 <FormItem className="space-y-2">
-                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Transaction Type</FormLabel>
+                  <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Fulfillment</FormLabel>
                   <FormControl>
-                    <div className="grid grid-cols-4 gap-1 p-1 bg-muted/40 rounded-xl border border-border/10">
-                      {(["credit", "debit", "savings", "subscription"] as const).map((type) => {
-                        const isActive = transactionType === type;
-                        const label = {
-                          credit: "Income",
-                          debit: "Expense",
-                          savings: "Savings",
-                          subscription: "Subs"
-                        }[type];
-                        
+                    <div className="flex items-center justify-around bg-muted/30 p-2 rounded-2xl border border-border-default">
+                      {[
+                        { rating: "1", emoji: "💔", label: "Waste" },
+                        { rating: "2", emoji: "😐", label: "Neutral" },
+                        { rating: "3", emoji: "😊", label: "Good" },
+                        { rating: "4", emoji: "💖", label: "Joy" },
+                        { rating: "5", emoji: "🌟", label: "Fulfill" }
+                      ].map((item) => {
+                        const isActive = field.value === item.rating;
                         return (
                           <button
-                            key={type}
+                            key={item.rating}
                             type="button"
-                            onClick={() => handleTypeChange(type)}
+                            onClick={() => field.onChange(item.rating)}
                             className={cn(
-                              "h-9 text-xs font-semibold rounded-lg transition-all duration-200 select-none",
-                              isActive
-                                ? "bg-white dark:bg-card text-foreground shadow-sm scale-[1.02]"
-                                : "text-muted-foreground hover:text-foreground hover:bg-white/10 dark:hover:bg-card/10"
+                              "flex flex-col items-center gap-0.5 p-1 px-3 rounded-xl transition-all duration-150 active:scale-95",
+                              isActive ? "bg-white dark:bg-card text-foreground shadow-sm scale-105" : "opacity-40"
                             )}
-                            disabled={loading}
                           >
-                            {label}
+                            <span className="text-sm">{item.emoji}</span>
+                            <span className="text-[8px] font-bold">{item.label}</span>
                           </button>
                         );
                       })}
@@ -522,490 +579,39 @@ export const TransactionForm = ({
                 </FormItem>
               )}
             />
+          )}
+        </div>
 
-            {/* Grid for Date & Category */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={loading || categories.length === 0}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
-                          <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select category"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              form.reset();
+              onOpenChange(false);
+            }}
+            className="h-10 rounded-xl px-4 text-xs font-semibold text-muted-foreground hover:bg-transparent"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-10 rounded-xl px-6 text-xs font-semibold bg-foreground text-background hover:bg-foreground/90 transition-all shadow-md"
+            disabled={loading}
+          >
+            {loading ? "Saving..." : transaction ? 'Update' : 'Confirm'}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
 
-            {/* Category Suggestions Under Grid */}
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <div className="space-y-0">
-                  {suggestions.length > 0 && !field.value && (
-                    <div className="flex gap-2 mb-3 flex-wrap">
-                      {suggestions.map((suggestion) => (
-                        <Badge
-                          key={suggestion.category}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground rounded-lg py-1 px-2 text-[10px]"
-                          onClick={() => field.onChange(suggestion.category)}
-                        >
-                          ✨ {suggestion.category}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {extraSuggestions.length > 0 && !field.value && (
-                    <div className="flex gap-2 mt-3 flex-wrap animate-in fade-in slide-in-from-top-1 duration-500">
-                      <p className="w-full text-[10px] text-muted-foreground font-medium mb-1">AI Suggestions:</p>
-                      {extraSuggestions.map((suggestion) => (
-                        <Badge
-                          key={suggestion}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-emerald-500 hover:text-white rounded-lg py-1 px-2 text-[10px] border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                          onClick={() => field.onChange(suggestion)}
-                        >
-                          ✨ {suggestion}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            />
-
-            {/* Unit Pricing toggle */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => setShowUnitPricing((v) => !v)}
-                className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {showUnitPricing ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                Unit Pricing (optional) — auto-calculates Amount
-              </button>
-
-              {showUnitPricing && (
-                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/20 rounded-xl border border-border/50">
-                  <FormField
-                    control={form.control}
-                    name="unit_price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Unit Price</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="0.00"
-                            step="0.01"
-                            {...field}
-                            className="h-10 bg-muted/40 border-none rounded-xl text-sm"
-                            disabled={loading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="quantity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Quantity</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="1"
-                            step="1"
-                            min="1"
-                            {...field}
-                            className="h-10 bg-muted/40 border-none rounded-xl text-sm"
-                            disabled={loading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {watchedUnitPrice && watchedQuantity && (
-                    <p className="col-span-2 text-xs text-primary font-medium">
-                      ✓ Amount auto-set to {parseFloat(watchedUnitPrice) * parseFloat(watchedQuantity)}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Itemized Receipt List */}
-            {watchedItems && watchedItems.length > 0 && (
-              <div className="space-y-3 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 animate-in zoom-in-95 duration-300">
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Scanned Items Breakdown</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-[10px]"
-                    onClick={() => form.setValue('items', [])}
-                  >
-                    Clear Items
-                  </Button>
-                </div>
-                <ScrollArea className="h-[150px] pr-4">
-                  <div className="space-y-3">
-                    {watchedItems.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2 items-center text-xs bg-background/50 p-2 rounded-lg border border-border/50">
-                        <div className="col-span-6 font-medium truncate" title={item.name}>{item.name}</div>
-                        <div className="col-span-2">
-                          <Input
-                            type="number"
-                            className="h-7 text-[10px] p-1 bg-transparent border-none focus-visible:ring-0 text-center"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const newItems = [...watchedItems];
-                              newItems[index] = {
-                                ...item,
-                                quantity: parseFloat(e.target.value) || 0,
-                                amount: (parseFloat(e.target.value) || 0) * (item.unit_price || (item.amount / item.quantity))
-                              };
-                              form.setValue('items', newItems);
-                            }}
-                          />
-                        </div>
-                        <div className="col-span-1 text-center text-muted-foreground">x</div>
-                        <div className="col-span-3 font-bold text-right">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            className="h-7 text-[10px] p-1 bg-transparent border-none focus-visible:ring-0 text-right font-bold"
-                            value={item.amount}
-                            onChange={(e) => {
-                              const newItems = [...watchedItems];
-                              newItems[index] = { ...item, amount: parseFloat(e.target.value) || 0 };
-                              form.setValue('items', newItems);
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                <div className="pt-2 border-t border-emerald-500/10 flex justify-between items-center text-sm">
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Total</span>
-                  <span className="font-bold text-lg">${watchedItems.reduce((sum, i) => sum + (i.amount || 0), 0).toFixed(2)}</span>
-                </div>
-              </div>
-            )}
-
-            <RecurringTemplateSelector
-              transactionType={transactionType}
-              disabled={loading}
-              onSelect={(template) => {
-                if (template) {
-                  form.setValue('amount', template.amount.toString());
-                  form.setValue('category', template.category);
-                  form.setValue('description', template.description);
-                }
-              }}
-            />
-
-            {form.watch('category') === 'Subscriptions' && (
-              <div className="space-y-4 pt-2 border-t border-muted/20">
-                {subscriptionOptions.length > 0 && (
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold tracking-tight text-primary">Link to Existing Subscription (Optional)</Label>
-                    <Select
-                      value={selectedSubscription}
-                      onValueChange={(val) => {
-                        setSelectedSubscription(val);
-                        // Auto-fill details if an existing subscription is selected
-                        const existing = subscriptionOptions.find(opt => opt.id === val)?.subscription;
-                        if (existing) {
-                          form.setValue('amount', existing.amount.toString());
-
-                          // Check if it's a known provider or "Other"
-                          const isKnownProvider = SERVICE_PROVIDERS.includes(existing.service_provider);
-                          if (isKnownProvider) {
-                            form.setValue('service_provider', existing.service_provider);
-                            form.setValue('custom_provider', '');
-                          } else {
-                            form.setValue('service_provider', 'Other');
-                            form.setValue('custom_provider', existing.service_provider);
-                          }
-
-                          form.setValue('card_type', existing.card_type);
-                          form.setValue('last_four_digits', existing.last_four_digits);
-                          form.setValue('subscription_type', existing.subscription_type);
-                        }
-                      }}
-                      disabled={loading}
-                    >
-                      <SelectTrigger className="h-11 bg-primary/5 border border-primary/10 rounded-xl font-medium">
-                        <SelectValue placeholder="Choose a subscription to update" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subscriptionOptions.map((option) => (
-                          <SelectItem key={option.id} value={option.id}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="service_provider"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Provider</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
-                          <FormControl>
-                            <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
-                              <SelectValue placeholder="Select provider" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {customProviders.map(p => (
-                              <SelectItem key={p} value={p}>{p}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch('service_provider') === 'Other' && (
-                    <FormField
-                      control={form.control}
-                      name="custom_provider"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Custom Provider Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. ChatGPT Plus" {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} value={field.value || ''} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {form.watch('service_provider') !== 'Other' && (
-                    <FormField
-                      control={form.control}
-                      name="subscription_type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Billing Cycle</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
-                            <FormControl>
-                              <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
-                                <SelectValue placeholder="Cycle" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {SUBSCRIPTION_TYPES.map(t => (
-                                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </div>
-
-                {form.watch('service_provider') === 'Other' && (
-                  <FormField
-                    control={form.control}
-                    name="subscription_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Billing Cycle</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
-                          <FormControl>
-                            <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
-                              <SelectValue placeholder="Cycle" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {SUBSCRIPTION_TYPES.map(t => (
-                              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="card_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Method</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={loading}>
-                          <FormControl>
-                            <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl">
-                              <SelectValue placeholder="Card type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {CARD_TYPES.map(t => (
-                              <SelectItem key={t} value={t}>{t}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="last_four_digits"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last 4 Digits</FormLabel>
-                        <FormControl>
-                          <Input placeholder="1234" maxLength={4} {...field} className="h-11 bg-muted/30 border-none rounded-xl" disabled={loading} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-
-            {transactionType !== "credit" && (
-              <FormField
-                control={form.control}
-                name="fulfillment_rating"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Fulfillment Rating</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center justify-around bg-muted/20 p-2.5 rounded-xl border border-border/50">
-                        {[
-                          { rating: "1", emoji: "💔", label: "Waste" },
-                          { rating: "2", emoji: "😐", label: "Neutral" },
-                          { rating: "3", emoji: "😊", label: "Good" },
-                          { rating: "4", emoji: "💖", label: "Joy" },
-                          { rating: "5", emoji: "🌟", label: "Fulfillment" }
-                        ].map((item) => {
-                          const isActive = field.value === item.rating;
-                          return (
-                            <button
-                              key={item.rating}
-                              type="button"
-                              onClick={() => field.onChange(item.rating)}
-                              className={cn(
-                                "flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 hover:scale-105",
-                                isActive
-                                  ? "bg-primary/20 scale-110 border border-primary/30"
-                                  : "opacity-60 hover:opacity-100"
-                              )}
-                            >
-                              <span className="text-xl">{item.emoji}</span>
-                              <span className="text-[9px] font-bold text-muted-foreground">{item.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter transaction details..."
-                      {...field}
-                      className="resize-none bg-muted/30 border-none rounded-2xl min-h-[100px] p-4 text-sm font-medium"
-                      disabled={loading}
-                      rows={3}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  form.reset();
-                  onOpenChange(false);
-                }}
-                className="h-12 rounded-xl px-6 font-bold text-muted-foreground hover:text-foreground"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="h-12 rounded-xl px-8 font-bold hover:scale-105 active:scale-95 transition-all"
-                disabled={loading}
-              >
-                {loading ? "Saving..." : transaction ? 'Update' : 'Add Transaction'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+  return (
+    <div className="w-full bg-background px-1 select-none flex justify-center">
+      <div className="w-full max-w-sm p-6 bg-card rounded-[32px]">
+        {formContent}
+      </div>
+    </div>
   );
 };

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,66 +6,66 @@
 
 @layer base {
   :root {
-    /* Brand Foundation - Pure Minimalist Carbon */
-    --brand-primary: #111111;
-    --brand-primary-hover: #262626;
-    --brand-primary-active: #3A3A3A;
-    --brand-primary-subtle: #EDEEF2;
+    /* Brand Foundation - Image 2 Charcoal & Warm White */
+    --brand-primary: #111315;
+    --brand-primary-hover: #1F2226;
+    --brand-primary-active: #2D3137;
+    --brand-primary-subtle: #EBEAE5;
 
-    /* Light Mode Tokens - Minimalist Cool Off-white */
-    --bg-base: #F8F9FB;
-    --bg-surface: #FFFFFF;
+    /* Light Mode Tokens - Image 2 Warm White (#F5F4F0) */
+    --bg-base: #F5F4F0; /* Warm white background */
+    --bg-surface: #FFFFFF; /* Pure white header/navigation surfaces */
     --bg-elevated: #FFFFFF;
-    --bg-overlay: #F5F6F8;
+    --bg-overlay: #EAE9E4;
     --bg-modal: #FFFFFF;
-    --bg-tooltip: #111111;
+    --bg-tooltip: #111315;
     --bg-input: #FFFFFF;
-    --bg-input-focus: #FAFAFA;
+    --bg-input-focus: #FFFFFF;
     --bg-sidebar: #FFFFFF;
-    --bg-sidebar-hover: #EDEFF2;
-    --bg-sidebar-active: #E2E5EB;
+    --bg-sidebar-hover: #F5F4F0;
+    --bg-sidebar-active: #EBEAE5;
     --bg-card: #FFFFFF;
-    --bg-card-hover: #FAFAF9;
+    --bg-card-hover: #FAF9F5;
     --bg-header: #FFFFFF;
-    --bg-skeleton: #E2E5EB;
-    --bg-skeleton-shimmer: #EDEFF2;
+    --bg-skeleton: #EBEAE5;
+    --bg-skeleton-shimmer: #F5F4F0;
 
-    --text-primary: #2D3139;
-    --text-secondary: #5F6672;
-    --text-tertiary: #8B93A1;
-    --text-disabled: #C4C4C2;
+    --text-primary: #111315;
+    --text-secondary: #525866;
+    --text-tertiary: #8C94A6;
+    --text-disabled: #C2C7D0;
     --text-inverse: #FFFFFF;
     --text-on-brand: #FFFFFF;
-    --text-link: #2D3139;
-    --text-link-hover: #434956;
-    --text-placeholder: #8B93A1;
-    --text-heading: #1E2229;
+    --text-link: #111315;
+    --text-link-hover: #2FA8A0;
+    --text-placeholder: #8C94A6;
+    --text-heading: #111315;
 
-    --border-default: rgba(0, 0, 0, 0.03);
-    --border-subtle: rgba(0, 0, 0, 0.01);
-    --border-strong: #C5CAD3;
-    --border-focus: #111111;
-    --border-divider: rgba(0, 0, 0, 0.03);
+    --border-default: #E5E4DF;
+    --border-subtle: #F0EFEA;
+    --border-strong: #C8C7C2;
+    --border-focus: #111315;
+    --border-divider: #E5E4DF;
 
-    --icon-default: #6B7280;
-    --icon-muted: #9CA3AF;
-    --icon-strong: #111111;
-    --icon-brand: #111111;
+    --icon-default: #525866;
+    --icon-muted: #8C94A6;
+    --icon-strong: #111315;
+    --icon-brand: #111315;
 
-    /* Semantic - Light */
-    --semantic-success-bg: #E6F7ED;
-    --semantic-success-bgSubtle: #F2FAF5;
-    --semantic-success-text: #059669;
-    --semantic-success-textStrong: #065F46;
-    --semantic-success-border: #A7F3D0;
-    --semantic-success-icon: #10B981;
+    /* Semantic - Light (Teal & Lime & Deep Blue from Image 2) */
+    --semantic-success-bg: #E6F6F5;
+    --semantic-success-bgSubtle: #F0FAF9;
+    --semantic-success-text: #2FA8A0; /* Image 2 Teal */
+    --semantic-success-textStrong: #1C6B66;
+    --semantic-success-border: #B2E5E2;
+    --semantic-success-icon: #2FA8A0;
 
-    --semantic-warning-bg: #FFF7ED;
-    --semantic-warning-bgSubtle: #FFFDFA;
-    --semantic-warning-text: #EA580C;
-    --semantic-warning-textStrong: #9A3412;
-    --semantic-warning-border: #FED7AA;
-    --semantic-warning-icon: #F97316;
+    --semantic-warning-bg: #F5FBEA;
+    --semantic-warning-bgSubtle: #FAFDFA;
+    --semantic-warning-text: #6A992A;
+    --semantic-warning-textStrong: #4A6B1D;
+    --semantic-warning-border: #D1F099;
+    --semantic-warning-icon: #8DC63F; /* Image 2 Lime */
 
     --semantic-danger-bg: #FEF2F2;
     --semantic-danger-bgSubtle: #FFFDFD;
@@ -74,129 +74,129 @@
     --semantic-danger-border: #FEE2E2;
     --semantic-danger-icon: #EF4444;
 
-    --semantic-info-bg: #EFF6FF;
-    --semantic-info-bgSubtle: #F8FAFC;
-    --semantic-info-text: #2563EB;
-    --semantic-info-textStrong: #1E40AF;
-    --semantic-info-border: #DBEAFE;
-    --semantic-info-icon: #3B82F6;
+    --semantic-info-bg: #EBF3F8;
+    --semantic-info-bgSubtle: #F4F8FA;
+    --semantic-info-text: #1F5C82; /* Image 2 Deep Blue */
+    --semantic-info-textStrong: #143C55;
+    --semantic-info-border: #BCD4E3;
+    --semantic-info-icon: #1F5C82;
 
-    --semantic-neutral-bg: #EDEEF2;
-    --semantic-neutral-text: #6B7280;
-    --semantic-neutral-border: #E5E7EB;
+    --semantic-neutral-bg: #EBEAE5;
+    --semantic-neutral-text: #525866;
+    --semantic-neutral-border: #E5E4DF;
 
     /* Finance - Light */
-    --finance-income: #10B981;
-    --finance-expense: #EF4444;
-    --finance-savings: #3B82F6;
-    --finance-debt: #F97316;
-    --finance-neutral: #6B7280;
-    --finance-positive: #10B981;
-    --finance-negative: #EF4444;
+    --finance-income: #2FA8A0; /* Image 2 Teal */
+    --finance-expense: #DC2626;
+    --finance-savings: #1F5C82; /* Image 2 Deep Blue */
+    --finance-debt: #8DC63F; /* Image 2 Lime */
+    --finance-neutral: #525866;
+    --finance-positive: #2FA8A0;
+    --finance-negative: #DC2626;
 
     /* Chart - Light */
-    --chart-grid: #E5E7EB;
-    --chart-axis: #9CA3AF;
-    --chart-label: #6B7280;
+    --chart-grid: #E5E4DF;
+    --chart-axis: #8C94A6;
+    --chart-label: #525866;
     --chart-tooltip: #FFFFFF;
-    --chart-crosshair: #D1D5DB;
+    --chart-crosshair: #C8C7C2;
   }
 
   .dark {
-    /* Brand Foundation - Pure Minimalist Carbon Dark */
-    --brand-primary: #FFFFFF;
-    --brand-primary-hover: #F3F4F6;
-    --brand-primary-active: #E5E7EB;
-    --brand-primary-subtle: #262629;
+    /* Brand Foundation - Pure Minimalist Carbon Dark (Charcoal #111315) */
+    --brand-primary: #F5F4F0;
+    --brand-primary-hover: #EBEAE5;
+    --brand-primary-active: #D1D0C9;
+    --brand-primary-subtle: #1E2126;
 
-    /* Dark Mode Tokens */
-    --bg-base: #050507;
-    --bg-surface: #0E0E11;
-    --bg-elevated: #161619;
-    --bg-overlay: #1F1F24;
-    --bg-modal: #0E0E11;
-    --bg-tooltip: #FFFFFF;
-    --bg-input: #161619;
-    --bg-input-focus: #1F1F24;
-    --bg-sidebar: #0B0B0E;
-    --bg-sidebar-hover: #121215;
-    --bg-sidebar-active: #1A1A20;
-    --bg-card: #0E0E11;
-    --bg-card-hover: #121216;
-    --bg-header: #050507;
-    --bg-skeleton: #161619;
-    --bg-skeleton-shimmer: #1F1F24;
+    /* Dark Mode Tokens - Image 2 Charcoal (#111315) */
+    --bg-base: #111315; /* Image 2 Charcoal background */
+    --bg-surface: #17191C;
+    --bg-elevated: #1F2226;
+    --bg-overlay: #272A30;
+    --bg-modal: #17191C;
+    --bg-tooltip: #F5F4F0;
+    --bg-input: #1B1E22;
+    --bg-input-focus: #24282E;
+    --bg-sidebar: #141618;
+    --bg-sidebar-hover: #1E2125;
+    --bg-sidebar-active: #272A30;
+    --bg-card: #17191C;
+    --bg-card-hover: #1D2024;
+    --bg-header: #111315;
+    --bg-skeleton: #1F2226;
+    --bg-skeleton-shimmer: #272A30;
 
-    --text-primary: #D2D4D9;
-    --text-secondary: #979CA6;
-    --text-tertiary: #6B7280;
-    --text-disabled: #4B5563;
-    --text-inverse: #0D0D0D;
-    --text-on-brand: #0D0D0D;
-    --text-link: #EAECEF;
-    --text-link-hover: #D2D4D9;
-    --text-placeholder: #6B7280;
-    --text-heading: #EAECEF;
+    --text-primary: #F5F4F0;
+    --text-secondary: #9DA3B0;
+    --text-tertiary: #6E7585;
+    --text-disabled: #474D58;
+    --text-inverse: #111315;
+    --text-on-brand: #111315;
+    --text-link: #F5F4F0;
+    --text-link-hover: #2FA8A0;
+    --text-placeholder: #6E7585;
+    --text-heading: #F5F4F0;
 
-    --border-default: rgba(255, 255, 255, 0.03);
-    --border-subtle: rgba(255, 255, 255, 0.01);
-    --border-strong: #242429;
-    --border-focus: #FFFFFF;
-    --border-divider: rgba(255, 255, 255, 0.03);
+    --border-default: rgba(255, 255, 255, 0.05);
+    --border-subtle: rgba(255, 255, 255, 0.02);
+    --border-strong: #2D3138;
+    --border-focus: #F5F4F0;
+    --border-divider: rgba(255, 255, 255, 0.05);
 
-    --icon-default: #979CA6;
-    --icon-muted: #6B7280;
-    --icon-strong: #EAECEF;
-    --icon-brand: #EAECEF;
+    --icon-default: #9DA3B0;
+    --icon-muted: #6E7585;
+    --icon-strong: #F5F4F0;
+    --icon-brand: #F5F4F0;
 
-    /* Semantic - Dark */
-    --semantic-success-bg: #064E3B;
-    --semantic-success-bgSubtle: #022C22;
-    --semantic-success-text: #34D399;
-    --semantic-success-textStrong: #6EE7B7;
-    --semantic-success-border: #047857;
-    --semantic-success-icon: #34D399;
+    /* Semantic - Dark (Image 2 Teal, Deep Blue, Lime) */
+    --semantic-success-bg: #0C3835;
+    --semantic-success-bgSubtle: #072624;
+    --semantic-success-text: #2FA8A0; /* Image 2 Teal */
+    --semantic-success-textStrong: #5CE0D7;
+    --semantic-success-border: #185E5A;
+    --semantic-success-icon: #2FA8A0;
 
-    --semantic-warning-bg: #7C2D12;
-    --semantic-warning-bgSubtle: #431407;
-    --semantic-warning-text: #FB923C;
-    --semantic-warning-textStrong: #FDBA74;
-    --semantic-warning-border: #EA580C;
-    --semantic-warning-icon: #FB923C;
+    --semantic-warning-bg: #2B3D14;
+    --semantic-warning-bgSubtle: #1C2B0A;
+    --semantic-warning-text: #8DC63F; /* Image 2 Lime */
+    --semantic-warning-textStrong: #B2E56B;
+    --semantic-warning-border: #4B6E1F;
+    --semantic-warning-icon: #8DC63F;
 
-    --semantic-danger-bg: #7F1D1D;
-    --semantic-danger-bgSubtle: #450A0A;
+    --semantic-danger-bg: #4C1010;
+    --semantic-danger-bgSubtle: #2E0A0A;
     --semantic-danger-text: #F87171;
     --semantic-danger-textStrong: #FCA5A5;
-    --semantic-danger-border: #B91C1C;
+    --semantic-danger-border: #801E1E;
     --semantic-danger-icon: #F87171;
 
-    --semantic-info-bg: #1E3A8A;
-    --semantic-info-bgSubtle: #172554;
-    --semantic-info-text: #60A5FA;
-    --semantic-info-textStrong: #93C5FD;
-    --semantic-info-border: #2563EB;
-    --semantic-info-icon: #60A5FA;
+    --semantic-info-bg: #0E293A;
+    --semantic-info-bgSubtle: #081B27;
+    --semantic-info-text: #3D88B8; /* Image 2 Deep Blue tint */
+    --semantic-info-textStrong: #6BB5E3;
+    --semantic-info-border: #1F5C82;
+    --semantic-info-icon: #3D88B8;
 
-    --semantic-neutral-bg: #262629;
-    --semantic-neutral-text: #9CA3AF;
-    --semantic-neutral-border: #374151;
+    --semantic-neutral-bg: #272A30;
+    --semantic-neutral-text: #9DA3B0;
+    --semantic-neutral-border: #383D47;
 
     /* Finance - Dark */
-    --finance-income: #34D399;
+    --finance-income: #2FA8A0; /* Image 2 Teal */
     --finance-expense: #F87171;
-    --finance-savings: #60A5FA;
-    --finance-debt: #FB923C;
-    --finance-neutral: #9CA3AF;
-    --finance-positive: #34D399;
+    --finance-savings: #3D88B8; /* Image 2 Deep Blue */
+    --finance-debt: #8DC63F; /* Image 2 Lime */
+    --finance-neutral: #9DA3B0;
+    --finance-positive: #2FA8A0;
     --finance-negative: #F87171;
 
     /* Chart - Dark */
-    --chart-grid: #1F1F22;
-    --chart-axis: #4B5563;
-    --chart-label: #9CA3AF;
-    --chart-tooltip: #161616;
-    --chart-crosshair: #374151;
+    --chart-grid: #1D2025;
+    --chart-axis: #474D58;
+    --chart-label: #9DA3B0;
+    --chart-tooltip: #17191C;
+    --chart-crosshair: #383D47;
   }
 }
 
@@ -335,6 +335,7 @@
   textarea {
     background-color: var(--bg-input) !important;
     color: var(--text-primary) !important;
+    border: 1px solid var(--border-default) !important;
   }
 
   /* Focus rings styling compatibility */
@@ -342,19 +343,19 @@
   select:focus,
   textarea:focus {
     border-color: var(--border-focus) !important;
+    background-color: var(--bg-surface) !important;
     outline: none !important;
   }
-  /* Cards — flat, no shadow, consistent radius */
+  /* Cards — flat, no shadow, seamless borderless contrast layout */
   .card {
     @apply overflow-hidden transition-colors duration-200 ease-out;
-    border-radius: 16px !important;
-    border: 1px solid var(--border-default) !important;
+    border-radius: 24px !important;
+    border: none !important;
     background-color: var(--bg-card) !important;
     box-shadow: none !important;
   }
   .card:hover {
     background-color: var(--bg-card-hover) !important;
-    border-color: var(--border-strong) !important;
   }
 
   /* Badges */
@@ -424,11 +425,11 @@
 
 /* Base custom styles to handle layout rendering */
 .recharts-tooltip-wrapper {
-  background-color: var(--bg-tooltip) !important;
+  background-color: transparent !important;
   border-radius: 12px !important;
-  padding: 8px 12px !important;
-  border: 1px solid var(--border-strong) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .recharts-default-tooltip {
@@ -553,9 +554,9 @@ header.lg\:hidden.fixed {
 
 /* Make tooltip look clean, flat and modern */
 .recharts-tooltip-wrapper {
-  background-color: var(--bg-tooltip) !important;
-  color: var(--text-inverse) !important;
-  border: 1px solid var(--border-strong) !important;
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+  border: none !important;
   box-shadow: none !important;
   border-radius: 12px !important;
 }
@@ -578,24 +579,26 @@ header.lg\:hidden.fixed {
 .font-numeric,
 span[class*="text-[36px]"],
 span.text-xl.font-medium.text-muted-foreground,
-.text-lg.font-bold.tracking-tight {
+.text-lg.font-bold.tracking-tight,
+.font-amount {
+  font-family: 'Space Grotesk', sans-serif !important;
   font-variant-numeric: tabular-nums !important;
-  letter-spacing: -0.035em !important;
+  letter-spacing: -0.02em !important;
 }
 
 /* Enforce flat design on legacy bg-white/bg-card divs */
-div.rounded-lg.bg-white,
-div.rounded-lg.bg-card,
-div.p-3.rounded-lg.bg-white.dark\:bg-card.border {
-  border-radius: 16px !important;
+div.rounded-lg.bg-white:not(.border-none):not(.bg-transparent),
+div.rounded-lg.bg-card:not(.border-none):not(.bg-transparent),
+div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-transparent) {
+  border-radius: 12px !important;
   border: 1px solid var(--border-default) !important;
   background-color: var(--bg-card) !important;
   box-shadow: none !important;
   transition: background-color 0.2s ease, border-color 0.2s ease !important;
 }
-div.rounded-lg.bg-white:hover,
-div.rounded-lg.bg-card:hover,
-div.p-3.rounded-lg.bg-white.dark\:bg-card.border:hover {
+div.rounded-lg.bg-white:not(.border-none):not(.bg-transparent):hover,
+div.rounded-lg.bg-card:not(.border-none):not(.bg-transparent):hover,
+div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-transparent):hover {
   background-color: var(--bg-card-hover) !important;
   border-color: var(--border-strong) !important;
 }
@@ -619,8 +622,12 @@ span.relative.flex.h-8.w-8.shrink-0.overflow-hidden.rounded-full span {
 
 /* Upgrade mobile top header layout for a clean, minimalist fintech bar */
 header.lg\:hidden.fixed {
-  height: 64px !important;
-  padding: 0 16px !important;
+  height: auto !important;
+  min-height: calc(52px + max(env(safe-area-inset-top, 0px), 24px)) !important;
+  padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
+  padding-bottom: 10px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
   box-shadow: none !important;
 }
 
@@ -713,4 +720,117 @@ header.lg\:hidden.fixed .container {
     max-width: 100vw !important;
     overflow-x: hidden !important;
   }
+}
+
+/* Mobile Safe Area Helpers for Capacitor / Native */
+.safe-h-header {
+  height: calc(56px + env(safe-area-inset-top)) !important;
+}
+
+.safe-pt {
+  padding-top: env(safe-area-inset-top) !important;
+}
+
+.safe-pt-main {
+  padding-top: calc(62px + max(env(safe-area-inset-top, 0px), 24px)) !important;
+}
+
+@media (min-width: 1024px) {
+  .safe-pt-main {
+    padding-top: 0 !important;
+  }
+}
+
+/* Financial Amounts Typography */
+.font-amount {
+  font-family: 'Space Grotesk', sans-serif !important;
+  letter-spacing: -0.02em;
+}
+
+/* Global Border Radius Reductions for Flat Premium Design */
+button:not(.w-8):not(.h-8):not(.w-9):not(.h-9):not(.w-10):not(.h-10):not(.w-14):not(.h-14):not(.rounded-full),
+input,
+select,
+textarea,
+.btn {
+  border-radius: 8px !important;
+}
+
+/* Card layout corners override: reduce to clean 12px instead of large pill-like/circular 28px/22px */
+.card,
+.bg-card,
+.glass-card,
+div.rounded-lg.bg-white,
+div.rounded-lg.bg-card,
+div.p-3.rounded-lg.bg-white.dark\:bg-card.border,
+[class*="rounded-2xl"],
+[class*="rounded-xl"] {
+  border-radius: 12px !important;
+}
+
+/* Add padding only to actual content cards, excluding flat list wrappers */
+.card:not(.border-none):not(.bg-transparent):not([class*="bg-card/25"]),
+.bg-card:not(.border-none):not(.bg-transparent):not([class*="bg-card/25"]),
+div.rounded-lg.bg-white:not(.border-none):not(.bg-transparent):not(.shadow-none):not([class*="bg-card/25"]),
+div.rounded-lg.bg-card:not(.border-none):not(.bg-transparent):not(.shadow-none):not([class*="bg-card/25"]),
+div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-transparent):not(.shadow-none) {
+  padding: 16px !important;
+}
+
+/* Primary Highlighted Total / Balance Amounts */
+.card .primary-total-amount,
+.bg-card .primary-total-amount,
+.primary-total-amount {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 36px !important;
+  font-weight: 850 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1.1 !important;
+  color: var(--text-heading) !important;
+}
+
+/* Global Premium Card Hierarchy Overrides - Only applied to content cards */
+/* 1. Muted Uppercase Small Titles */
+.card:not(.border-none):not([class*="bg-card/25"]) h3,
+.bg-card:not(.border-none):not([class*="bg-card/25"]) h3,
+.card:not(.border-none):not([class*="bg-card/25"]) [class*="CardTitle"],
+.card:not(.border-none):not([class*="bg-card/25"]) [class*="CardHeader"] [class*="CardTitle"],
+.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="CardHeader"] [class*="CardTitle"] {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--text-secondary) !important;
+  opacity: 0.75 !important;
+}
+
+/* 2. Prominent Stand-out Amounts */
+.card:not(.border-none):not([class*="bg-card/25"]) [class*="text-2xl"]:not(.primary-total-amount),
+.card:not(.border-none):not([class*="bg-card/25"]) [class*="text-3xl"]:not(.primary-total-amount),
+.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="text-2xl"]:not(.primary-total-amount),
+.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="text-3xl"]:not(.primary-total-amount),
+.card:not(.border-none):not([class*="bg-card/25"]) [class*="text-lg"].font-bold:not(.primary-total-amount),
+.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="text-lg"].font-bold:not(.primary-total-amount),
+.card-amount,
+.font-amount:not(.primary-total-amount) {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  color: var(--text-heading) !important;
+  letter-spacing: -0.02em !important;
+  margin-top: 4px !important;
+  margin-bottom: 2px !important;
+}
+
+/* 3. Description / Detail Subtexts */
+.card:not(.border-none):not([class*="bg-card/25"]) p:not([class*="text-2xl"]):not([class*="text-3xl"]):not(.card-amount):not(.font-amount),
+.bg-card:not(.border-none):not([class*="bg-card/25"]) p:not([class*="text-2xl"]):not([class*="text-3xl"]):not(.card-amount):not(.font-amount),
+.card:not(.border-none):not([class*="bg-card/25"]) span.text-muted-foreground,
+.bg-card:not(.border-none):not([class*="bg-card/25"]) span.text-muted-foreground,
+.card-subtext {
+  font-size: 11px !important;
+  color: var(--text-secondary) !important;
+  opacity: 0.7 !important;
+  margin-top: 2px !important;
+  margin-bottom: 0 !important;
 }

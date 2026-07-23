@@ -105,6 +105,7 @@ const ReportsPage = () => {
 
 
     return typedTransactions.filter(transaction => {
+      if (transaction.category === "System-Adjustment" || (transaction as any).is_system_adjustment) return false;
       const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(transaction.category);
       const typeMatch = selectedType === "all" || transaction.type === selectedType;
       return categoryMatch && typeMatch;
@@ -871,11 +872,13 @@ const ReportsPage = () => {
                           'Amount'
                         ]}
                         contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '8px',
+                          backgroundColor: 'var(--bg-card)',
+                          borderColor: 'var(--border-default)',
+                          color: 'var(--text-primary)',
+                          borderRadius: '12px',
                           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
+                        wrapperStyle={{ outline: 'none' }}
 
                       />
                       <Legend />
@@ -922,11 +925,13 @@ const ReportsPage = () => {
                           'Amount'
                         ]}
                         contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '8px',
+                          backgroundColor: 'var(--bg-card)',
+                          borderColor: 'var(--border-default)',
+                          color: 'var(--text-primary)',
+                          borderRadius: '12px',
                           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
+                        wrapperStyle={{ outline: 'none' }}
 
                       />
                       <Legend />
@@ -996,11 +1001,13 @@ const ReportsPage = () => {
                               <Tooltip
                                 formatter={(value: number) => [`${!showLifeHours ? currency.symbol : ''}${formatAmount(value)}`, 'Amount']}
                                 contentStyle={{
-                                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                  border: 'none',
-                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--bg-card)',
+                                  borderColor: 'var(--border-default)',
+                                  color: 'var(--text-primary)',
+                                  borderRadius: '12px',
                                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                                 }}
+                                wrapperStyle={{ outline: 'none' }}
 
                               />
                             </RechartsPieChart>
@@ -1067,11 +1074,13 @@ const ReportsPage = () => {
                             <Tooltip
                               formatter={(value: number) => [`${!showLifeHours ? currency.symbol : ''}${formatAmount(value)}`, 'Amount']}
                               contentStyle={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                border: 'none',
-                                borderRadius: '8px',
+                                backgroundColor: 'var(--bg-card)',
+                                borderColor: 'var(--border-default)',
+                                color: 'var(--text-primary)',
+                                borderRadius: '12px',
                                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                               }}
+                              wrapperStyle={{ outline: 'none' }}
 
                             />
                             <Bar dataKey="amount" fill="#3b82f6" radius={[0, 4, 4, 0]} />

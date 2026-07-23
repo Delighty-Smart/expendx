@@ -119,29 +119,29 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
     // Auto-save settings changes
     useEffect(() => {
-        // Prevent saving defaults on mount before server fetch
-        if (!isInitialized.current) return;
-
-        const saveTimeout = setTimeout(() => {
-            updateUserSettings();
-        }, 1000);
-
         // Update HTML class for theme immediately
         document.documentElement.classList.toggle('dark', theme === 'dark');
 
-        // Sync Android status bar style with app theme (Style.Dark = dark text for light theme, Style.Light = light text for dark theme)
+        // Sync Android status bar style with app theme (Style.Dark = white text for dark theme, Style.Light = dark text for light theme)
         if (Capacitor.isNativePlatform()) {
-            StatusBar.setStyle({ style: theme === 'dark' ? Style.Light : Style.Dark }).catch(() => { });
+            StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light }).catch(() => { });
         }
 
         // Update theme-color meta tag for PWA/Mobile
-        const themeColor = theme === 'dark' ? '#0f0f10' : '#ffffff';
+        const themeColor = theme === 'dark' ? '#050507' : '#ffffff';
 
         // Update all theme-color meta tags (including those with media queries)
         const metaTags = document.querySelectorAll('meta[name="theme-color"]');
         metaTags.forEach(tag => {
             tag.setAttribute('content', themeColor);
         });
+
+        // Prevent saving defaults on mount before server fetch
+        if (!isInitialized.current) return;
+
+        const saveTimeout = setTimeout(() => {
+            updateUserSettings();
+        }, 1000);
 
         return () => clearTimeout(saveTimeout);
     }, [currency, theme, hideAmounts, user?.id]);

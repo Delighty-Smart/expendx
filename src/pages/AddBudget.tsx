@@ -15,6 +15,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { Card } from "@/components/ui/card";
 import { useEnhancedBudgetData } from "@/hooks/useEnhancedBudgetData";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import PageHeader from "@/components/ui/page-header";
 
 const budgetSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -56,21 +57,7 @@ const AddBudgetPage = () => {
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mr-2 h-8 px-2"
-            onClick={() => navigate("/budgets")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
-            Back
-          </Button>
-          <h1 className="text-xl font-medium">Set Budget Limit</h1>
-        </div>
-        <OfflineIndicator />
-      </div>
+      <PageHeader title="Set Budget Limit" backTo="/budgets" />
 
       {!navigator.onLine && (
         <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">

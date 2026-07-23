@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/ui/page-header";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type TimeView = "weekly" | "monthly" | "yearly";
@@ -141,7 +142,15 @@ const CheckBox = ({ checked, color }: { checked: boolean; color?: string }) => (
 const CustomTooltip = ({ active, payload, label, currency, selected }: any) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-card border border-border rounded-xl shadow-xl px-4 py-3 text-sm">
+        <div 
+            className="rounded-xl px-4 py-3 text-sm"
+            style={{
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-primary)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+            }}
+        >
             <p className="font-semibold text-foreground mb-2">{label}</p>
             {payload.map((entry: any) => (
                 <div key={entry.dataKey} className="flex items-center gap-2 mb-1">
@@ -239,12 +248,12 @@ const SelectorPanel = ({ transactions, selected, onToggle }: SelectorProps) => {
 
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <Input
                     placeholder="Search…"
                     value={searchQ}
                     onChange={(e) => setSearchQ(e.target.value)}
-                    className="pl-8 h-9 text-sm bg-muted/30 border-none rounded-xl"
+                    className="pl-10 h-9 text-sm bg-muted/30 border-none rounded-lg"
                 />
             </div>
 
@@ -261,7 +270,7 @@ const SelectorPanel = ({ transactions, selected, onToggle }: SelectorProps) => {
                             disabled={!canAdd}
                             onClick={() => onToggle(item)}
                             className={cn(
-                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all group",
+                                "w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all group",
                                 checked ? "bg-primary/10" : "hover:bg-muted/60",
                                 !canAdd && "opacity-40 cursor-not-allowed"
                             )}
@@ -305,7 +314,7 @@ const SelectorPanel = ({ transactions, selected, onToggle }: SelectorProps) => {
                                     disabled={!canAdd}
                                     onClick={() => onToggle(catItem)}
                                     className={cn(
-                                        "flex-1 flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all group",
+                                        "flex-1 flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all group",
                                         isCatChecked ? "bg-primary/10" : "hover:bg-muted/60",
                                         !canAdd && "opacity-40 cursor-not-allowed"
                                     )}
@@ -322,7 +331,7 @@ const SelectorPanel = ({ transactions, selected, onToggle }: SelectorProps) => {
                                 {group.descriptions.length > 0 && (
                                     <button
                                         onClick={() => toggleCategory(catItem.id)}
-                                        className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors"
+                                        className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground transition-colors"
                                     >
                                         {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                                     </button>
@@ -346,7 +355,7 @@ const SelectorPanel = ({ transactions, selected, onToggle }: SelectorProps) => {
                                         disabled={!canAddDesc}
                                         onClick={() => onToggle(descItem)}
                                         className={cn(
-                                            "w-full flex items-center gap-3 pl-9 pr-3 py-1.5 rounded-xl text-sm transition-all group",
+                                            "w-full flex items-center gap-3 pl-9 pr-3 py-1 rounded-lg text-sm transition-all group",
                                             isDescChecked ? "bg-primary/10" : "hover:bg-muted/60",
                                             !canAddDesc && "opacity-40 cursor-not-allowed"
                                         )}
@@ -439,15 +448,7 @@ const Trends = () => {
     return (
         <div className="space-y-5 pb-8">
             {/* ── Header ── */}
-            <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-primary/10">
-                    <TrendingUp className="h-6 w-6 text-primary" strokeWidth={2} />
-                </div>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Trends</h1>
-                    <p className="text-sm text-muted-foreground">Visualise your spending patterns over time</p>
-                </div>
-            </div>
+            <PageHeader title="Trends" />
 
             <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 items-start">
                 {/* ── Left: Selector + selected chips ── */}
@@ -458,7 +459,7 @@ const Trends = () => {
                             {selected.map((item, idx) => (
                                 <span
                                     key={item.id}
-                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
+                                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border"
                                     style={{ borderColor: CHART_COLORS[idx] + "60", background: CHART_COLORS[idx] + "15", color: CHART_COLORS[idx] }}
                                 >
                                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CHART_COLORS[idx] }} />
@@ -555,7 +556,7 @@ const Trends = () => {
                                             <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} />
                                             <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} width={48}
                                                 tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
-                                            <Tooltip content={<CustomTooltip currency={currency.symbol} selected={selected} />} />
+                                            <Tooltip content={<CustomTooltip currency={currency.symbol} selected={selected} />} contentStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} wrapperStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', outline: 'none' }} />
                                             <Legend formatter={(value) => selected.find((s) => s.id === value)?.label ?? value} />
                                             {selected.map((item, idx) => (
                                                 <Line key={item.id} type="monotone" dataKey={item.id} name={item.id}
@@ -569,7 +570,7 @@ const Trends = () => {
                                             <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} />
                                             <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} axisLine={false} tickLine={false} width={48}
                                                 tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} />
-                                            <Tooltip content={<CustomTooltip currency={currency.symbol} selected={selected} />} />
+                                            <Tooltip content={<CustomTooltip currency={currency.symbol} selected={selected} />} contentStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }} wrapperStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', outline: 'none' }} />
                                             <Legend formatter={(value) => selected.find((s) => s.id === value)?.label ?? value} />
                                             {selected.map((item, idx) => (
                                                 <Bar key={item.id} dataKey={item.id} name={item.id} fill={CHART_COLORS[idx]} radius={[4, 4, 0, 0]} maxBarSize={40} />

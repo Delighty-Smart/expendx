@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#323537",
+                    "surface-dim": "#111415",
+                    "on-secondary-container": "#003a5c",
+                    "primary-fixed-dim": "#c8c5c9",
+                    "border-subtle": "rgba(255, 255, 255, 0.03)",
+                    "tertiary-fixed": "#bef521",
+                    "inverse-on-surface": "#2e3132",
+                    "inverse-surface": "#e1e2e4",
+                    "tertiary-fixed-dim": "#a5d700",
+                    "error": "#ffb4ab",
+                    "background": "#111415",
+                    "surface-container-high": "#282a2c",
+                    "on-tertiary": "#263500",
+                    "outline-variant": "#47464b",
+                    "error-container": "#93000a",
+                    "on-surface-variant": "#c8c5cb",
+                    "carbon-surface": "#0E0E11",
+                    "finance-debt": "#FB923C",
+                    "inverse-primary": "#5f5e61",
+                    "surface-bright": "#37393b",
+                    "primary-container": "#050507",
+                    "finance-income": "#34D399",
+                    "surface-container-low": "#191c1e",
+                    "primary": "#c8c5c9",
+                    "surface-container-lowest": "#0c0f10",
+                    "on-primary": "#313033",
+                    "surface-container-highest": "#323537",
+                    "on-background": "#e1e2e4",
+                    "border-strong": "#242429",
+                    "secondary": "#93ccff",
+                    "finance-expense": "#F87171",
+                    "on-surface": "#e1e2e4",
+                    "on-secondary-fixed-variant": "#004b73",
+                    "on-error": "#690005",
+                    "surface": "#111415",
+                    "secondary-fixed-dim": "#93ccff",
+                    "surface-tint": "#c8c5c9",
+                    "on-primary-fixed": "#1c1b1e",
+                    "finance-savings": "#60A5FA",
+                    "on-tertiary-container": "#628200",
+                    "on-tertiary-fixed": "#151f00",
+                    "secondary-fixed": "#cce5ff",
+                    "secondary-container": "#00a9fd",
+                    "on-primary-container": "#78777a",
+                    "outline": "#929095",
+                    "tertiary": "#a5d700",
+                    "primary-fixed": "#e5e1e5",
+                    "obsidian-card": "#121216",
+                    "on-secondary-fixed": "#001d31",
+                    "surface-container": "#1d2022",
+                    "on-tertiary-fixed-variant": "#394d00",
+                    "on-primary-fixed-variant": "#47464a",
+                    "on-error-container": "#ffdad6",
+                    "tertiary-container": "#030600",
+                    "on-secondary": "#003351"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "compact-sm": "0.625rem",
+                    "margin-desktop": "32px",
+                    "unit": "4px",
+                    "margin-mobile": "20px",
+                    "compact-md": "0.875rem",
+                    "gutter": "16px",
+                    "compact-xs": "0.375rem"
+            },
+            "fontFamily": {
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "label-tabular": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                    "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                    "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #111415;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+        }
+        .glass-background {
+            background: radial-gradient(circle at 50% 50%, #1d2022 0%, #111415 100%);
+        }
+        .auth-card {
+            backdrop-filter: blur(20px);
+            background: rgba(18, 18, 22, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .capsule-tab-active {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex items-center justify-center min-h-screen p-margin-mobile md:p-margin-desktop glass-background">
+<!-- Atmospheric Glow Effects -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none opacity-20 overflow-hidden">
+<div class="absolute -top-1/4 -left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]"></div>
+<div class="absolute -bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[100px]"></div>
+</div>
+<!-- Auth Container -->
+<main class="w-full max-w-[420px] relative z-10 flex flex-col gap-8">
+<!-- Brand Header -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-xl bg-on-surface flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-surface text-3xl" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tighter">ExpendX</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">The clinical standard for capital management.</p>
+</div>
+<!-- Auth Card -->
+<div class="auth-card rounded-[24px] p-6 md:p-8 flex flex-col gap-6">
+<!-- Capsule Tab Switcher -->
+<div class="bg-surface-container-lowest p-1 rounded-full flex relative h-[48px] border border-white/[0.03]">
+<button class="relative z-10 flex-1 flex items-center justify-center font-label-tabular text-label-tabular transition-colors text-on-surface" id="tab-signin" onclick="switchTab('signin')">
+                    Sign In
+                </button>
+<button class="relative z-10 flex-1 flex items-center justify-center font-label-tabular text-label-tabular transition-colors text-on-surface-variant" id="tab-register" onclick="switchTab('register')">
+                    Register
+                </button>
+<!-- Slider Background -->
+<div class="absolute top-1 left-1 bottom-1 w-[calc(50%-4px)] bg-surface-bright/20 rounded-full transition-all duration-300 ease-out capsule-tab-active border border-white/[0.05]" id="tab-slider"></div>
+</div>
+<!-- Form Container -->
+<div class="flex flex-col gap-4">
+<!-- Google Sign In Button -->
+<button class="w-full h-[48px] bg-white text-surface font-label-tabular text-label-tabular rounded-full flex items-center justify-center gap-3 active:scale-95 transition-transform duration-200">
+<img alt="Google" class="w-5 h-5" data-alt="A clean, isolated official Google logo icon in vibrant brand colors, representing a secure and modern third-party authentication method. The lighting is studio-quality, ensuring crisp edges and professional rendering. This minimalist icon sits on a white background, embodying the high-fidelity fintech aesthetic of the app's sign-in interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfl_ypiTuaZQrDbV4oXw3ay0mXaUKRiU9telLzrvrRYwYJv3KqngKNwnPmyoP9CHKSov2hqNWmw-_LckDlIRn5EsK844lOcwipWW_kxDEGU4gN46BbDAUKsK5ilyp4pIGtScAKf1UTRnWsH92Aowpf30TuwnnA9y7UIYjRDbvf1rwWbP7momoGwtH9w6uBR68KocOoSpaCgD412UiKZ-0Rey_6VMCtvTEsMfBKbjZGUltqy-jl1Q_88v5GunwyOn6YMptDNCng60U"/>
+                    Continue with Google
+                </button>
+<!-- Divider -->
+<div class="flex items-center gap-4 py-2">
+<div class="h-px flex-1 bg-white/[0.05]"></div>
+<span class="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-widest text-[10px]">or email</span>
+<div class="h-px flex-1 bg-white/[0.05]"></div>
+</div>
+<!-- Input Fields -->
+<form class="flex flex-col gap-4" id="auth-form" onsubmit="event.preventDefault();">
+<div class="flex flex-col gap-2">
+<label class="font-label-tabular text-label-tabular text-on-surface-variant px-2">Email Address</label>
+<input class="w-full h-[44px] bg-surface-container-low border border-white/[0.05] rounded-xl px-4 text-on-surface font-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-on-surface-variant/30" placeholder="name@company.com" type="email"/>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center px-2">
+<label class="font-label-tabular text-label-tabular text-on-surface-variant">Password</label>
+<a class="font-label-tabular text-label-tabular text-secondary text-[12px] hover:underline" href="#">Forgot?</a>
+</div>
+<div class="relative">
+<input class="w-full h-[44px] bg-surface-container-low border border-white/[0.05] rounded-xl px-4 text-on-surface font-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-on-surface-variant/30" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+</div>
+</div>
+<!-- CTA Button -->
+<button class="w-full h-[48px] bg-on-surface text-surface font-headline-sm text-headline-sm rounded-full mt-2 hover:bg-white active:scale-95 transition-all duration-200">
+                        Continue to Workspace
+                    </button>
+</form>
+</div>
+</div>
+<!-- Security Footer -->
+<footer class="flex flex-col items-center gap-4 px-6 text-center">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-high rounded-full border border-white/[0.03]">
+<span class="material-symbols-outlined text-[14px] text-tertiary" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] uppercase tracking-wider">AES-256 Cloud Encryption Enabled</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant/60 max-w-[300px]">
+                By continuing, you agree to the <a class="text-on-surface hover:underline" href="#">Terms of Service</a> and <a class="text-on-surface hover:underline" href="#">Privacy Policy</a> of ExpendX Financial.
+            </p>
+</footer>
+</main>
+<script>
+        function switchTab(type) {
+            const slider = document.getElementById('tab-slider');
+            const signinBtn = document.getElementById('tab-signin');
+            const registerBtn = document.getElementById('tab-register');
+
+            if (type === 'signin') {
+                slider.style.transform = 'translateX(0%)';
+                signinBtn.classList.remove('text-on-surface-variant');
+                signinBtn.classList.add('text-on-surface');
+                registerBtn.classList.remove('text-on-surface');
+                registerBtn.classList.add('text-on-surface-variant');
+            } else {
+                slider.style.transform = 'translateX(100%)';
+                registerBtn.classList.remove('text-on-surface-variant');
+                registerBtn.classList.add('text-on-surface');
+                signinBtn.classList.remove('text-on-surface');
+                signinBtn.classList.add('text-on-surface-variant');
+            }
+        }
+
+        // Simple mouse trail effect for atmospheric feel
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth) * 100;
+            const y = (e.clientY / window.innerHeight) * 100;
+            document.body.style.background = `radial-gradient(circle at ${x}% ${y}%, #1d2022 0%, #111415 100%)`;
+        });
+    </script>
+</body></html>

@@ -40,7 +40,15 @@ const CustomTooltip = ({ active, payload, currencySymbol, formatAmount, hideAmou
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="bg-bg-surface/90 dark:bg-bg-surface/90 border border-border-default shadow-xl rounded-[16px] p-3 flex flex-col gap-0.5 pointer-events-none select-none backdrop-blur-md">
+            <div 
+                className="rounded-xl p-3 flex flex-col gap-0.5 pointer-events-none select-none"
+                style={{
+                    backgroundColor: 'var(--bg-card)',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+                }}
+            >
                 <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider leading-none">
                     {data.name}
                 </span>
@@ -100,6 +108,8 @@ const SpendingByCategoryChart = ({
                             hideAmounts={hideAmounts} 
                         />
                     }
+                    contentStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}
+                    wrapperStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', outline: 'none' }}
                     cursor={{ fill: 'var(--border-default)', opacity: 0.1 }}
                 />
 

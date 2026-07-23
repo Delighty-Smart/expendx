@@ -35,7 +35,7 @@ export const defaultLifeEnergyData: LifeEnergyData = {
 export const LifeEnergySettings: React.FC = () => {
   const { toast } = useToast();
   const [data, setData] = useState<LifeEnergyData>(() => {
-    const saved = localStorage.getItem("expendx_life_energy_data");
+    const saved = localStorage.getItem("lucent_life_energy_data") || localStorage.getItem("expendx_life_energy_data");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -48,26 +48,30 @@ export const LifeEnergySettings: React.FC = () => {
 
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Recalculate true hourly wage whenever inputs change
+  // Recalculate true hourly wage whenever inputs change (using identical formula as LifeEnergy page)
   const computedNominalRate = (() => {
-    const weeklyGross = (data.grossSalary * 12) / 52;
-    if (data.workHoursPerWeek <= 0) return 0;
-    return weeklyGross / data.workHoursPerWeek;
+    const monthlyGross = data.grossSalary;
+    const workHoursMonthly = data.workHoursPerWeek * 4.3;
+    if (workHoursMonthly <= 0) return 0;
+    return monthlyGross / workHoursMonthly;
   })();
 
   const computedTrueRate = (() => {
-    const weeklyGross = (data.grossSalary * 12) / 52;
-    const totalWeeklyHours = data.workHoursPerWeek + data.commuteTimePerWeek;
+    const monthlyGross = data.grossSalary;
+    const workHoursMonthly = data.workHoursPerWeek * 4.3;
+    const prepHoursMonthly = data.commuteTimePerWeek * 4.3;
+    const totalHoursDedicated = workHoursMonthly + prepHoursMonthly;
+
     const totalMonthlyJobCosts =
       data.jobCostsCommute +
       data.jobCostsAttire +
       data.jobCostsMeals +
       data.jobCostsDecompression +
       data.jobCostsOther;
-    
-    const weeklyJobCosts = (totalMonthlyJobCosts * 12) / 52;
-    if (totalWeeklyHours <= 0) return 0;
-    return Math.max(0, (weeklyGross - weeklyJobCosts) / totalWeeklyHours);
+
+    const trueMonthlyNet = Math.max(0, monthlyGross - totalMonthlyJobCosts);
+    if (totalHoursDedicated <= 0) return 0;
+    return trueMonthlyNet / totalHoursDedicated;
   })();
 
   const handleInputChange = (field: keyof LifeEnergyData, value: number) => {
@@ -83,10 +87,11 @@ export const LifeEnergySettings: React.FC = () => {
       trueHourlyRate: Number(computedTrueRate.toFixed(2)),
     };
     setData(updatedData);
-    localStorage.setItem("expendx_life_energy_data", JSON.stringify(updatedData));
+    localStorage.setItem("lucent_life_energy_data", JSON.stringify(updatedData));
+    localStorage.setItem("lucent_true_hourly_rate", updatedData.trueHourlyRate.toString());
     
-    // Also save simple toggle trigger values
-    localStorage.setItem("expendx_true_hourly_rate", updatedData.trueHourlyRate.toString());
+    // Dispatch storage event to sync all listeners globally
+    window.dispatchEvent(new Event("storage"));
     
     toast({
       title: "Life Energy Settings Saved!",

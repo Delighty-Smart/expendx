@@ -75,6 +75,15 @@ function AppContent() {
             nativeSplash.remove();
           }, 300); // Wait for the CSS transition to finish before dropping from DOM
         }
+
+        // Skip landing page if running as native app
+        if (locationRef.current === '/') {
+          if (session?.user) {
+            navigate('/dashboard', { replace: true });
+          } else {
+            navigate('/auth', { replace: true });
+          }
+        }
       }
     });
 
@@ -239,12 +248,27 @@ function AppContent() {
   )
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <GlobalErrorBoundary>
       <TooltipProvider>
         <SettingsProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <AppContent />
             <PushOnboarding />
             <Toaster />
@@ -253,7 +277,7 @@ function App() {
         </SettingsProvider>
       </TooltipProvider>
     </GlobalErrorBoundary>
-  )
+  );
 }
 
 export default App

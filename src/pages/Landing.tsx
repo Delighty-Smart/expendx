@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import {
     Activity,
     PieChart,
@@ -86,6 +87,16 @@ export default function Landing() {
     }, []);
 
     useEffect(() => {
+        if (Capacitor.isNativePlatform()) {
+            if (user) {
+                navigate('/dashboard', { replace: true });
+            } else {
+                navigate('/auth', { replace: true });
+            }
+        }
+    }, [user, navigate]);
+
+    useEffect(() => {
         // If we are processing an OAuth callback, hold the redirect so Supabase can parse it
         // but only if the user is not already authenticated
         if (!user && (window.location.hash.includes('access_token') || window.location.search.includes('code='))) {
@@ -108,7 +119,7 @@ export default function Landing() {
         });
     };
 
-    if (isLoading) {
+    if (isLoading || Capacitor.isNativePlatform()) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <motion.div
@@ -117,8 +128,8 @@ export default function Landing() {
                     className="flex flex-col items-center gap-4"
                 >
                     <img
-                        src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                        alt="Loading expendX"
+                        src="/lucent-header-dark.png"
+                        alt="Loading Lucent"
                         className="h-10 sm:h-12 object-contain"
                     />
                     <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
@@ -160,21 +171,19 @@ export default function Landing() {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30 overflow-hidden">
-            {/* Navigation */}
             <motion.nav
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0, transition: { duration: 0.6 } }}
-                className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-md"
+                className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/50 backdrop-blur-md safe-pt"
             >
-                <div className="container mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+                <div className="container mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
                             <img
-                                src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                                alt="expendX"
+                                src="/lucent-header-dark.png"
+                                alt="Lucent"
                                 className="h-7 sm:h-8 object-contain"
                             />
-                            <Badge className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 uppercase tracking-wider inline-flex rounded-full border border-emerald-500/20">Beta</Badge>
                         </div>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-4">
@@ -200,8 +209,8 @@ export default function Landing() {
                     className="container mx-auto px-6 relative z-10 text-center max-w-4xl"
                 >
                     <motion.div variants={fadeUp}>
-                        <Badge className="mb-6 bg-white/10 hover:bg-white/20 text-white border-0 px-4 py-1.5 rounded-full text-sm font-medium backdrop-blur-sm">
-                            Smarter Expense Tracking
+                        <Badge className="mb-6 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm">
+                            Smarter Expense Tracking • Lucent v1.2.0
                         </Badge>
                     </motion.div>
                     <motion.h1 variants={fadeUp} style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-tight">
@@ -238,7 +247,7 @@ export default function Landing() {
                 >
                     <h2 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight">Tired of manual spreadsheets?</h2>
                     <p className="text-base md:text-xl text-white/60 leading-relaxed max-w-3xl mx-auto">
-                        Stop wasting hours trying to figure out where your money went. expendX provides intelligent categorizations, target pacing, and real-time reports to give you a crystal-clear picture of your wealth.
+                        Stop wasting hours trying to figure out where your money went. Lucent provides intelligent categorizations, target pacing, and real-time reports to give you a crystal-clear picture of your wealth.
                     </p>
                 </motion.div>
             </section>
@@ -612,13 +621,13 @@ export default function Landing() {
                 <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
                     <div className="flex items-center gap-2 mb-4 md:mb-0">
                         <img
-                            src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                            alt="expendX"
+                            src="/lucent-header-dark.png"
+                            alt="Lucent"
                             className="h-6 object-contain opacity-50 grayscale"
                         />
                     </div>
                     <div className="text-sm text-white/40">
-                        © {new Date().getFullYear()} expendX. All rights reserved.
+                        © {new Date().getFullYear()} Lucent. All rights reserved.
                     </div>
                 </div>
             </footer>

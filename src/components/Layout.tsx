@@ -144,17 +144,16 @@ const Layout = ({
   }
 
   return (
-    <div className="min-h-screen bg-bg-base transition-colors duration-300 flex flex-col">
+    <div className="min-h-screen bg-bg-base transition-colors duration-300 flex flex-col safe-pt">
       <GlobalBanner />
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
       {/* Header for mobile */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 safe-h-header safe-pt bg-bg-surface/80 backdrop-blur-lg border-b border-border-default z-50">
-        <div className="container mx-auto h-full flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-bg-surface/90 backdrop-blur-lg border-b border-border-default pt-[calc(max(env(safe-area-inset-top,0px),24px)+6px)] pb-3 px-4">
+        <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain" />
-              <Badge variant="secondary" className="bg-brand-primary-subtle text-brand-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider inline-flex border-none">Beta</Badge>
+              <img src={theme === "dark" ? "/lucent-header-dark.png" : "/lucent-header-light.png"} alt="Lucent" className="h-8 object-contain" />
             </Link>
           </div>
 
@@ -182,8 +181,7 @@ const Layout = ({
       {/* Desktop sidebar nav (Hidden on lg < screens) */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default z-40 hidden lg:flex flex-col`}>
         <div className="p-4 safe-pt border-b border-border-default flex items-center justify-center gap-2 h-[72px]">
-          <img src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png" alt="expendX" className="h-8 object-contain mt-1" />
-          <Badge variant="secondary" className="bg-brand-primary-subtle text-brand-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider relative -top-2 border-none">Beta</Badge>
+          <img src={theme === "dark" ? "/lucent-header-dark.png" : "/lucent-header-light.png"} alt="Lucent" className="h-8 object-contain mt-1" />
         </div>
 
         <nav className="flex-1 px-3 pt-4 space-y-1 overflow-y-auto scrollable-container">
@@ -244,7 +242,7 @@ const Layout = ({
         </div>
       </aside>
 
-      <main className={`flex-1 lg:pl-64 pt-16 lg:pt-0 min-h-screen transition-all duration-300 pb-20 lg:pb-6`}>
+      <main className={`flex-1 lg:pl-64 safe-pt-main min-h-screen transition-all duration-300 pb-20 lg:pb-6`}>
         <div className="container mx-auto px-6 py-4 md:p-6 lg:p-8 animate-fadeIn max-w-7xl">
           {children || <Outlet />}
         </div>

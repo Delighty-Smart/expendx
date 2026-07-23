@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
+import PageHeader from "@/components/ui/page-header";
 
 const incomeSchema = z.object({
   amount: z.string().min(1, "Monthly income is required"),
@@ -93,17 +94,7 @@ const SetIncomePage = () => {
 
   return (
     <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="ghost"
-          className="mr-2"
-          onClick={() => navigate("/budgets")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold">Set Income Target</h1>
-      </div>
+      <PageHeader title="Set Income Target" backTo="/budgets" />
 
       <Card className="p-6">
         <Form {...form}>

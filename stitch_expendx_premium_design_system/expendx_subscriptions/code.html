@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>ExpendX Subscriptions</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#323537",
+                    "surface-dim": "#111415",
+                    "on-secondary-container": "#003a5c",
+                    "primary-fixed-dim": "#c8c5c9",
+                    "border-subtle": "rgba(255, 255, 255, 0.03)",
+                    "tertiary-fixed": "#bef521",
+                    "inverse-on-surface": "#2e3132",
+                    "inverse-surface": "#e1e2e4",
+                    "tertiary-fixed-dim": "#a5d700",
+                    "error": "#ffb4ab",
+                    "background": "#111415",
+                    "surface-container-high": "#282a2c",
+                    "on-tertiary": "#263500",
+                    "outline-variant": "#47464b",
+                    "error-container": "#93000a",
+                    "on-surface-variant": "#c8c5cb",
+                    "carbon-surface": "#0E0E11",
+                    "finance-debt": "#FB923C",
+                    "inverse-primary": "#5f5e61",
+                    "surface-bright": "#37393b",
+                    "primary-container": "#050507",
+                    "finance-income": "#34D399",
+                    "surface-container-low": "#191c1e",
+                    "primary": "#c8c5c9",
+                    "surface-container-lowest": "#0c0f10",
+                    "on-primary": "#313033",
+                    "surface-container-highest": "#323537",
+                    "on-background": "#e1e2e4",
+                    "border-strong": "#242429",
+                    "secondary": "#93ccff",
+                    "finance-expense": "#F87171",
+                    "on-surface": "#e1e2e4",
+                    "on-secondary-fixed-variant": "#004b73",
+                    "on-error": "#690005",
+                    "surface": "#111415",
+                    "secondary-fixed-dim": "#93ccff",
+                    "surface-tint": "#c8c5c9",
+                    "on-primary-fixed": "#1c1b1e",
+                    "finance-savings": "#60A5FA",
+                    "on-tertiary-container": "#628200",
+                    "on-tertiary-fixed": "#151f00",
+                    "secondary-fixed": "#cce5ff",
+                    "secondary-container": "#00a9fd",
+                    "on-primary-container": "#78777a",
+                    "outline": "#929095",
+                    "tertiary": "#a5d700",
+                    "primary-fixed": "#e5e1e5",
+                    "obsidian-card": "#121216",
+                    "on-secondary-fixed": "#001d31",
+                    "surface-container": "#1d2022",
+                    "on-tertiary-fixed-variant": "#394d00",
+                    "on-primary-fixed-variant": "#47464a",
+                    "on-error-container": "#ffdad6",
+                    "tertiary-container": "#030600",
+                    "on-secondary": "#003351"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "compact-sm": "0.625rem",
+                    "margin-desktop": "32px",
+                    "unit": "4px",
+                    "margin-mobile": "20px",
+                    "compact-md": "0.875rem",
+                    "gutter": "16px",
+                    "compact-xs": "0.375rem"
+            },
+            "fontFamily": {
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "label-tabular": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                    "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                    "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(18, 18, 22, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .carbon-gradient {
+            background: linear-gradient(145deg, #1d2022 0%, #0c0f10 100%);
+        }
+        ::-webkit-scrollbar { width: 0px; }
+        body { -webkit-tap-highlight-color: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full h-[64px] z-50 bg-background/80 backdrop-blur-xl border-b border-white/[0.03] flex justify-between items-center px-margin-mobile md:px-margin-desktop">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-white/10">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="A professional close-up studio portrait of a modern fintech user with a minimalist aesthetic. The lighting is soft and cinematic, highlighting a clean, high-tech persona against a dark obsidian background. The overall style is clinical and premium, utilizing a cool color palette of deep blacks and subtle grays to convey stability and trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRYwSCtrhqwF2-hcgLAq0iH0QNQ1N4qRU71vTtJS6Cyrwf5s6v-jJXOGU3wTGu1sRboxU34MI0W1cfdXXMy95F06Ox4O4Pqv8mfNWyr4eR2L4V_nFweMTVh_VPlda5tdcODpcUpG5pRZWNieBhDNuLB97aQNly-yBjq7a17EmYdvHGUTI0jmb_BK2zYJz8L60GgaCEQz8Qh47vCWwJBN7ewVYjbUmAf_YSWqLuFCJoGad8pXnyHBVxjsHAV-Yg9ndX26SNRI21Oug"/>
+</div>
+<h1 class="text-headline-lg font-headline-lg tracking-tighter text-on-surface">ExpendX</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-bright/10 transition-colors active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<main class="pt-[84px] pb-[100px] px-margin-mobile max-w-5xl mx-auto space-y-6">
+<!-- Overhead Summary Card -->
+<section class="relative overflow-hidden glass-panel rounded-[24px] p-6 carbon-gradient shadow-sm">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[120px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div class="relative z-10 space-y-4">
+<div>
+<p class="font-body-sm text-on-surface-variant uppercase tracking-widest">Monthly Subscription Overhead</p>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-headline-lg text-[40px] text-on-surface tabular-nums">$284.50</span>
+<span class="font-label-tabular text-finance-expense font-semibold">+4.2% from last month</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
+<div>
+<p class="font-body-sm text-on-surface-variant">Active</p>
+<p class="font-label-tabular text-on-surface text-lg">12</p>
+</div>
+<div>
+<p class="font-body-sm text-on-surface-variant">Next Due</p>
+<p class="font-label-tabular text-on-surface text-lg">In 2 days</p>
+</div>
+<div>
+<p class="font-body-sm text-on-surface-variant">Savings</p>
+<p class="font-label-tabular text-finance-savings text-lg">$12.00</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Category Filters (Horizontal Scroll) -->
+<div class="flex gap-2 overflow-x-auto no-scrollbar py-2">
+<button class="px-5 py-2 rounded-full bg-on-surface text-background font-label-tabular text-sm transition-transform active:scale-95">All</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-tabular text-sm border border-white/5 hover:border-white/20 transition-all">Entertainment</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-tabular text-sm border border-white/5 hover:border-white/20 transition-all">Fitness</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-tabular text-sm border border-white/5 hover:border-white/20 transition-all">SaaS</button>
+<button class="px-5 py-2 rounded-full bg-surface-container-high text-on-surface-variant font-label-tabular text-sm border border-white/5 hover:border-white/20 transition-all">Utilities</button>
+</div>
+<!-- Subscriptions Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Netflix Card -->
+<div class="group relative p-5 rounded-[20px] bg-surface-container border border-white/[0.03] hover:border-primary/20 transition-all duration-300 hover:-translate-y-1">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-red-950/30 flex items-center justify-center border border-red-500/20">
+<span class="material-symbols-outlined text-red-500" data-icon="play_circle">play_circle</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-on-surface">Netflix</h3>
+<p class="font-body-sm text-on-surface-variant">Standard Plan</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-tabular text-on-surface">$15.49</p>
+<p class="font-body-sm text-on-surface-variant">Monthly</p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-sm text-on-surface-variant">Next: Oct 24</span>
+</div>
+<span class="px-3 py-1 rounded-full bg-finance-income/10 text-finance-income text-[11px] font-bold uppercase tracking-wider">Active</span>
+</div>
+</div>
+<!-- Spotify Card -->
+<div class="group relative p-5 rounded-[20px] bg-surface-container border border-white/[0.03] hover:border-primary/20 transition-all duration-300 hover:-translate-y-1">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-green-950/30 flex items-center justify-center border border-green-500/20">
+<span class="material-symbols-outlined text-green-500" data-icon="music_note">music_note</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-on-surface">Spotify</h3>
+<p class="font-body-sm text-on-surface-variant">Premium Duo</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-tabular text-on-surface">$16.99</p>
+<p class="font-body-sm text-on-surface-variant">Monthly</p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-sm text-on-surface-variant">Next: Oct 18</span>
+</div>
+<span class="px-3 py-1 rounded-full bg-finance-income/10 text-finance-income text-[11px] font-bold uppercase tracking-wider">Active</span>
+</div>
+</div>
+<!-- Gym Card -->
+<div class="group relative p-5 rounded-[20px] bg-surface-container border border-white/[0.03] hover:border-primary/20 transition-all duration-300 hover:-translate-y-1">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-blue-950/30 flex items-center justify-center border border-blue-500/20">
+<span class="material-symbols-outlined text-blue-500" data-icon="fitness_center">fitness_center</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-on-surface">Iron Works Gym</h3>
+<p class="font-body-sm text-on-surface-variant">Annual Pro</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-tabular text-on-surface">$59.00</p>
+<p class="font-body-sm text-on-surface-variant">Monthly</p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-sm text-on-surface-variant">Next: Nov 02</span>
+</div>
+<span class="px-3 py-1 rounded-full bg-finance-income/10 text-finance-income text-[11px] font-bold uppercase tracking-wider">Active</span>
+</div>
+</div>
+<!-- Adobe Creative Cloud -->
+<div class="group relative p-5 rounded-[20px] bg-surface-container border border-white/[0.03] hover:border-primary/20 transition-all duration-300 hover:-translate-y-1">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-purple-950/30 flex items-center justify-center border border-purple-500/20">
+<span class="material-symbols-outlined text-purple-400" data-icon="brush">brush</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-on-surface">Adobe CC</h3>
+<p class="font-body-sm text-on-surface-variant">All Apps</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-tabular text-on-surface">$54.99</p>
+<p class="font-body-sm text-on-surface-variant">Monthly</p>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant" data-icon="error_outline">error_outline</span>
+<span class="font-body-sm text-finance-debt">Due Tomorrow</span>
+</div>
+<span class="px-3 py-1 rounded-full bg-finance-debt/10 text-finance-debt text-[11px] font-bold uppercase tracking-wider">Pending</span>
+</div>
+</div>
+</section>
+<!-- Insights Banner -->
+<div class="p-6 rounded-[24px] bg-secondary-container/10 border border-secondary-container/20 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary" data-icon="lightbulb">lightbulb</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-on-surface">Subscription Optimizer</h4>
+<p class="font-body-sm text-on-surface-variant">You have 2 unused streaming services. Save $24.00/mo by canceling.</p>
+</div>
+</div>
+<button class="px-6 py-2 bg-on-surface text-background font-label-tabular rounded-full active:scale-95 transition-all whitespace-nowrap">View Insights</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full h-[72px] pb-safe z-50 bg-background/80 backdrop-blur-md border-t border-white/[0.03] flex justify-around items-center px-4 shadow-sm">
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-sm text-body-sm">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface font-semibold hover:opacity-80 transition-opacity active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Budget</span>
+</button>
+<div class="relative -top-4">
+<button class="w-14 h-14 bg-on-surface text-background rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform duration-200 border-4 border-background">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="font-body-sm text-body-sm">Wealth</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</button>
+</nav>
+<script>
+        // Micro-interactions for card hover parallax effect
+        document.querySelectorAll('.group').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        // Simple animation on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.group, section').forEach(el => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-4');
+            observer.observe(el);
+        });
+    </script>
+</body></html>

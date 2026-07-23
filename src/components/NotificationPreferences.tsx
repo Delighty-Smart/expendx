@@ -14,9 +14,7 @@ import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { useAuth } from "@/hooks/useAuth";
-import { MessageReader } from '@solimanware/capacitor-sms-reader';
-import { NotificationsListener } from 'capacitor-notifications-listener';
-import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
+
 
 interface NotificationPreference {
   id: string;
@@ -64,14 +62,7 @@ const NotificationPreferences = () => {
   const [saving, setSaving] = useState(false);
   const [isPushActive, setIsPushActive] = useState(false);
   const { user } = useAuth();
-
-  const isAndroidDevice = Capacitor.getPlatform() === 'android' || /Android/i.test(navigator.userAgent);
   const { toast } = useToast();
-
-  const [smsActive, setSmsActive] = useState(false);
-  const [notificationsActive, setNotificationsActive] = useState(false);
-  const [smsPermission, setSmsPermission] = useState<string | null>(null);
-  const [notificationsPermission, setNotificationsPermission] = useState<string | null>(null);
 
   const getPreferredTimeForCategory = useCallback((prefs: NotificationPreference | null, category: string) => {
     if (!prefs?.preferred_time) return "19:00";
@@ -91,126 +82,6 @@ const NotificationPreferences = () => {
       notificationScheduler.scheduleNotification(userId, schedule.type, preferredTime, isEnabled);
     });
   }, [getPreferredTimeForCategory]);
-
-  useEffect(() => {
-    if (isAndroidDevice) {
-      setSmsActive(localStorage.getItem('auto_tracker_sms_enabled') === 'true');
-      setNotificationsActive(localStorage.getItem('auto_tracker_notifications_enabled') === 'true');
-      
-      // Check initial SMS permissions
-      MessageReader.checkPermissions().then((status: { messages?: string }) => {
-        setSmsPermission(status?.messages || 'prompt');
-      }).catch(() => setSmsPermission('prompt'));
-
-      // Check initial Notifications permissions
-      NotificationsListener.isListening().then((status) => {
-        setNotificationsPermission(status?.value ? 'granted' : 'denied');
-      }).catch(() => setNotificationsPermission('denied'));
-    }
-  }, [isAndroidDevice]);
-
-  const openSmsSettings = async () => {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await NativeSettings.open({
-        optionAndroid: AndroidSettings.ApplicationDetails,
-        optionIOS: IOSSettings.App
-      });
-    } catch (e) {
-      console.error("Failed to open SMS settings:", e);
-    }
-  };
-
-  const openNotificationSettings = async () => {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await NativeSettings.open({
-        optionAndroid: AndroidSettings.ApplicationDetails,
-        optionIOS: IOSSettings.App
-      });
-    } catch (e) {
-      console.error("Failed to open notification settings:", e);
-    }
-  };
-
-  const handleSmsToggle = async (checked: boolean) => {
-    setSaving(true);
-    try {
-      if (checked) {
-        const req = await MessageReader.requestPermissions().catch(() => null);
-        const status = req?.messages || 'denied';
-        setSmsPermission(status);
-        
-        if (status === 'granted') {
-          localStorage.setItem('auto_tracker_sms_enabled', 'true');
-          setSmsActive(true);
-          toast({
-            title: "SMS Sync Enabled",
-            description: "Expendx will parse transaction alerts from your inbox locally.",
-          });
-        } else {
-          localStorage.setItem('auto_tracker_sms_enabled', 'false');
-          setSmsActive(false);
-          toast({
-            title: "Permission Denied",
-            description: "Redirecting to App Settings to enable SMS permissions...",
-            variant: "destructive"
-          });
-          setTimeout(openSmsSettings, 1500);
-        }
-      } else {
-        localStorage.setItem('auto_tracker_sms_enabled', 'false');
-        setSmsActive(false);
-        toast({
-          title: "SMS Sync Disabled",
-          description: "SMS inbox parsing turned off.",
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleNotificationsToggle = async (checked: boolean) => {
-    setSaving(true);
-    try {
-      if (checked) {
-        await NotificationsListener.requestPermission().catch(() => null);
-        localStorage.setItem('auto_tracker_notifications_enabled', 'true');
-        setNotificationsActive(true);
-        const statusCheck = await NotificationsListener.isListening().catch(() => ({ value: false }));
-        const isGranted = statusCheck.value;
-        setNotificationsPermission(isGranted ? 'granted' : 'denied');
-        
-        if (!isGranted) {
-          toast({
-            title: "Notification Access Required",
-            description: "Redirecting to App Settings to enable Notification Access for Expendx...",
-          });
-          setTimeout(openNotificationSettings, 1500);
-        } else {
-          toast({
-            title: "Notification Listener Enabled",
-            description: "Expendx is now listening for bank transaction alerts in real-time.",
-          });
-        }
-      } else {
-        localStorage.setItem('auto_tracker_notifications_enabled', 'false');
-        setNotificationsActive(false);
-        setNotificationsPermission('denied');
-        toast({
-          title: "Notification Listener Disabled",
-          description: "Real-time push alerts listening turned off.",
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
-  };
 
   useEffect(() => {
     const checkPushStatus = async () => {
@@ -458,112 +329,6 @@ const NotificationPreferences = () => {
         </div>
       </div>
 
-      {isAndroidDevice && (
-        <div className="space-y-4 pt-4 border-t border-border/10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center justify-between px-1">
-            <Label className="text-[11px] uppercase tracking-widest font-bold text-muted-foreground">Automated Transaction Ledger</Label>
-            <Badge variant="outline" className="text-[10px] font-bold border-emerald-500/20 text-emerald-500 bg-emerald-500/5">Local Only</Badge>
-          </div>
-
-          <div className="grid gap-3">
-            {/* SMS Tracker Switch */}
-            <div className={cn(
-              "group flex flex-col gap-4 p-4 rounded-2xl border transition-all duration-300 backdrop-blur-sm",
-              smsActive ? "bg-primary/5 border-primary/20" : "bg-background/40 border-border/50"
-            )}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "p-2.5 rounded-xl transition-colors",
-                    smsActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}>
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-bold block">SMS Inbox Sync</Label>
-                    <p className="text-[10px] text-muted-foreground max-w-[280px] leading-snug">
-                      Sync bank debit/credit transaction alerts directly from your SMS inbox history.
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={smsActive}
-                  onCheckedChange={handleSmsToggle}
-                  disabled={saving}
-                  className="data-[state=on]:bg-primary"
-                />
-              </div>
-              <div className="text-[10px] text-muted-foreground/60 flex items-center justify-between pt-2 border-t border-border/5 font-mono">
-                <span>Permission Status:</span>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "font-semibold text-[10px]",
-                    smsPermission === 'granted' ? "text-emerald-500" : smsPermission === 'denied' ? "text-red-500" : "text-muted-foreground"
-                  )}>
-                    {smsPermission ? smsPermission.toUpperCase() : "CHECKING..."}
-                  </span>
-                  {smsPermission === 'denied' && Capacitor.isNativePlatform() && (
-                    <button
-                      onClick={openSmsSettings}
-                      className="text-[10px] text-primary underline hover:text-primary-hover font-sans font-bold ml-1 active:scale-95 transition-transform"
-                    >
-                      Grant Access
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Notifications Listener Switch */}
-            <div className={cn(
-              "group flex flex-col gap-4 p-4 rounded-2xl border transition-all duration-300 backdrop-blur-sm",
-              notificationsActive ? "bg-primary/5 border-primary/20" : "bg-background/40 border-border/50"
-            )}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "p-2.5 rounded-xl transition-colors",
-                    notificationsActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}>
-                    <Bell className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-bold block">Push Alert Listener</Label>
-                    <p className="text-[10px] text-muted-foreground max-w-[280px] leading-snug">
-                      Listen to incoming notifications from bank apps (like OPay) to ledger transactions in real-time.
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={notificationsActive}
-                  onCheckedChange={handleNotificationsToggle}
-                  disabled={saving}
-                  className="data-[state=on]:bg-primary"
-                />
-              </div>
-              <div className="text-[10px] text-muted-foreground/60 flex items-center justify-between pt-2 border-t border-border/5 font-mono">
-                <span>Permission Status:</span>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "font-semibold text-[10px]",
-                    notificationsPermission === 'granted' ? "text-emerald-500" : notificationsPermission === 'denied' ? "text-red-500" : "text-muted-foreground"
-                  )}>
-                    {notificationsPermission ? notificationsPermission.toUpperCase() : "CHECKING..."}
-                  </span>
-                  {notificationsPermission === 'denied' && Capacitor.isNativePlatform() && (
-                    <button
-                      onClick={openNotificationSettings}
-                      className="text-[10px] text-primary underline hover:text-primary-hover font-sans font-bold ml-1 active:scale-95 transition-transform"
-                    >
-                      Grant Access
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

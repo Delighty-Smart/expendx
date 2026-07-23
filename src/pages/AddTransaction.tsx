@@ -2,9 +2,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { TransactionForm } from "@/components/TransactionForm";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { OfflineIndicator } from "@/components/OfflineIndicator";
+import PageHeader from "@/components/ui/page-header";
 
 const AddTransactionPage = () => {
   const location = useLocation();
@@ -26,23 +24,11 @@ const AddTransactionPage = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            className="mobile-button-sm mr-2 touch-manipulation"
-            onClick={() => navigate("/transactions")}
-          >
-            <ArrowLeft className="mobile-icon-sm mr-2" />
-            Back
-          </Button>
-          <h1 className="text-xl md:text-2xl font-bold">
-            {isEditing ? 'Edit Transaction' : sharedFileUri ? 'Scan Shared Receipt' : 'Add Transaction'}
-          </h1>
-        </div>
-        <OfflineIndicator />
-      </div>
+    <div className="space-y-6 max-w-md mx-auto">
+      <PageHeader
+        title={isEditing ? 'Edit Transaction' : 'New Transaction'}
+        backTo="/transactions"
+      />
 
       {!navigator.onLine && (
         <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">

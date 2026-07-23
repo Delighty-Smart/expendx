@@ -15,6 +15,8 @@ export interface Transaction {
   category: TransactionCategory;
   description: string;
   archived?: boolean; // Add archived property
+  is_locked?: boolean; // Lock past transactions during Fresh Start
+  is_system_adjustment?: boolean; // Flag adjustment transactions
   created_at?: string;
   updated_at?: string;
 }

@@ -32,6 +32,8 @@ import SpendingByCategoryChart from "@/components/charts/SpendingByCategoryChart
 import DailyIncomeExpensesChart from "@/components/charts/DailyIncomeExpensesChart";
 import BalanceTrendChart from "@/components/charts/BalanceTrendChart";
 import ExpenseDistributionChart from "@/components/charts/ExpenseDistributionChart";
+import { FreshStartBanner } from "@/components/FreshStartBanner";
+import { FreshStartWizard } from "@/components/FreshStartWizard";
 
 // Transaction types
 interface TransactionData {
@@ -72,6 +74,8 @@ const IndexPage = () => {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [fullscreenChartId, setFullscreenChartId] = useState<string | null>(null);
+  const [showFreshStartWizard, setShowFreshStartWizard] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
 
 
@@ -126,6 +130,20 @@ const IndexPage = () => {
     if (hour < 17) return "Good afternoon";
     return "Good evening";
   }, []);
+
+  // Short, simple, attention-grabbing greetings
+  const catchyGreeting = useMemo(() => {
+    const name = profile?.first_name || profile?.username || "";
+    const nameSuffix = name ? `, ${name}` : "";
+    const phrases = [
+      `How is it going${nameSuffix}?`,
+      `Saved some life-hours today${nameSuffix}?`,
+      `Oh, back already${nameSuffix}? Love to see it!`,
+      `Glad to have you back${nameSuffix}!`
+    ];
+    const index = (new Date().getHours() + new Date().getDate()) % phrases.length;
+    return phrases[index];
+  }, [profile?.first_name, profile?.username]);
 
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
@@ -185,6 +203,15 @@ const IndexPage = () => {
     });
   }, [allTransactions, firstDayOfMonth, lastDayOfMonth]);
 
+  // Check 14+ days inactivity (excluding system adjustments)
+  const isInactiveFor14Days = useMemo(() => {
+    const userRealTransactions = allTransactions.filter(t => !t.is_system_adjustment);
+    if (userRealTransactions.length === 0) return false;
+    const latestTxDate = new Date(userRealTransactions[0].date);
+    const diffDays = (new Date().getTime() - latestTxDate.getTime()) / (1000 * 3600 * 24);
+    return diffDays >= 14;
+  }, [allTransactions]);
+
   const transactionsData = transactions;
 
   // For the balance, we use the offline manager's summary which is instant and always present
@@ -202,7 +229,8 @@ const IndexPage = () => {
     if (hideAmounts) return { primary: "***", secondary: "" };
     if (showLifeHours) {
       const hrs = (currentBalance / trueHourlyRate).toFixed(1);
-      return { primary: `${hrs} hrs`, secondary: "" };
+      const parts = hrs.split('.');
+      return { primary: parts[0], secondary: `.${parts[1]} hrs` };
     }
     const val = currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const parts = val.split('.');
@@ -228,18 +256,21 @@ const IndexPage = () => {
     queryClient.invalidateQueries({ queryKey: ["budgets"] });
   };
 
-  // Memoized monthly totals — only recalculated when transactions changes
-  const { monthlyIncomeTotal, monthlyExpenses, monthlySavings } = useMemo(() => ({
-    monthlyIncomeTotal: transactions
-      .filter((t) => t.type === "credit")
-      .reduce((sum, t) => sum + t.amount, 0),
-    monthlyExpenses: transactions
-      .filter((t) => t.type === "debit" || t.type === "subscription")
-      .reduce((sum, t) => sum + t.amount, 0),
-    monthlySavings: transactions
-      .filter((t) => t.type === "savings")
-      .reduce((sum, t) => sum + t.amount, 0),
-  }), [transactions]);
+  // Memoized monthly totals — excludes System-Adjustment transactions so fresh start balances don't skew reports
+  const { monthlyIncomeTotal, monthlyExpenses, monthlySavings } = useMemo(() => {
+    const realTx = transactions.filter(t => t.category !== "System-Adjustment" && !t.is_system_adjustment);
+    return {
+      monthlyIncomeTotal: realTx
+        .filter((t) => t.type === "credit")
+        .reduce((sum, t) => sum + t.amount, 0),
+      monthlyExpenses: realTx
+        .filter((t) => t.type === "debit" || t.type === "subscription")
+        .reduce((sum, t) => sum + t.amount, 0),
+      monthlySavings: realTx
+        .filter((t) => t.type === "savings")
+        .reduce((sum, t) => sum + t.amount, 0),
+    };
+  }, [transactions]);
 
   // Mock transactions for beautiful empty dashboard demo visual fallback
   const mockTransactions = useMemo(() => [
@@ -287,6 +318,7 @@ const IndexPage = () => {
   const dailyData = useMemo(() => {
     if (!allTransactions || !allTransactions.length) return [];
 
+    const realAllTx = allTransactions.filter(t => t.category !== "System-Adjustment" && !t.is_system_adjustment);
     const startDate = currentWeekStart;
     const endDate = addWeeks(startDate, 1);
     const days = eachDayOfInterval({ start: startDate, end: endDate });
@@ -294,11 +326,11 @@ const IndexPage = () => {
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
 
-      const dayIncomes = allTransactions
+      const dayIncomes = realAllTx
         .filter(t => t.type === 'credit' && t.date.startsWith(dayStr))
         .reduce((sum, t) => sum + t.amount, 0);
 
-      const dayExpenses = allTransactions
+      const dayExpenses = realAllTx
         .filter(t => (t.type === 'debit' || t.type === 'subscription') && t.date.startsWith(dayStr))
         .reduce((sum, t) => sum + t.amount, 0);
 
@@ -322,10 +354,11 @@ const IndexPage = () => {
     }
   };
 
-  // Memoized trend data — recalculates only when transactions changes
+  // Trend data — calculate smooth running balance trajectory excluding outlier system adjustments
   const trendData = useMemo(() => {
     if (!transactions?.length) return [];
 
+    const realTx = transactions.filter(t => t.category !== "System-Adjustment" && !t.is_system_adjustment);
     const now = new Date();
     const startDate = startOfMonth(now);
     const endDate = endOfMonth(now);
@@ -334,7 +367,7 @@ const IndexPage = () => {
 
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
-      const dayTransactions = transactions.filter(t => t.date.startsWith(dayStr));
+      const dayTransactions = realTx.filter(t => t.date.startsWith(dayStr));
 
       const dayIncome = dayTransactions
         .filter(t => t.type === 'credit')
@@ -385,13 +418,13 @@ const IndexPage = () => {
     },
   });
 
-  // Memoized progress percentages and total
+  // Memoized progress percentages and total — uncapped to show actual percentage & over-budget status (e.g., 233% of target / 15% over budget)
   const { incomeProgress, expenseProgress, totalSpendingAmount } = useMemo(() => ({
     incomeProgress: monthlyIncome > 0
-      ? Math.min((monthlyIncomeTotal / monthlyIncome) * 100, 100)
+      ? (monthlyIncomeTotal / monthlyIncome) * 100
       : 0,
     expenseProgress: totalBudget && totalBudget > 0
-      ? Math.min((monthlyExpenses / totalBudget) * 100, 100)
+      ? (monthlyExpenses / totalBudget) * 100
       : 0,
     totalSpendingAmount: spendingData.reduce((sum, item) => sum + item.amount, 0),
   }), [monthlyIncome, monthlyIncomeTotal, monthlyExpenses, totalBudget, spendingData]);
@@ -399,14 +432,14 @@ const IndexPage = () => {
   return (
     <PullToRefresh onRefresh={refreshData} containerClassName="h-full">
 
-      <div className="space-y-6 pb-20">
-        {/* Header Area - Hidden on mobile */}
-        <div className="hidden lg:flex items-center justify-between pt-4 pb-2">
+      <div className="space-y-4 pb-20">
+        {/* Header Area - Visible on mobile & desktop with catchyGreeting */}
+        <div className="flex items-center justify-between pt-2 pb-1">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              {greeting}, {profile?.first_name || profile?.username || "there"}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground animate-fadeIn">
+              {catchyGreeting}
             </h1>
-            <p className="text-sm text-muted-foreground">{format(today, 'EEEE, MMMM do')}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{format(today, 'EEEE, MMMM do')}</p>
           </div>
           <div className="flex items-center gap-2">
             {streakData && (
@@ -420,17 +453,6 @@ const IndexPage = () => {
                 <span>{streakData.current_streak}</span>
               </Button>
             )}
-            <button
-              className="rounded-full w-10 h-10 hover:opacity-80 transition-opacity flex items-center justify-center overflow-hidden border border-border/50"
-              onClick={() => navigate('/profile')}
-            >
-              <UserAvatar
-                url={profile?.avatar_url}
-                name={profile?.username || profile?.email || "User"}
-                className="w-full h-full"
-                showDefaultGradient={false}
-              />
-            </button>
             <div className="relative">
               <Button
                 variant="secondary"
@@ -445,79 +467,68 @@ const IndexPage = () => {
           </div>
         </div>
 
-        {/* Fintech Balance Card */}
-        <div className="relative overflow-hidden rounded-2xl border border-border-default bg-white dark:bg-card p-4 sm:p-5 group">
-          {/* Subtle light reflection and tech grid mesh background */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.04),rgba(255,255,255,0))] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,255,255,0.02),rgba(0,0,0,0))] pointer-events-none" />
-          
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] leading-none">Total Balance</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-colors rounded-full"
-                  onClick={() => setHideAmounts(!hideAmounts)}
-                >
-                  {hideAmounts ? (
-                    <EyeOff className="h-3 w-3" />
-                  ) : (
-                    <Eye className="h-3 w-3" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-5 w-5 p-0 transition-colors rounded-full",
-                    showLifeHours
-                      ? "text-primary bg-primary/10 hover:bg-primary/20"
-                      : "text-muted-foreground/50 hover:text-foreground hover:bg-muted"
-                  )}
-                  onClick={toggleShowLifeHours}
-                  title="Toggle Life Energy Mode"
-                >
-                  <LifeEnergyIcon className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+        {/* Phase 1 Inactivity Trigger Banner */}
+        {isInactiveFor14Days && !bannerDismissed && (
+          <FreshStartBanner
+            onStartFresh={() => setShowFreshStartWizard(true)}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+        )}
 
-              {/* Mobile-only secondary actions */}
-              <div className="flex lg:hidden items-center gap-1.5">
-                {streakData && (
-                  <Button
-                    variant="ghost"
-                    size="compact"
-                    onClick={() => setShowStreakModal(true)}
-                    className="flex items-center gap-1 px-1.5 py-0.5 h-5 bg-orange-500/10 text-orange-500 font-bold hover:bg-orange-500/20 rounded-full transition-all border border-orange-500/25"
-                  >
-                    <Flame className="h-3 w-3 fill-current animate-pulse" />
-                    <span className="text-[9px] font-black tracking-tight">{streakData.current_streak}</span>
-                  </Button>
+        {/* Fintech Balance Card - High contrast mockup spacing */}
+        <div className="relative overflow-hidden rounded-[28px] bg-card py-9 px-6 md:py-12 md:px-8 select-none">
+          <div className="relative z-10 flex flex-col items-center justify-center text-center">
+            {/* Top Left Visibility toggle icon - Image 1 Note (4): Light color circular bg + Perfect Circle */}
+            <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+              <button
+                type="button"
+                className="w-8 h-8 min-w-[32px] min-h-[32px] max-w-[32px] max-h-[32px] p-0 text-foreground bg-muted/80 hover:bg-muted dark:bg-white/15 dark:hover:bg-white/25 transition-colors flex items-center justify-center border border-border-default/50 shadow-xs !rounded-full shrink-0"
+                style={{ borderRadius: "9999px", aspectRatio: "1 / 1" }}
+                onClick={() => setHideAmounts(!hideAmounts)}
+                aria-label="Toggle Amount Visibility"
+              >
+                {hideAmounts ? (
+                  <EyeOff className="h-4 w-4" strokeWidth={1.8} />
+                ) : (
+                  <Eye className="h-4 w-4" strokeWidth={1.8} />
                 )}
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full w-6.5 h-6.5 bg-muted text-foreground hover:bg-muted/80 shadow-none border border-border/50 flex items-center justify-center"
-                  onClick={() => navigate('/alerts')}
-                >
-                  <Bell className="h-3 w-3" strokeWidth={1.5} />
-                  {unreadAlerts > 0 && <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-accent rounded-full" />}
-                </Button>
-              </div>
+              </button>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex items-baseline">
+            {/* Top Right Life Energy Icon toggle - Image 1 Note (3): Light color circular bg + Perfect Circle */}
+            <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
+              <button
+                type="button"
+                className={cn(
+                  "w-8 h-8 min-w-[32px] min-h-[32px] max-w-[32px] max-h-[32px] p-0 transition-colors flex items-center justify-center border border-border-default/50 shadow-xs !rounded-full shrink-0",
+                  showLifeHours
+                    ? "text-brand-primary bg-brand-subtle dark:bg-white/30"
+                    : "text-foreground bg-muted/80 hover:bg-muted dark:bg-white/15 dark:hover:bg-white/25"
+                )}
+                style={{ borderRadius: "9999px", aspectRatio: "1 / 1" }}
+                onClick={toggleShowLifeHours}
+                title="Toggle Life Energy Mode"
+                aria-label="Toggle Life Energy Mode"
+              >
+                <LifeEnergyIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Label and Info */}
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[13px] font-medium text-text-secondary/70 tracking-tight">Account balance</span>
+              
+              {/* Account Balance display digits matching exact mockup format */}
+              <div className="flex items-baseline justify-center mt-1">
                 {isAllTransactionsLoading ? (
-                  <Skeleton className="h-9 w-32" />
+                  <Skeleton className="h-12 w-48" />
                 ) : (
                   <>
-                    <span className="text-2xl sm:text-3xl lg:text-[34px] font-bold tracking-[-0.04em] text-foreground font-numeric leading-none">
+                    <span className="text-4xl sm:text-[40px] font-extrabold tracking-tight text-text-primary font-numeric font-amount leading-none primary-total-amount">
                       {formattedBalance.primary}
                     </span>
                     {formattedBalance.secondary && (
-                      <span className="text-lg sm:text-xl font-semibold text-muted-foreground/75 font-numeric leading-none ml-1">
+                      <span className="text-[20px] font-bold text-text-secondary/45 font-numeric font-amount leading-none ml-0.5">
                         {formattedBalance.secondary}
                       </span>
                     )}
@@ -526,31 +537,22 @@ const IndexPage = () => {
               </div>
             </div>
 
-            {/* Bottom Income/Deficit Badge & Status inside the Card */}
-            <div className="flex items-center justify-start pt-3 border-t border-border-default/30">
-              <div className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border",
-                isMonthlyTransactionsLoading || isMonthlyIncomeLoading
-                  ? "bg-muted text-muted-foreground border-border-default"
-                  : (monthlyIncomeTotal - monthlyExpenses) >= 0
-                    ? "bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/10"
-                    : "bg-rose-500/5 text-rose-600 dark:text-rose-400 border-rose-500/10"
-              )}>
-                {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
-                  <Skeleton className="h-4 w-24" />
-                ) : (
-                  <>
-                    {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? (
-                      <TrendingUp className="h-3.5 w-3.5 stroke-[2]" />
-                    ) : (
-                      <TrendingDown className="h-3.5 w-3.5 stroke-[2]" />
-                    )}
-                    <span>
-                      {!showLifeHours && currency.symbol}{formatAmount(Math.abs(monthlyIncomeTotal - monthlyExpenses))} {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? "Net Income" : "Deficit"} this month
-                    </span>
-                  </>
-                )}
-              </div>
+            {/* Centered monthly Net Income details mimicking the mockup account sub-line */}
+            <div className="mt-3 flex justify-center">
+              {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
+                <Skeleton className="h-4 w-28" />
+              ) : (
+                <div className="flex items-center gap-1 text-[11.5px] font-medium text-text-secondary/70">
+                  {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? (
+                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 stroke-[1.8]" />
+                  ) : (
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 stroke-[1.8]" />
+                  )}
+                  <span className="font-medium">
+                    {!showLifeHours && currency.symbol}{formatAmount(Math.abs(monthlyIncomeTotal - monthlyExpenses))} {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? "Net Income" : "Deficit"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -575,52 +577,59 @@ const IndexPage = () => {
           {/* Monthly Income */}
           <div
             onClick={() => navigate('/set-income')}
-            className="p-3 md:p-3.5 rounded-xl bg-white dark:bg-card border border-border-default shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between cursor-pointer active:scale-[0.98]"
+            className="p-3.5 px-4 rounded-[22px] bg-card relative overflow-hidden group transition-all flex items-center justify-between cursor-pointer active:scale-[0.98]"
           >
-            <div className="flex flex-col gap-0.5">
-              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[0.12em] leading-none">Income</p>
-              <p className="text-lg md:text-xl font-bold tracking-tight text-foreground mt-0.5">
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[9.5px] font-bold text-text-secondary/60 uppercase tracking-wider leading-none">Income</span>
+              <span className="text-[20px] font-extrabold tracking-tight text-text-primary font-numeric font-amount mt-0.5 leading-tight truncate">
                 {isMonthlyTransactionsLoading ? (
                   <Skeleton className="h-5 w-16 mt-0.5" />
                 ) : (
                   <>
-                    {!showLifeHours && <span className="text-[10px] font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>}
+                    {!showLifeHours && <span className="text-[12px] font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>}
                     {formatAmount(monthlyIncomeTotal)}
                   </>
                 )}
-              </p>
+              </span>
               {monthlyIncome > 0 && !isMonthlyTransactionsLoading && (
-                <p className="text-[9px] text-muted-foreground font-semibold mt-0.5 bg-emerald-500/5 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full w-fit">
+                <span className="text-[8.5px] text-text-secondary/60 font-bold mt-1 bg-emerald-500/5 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded w-fit leading-none">
                   {incomeProgress.toFixed(0)}% of target
-                </p>
+                </span>
               )}
             </div>
-            <div className="p-2 bg-emerald-500/10 rounded-full group-hover:bg-emerald-500/20 transition-colors self-center">
+            <div className="p-2 bg-emerald-500/10 rounded-full group-hover:bg-emerald-500/20 transition-colors self-center shrink-0 ml-1.5" style={{ borderRadius: '9999px' }}>
               <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} />
             </div>
           </div>
 
           {/* Monthly Expenses */}
-          <div className="p-3 md:p-3.5 rounded-xl bg-white dark:bg-card border border-border-default shadow-sm relative overflow-hidden group transition-all hover:shadow-md flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-              <p className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-[0.12em] leading-none">Expenses</p>
-              <p className="text-lg md:text-xl font-bold tracking-tight text-foreground mt-0.5">
+          <div className="p-3.5 px-4 rounded-[22px] bg-card relative overflow-hidden group transition-all flex items-center justify-between">
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[9.5px] font-bold text-text-secondary/60 uppercase tracking-wider leading-none">Expenses</span>
+              <span className="text-[20px] font-extrabold tracking-tight text-text-primary font-numeric font-amount mt-0.5 leading-tight truncate">
                 {isMonthlyTransactionsLoading ? (
                   <Skeleton className="h-5 w-16 mt-0.5" />
                 ) : (
                   <>
-                    {!showLifeHours && <span className="text-[10px] font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>}
+                    {!showLifeHours && <span className="text-[12px] font-normal text-muted-foreground mr-0.5">{currency.symbol}</span>}
                     {formatAmount(monthlyExpenses)}
                   </>
                 )}
-              </p>
+              </span>
               {totalBudget && totalBudget > 0 && !isMonthlyTransactionsLoading && (
-                <p className="text-[9px] text-muted-foreground font-semibold mt-0.5 bg-rose-500/5 dark:bg-rose-500/10 px-1.5 py-0.5 rounded-full w-fit">
-                  {expenseProgress.toFixed(0)}% of budget
-                </p>
+                <span className={cn(
+                  "text-[8.5px] font-bold mt-1 px-1.5 py-0.5 rounded w-fit leading-none",
+                  expenseProgress > 100
+                    ? "bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                    : "bg-rose-500/5 dark:bg-rose-500/10 text-text-secondary/60"
+                )}>
+                  {expenseProgress > 100
+                    ? `${(expenseProgress - 100).toFixed(0)}% over budget`
+                    : `${expenseProgress.toFixed(0)}% of budget`}
+                </span>
               )}
             </div>
-            <div className="p-2 bg-rose-500/10 rounded-full group-hover:bg-rose-500/20 transition-colors self-center">
+            <div className="p-2 bg-rose-500/10 rounded-full group-hover:bg-rose-500/20 transition-colors self-center shrink-0 ml-1.5" style={{ borderRadius: '9999px' }}>
               <ArrowDownRight className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" strokeWidth={2.5} />
             </div>
           </div>
@@ -628,7 +637,7 @@ const IndexPage = () => {
         </div>
 
         {/* Circular Fintech Actions */}
-        <div className="flex items-center justify-around py-2.5 px-2 bg-white dark:bg-card border border-border-default rounded-xl shadow-sm select-none">
+        <div className="flex items-center justify-around py-2.5 px-2 bg-card rounded-[20px] select-none">
           {[
             { label: "Transactions", icon: Banknote, path: "/transactions" },
             { label: "Budgets", icon: Wallet, path: "/budgets" },
@@ -657,19 +666,19 @@ const IndexPage = () => {
         <div className="space-y-2.5">
           <div className="flex items-center justify-between mt-1 select-none">
             <h3 className="text-[15px] sm:text-[16px] font-bold text-foreground tracking-tight">
-              Transactions
+              Recent Transactions
             </h3>
             <Button
               variant="ghost"
               onClick={() => navigate("/transactions")}
-              className="text-[10.5px] sm:text-xs font-semibold px-3 py-0.5 h-6 rounded-full bg-muted/60 hover:bg-muted text-foreground transition-all hover:scale-105 active:scale-95 border border-border-default/50"
+              className="text-[9.5px] font-medium px-2 py-0 h-5 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all hover:scale-105 active:scale-95 border border-border/30"
             >
               see all
             </Button>
           </div>
 
-          <Card className="glass-card border-none overflow-hidden select-none">
-            <div className="divide-y divide-border-default/20">
+          <Card className="bg-card overflow-hidden select-none rounded-[24px]">
+            <div className="divide-y divide-border-default">
               {displayTransactions.map((tx) => {
                 const isIncome = tx.type === "credit";
                 const txDate = getFormattedDate(tx.date);
@@ -682,29 +691,29 @@ const IndexPage = () => {
                         navigate("/add-transaction", { state: { transaction: tx } });
                       }
                     }}
-                    className="flex items-center justify-between p-3.5 hover:bg-muted/30 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-muted/60 dark:bg-muted/30 flex items-center justify-center text-foreground border border-border-default/30 shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-bg-overlay flex items-center justify-center text-foreground border border-border-default/40 shrink-0">
                         {isIncome ? (
-                          <ArrowDownToLine className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[2]" />
+                          <ArrowDown className="w-4 h-4 text-text-primary" strokeWidth={1.8} />
                         ) : (
-                          <ArrowUpFromLine className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 stroke-[2]" />
+                          <ArrowUp className="w-4 h-4 text-text-primary" strokeWidth={1.8} />
                         )}
                       </div>
 
                       <div className="flex flex-col">
-                        <span className="text-[13.5px] font-semibold text-foreground leading-tight tracking-tight">
+                        <span className="text-[13.5px] font-semibold text-text-primary leading-tight tracking-tight">
                           {tx.description}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/60 font-medium mt-0.5 leading-none">
-                          {isIncome ? "Received" : "Sent"} • {txDate}
+                        <span className="text-[10px] text-muted-foreground/80 font-medium mt-0.5 leading-none">
+                          {isIncome ? "Received by you" : "Sent by you"} • {txDate}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right flex flex-col items-end">
-                      <span className="text-[14px] font-bold tracking-tight text-foreground font-numeric leading-tight">
+                      <span className="text-[14px] font-bold tracking-tight text-text-primary font-numeric leading-tight">
                         {isIncome ? "+" : "-"}{!showLifeHours && currency.symbol}{formatAmount(tx.amount)}
                       </span>
                       <span className="text-[9.5px] text-muted-foreground/60 font-semibold capitalize mt-0.5 leading-none">
@@ -985,6 +994,11 @@ const IndexPage = () => {
         open={showStreakModal}
         onOpenChange={setShowStreakModal}
         streak={streakData}
+      />
+      <FreshStartWizard
+        open={showFreshStartWizard}
+        onOpenChange={setShowFreshStartWizard}
+        calculatedBalance={currentBalance}
       />
     </PullToRefresh >
   );

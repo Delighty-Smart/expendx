@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX | Pure Minimalist Carbon Finance</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(18, 18, 22, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(200, 197, 201, 0.2);
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#323537",
+                        "surface-dim": "#111415",
+                        "on-secondary-container": "#003a5c",
+                        "primary-fixed-dim": "#c8c5c9",
+                        "border-subtle": "rgba(255, 255, 255, 0.03)",
+                        "tertiary-fixed": "#bef521",
+                        "inverse-on-surface": "#2e3132",
+                        "inverse-surface": "#e1e2e4",
+                        "tertiary-fixed-dim": "#a5d700",
+                        "error": "#ffb4ab",
+                        "background": "#111415",
+                        "surface-container-high": "#282a2c",
+                        "on-tertiary": "#263500",
+                        "outline-variant": "#47464b",
+                        "error-container": "#93000a",
+                        "on-surface-variant": "#c8c5cb",
+                        "carbon-surface": "#0E0E11",
+                        "finance-debt": "#FB923C",
+                        "inverse-primary": "#5f5e61",
+                        "surface-bright": "#37393b",
+                        "primary-container": "#050507",
+                        "finance-income": "#34D399",
+                        "surface-container-low": "#191c1e",
+                        "primary": "#c8c5c9",
+                        "surface-container-lowest": "#0c0f10",
+                        "on-primary": "#313033",
+                        "surface-container-highest": "#323537",
+                        "on-background": "#e1e2e4",
+                        "border-strong": "#242429",
+                        "secondary": "#93ccff",
+                        "finance-expense": "#F87171",
+                        "on-surface": "#e1e2e4",
+                        "on-secondary-fixed-variant": "#004b73",
+                        "on-error": "#690005",
+                        "surface": "#111415",
+                        "secondary-fixed-dim": "#93ccff",
+                        "surface-tint": "#c8c5c9",
+                        "on-primary-fixed": "#1c1b1e",
+                        "finance-savings": "#60A5FA",
+                        "on-tertiary-container": "#628200",
+                        "on-tertiary-fixed": "#151f00",
+                        "secondary-fixed": "#cce5ff",
+                        "secondary-container": "#00a9fd",
+                        "on-primary-container": "#78777a",
+                        "outline": "#929095",
+                        "tertiary": "#a5d700",
+                        "primary-fixed": "#e5e1e5",
+                        "obsidian-card": "#121216",
+                        "on-secondary-fixed": "#001d31",
+                        "surface-container": "#1d2022",
+                        "on-tertiary-fixed-variant": "#394d00",
+                        "on-primary-fixed-variant": "#47464a",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#030600",
+                        "on-secondary": "#003351"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "compact-sm": "0.625rem",
+                        "margin-desktop": "32px",
+                        "unit": "4px",
+                        "margin-mobile": "20px",
+                        "compact-md": "0.875rem",
+                        "gutter": "16px",
+                        "compact-xs": "0.375rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-tabular": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                        "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                        "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary selection:text-on-primary overflow-x-hidden">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full h-[64px] z-50 bg-background/80 backdrop-blur-xl border-b border-white/[0.03] flex justify-between items-center px-margin-mobile md:px-margin-desktop">
+<div class="text-headline-lg font-headline-lg tracking-tighter text-on-surface">ExpendX</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface font-bold font-label-tabular text-label-tabular transition-colors" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-tabular text-label-tabular" href="#features">Features</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-tabular text-label-tabular" href="#pricing">Pricing</a>
+<button class="bg-on-surface text-background px-6 py-2.5 rounded-full font-label-tabular text-label-tabular font-bold active:scale-95 transition-transform">Download APK</button>
+</nav>
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<main class="pt-24 pb-32">
+<!-- Hero Section -->
+<section class="px-margin-mobile md:px-margin-desktop mb-24 lg:mb-40">
+<div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
+<div class="flex-1 text-center lg:text-left">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full border border-border-subtle mb-6">
+<span class="w-2 h-2 rounded-full bg-finance-income"></span>
+<span class="text-body-sm font-label-tabular tracking-wide text-on-surface-variant">V2.0 NOW AVAILABLE</span>
+</div>
+<h1 class="font-headline-lg text-5xl md:text-7xl lg:text-8xl tracking-tighter leading-[1] mb-8">
+                        Absolute control over your <span class="text-primary-fixed-dim italic">capital.</span>
+</h1>
+<p class="text-on-surface-variant text-headline-md font-headline-md max-w-2xl mb-12 leading-relaxed">
+                        A clinical, high-performance fintech environment designed for those who demand precision. No clutter, just pure data intelligence.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+<button class="bg-on-surface text-background px-8 py-4 rounded-full font-headline-md text-headline-md font-bold flex items-center justify-center gap-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">android</span>
+                            Download for Android
+                        </button>
+<button class="bg-surface-container border border-border-subtle text-on-surface px-8 py-4 rounded-full font-headline-md text-headline-md font-semibold hover:bg-surface-bright/20 transition-colors flex items-center justify-center gap-3">
+                            Watch Trailer
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="flex-1 relative w-full aspect-square md:aspect-video lg:aspect-square flex justify-center items-center">
+<div class="absolute inset-0 bg-primary/10 blur-[120px] rounded-full"></div>
+<div class="relative z-10 w-4/5 lg:w-full max-w-[500px] animate-float">
+<img alt="ExpendX Mobile App Preview" class="w-full h-auto drop-shadow-[0_40px_60px_rgba(0,0,0,0.5)] rounded-[3rem] border-8 border-surface-container" data-alt="A hyper-realistic high-fidelity smartphone mockup displaying a sleek fintech app with dark mode UI featuring neon green and electric blue financial charts. The device floats in a minimalist void with subtle carbon fiber textures and soft ambient lighting casting long shadows. Pure minimalist aesthetic with sharp edges and clinical precision in lighting. Professional product photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqJ4uVh1RRyVIDxM2K7_DUaer7CmGyLM7bEFSyJzgAQWVKusCDeYdZFAmIHvs_TaNuO6l59YaD9tP-rEQ30RPu12D8SW9xtgkJl5W6k6XwCKihqwyMCBo-xmzDsecrF3FAQ7rpdBzHHON6YbgTP8XjgXMO7E0qffNB9crJBq42yGuW6lcIAgt2hgoFVa0MLSsV6_jhR79oneDZ6CbhWGHPtdhrITCYXky4KIKluk1F2Zi2YydsEzMwVcgvnq4whEu-o4CBYRzEc7E"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Features -->
+<section class="px-margin-mobile md:px-margin-desktop mb-40" id="features">
+<div class="max-w-7xl mx-auto">
+<div class="mb-16">
+<h2 class="text-on-surface font-headline-lg text-4xl mb-4">Engineered for Performance.</h2>
+<p class="text-on-surface-variant font-body-md text-lg">Every feature is a precision instrument for your financial growth.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto">
+<!-- Smart Tracking -->
+<div class="md:col-span-2 glass-card rounded-[2rem] p-8 flex flex-col justify-between overflow-hidden group">
+<div>
+<span class="material-symbols-outlined text-primary mb-6" style="font-size: 40px;">radar</span>
+<h3 class="text-2xl font-headline-lg mb-4">Smart Tracking</h3>
+<p class="text-on-surface-variant font-body-md max-w-sm mb-8">Proprietary AI algorithms categorize every cent in real-time. Experience zero-latency transaction syncing across all your obsidian-linked accounts.</p>
+</div>
+<div class="relative h-48 mt-4 rounded-xl overflow-hidden">
+<img alt="Smart Tracking Visualization" class="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" data-alt="A minimalist digital dashboard showing abstract financial tracking data visualized as glowing 3D trajectories on a dark obsidian grid. Subtle electric blue accents highlight the data nodes. The mood is highly technical and clinical, reflecting pure minimalist fintech branding. Macro focus on the interface details." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd0FFqiuXVaCDC2NvZzP8L3UsEIxNk5V70oLxL5TY0gV08JYA3itiyC8XXw1pFX8gRy9kwKdwQIJjAesappnT1Y0ebdxVISoycuM31O54bgA3vBIrBI4VSI5Qego-SPGHnXB_42H4DTocncDBKaWjLEEhDpS0VywomXhVSxLYbYPnD_jYD-qRtFAaik8fMlcRZHKMyNuiwPhdcPE6ptiJ9nEzYk11ST7wlxCTETIaftYS83ueLJ1Xo0ssiul8yFoWmqskATcqxj6I"/>
+</div>
+</div>
+<!-- Deep Analytics -->
+<div class="glass-card rounded-[2rem] p-8 flex flex-col justify-between border-primary/20">
+<span class="material-symbols-outlined text-tertiary mb-6" style="font-size: 40px;">insights</span>
+<div>
+<h3 class="text-2xl font-headline-lg mb-4">Deep Analytics</h3>
+<p class="text-on-surface-variant font-body-md">Granular spending heatmaps and predictive wealth projections that adjust as you spend.</p>
+</div>
+<div class="mt-8 pt-8 border-t border-white/[0.05]">
+<div class="flex items-center justify-between mb-2">
+<span class="text-body-sm font-label-tabular">Accuracy Rating</span>
+<span class="text-tertiary text-body-sm font-label-tabular">99.8%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[99.8%]"></div>
+</div>
+</div>
+</div>
+<!-- Security -->
+<div class="glass-card rounded-[2rem] p-8 flex flex-col md:flex-row gap-8 items-center col-span-1 md:col-span-3">
+<div class="flex-1">
+<div class="inline-flex items-center gap-2 text-finance-income mb-4">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-tabular text-label-tabular tracking-widest uppercase">Military Grade</span>
+</div>
+<h3 class="text-3xl font-headline-lg mb-4">Encryption by Default.</h3>
+<p class="text-on-surface-variant font-body-md text-lg max-w-2xl">Your data is yours. ExpendX utilizes 256-bit AES encryption at rest and TLS 1.3 in transit. We don't just secure your data; we make it invisible.</p>
+</div>
+<div class="flex-none flex gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface">fingerprint</span>
+</div>
+<div class="w-16 h-16 rounded-full bg-surface-container border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface">face</span>
+</div>
+<div class="w-16 h-16 rounded-full bg-surface-container border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface">key</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Matrices -->
+<section class="px-margin-mobile md:px-margin-desktop mb-40" id="pricing">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-on-surface font-headline-lg text-4xl mb-4">Simple, Transparent Pricing</h2>
+<p class="text-on-surface-variant font-body-md text-lg">Choose the tier that matches your financial ambition.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Free -->
+<div class="glass-card rounded-[2.5rem] p-10 flex flex-col border-white/[0.02]">
+<div class="mb-8">
+<h4 class="text-on-surface-variant font-label-tabular text-sm tracking-widest uppercase mb-2">Fundamental</h4>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-headline-lg">$0</span>
+<span class="text-on-surface-variant font-body-sm">/mo</span>
+</div>
+</div>
+<ul class="space-y-4 mb-10 flex-1">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-finance-income text-lg">check_circle</span>
+<span class="text-body-md">Standard Tracking</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-finance-income text-lg">check_circle</span>
+<span class="text-body-md">Monthly Snapshots</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-finance-income text-lg">check_circle</span>
+<span class="text-body-md">Basic Security</span>
+</li>
+</ul>
+<button class="w-full py-4 rounded-full border border-border-subtle hover:bg-surface-container transition-colors font-headline-sm">Get Started</button>
+</div>
+<!-- Plus -->
+<div class="glass-card rounded-[2.5rem] p-10 flex flex-col relative border-primary/30 scale-105 z-10 shadow-2xl shadow-primary/5">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-background px-4 py-1 rounded-full text-xs font-bold font-label-tabular uppercase tracking-tighter">Most Popular</div>
+<div class="mb-8">
+<h4 class="text-primary font-label-tabular text-sm tracking-widest uppercase mb-2">Professional</h4>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-headline-lg">$12</span>
+<span class="text-on-surface-variant font-body-sm">/mo</span>
+</div>
+</div>
+<ul class="space-y-4 mb-10 flex-1">
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">AI Categorization</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Unlimited Multi-Bank Sync</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Advanced Export (CSV/PDF)</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface">
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Family Shared Budgets</span>
+</li>
+</ul>
+<button class="w-full py-4 rounded-full bg-primary text-background font-headline-sm font-bold active:scale-95 transition-transform">Start Free Trial</button>
+</div>
+<!-- Premium -->
+<div class="glass-card rounded-[2.5rem] p-10 flex flex-col border-white/[0.02]">
+<div class="mb-8">
+<h4 class="text-on-surface-variant font-label-tabular text-sm tracking-widest uppercase mb-2">Institutional</h4>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-headline-lg">$29</span>
+<span class="text-on-surface-variant font-body-sm">/mo</span>
+</div>
+</div>
+<ul class="space-y-4 mb-10 flex-1">
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-finance-income text-lg">check_circle</span>
+<span class="text-body-md">Wealth Management API</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-finance-income text-lg">check_circle</span>
+<span class="text-body-md">Private Advisor Portal</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-finance-income text-lg">check_circle</span>
+<span class="text-body-md">Quantum Encryption Key</span>
+</li>
+</ul>
+<button class="w-full py-4 rounded-full border border-border-subtle hover:bg-surface-container transition-colors font-headline-sm">Contact Sales</button>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="px-margin-mobile md:px-margin-desktop">
+<div class="max-w-7xl mx-auto glass-card rounded-[3rem] p-12 md:p-24 text-center overflow-hidden relative">
+<div class="absolute inset-0 bg-primary/5 -z-10"></div>
+<h2 class="text-5xl md:text-7xl font-headline-lg tracking-tighter mb-8 max-w-4xl mx-auto">Elevate your financial existence.</h2>
+<p class="text-on-surface-variant text-xl mb-12 max-w-xl mx-auto">Join 200,000+ power users tracking over $50B in capital across the ExpendX ecosystem.</p>
+<div class="flex flex-col sm:flex-row gap-6 justify-center">
+<button class="bg-on-surface text-background px-10 py-5 rounded-full font-headline-md text-headline-md font-bold flex items-center justify-center gap-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">download</span>
+                        Get ExpendX APK
+                    </button>
+<div class="flex items-center gap-4 text-on-surface-variant font-label-tabular">
+<div class="flex -space-x-3">
+<div class="w-10 h-10 rounded-full border-2 border-background bg-surface-container-high overflow-hidden">
+<img alt="User" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwHFkgDYNkv6zbZ-_GwNyX88TLdZBHB7XBTe6h75qfhOVfRoVS2quCIqxDSgnHCjTdEMfAoQlUw2DDnlz1A2pk8ZozM8iiLlBrHJDe3siAUIgnIQoMgDfz3-6X0PgCMXeolAQol_I0YLvmcefB4JU_WhdrvsXN_4zA6M88YvpPvcfDpFPCWTj8VGqVhP7WL7NHms4uKHEigfANY3Kiw08-kjbaxWzwyb3YxPYxy6ksNIU6ZV_R_i1t5cCmIRzIIc_bgBlQM5j4vDc"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-background bg-surface-container-high overflow-hidden">
+<img alt="User" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASZbu_mh9DK8OgXrmQj-wZFl4dn-iiwg6PWZ65ivec3ZyFr7JtFrVuoNdpYca6vpnn5slgIzj5jKY9TKUhGNWbhXE97BpPrSO_NdFURIl8mWqc_8BH74f9XMb_vBcf3e4CPBgmlmEGn9UaDS11sjBcorngAiAxQOv3lD6aRja_iyXpvh8WH50rm4Z_PprS0qckZdClsloJ4cjZwJ3H1sLiKgHrbpln4XQFBmCg_FHuR4VYu2-HKziHoNd18gPAgICr1Vsm42_ZrDs"/>
+</div>
+</div>
+<span>4.9/5 stars based on 10k reviews</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-surface-dim pt-24 pb-12 px-margin-mobile md:px-margin-desktop border-t border-white/[0.03]">
+<div class="max-w-7xl mx-auto">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 mb-20">
+<div class="col-span-2">
+<div class="text-headline-lg font-headline-lg tracking-tighter text-on-surface mb-6">ExpendX</div>
+<p class="text-on-surface-variant text-body-md max-w-xs">The clinical standard for personal wealth management. Precision engineered for the modern investor.</p>
+</div>
+<div>
+<h5 class="font-headline-sm text-on-surface mb-6">Product</h5>
+<ul class="space-y-4 text-on-surface-variant font-body-sm">
+<li><a class="hover:text-primary transition-colors" href="#">Features</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Pricing</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Mobile App</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Desktop</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-headline-sm text-on-surface mb-6">Security</h5>
+<ul class="space-y-4 text-on-surface-variant font-body-sm">
+<li><a class="hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Compliance</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Audit Report</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-headline-sm text-on-surface mb-6">Resources</h5>
+<ul class="space-y-4 text-on-surface-variant font-body-sm">
+<li><a class="hover:text-primary transition-colors" href="#">Documentation</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Changelog</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Community</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Support</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-headline-sm text-on-surface mb-6">Connect</h5>
+<ul class="space-y-4 text-on-surface-variant font-body-sm">
+<li><a class="hover:text-primary transition-colors" href="#">X / Twitter</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">LinkedIn</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">GitHub</a></li>
+</ul>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/[0.03] text-on-surface-variant font-label-tabular text-sm">
+<p>© 2024 ExpendX Institutional. All rights reserved.</p>
+<div class="flex gap-8 mt-4 md:mt-0">
+<span class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-finance-income"></span>
+                        Network Stable
+                    </span>
+<span>System v2.4.12</span>
+</div>
+</div>
+</div>
+</footer>
+<!-- Pure Minimalist Interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.addEventListener('mousedown', () => {
+                    btn.classList.add('scale-95');
+                });
+                btn.addEventListener('mouseup', () => {
+                    btn.classList.remove('scale-95');
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.classList.remove('scale-95');
+                });
+            });
+
+            // Smooth Scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body></html>

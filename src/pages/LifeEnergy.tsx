@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/ui/page-header";
 
 interface TxRow {
   id: string;
@@ -38,7 +39,7 @@ const LifeEnergy = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"crossover" | "fulfillment" | "concept">("crossover");
   const [showSetup, setShowSetup] = useState(() => {
-    return !localStorage.getItem("expendx_life_energy_data");
+    return !localStorage.getItem("lucent_life_energy_data") && !localStorage.getItem("expendx_life_energy_data");
   });
   const [setupStep, setSetupStep] = useState(1);
 
@@ -56,26 +57,38 @@ const LifeEnergy = () => {
   });
 
   // Load existing values into form if present
-  useMemo(() => {
+  const loadSavedData = React.useCallback(() => {
     try {
-      const saved = localStorage.getItem("expendx_life_energy_data");
+      const saved = localStorage.getItem("lucent_life_energy_data") || localStorage.getItem("expendx_life_energy_data");
       if (saved) {
         const parsed = JSON.parse(saved);
         setFormData(prev => ({
           ...prev,
           grossSalary: Number(parsed.grossSalary) || 3500,
-          hoursPerWeek: Number(parsed.hoursPerWeek) || 40,
-          commuteHoursPerWeek: Number(parsed.commuteHoursPerWeek) || 5,
-          taxPercentage: Number(parsed.taxPercentage) || 20,
-          commuteCost: Number(parsed.commuteCost) || 150,
-          wardrobeCost: Number(parsed.wardrobeCost) || 50,
-          mealsCost: Number(parsed.mealsCost) || 100,
-          decompressionCost: Number(parsed.decompressionCost) || 100,
+          hoursPerWeek: Number(parsed.workHoursPerWeek || parsed.hoursPerWeek) || 40,
+          commuteHoursPerWeek: Number(parsed.commuteTimePerWeek || parsed.commuteHoursPerWeek) || 5,
+          taxPercentage: Number(parsed.taxPercentage) || 0,
+          commuteCost: Number(parsed.jobCostsCommute || parsed.commuteCost) || 150,
+          wardrobeCost: Number(parsed.jobCostsAttire || parsed.wardrobeCost) || 50,
+          mealsCost: Number(parsed.jobCostsMeals || parsed.mealsCost) || 100,
+          decompressionCost: Number(parsed.jobCostsDecompression || parsed.decompressionCost) || 100,
           passiveMonthlyIncome: Number(parsed.passiveMonthlyIncome) || 150,
         }));
       }
     } catch (e) {}
   }, []);
+
+  useMemo(() => {
+    loadSavedData();
+  }, [loadSavedData]);
+
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      loadSavedData();
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [loadSavedData]);
 
   // Live calculations for wizard
   const wizardCalculations = useMemo(() => {
@@ -104,13 +117,21 @@ const LifeEnergy = () => {
   const handleSaveSetup = () => {
     try {
       const savedData = {
-        ...formData,
+        grossSalary: formData.grossSalary,
+        workHoursPerWeek: formData.hoursPerWeek,
+        commuteTimePerWeek: formData.commuteHoursPerWeek,
+        jobCostsCommute: formData.commuteCost,
+        jobCostsAttire: formData.wardrobeCost,
+        jobCostsMeals: formData.mealsCost,
+        jobCostsDecompression: formData.decompressionCost,
+        jobCostsOther: 0,
+        passiveMonthlyIncome: formData.passiveMonthlyIncome,
         trueHourlyRate: wizardCalculations.trueHourly,
       };
-      localStorage.setItem("expendx_life_energy_data", JSON.stringify(savedData));
-      localStorage.setItem("expendx_true_hourly_rate", wizardCalculations.trueHourly.toString());
+      localStorage.setItem("lucent_life_energy_data", JSON.stringify(savedData));
+      localStorage.setItem("lucent_true_hourly_rate", wizardCalculations.trueHourly.toString());
       
-      // Dispatch storage change event to sync headers immediately
+      // Dispatch storage change event to sync headers & settings immediately
       window.dispatchEvent(new Event("storage"));
       
       toast({
@@ -250,7 +271,7 @@ const LifeEnergy = () => {
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Discover Your Life Energy</h1>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Money is simply something you trade your life energy for. Let's calculate your **True Hourly Wage** to start tracking in time, not just currency.
+            Money is simply something you trade your life energy for. Let's calculate your <strong className="text-foreground font-bold">True Hourly Wage</strong> to start tracking in time, not just currency.
           </p>
         </div>
 
@@ -281,7 +302,7 @@ const LifeEnergy = () => {
                 <div className="space-y-2">
                   <h3 className="text-lg font-bold">What is Life Energy?</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Most people think they make $30/hour. But after subtracting income taxes, commuting expenses, wardrobes, extra meals, and stress decompression, their actual **True Hourly Wage** is often less than half of that!
+                    Most people think they make $30/hour. But after subtracting income taxes, commuting expenses, wardrobes, extra meals, and stress decompression, their actual <strong className="text-foreground font-bold">True Hourly Wage</strong> is often less than half of that!
                   </p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     In Step 2 and 3, we will break down your gross earnings and real expenses to uncover the true value of your time.
@@ -290,7 +311,7 @@ const LifeEnergy = () => {
                 <div className="bg-primary/5 rounded-xl p-4 border border-primary/10 flex items-start gap-3">
                   <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Once set up, you can toggle your dashboard to display balances in **hours of life energy** instead of traditional currency.
+                    Once set up, you can toggle your dashboard to display balances in <strong className="text-foreground font-bold">hours of life energy</strong> instead of traditional currency.
                   </p>
                 </div>
               </div>
@@ -470,29 +491,22 @@ const LifeEnergy = () => {
   return (
     <div className="space-y-6 pb-24 text-foreground">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 items-start">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-primary/10">
-            <CustomLifeEnergyIcon className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Life Energy & Freedom</h1>
-            <p className="text-xs text-muted-foreground">Track financial freedom and fulfillment curves</p>
-          </div>
-        </div>
-
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => {
-            setSetupStep(1);
-            setShowSetup(true);
-          }}
-          className="text-xs font-bold border border-primary/20 hover:border-primary/40 bg-background/50 hover:bg-muted/20 rounded-xl px-4 py-2"
-        >
-          Adjust Wage Settings
-        </Button>
-      </div>
+      <PageHeader
+        title="Life Energy & Freedom"
+        actions={
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              setSetupStep(1);
+              setShowSetup(true);
+            }}
+            className="text-xs font-bold border border-primary/20 hover:border-primary/40 bg-background/50 hover:bg-muted/20 rounded-xl px-4 py-2"
+          >
+            Adjust Wage Settings
+          </Button>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex bg-muted/40 rounded-xl p-1 gap-1 w-full max-w-lg overflow-x-auto scrollbar-none">

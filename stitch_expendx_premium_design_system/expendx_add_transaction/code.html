@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX | Add Transaction</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #111415;
+            color: #e1e2e4;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(13, 13, 17, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #323537;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "surface-variant": "#323537",
+                "surface-dim": "#111415",
+                "on-secondary-container": "#003a5c",
+                "primary-fixed-dim": "#c8c5c9",
+                "border-subtle": "rgba(255, 255, 255, 0.03)",
+                "tertiary-fixed": "#bef521",
+                "inverse-on-surface": "#2e3132",
+                "inverse-surface": "#e1e2e4",
+                "tertiary-fixed-dim": "#a5d700",
+                "error": "#ffb4ab",
+                "background": "#111415",
+                "surface-container-high": "#282a2c",
+                "on-tertiary": "#263500",
+                "outline-variant": "#47464b",
+                "error-container": "#93000a",
+                "on-surface-variant": "#c8c5cb",
+                "carbon-surface": "#0E0E11",
+                "finance-debt": "#FB923C",
+                "inverse-primary": "#5f5e61",
+                "surface-bright": "#37393b",
+                "primary-container": "#050507",
+                "finance-income": "#34D399",
+                "surface-container-low": "#191c1e",
+                "primary": "#c8c5c9",
+                "surface-container-lowest": "#0c0f10",
+                "on-primary": "#313033",
+                "surface-container-highest": "#323537",
+                "on-background": "#e1e2e4",
+                "border-strong": "#242429",
+                "secondary": "#93ccff",
+                "finance-expense": "#F87171",
+                "on-surface": "#e1e2e4",
+                "on-secondary-fixed-variant": "#004b73",
+                "on-error": "#690005",
+                "surface": "#111415",
+                "secondary-fixed-dim": "#93ccff",
+                "surface-tint": "#c8c5c9",
+                "on-primary-fixed": "#1c1b1e",
+                "finance-savings": "#60A5FA",
+                "on-tertiary-container": "#628200",
+                "on-tertiary-fixed": "#151f00",
+                "secondary-fixed": "#cce5ff",
+                "secondary-container": "#00a9fd",
+                "on-secondary-fixed": "#001d31",
+                "surface-container": "#1d2022",
+                "on-tertiary-fixed-variant": "#394d00",
+                "on-primary-fixed-variant": "#47464a",
+                "on-error-container": "#ffdad6",
+                "tertiary-container": "#030600",
+                "on-secondary": "#003351"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "compact-sm": "0.625rem",
+                "margin-desktop": "32px",
+                "unit": "4px",
+                "margin-mobile": "20px",
+                "compact-md": "0.875rem",
+                "gutter": "16px",
+                "compact-xs": "0.375rem"
+              },
+              "fontFamily": {
+                "body-md": ["Plus Jakarta Sans"],
+                "headline-lg": ["Plus Jakarta Sans"],
+                "headline-sm": ["Plus Jakarta Sans"],
+                "label-tabular": ["Plus Jakarta Sans"],
+                "headline-md": ["Plus Jakarta Sans"],
+                "body-sm": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background selection:bg-primary/30">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 left-0 w-full h-[64px] z-50 bg-[#0d0d0dcc] backdrop-blur-[20px] border-b border-border-subtle flex items-center justify-between px-margin-mobile md:px-margin-desktop">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform p-1">
+<span class="material-symbols-outlined text-on-surface">close</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">Add Transaction</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="h-[36px] px-5 bg-on-surface text-surface font-headline-sm text-headline-sm rounded-full flex items-center gap-2 hover:opacity-90 transition-opacity active:scale-95" id="aiScannerBtn">
+<span class="material-symbols-outlined text-[18px]">document_scanner</span>
+<span>Launch AI Scanner</span>
+</button>
+</div>
+</header>
+<main class="pt-[84px] pb-[100px] px-margin-mobile md:px-margin-desktop max-w-2xl mx-auto">
+<!-- Transaction Type Selector -->
+<div class="flex p-1 bg-surface-container-low rounded-full border border-border-subtle mb-8">
+<button class="flex-1 py-3 px-4 rounded-full font-headline-sm text-headline-sm transition-all duration-200 bg-surface-variant text-on-surface" id="btn-expense" onclick="setType('expense')">
+                Expense
+            </button>
+<button class="flex-1 py-3 px-4 rounded-full font-headline-sm text-headline-sm transition-all duration-200 text-on-surface-variant hover:text-on-surface" id="btn-income" onclick="setType('income')">
+                Income
+            </button>
+<button class="flex-1 py-3 px-4 rounded-full font-headline-sm text-headline-sm transition-all duration-200 text-on-surface-variant hover:text-on-surface" id="btn-savings" onclick="setType('savings')">
+                Savings
+            </button>
+<button class="flex-1 py-3 px-4 rounded-full font-headline-sm text-headline-sm transition-all duration-200 text-on-surface-variant hover:text-on-surface" id="btn-subscription" onclick="setType('subscription')">
+                Subs
+            </button>
+</div>
+<!-- Amount Entry Section -->
+<div class="mb-10 text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-2 uppercase tracking-widest">Amount</p>
+<div class="flex items-center justify-center">
+<span class="font-headline-lg text-[40px] text-on-surface-variant mr-2">$</span>
+<input autofocus="" class="w-full max-w-[280px] bg-transparent border-none text-center font-headline-lg text-[56px] focus:ring-0 placeholder:text-surface-variant text-on-surface" placeholder="0.00" step="0.01" type="number"/>
+</div>
+</div>
+<!-- Bento Grid Form Sections -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Category Picker -->
+<div class="bg-carbon-surface border border-border-subtle p-5 rounded-[24px] col-span-1 md:col-span-2">
+<label class="block font-headline-sm text-headline-sm text-on-surface mb-4">Category</label>
+<div class="flex flex-wrap gap-3">
+<button class="group flex flex-col items-center gap-2 flex-1 min-w-[70px]">
+<div class="w-14 h-14 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-finance-expense">shopping_bag</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Shopping</span>
+</button>
+<button class="group flex flex-col items-center gap-2 flex-1 min-w-[70px]">
+<div class="w-14 h-14 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-finance-savings">restaurant</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dining</span>
+</button>
+<button class="group flex flex-col items-center gap-2 flex-1 min-w-[70px]">
+<div class="w-14 h-14 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-finance-income">commute</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Travel</span>
+</button>
+<button class="group flex flex-col items-center gap-2 flex-1 min-w-[70px]">
+<div class="w-14 h-14 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-finance-debt">home</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Rent</span>
+</button>
+<button class="group flex flex-col items-center gap-2 flex-1 min-w-[70px]">
+<div class="w-14 h-14 rounded-full bg-surface-container-high border border-border-subtle flex items-center justify-center border-dashed group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">more_horiz</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Other</span>
+</button>
+</div>
+</div>
+<!-- Date Picker -->
+<div class="bg-carbon-surface border border-border-subtle p-5 rounded-[24px]">
+<label class="block font-headline-sm text-headline-sm text-on-surface mb-3">Date</label>
+<div class="relative">
+<input class="w-full h-[44px] bg-surface-container-low border border-border-subtle rounded-xl px-4 font-body-md text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none" type="date" value="2023-11-24"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">calendar_today</span>
+</div>
+</div>
+<!-- Account Selector -->
+<div class="bg-carbon-surface border border-border-subtle p-5 rounded-[24px]">
+<label class="block font-headline-sm text-headline-sm text-on-surface mb-3">Account</label>
+<select class="w-full h-[44px] bg-surface-container-low border border-border-subtle rounded-xl px-4 font-body-md text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all appearance-none">
+<option>Main Checkings (..4291)</option>
+<option>Savings Vault</option>
+<option>Credit Platinum</option>
+</select>
+</div>
+<!-- Notes Field -->
+<div class="bg-carbon-surface border border-border-subtle p-5 rounded-[24px] col-span-1 md:col-span-2">
+<label class="block font-headline-sm text-headline-sm text-on-surface mb-3">Notes &amp; Tags</label>
+<textarea class="w-full bg-surface-container-low border border-border-subtle rounded-xl px-4 py-3 font-body-md text-body-md text-on-surface focus:ring-1 focus:ring-primary focus:border-primary transition-all min-h-[100px] resize-none" placeholder="Add description or #tags..."></textarea>
+</div>
+</div>
+<!-- Action Button -->
+<div class="mt-12 flex flex-col gap-4">
+<button class="w-full h-[56px] bg-on-surface text-surface rounded-full font-headline-md text-headline-md font-bold flex items-center justify-center hover:opacity-90 active:scale-[0.98] transition-all">
+                Save Transaction
+            </button>
+<p class="text-center font-body-sm text-body-sm text-on-surface-variant opacity-60">Auto-syncing with synced bank accounts</p>
+</div>
+</main>
+<!-- Bottom Navigation Shell (Inactive Context - User is in a 'Close' action sub-page, but shell structure is defined in system) -->
+<!-- Suppressed per rules for transactional focused task pages -->
+<!-- Scanner Modal Overlay (Hidden) -->
+<div class="fixed inset-0 z-[100] bg-black/90 hidden flex flex-col items-center justify-center p-6 text-center" id="scannerOverlay">
+<div class="w-full max-w-sm aspect-[3/4] border-2 border-dashed border-primary/50 rounded-3xl relative overflow-hidden flex flex-center">
+<div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent animate-pulse"></div>
+<img class="w-full h-full object-cover" data-alt="A futuristic smartphone screen scanning a high-fidelity paper receipt in a dark, minimalist setting. The interface displays glowing digital data points and a floating scan line. The aesthetic is ultra-clean with deep carbon blacks and sharp neon electric blue accents, reflecting a high-end fintech laboratory environment with sophisticated laboratory lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4ca2ubxw23Sgo2rmzvoELqUl-XXKdQxTNC3fZZ54wC3tCNIqvjZJOQxXKudrXwYhP-GFGbcq7HzMxMis5A4T3tzHeM_2eZjl2QecC6LTqTeZXvT9uYC5K4s8uCL_7CnL-gbjJ5xYA5WTCRd8_9T5PTq76BZ2LViOceZ03a-aAdNhlcLa45MnDLca-wZJ5F_OwI24ykdn62eNL3UFCHSAe6fzKXNtK95vRT3nFpo-S0pL6a6BOaLeGVGqzcHdc0ixpexCZpFzF0GY"/>
+</div>
+<p class="mt-8 font-headline-md text-headline-md text-on-surface">Scanning for Data...</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-xs">Our AI is extracting merchant, date, and amount automatically.</p>
+<button class="mt-12 w-14 h-14 rounded-full bg-surface-variant flex items-center justify-center" id="closeScanner">
+<span class="material-symbols-outlined text-on-surface">close</span>
+</button>
+</div>
+<script>
+        function setType(type) {
+            const buttons = ['expense', 'income', 'savings', 'subscription'];
+            buttons.forEach(b => {
+                const el = document.getElementById('btn-' + b);
+                if (b === type) {
+                    el.classList.add('bg-surface-variant', 'text-on-surface');
+                    el.classList.remove('text-on-surface-variant');
+                } else {
+                    el.classList.remove('bg-surface-variant', 'text-on-surface');
+                    el.classList.add('text-on-surface-variant');
+                }
+            });
+        }
+
+        const scannerBtn = document.getElementById('aiScannerBtn');
+        const scannerOverlay = document.getElementById('scannerOverlay');
+        const closeScanner = document.getElementById('closeScanner');
+
+        scannerBtn.addEventListener('click', () => {
+            scannerOverlay.classList.remove('hidden');
+        });
+
+        closeScanner.addEventListener('click', () => {
+            scannerOverlay.classList.add('hidden');
+        });
+
+        // Tactile compression simulation
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.classList.add('scale-95'));
+            btn.addEventListener('mouseup', () => btn.classList.remove('scale-95'));
+            btn.addEventListener('mouseleave', () => btn.classList.remove('scale-95'));
+        });
+    </script>
+</body></html>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#323537",
+                        "surface-dim": "#111415",
+                        "on-secondary-container": "#003a5c",
+                        "primary-fixed-dim": "#c8c5c9",
+                        "border-subtle": "rgba(255, 255, 255, 0.03)",
+                        "tertiary-fixed": "#bef521",
+                        "inverse-on-surface": "#2e3132",
+                        "inverse-surface": "#e1e2e4",
+                        "tertiary-fixed-dim": "#a5d700",
+                        "error": "#ffb4ab",
+                        "background": "#111415",
+                        "surface-container-high": "#282a2c",
+                        "on-tertiary": "#263500",
+                        "outline-variant": "#47464b",
+                        "error-container": "#93000a",
+                        "on-surface-variant": "#c8c5cb",
+                        "carbon-surface": "#0E0E11",
+                        "finance-debt": "#FB923C",
+                        "inverse-primary": "#5f5e61",
+                        "surface-bright": "#37393b",
+                        "primary-container": "#050507",
+                        "finance-income": "#34D399",
+                        "surface-container-low": "#191c1e",
+                        "primary": "#c8c5c9",
+                        "surface-container-lowest": "#0c0f10",
+                        "on-primary": "#313033",
+                        "surface-container-highest": "#323537",
+                        "on-background": "#e1e2e4",
+                        "border-strong": "#242429",
+                        "secondary": "#93ccff",
+                        "finance-expense": "#F87171",
+                        "on-surface": "#e1e2e4",
+                        "on-secondary-fixed-variant": "#004b73",
+                        "on-error": "#690005",
+                        "surface": "#111415",
+                        "secondary-fixed-dim": "#93ccff",
+                        "surface-tint": "#c8c5c9",
+                        "on-primary-fixed": "#1c1b1e",
+                        "finance-savings": "#60A5FA",
+                        "on-tertiary-container": "#628200",
+                        "on-tertiary-fixed": "#151f00",
+                        "secondary-fixed": "#cce5ff",
+                        "secondary-container": "#00a9fd",
+                        "on-tertiary-fixed-variant": "#394d00",
+                        "on-primary-fixed-variant": "#47464a",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#030600",
+                        "on-secondary": "#003351"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "compact-sm": "0.625rem",
+                        "margin-desktop": "32px",
+                        "unit": "4px",
+                        "margin-mobile": "20px",
+                        "compact-md": "0.875rem",
+                        "gutter": "16px",
+                        "compact-xs": "0.375rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-tabular": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                        "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                        "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .streak-glow {
+            box-shadow: 0 0 60px -15px rgba(186, 245, 33, 0.3);
+        }
+        @keyframes flame-float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+        .animate-flame {
+            animation: flame-float 3s ease-in-out infinite;
+        }
+        .backdrop-blur-ultra {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md selection:bg-tertiary selection:text-tertiary-container overflow-hidden">
+<!-- Header Mockup (Background Layer) -->
+<header class="fixed top-0 left-0 w-full h-[64px] z-10 flex items-center justify-between px-margin-mobile bg-[#0d0d0dcc] backdrop-blur-[20px] border-b border-border-subtle">
+<div class="font-headline-md text-headline-md font-bold text-on-surface">ExpendX</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">person</span>
+</div>
+</header>
+<!-- Main Content Mockup (Background Layer) -->
+<main class="pt-[84px] px-margin-mobile space-y-6 opacity-40 grayscale pointer-events-none">
+<section class="h-48 bg-surface-container rounded-3xl border border-border-subtle"></section>
+<section class="grid grid-cols-2 gap-4">
+<div class="h-32 bg-surface-container rounded-3xl border border-border-subtle"></div>
+<div class="h-32 bg-surface-container rounded-3xl border border-border-subtle"></div>
+</section>
+<section class="h-64 bg-surface-container rounded-3xl border border-border-subtle"></section>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-ultra transition-opacity duration-500" id="modal-container">
+<!-- Streak Milestone Modal -->
+<div class="relative w-full max-w-[400px] bg-carbon-surface/80 rounded-[32px] border border-white/5 p-8 streak-glow overflow-hidden transform transition-all duration-500 scale-100">
+<!-- Background Atmospheric Effect -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-tertiary/10 blur-[100px] rounded-full -z-10"></div>
+<!-- Visual Header: The Flame -->
+<div class="flex flex-col items-center justify-center mb-8">
+<div class="relative w-32 h-32 flex items-center justify-center mb-4">
+<!-- Outer Halo -->
+<div class="absolute inset-0 bg-tertiary/5 rounded-full animate-pulse"></div>
+<!-- The Flame Graphic -->
+<div class="animate-flame">
+<span class="material-symbols-outlined text-[80px] text-tertiary" style="font-variation-settings: 'FILL' 1;">
+                            local_fire_department
+                        </span>
+</div>
+</div>
+<div class="text-center space-y-1">
+<p class="font-headline-sm text-tertiary tracking-widest uppercase">Milestone Reached</p>
+<h1 class="font-headline-lg text-headline-lg text-on-surface leading-tight">Day 15</h1>
+</div>
+</div>
+<!-- Motivational Typography -->
+<div class="text-center space-y-4 mb-10">
+<p class="font-body-md text-on-surface-variant leading-relaxed">
+                    You've maintained your budget for <span class="text-on-surface font-bold">15 days straight</span>. Your financial discipline is setting a new standard for your future self.
+                </p>
+<div class="flex justify-center gap-2">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-carbon-surface bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, professional headshot of a young adult with a subtle smile, lit with soft cinematic lighting, against a dark minimalist studio background. The style is modern, clinical, and emphasizes high-trust fintech aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD75B2fHJP3M7yotkjuHuD-CBRxCWCYXgffnsEak0RQ1chVGCK5wL9mBd1jopPB0Ma9nozkpUuTVFDCceFP0XCi-jt0kcNFLKuQbT6iz9QUGvZHJd2l3TdqFGMrbo3RcVsven3wCYNVPJzEgSwqV95zaUCK0o0UGntcAXlnLLLuT-Y911Y3CMtizYsQYLyxyIONCiNYtxmgXOaLHlY2dfxg0iDeJ_ggqZM47rygSdea9BT9ZIA39r0obPZ-87S7V2Tgy4f7uhvv9n0"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-carbon-surface bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-resolution profile portrait of a woman looking confidently at the camera. The lighting is crisp and cool, consistent with a premium fintech interface. The background is a soft, dark gray gradient that conveys stability and precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1VnUcaTji_SRKnIeuf68hQQv6mWYaWl_kLLgL4lh3ba59W2sfNNAOrJuvpTxkc9mRXw_vdgynb4GJ9b_RGfOjMmaCoe4mn6_p4W8Iaof15FIHezCpEEHhfetB8KLd-2KxtwegNbePb9z9QUp-OZeM154cw9Bw6XzP57i3waomW5ZIVloTT0n0KItU91WC5DrBLw3F1vceJC08OKOmrt5s8ZJeXN0QLBUgZwGnnAo2frhXp-3gxp6sOfj84kmnCldTTCF6pHcyaBc"/>
+</div>
+</div>
+<p class="text-body-sm text-on-surface-variant flex items-center">
+                        Joined by <span class="text-on-surface font-bold px-1">1.2k</span> others today
+                    </p>
+</div>
+</div>
+<!-- Action Button -->
+<div class="space-y-4">
+<button class="w-full h-[52px] bg-on-surface text-background font-bold rounded-full hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2" onclick="closeModal()">
+<span>Continue Streak</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<button class="w-full h-[44px] bg-transparent text-on-surface-variant font-headline-sm hover:text-on-surface transition-colors duration-200">
+                    Share Progress
+                </button>
+</div>
+<!-- Progress Bar Micro-detail -->
+<div class="mt-8 pt-6 border-t border-border-subtle">
+<div class="flex justify-between items-end mb-2">
+<span class="text-[11px] uppercase tracking-widest text-on-surface-variant font-bold">Next Reward</span>
+<span class="text-[11px] text-tertiary font-bold italic">Day 20: Elite Badge</span>
+</div>
+<div class="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-3/4 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Nav (Hidden but present as anchor) -->
+<nav class="fixed bottom-0 left-0 w-full h-[72px] z-50 bg-[#0d0d0dcc] backdrop-blur-[20px] border-t border-border-subtle flex justify-around items-center px-4">
+<div class="flex flex-col items-center justify-center text-primary font-bold">
+<span class="material-symbols-outlined">home</span>
+<span class="text-body-sm font-body-sm">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-40">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-body-sm font-body-sm">Budget</span>
+</div>
+<div class="relative -top-4 w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20 scale-95 opacity-40">
+<span class="material-symbols-outlined text-on-primary">add</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-40">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="text-body-sm font-body-sm">Wealth</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant opacity-40">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-body-sm font-body-sm">Settings</span>
+</div>
+</nav>
+<script>
+        function closeModal() {
+            const container = document.getElementById('modal-container');
+            const modal = container.querySelector('.relative');
+            
+            modal.style.transform = 'scale(0.95)';
+            modal.style.opacity = '0';
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                container.style.display = 'none';
+                document.body.classList.remove('overflow-hidden');
+            }, 500);
+        }
+
+        // Entrance animation
+        window.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('modal-container');
+            const modal = container.querySelector('.relative');
+            
+            container.style.opacity = '0';
+            modal.style.transform = 'scale(0.9) translateY(20px)';
+            
+            requestAnimationFrame(() => {
+                container.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                modal.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                container.style.opacity = '1';
+                modal.style.transform = 'scale(1) translateY(0)';
+            });
+        });
+    </script>
+</body></html>

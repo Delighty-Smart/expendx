@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX Admin Telemetry</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #111415;
+            color: #e1e2e4;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(13, 13, 13, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .chart-grid {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #323537;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#323537",
+                    "surface-dim": "#111415",
+                    "on-secondary-container": "#003a5c",
+                    "primary-fixed-dim": "#c8c5c9",
+                    "border-subtle": "rgba(255, 255, 255, 0.03)",
+                    "tertiary-fixed": "#bef521",
+                    "inverse-on-surface": "#2e3132",
+                    "inverse-surface": "#e1e2e4",
+                    "tertiary-fixed-dim": "#a5d700",
+                    "error": "#ffb4ab",
+                    "background": "#111415",
+                    "surface-container-high": "#282a2c",
+                    "on-tertiary": "#263500",
+                    "outline-variant": "#47464b",
+                    "error-container": "#93000a",
+                    "on-surface-variant": "#c8c5cb",
+                    "carbon-surface": "#0E0E11",
+                    "finance-debt": "#FB923C",
+                    "inverse-primary": "#5f5e61",
+                    "surface-bright": "#37393b",
+                    "primary-container": "#050507",
+                    "finance-income": "#34D399",
+                    "surface-container-low": "#191c1e",
+                    "primary": "#c8c5c9",
+                    "surface-container-lowest": "#0c0f10",
+                    "on-primary": "#313033",
+                    "surface-container-highest": "#323537",
+                    "on-background": "#e1e2e4",
+                    "border-strong": "#242429",
+                    "secondary": "#93ccff",
+                    "finance-expense": "#F87171",
+                    "on-surface": "#e1e2e4",
+                    "on-secondary-fixed-variant": "#004b73",
+                    "on-error": "#690005",
+                    "surface": "#111415",
+                    "secondary-fixed-dim": "#93ccff",
+                    "surface-tint": "#c8c5c9",
+                    "on-primary-fixed": "#1c1b1e",
+                    "finance-savings": "#60A5FA",
+                    "on-tertiary-container": "#628200",
+                    "on-tertiary-fixed": "#151f00",
+                    "secondary-fixed": "#cce5ff",
+                    "secondary-container": "#00a9fd",
+                    "on-primary-container": "#78777a",
+                    "outline": "#929095",
+                    "tertiary": "#a5d700",
+                    "primary-fixed": "#e5e1e5",
+                    "obsidian-card": "#121216",
+                    "on-secondary-fixed": "#001d31",
+                    "surface-container": "#1d2022",
+                    "on-tertiary-fixed-variant": "#394d00",
+                    "on-primary-fixed-variant": "#47464a",
+                    "on-error-container": "#ffdad6",
+                    "tertiary-container": "#030600",
+                    "on-secondary": "#003351"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "compact-sm": "0.625rem",
+                    "margin-desktop": "32px",
+                    "unit": "4px",
+                    "margin-mobile": "20px",
+                    "compact-md": "0.875rem",
+                    "gutter": "16px",
+                    "compact-xs": "0.375rem"
+            },
+            "fontFamily": {
+                    "body-md": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "label-tabular": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                    "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                    "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface overflow-x-hidden pt-[64px] pb-[72px] md:pb-0">
+<!-- TopAppBar -->
+<header class="bg-[#0d0d0dcc] backdrop-blur-[20px] fixed top-0 left-0 w-full h-[64px] z-50 border-b border-border-subtle flex items-center justify-between px-margin-mobile w-full">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border-strong">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a technology executive in a dark minimalist studio. The lighting is low-key and dramatic, casting soft shadows that emphasize the high-fidelity skin textures. The color palette is strictly monochrome with subtle obsidian and carbon tones, reflecting a clinical and elite corporate atmosphere for an administrator profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDm6LIePLoiFT3TzNJkLscVMO6PY5daHqYLiiQK_tsTHVZCrZ-HmYDa0beUkKzus2OYnSmcXhSj2I1qU31BonLCMePQuqAj_81YNqCLMaZJ-odowmpESnDDrAw3z7Gt4TPZVxNBys2EkLNo0rCDEW7AAVWaAyavLFMjPJ19h4N4LDFCYIArX4idYPu54wRXNmtmS2bGCO0FS3qFUCglrMeH5-df7-mYmaM2qHKJfVNokojBXlcQnMsXi-WagZ1nKukVkh9aCEfpd7Y"/>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">ExpendX</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">search</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">notifications</button>
+</div>
+</header>
+<main class="max-w-7xl mx-auto p-margin-mobile md:p-margin-desktop animate-in fade-in duration-500">
+<!-- Dashboard Header -->
+<div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<span class="text-tertiary font-label-tabular text-body-sm tracking-widest uppercase">System Telemetry</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Admin Control Center</h2>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-border-subtle">
+<span class="w-2 h-2 rounded-full bg-finance-income animate-pulse"></span>
+<span class="text-body-sm font-label-tabular text-on-surface-variant">Systems Operational</span>
+</div>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-full font-headline-sm text-body-sm hover:opacity-90 active:scale-95 transition-all">
+                    Export Logs
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
+<!-- Real-time Active Users -->
+<div class="md:col-span-2 glass-panel rounded-xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+<div class="flex justify-between items-start z-10">
+<div>
+<p class="text-on-surface-variant font-body-sm">Active Sessions</p>
+<h3 class="text-4xl font-extrabold tracking-tight mt-1">12,482</h3>
+</div>
+<span class="text-finance-income font-label-tabular text-body-sm">+14.2%</span>
+</div>
+<!-- Abstract Chart Visualization -->
+<div class="absolute bottom-0 left-0 w-full h-24 opacity-30 chart-grid pointer-events-none">
+<div class="absolute inset-0 flex items-end gap-[2px] px-2">
+<div class="flex-1 bg-primary h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[55%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[80%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[90%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[75%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[85%] rounded-t-sm"></div>
+<div class="flex-1 bg-primary h-[95%] rounded-t-sm"></div>
+</div>
+</div>
+<div class="flex gap-4 mt-8 z-10">
+<div class="flex flex-col">
+<span class="text-[10px] uppercase text-outline">Web</span>
+<span class="text-body-md font-bold">8.2k</span>
+</div>
+<div class="flex flex-col border-l border-border-subtle pl-4">
+<span class="text-[10px] uppercase text-outline">Mobile</span>
+<span class="text-body-md font-bold">4.2k</span>
+</div>
+</div>
+</div>
+<!-- Server Health / Response Time -->
+<div class="glass-panel rounded-xl p-6 flex flex-col justify-between border-l-4 border-l-tertiary">
+<div class="flex justify-between">
+<span class="material-symbols-outlined text-tertiary">speed</span>
+<span class="text-on-surface-variant font-label-tabular text-body-sm">99.9% Uptime</span>
+</div>
+<div class="mt-4">
+<p class="text-on-surface-variant font-body-sm">Avg. Response Time</p>
+<div class="flex items-baseline gap-2">
+<h3 class="text-3xl font-bold">124</h3>
+<span class="text-on-surface-variant font-body-sm">ms</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full mt-4 overflow-hidden">
+<div class="bg-tertiary h-full w-[85%]"></div>
+</div>
+</div>
+<!-- Error Rate -->
+<div class="glass-panel rounded-xl p-6 flex flex-col justify-between border-l-4 border-l-finance-expense">
+<div class="flex justify-between">
+<span class="material-symbols-outlined text-finance-expense">warning</span>
+<span class="text-on-surface-variant font-label-tabular text-body-sm">Critical</span>
+</div>
+<div class="mt-4">
+<p class="text-on-surface-variant font-body-sm">API Error Rate</p>
+<div class="flex items-baseline gap-2">
+<h3 class="text-3xl font-bold">0.02</h3>
+<span class="text-on-surface-variant font-body-sm">%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full mt-4 overflow-hidden">
+<div class="bg-finance-expense h-full w-[12%]"></div>
+</div>
+</div>
+<!-- Main High-Density Chart -->
+<div class="md:col-span-3 glass-panel rounded-xl p-6 min-h-[400px] flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-sm text-on-surface">Infrastructure Loading (24h)</h3>
+<div class="flex gap-2">
+<button class="text-[11px] px-3 py-1 rounded bg-surface-container-highest text-on-surface">Requests</button>
+<button class="text-[11px] px-3 py-1 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors">CPU</button>
+<button class="text-[11px] px-3 py-1 rounded text-on-surface-variant hover:bg-surface-container-high transition-colors">Memory</button>
+</div>
+</div>
+<div class="flex-1 w-full chart-grid relative rounded-lg border border-border-subtle overflow-hidden">
+<!-- Complex SVG Data Visualization -->
+<svg class="w-full h-full preserve-3d" viewbox="0 0 800 300">
+<defs>
+<lineargradient id="gradient-line" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="white" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="white" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,250 Q100,220 200,260 T400,180 T600,210 T800,140 L800,300 L0,300 Z" fill="url(#gradient-line)"></path>
+<path d="M0,250 Q100,220 200,260 T400,180 T600,210 T800,140" fill="none" stroke="white" stroke-dasharray="0" stroke-width="2"></path>
+<circle cx="200" cy="260" fill="white" r="4"></circle>
+<circle cx="400" cy="180" fill="white" r="4"></circle>
+<circle cx="600" cy="210" fill="white" r="4"></circle>
+<!-- Reference Line -->
+<line stroke="rgba(255,255,255,0.05)" stroke-width="1" x1="0" x2="800" y1="200" y2="200"></line>
+<line stroke="rgba(255,255,255,0.05)" stroke-width="1" x1="0" x2="800" y1="100" y2="100"></line>
+</svg>
+<!-- Tooltip Simulation -->
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-on-surface text-surface p-2 rounded text-[10px] font-bold shadow-xl">
+                        PEAK: 14.2k req/sec
+                    </div>
+</div>
+<div class="grid grid-cols-4 mt-4 pt-4 border-t border-border-subtle">
+<div class="text-center">
+<p class="text-[10px] text-outline uppercase">Min</p>
+<p class="font-label-tabular">2.4k</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] text-outline uppercase">Max</p>
+<p class="font-label-tabular">16.8k</p>
+</div>
+<div class="text-center border-x border-border-subtle">
+<p class="text-[10px] text-outline uppercase">P95</p>
+<p class="font-label-tabular">14.1k</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] text-outline uppercase">Current</p>
+<p class="font-label-tabular text-tertiary">12.2k</p>
+</div>
+</div>
+</div>
+<!-- Recent User Feedback Logs -->
+<div class="lg:col-span-1 glass-panel rounded-xl flex flex-col overflow-hidden max-h-[400px] md:max-h-full">
+<div class="p-6 border-b border-border-subtle bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-sm text-on-surface">Feedback Logs</h3>
+<span class="bg-finance-debt/20 text-finance-debt text-[10px] px-2 py-0.5 rounded-full font-bold">4 NEW</span>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- Feedback Item 1 -->
+<div class="p-4 border-b border-border-subtle hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-body-md text-on-surface-variant">person</span>
+</div>
+<div class="overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<span class="text-body-sm font-bold truncate">@j_dorian</span>
+<span class="text-[10px] text-outline">2m ago</span>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">The wealth projection chart is slightly clipping on my iPhone 13 Pro. Might be a padding issue in the glass container...</p>
+</div>
+</div>
+</div>
+<!-- Feedback Item 2 -->
+<div class="p-4 border-b border-border-subtle hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-lg bg-finance-income/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-body-md text-finance-income">thumb_up</span>
+</div>
+<div class="overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<span class="text-body-sm font-bold truncate">@tech_lead</span>
+<span class="text-[10px] text-outline">15m ago</span>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">Sub-100ms response time on the bulk transaction export. Impressive work on the backend optimization.</p>
+</div>
+</div>
+</div>
+<!-- Feedback Item 3 -->
+<div class="p-4 border-b border-border-subtle hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-lg bg-finance-expense/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-body-md text-finance-expense">priority_high</span>
+</div>
+<div class="overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<span class="text-body-sm font-bold truncate">@alex_v</span>
+<span class="text-[10px] text-outline">1h ago</span>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">Integration with Plaid failed twice today during the onboarding flow. Returning 500 on the /link-token route.</p>
+</div>
+</div>
+</div>
+<!-- Feedback Item 4 -->
+<div class="p-4 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-body-md text-on-surface-variant">person</span>
+</div>
+<div class="overflow-hidden">
+<div class="flex justify-between items-center mb-1">
+<span class="text-body-sm font-bold truncate">@sarah_m</span>
+<span class="text-[10px] text-outline">4h ago</span>
+</div>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">Could we add a darker "Carbon" theme? The current dark mode is great but I want it even deeper.</p>
+</div>
+</div>
+</div>
+</div>
+<button class="p-4 text-center text-[11px] font-bold text-outline hover:text-on-surface transition-colors border-t border-border-subtle uppercase tracking-widest">View All Logs</button>
+</div>
+<!-- Server Locations Map Meta -->
+<div class="md:col-span-2 glass-panel rounded-xl overflow-hidden min-h-[300px] flex flex-col relative">
+<div class="p-6 absolute top-0 left-0 z-10 pointer-events-none">
+<h3 class="font-headline-sm text-on-surface">Global Distribution</h3>
+<p class="text-on-surface-variant text-body-sm">4 Active Nodes</p>
+</div>
+<div class="flex-1 w-full bg-surface-container-lowest flex items-center justify-center relative grayscale opacity-40">
+<img alt="Server Node Map" class="w-full h-full object-cover" data-alt="A high-contrast, stylized digital map of the world rendered in obsidian and charcoal tones. Glowing neon white pulses indicate server node locations in North America, Europe, and Asia. The aesthetic is hyper-minimalist and clinical, resembling a strategic military or financial operations terminal with ultra-fine grid lines overlaid on the geographic data." data-location="Global" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhrBTIEpA11tmQhTHpLVou8q5SE_CswF9fa8yOiEJh6qW39lnj-gEIIH72sTJUQNtpcQy8L8SZldoXQJEI9yhgjpqUxqMoqnr0GCSxe-Lf5RjMG6h1BGwY5a9XJDfJbQ5XUc1badSAv7F7qJye8l1wFPue6vo4i6Mr1tRkhffdOQz3LR-gG6EIklY_XXa7a-M4s9KZHkdwae1eC9PL3JDO_60lj5U_czxzUrIrHEXSuKY8MGrQKAQahYntaLIdsc5R4BJPoto97Y4"/>
+<!-- Faux Map Markers -->
+<div class="absolute top-[30%] left-[20%] w-3 h-3 bg-tertiary rounded-full shadow-[0_0_15px_#a5d700]"></div>
+<div class="absolute top-[25%] left-[48%] w-3 h-3 bg-tertiary rounded-full shadow-[0_0_15px_#a5d700]"></div>
+<div class="absolute top-[40%] left-[80%] w-3 h-3 bg-tertiary rounded-full shadow-[0_0_15px_#a5d700]"></div>
+<div class="absolute top-[60%] left-[35%] w-3 h-3 bg-finance-debt rounded-full shadow-[0_0_15px_#FB923C] animate-pulse"></div>
+</div>
+<div class="p-4 grid grid-cols-4 gap-4 bg-surface-container-low border-t border-border-subtle">
+<div class="flex flex-col">
+<span class="text-[9px] uppercase text-outline">US-EAST</span>
+<span class="text-[11px] font-bold">12ms</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] uppercase text-outline">EU-WEST</span>
+<span class="text-[11px] font-bold">48ms</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] uppercase text-outline">AS-SOUTHEAST</span>
+<span class="text-[11px] font-bold">110ms</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] uppercase text-outline">LATAM-1</span>
+<span class="text-[11px] font-bold text-finance-debt">240ms</span>
+</div>
+</div>
+</div>
+<!-- Security Audit Panel -->
+<div class="md:col-span-2 lg:col-span-2 glass-panel rounded-xl p-6 flex flex-col justify-between overflow-hidden">
+<div>
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-sm text-on-surface">Security Pulse</h3>
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-border-subtle">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-finance-income">shield</span>
+<div>
+<p class="text-body-sm font-bold">Firewall Strength</p>
+<p class="text-[11px] text-outline">L7 Protection Active</p>
+</div>
+</div>
+<span class="text-finance-income text-body-sm font-label-tabular">OPTIMAL</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-border-subtle">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-finance-debt">key</span>
+<div>
+<p class="text-body-sm font-bold">Token Rotations</p>
+<p class="text-[11px] text-outline">Next scheduled in 4h</p>
+</div>
+</div>
+<span class="text-on-surface text-body-sm font-label-tabular">PENDING</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-lowest border border-border-subtle">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">sync_lock</span>
+<div>
+<p class="text-body-sm font-bold">Encrypted Storage</p>
+<p class="text-[11px] text-outline">AES-256 Compliant</p>
+</div>
+</div>
+<span class="text-finance-income text-body-sm font-label-tabular">SECURE</span>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<button class="w-full py-2 bg-surface-container-highest rounded-lg text-body-sm font-bold hover:bg-border-strong transition-colors border border-border-subtle active:scale-[0.98]">
+                        Trigger Full Security Audit
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-[#0d0d0dcc] backdrop-blur-[20px] fixed bottom-0 left-0 w-full h-[72px] z-50 border-t border-border-subtle md:hidden flex justify-around items-center px-4">
+<div class="flex flex-col items-center justify-center text-primary font-bold hover:text-primary transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">home</span>
+<span class="font-body-sm text-body-sm">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Budget</span>
+</div>
+<div class="relative -top-4">
+<div class="w-14 h-14 bg-primary rounded-full flex items-center justify-center text-on-primary shadow-xl border-4 border-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-3xl">add</span>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-body-sm text-body-sm">Wealth</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</div>
+</nav>
+<!-- SideNav Desktop Anchor (Implicitly implied by Grid spacing on Desktop) -->
+<div class="hidden md:flex fixed left-0 top-0 h-full w-[64px] flex-col items-center py-20 gap-8 border-r border-border-subtle bg-surface-container-lowest z-40">
+<button class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">dashboard</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">analytics</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">group</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">database</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors mt-auto">logout</button>
+</div>
+<script>
+        // Micro-interaction for the chart or elements
+        document.querySelectorAll('.glass-panel').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                card.style.transition = 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.borderColor = 'rgba(255, 255, 255, 0.03)';
+            });
+        });
+
+        // Simulating live data updates
+        setInterval(() => {
+            const activeUsers = document.querySelector('h3.text-4xl');
+            if (activeUsers) {
+                const current = parseInt(activeUsers.innerText.replace(',', ''));
+                const next = current + Math.floor(Math.random() * 20) - 10;
+                activeUsers.innerText = next.toLocaleString();
+            }
+        }, 3000);
+    </script>
+</body></html>

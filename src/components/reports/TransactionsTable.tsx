@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "@/components/ui/card";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useSettings } from "@/contexts/SettingsContext";
+import { formatFulfillmentDescription } from "@/lib/utils";
 
 interface TransactionsTableProps {
   transactions: Transaction[];
@@ -411,7 +412,7 @@ const TransactionsTable = ({
 
                                   <div className="flex-1 flex flex-col min-w-0">
                                     <p className="font-semibold text-[15px] leading-tight text-foreground truncate">
-                                      {transaction.description}
+                                      {formatFulfillmentDescription(transaction.description)}
                                     </p>
                                     <p className="text-[11px] text-muted-foreground/80 leading-none mt-1 font-medium">
                                       {transaction.category}

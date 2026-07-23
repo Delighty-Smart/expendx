@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowDownToLine } from "lucide-react";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
+import PageHeader from "@/components/ui/page-header";
 
 const withdrawalSchema = z.object({
   category: z.string().min(1, "Category is required"),
@@ -132,20 +133,7 @@ const SavingsWithdrawalPage = () => {
 
   return (
     <div className="space-y-6 max-w-2xl animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            className="mr-2"
-            onClick={() => navigate("/savings")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Withdraw from Savings</h1>
-        </div>
-        <OfflineIndicator />
-      </div>
+      <PageHeader title="Withdraw from Savings" backTo="/savings" />
 
       {!navigator.onLine && (
         <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">

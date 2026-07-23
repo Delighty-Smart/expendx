@@ -33,7 +33,7 @@ const DownloadPage = () => {
         {
             icon: <Download className="w-5 p-2 h-5 text-blue-400 bg-blue-400/10 rounded-lg" />,
             title: "1. Download the APK",
-            description: "Click the download button below to start downloading the latest version of expendX."
+            description: "Click the download button below to start downloading the latest version of Lucent."
         },
         {
             icon: <Smartphone className="w-5 p-2 h-5 text-emerald-400 bg-emerald-400/10 rounded-lg" />,
@@ -43,12 +43,12 @@ const DownloadPage = () => {
         {
             icon: <ShieldAlert className="w-5 p-2 h-5 text-amber-400 bg-amber-400/10 rounded-lg" />,
             title: "3. Bypass Play Protect",
-            description: "Since this app is not on the Play Store yet, Android may show a 'Blocked by Play Protect' warning. To install, go to Play Store > Profile Icon > Play Protect > Settings (Gear Icon) > Turn off 'Scan apps with Play Protect'."
+            description: "Since this app is built by you and not yet published on the Google Play Store, Android will show a standard Play Protect alert. Simply click 'More details' or 'Install anyway' to proceed safely."
         },
         {
             icon: <CheckCircle2 className="w-5 p-2 h-5 text-green-400 bg-green-400/10 rounded-lg" />,
             title: "4. Complete Install",
-            description: "Follow the remaining prompts to finish the installation and start using expendX!"
+            description: "Follow the remaining prompts to finish the installation and start using Lucent!"
         }
     ];
 
@@ -75,7 +75,7 @@ const DownloadPage = () => {
                     <div className="inline-block p-4 bg-primary/20 rounded-2xl mb-6">
                         <Smartphone className="w-12 h-12 text-primary" />
                     </div>
-                    <h1 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-4xl font-bold mb-4">Install expendX for Android</h1>
+                    <h1 style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-4xl font-bold mb-4">Install Lucent for Android</h1>
                     <p className="text-text-secondary text-lg">
                         Experience smarter finance management directly on your mobile device.
                     </p>
@@ -111,15 +111,18 @@ const DownloadPage = () => {
                     transition={{ delay: 0.5 }}
                     className="text-center bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-3xl p-8"
                 >
-                    <h3 className="text-xl font-semibold mb-2">Ready to download?</h3>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold mb-4">
+                        <span>Version 1.2.0</span>
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">Ready to download Lucent v1.2.0?</h3>
                     <p className="text-text-secondary text-sm mb-8">
-                        The latest version includes the new Trends analysis and glassmorphism UI.
+                        Includes official Lucent rebranding, custom status bar integration, true wage analytics, and fresh start baseline tools.
                     </p>
                     <div className="flex flex-col gap-4">
-                        <a href="/expendx-latest.apk" download className="w-full">
-                            <Button size="lg" className="rounded-full px-12 h-14 text-lg bg-white text-black hover:bg-white/90 w-full">
+                        <a href="/lucent-latest.apk" download="lucent-v1.2.0.apk" className="w-full">
+                            <Button size="lg" className="rounded-full px-12 h-14 text-lg bg-white text-black hover:bg-white/90 w-full font-bold">
                                 <Download className="w-5 h-5 mr-2" />
-                                Download APK
+                                Download Lucent APK (v1.2.0)
                             </Button>
                         </a>
                         <Button
@@ -133,7 +136,7 @@ const DownloadPage = () => {
                     </div>
                     {apkDate && (
                         <p className="mt-6 text-sm text-emerald-400 font-medium">
-                            Latest version updated {formatDistanceToNow(apkDate, { addSuffix: true })}
+                            Latest build (v1.2.0) updated {formatDistanceToNow(apkDate, { addSuffix: true })}
                         </p>
                     )}
                     <p className="mt-2 text-xs text-text-tertiary">

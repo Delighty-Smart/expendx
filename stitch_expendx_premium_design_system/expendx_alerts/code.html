@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>ExpendX | Intelligent Alerts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior-y: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(17, 20, 21, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .safe-pb {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .alert-card {
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s ease;
+        }
+        .alert-card:active {
+            transform: scale(0.98);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#323537",
+                        "surface-dim": "#111415",
+                        "on-secondary-container": "#003a5c",
+                        "primary-fixed-dim": "#c8c5c9",
+                        "border-subtle": "rgba(255, 255, 255, 0.03)",
+                        "tertiary-fixed": "#bef521",
+                        "inverse-on-surface": "#2e3132",
+                        "inverse-surface": "#e1e2e4",
+                        "tertiary-fixed-dim": "#a5d700",
+                        "error": "#ffb4ab",
+                        "background": "#111415",
+                        "surface-container-high": "#282a2c",
+                        "on-tertiary": "#263500",
+                        "outline-variant": "#47464b",
+                        "error-container": "#93000a",
+                        "on-surface-variant": "#c8c5cb",
+                        "carbon-surface": "#0E0E11",
+                        "finance-debt": "#FB923C",
+                        "inverse-primary": "#5f5e61",
+                        "surface-bright": "#37393b",
+                        "primary-container": "#050507",
+                        "finance-income": "#34D399",
+                        "surface-container-low": "#191c1e",
+                        "primary": "#c8c5c9",
+                        "surface-container-lowest": "#0c0f10",
+                        "on-primary": "#313033",
+                        "surface-container-highest": "#323537",
+                        "on-background": "#e1e2e4",
+                        "border-strong": "#242429",
+                        "secondary": "#93ccff",
+                        "finance-expense": "#F87171",
+                        "on-surface": "#e1e2e4",
+                        "on-secondary-fixed-variant": "#004b73",
+                        "on-error": "#690005",
+                        "surface": "#111415",
+                        "secondary-fixed-dim": "#93ccff",
+                        "surface-tint": "#c8c5c9",
+                        "on-primary-fixed": "#1c1b1e",
+                        "finance-savings": "#60A5FA",
+                        "on-tertiary-container": "#628200",
+                        "on-tertiary-fixed": "#151f00",
+                        "secondary-fixed": "#cce5ff",
+                        "secondary-container": "#00a9fd",
+                        "on-primary-container": "#78777a",
+                        "outline": "#929095",
+                        "tertiary": "#a5d700",
+                        "primary-fixed": "#e5e1e5",
+                        "obsidian-card": "#121216",
+                        "on-secondary-fixed": "#001d31",
+                        "surface-container": "#1d2022",
+                        "on-tertiary-fixed-variant": "#394d00",
+                        "on-primary-fixed-variant": "#47464a",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#030600",
+                        "on-secondary": "#003351"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "compact-sm": "0.625rem",
+                        "margin-desktop": "32px",
+                        "unit": "4px",
+                        "margin-mobile": "20px",
+                        "compact-md": "0.875rem",
+                        "gutter": "16px",
+                        "compact-xs": "0.375rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-tabular": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                        "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                        "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full h-[64px] z-50 bg-background/80 backdrop-blur-xl border-b border-white/[0.03] flex justify-between items-center px-margin-mobile">
+<div class="flex items-center gap-compact-md">
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="A professional studio headshot of a young male executive with a clean, minimalist aesthetic. The portrait features soft, cinematic lighting against a dark charcoal background, matching a high-fidelity carbon fintech UI. The mood is sophisticated, clinical, and trustworthy, with a shallow depth of field that emphasizes precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgGNXVjvkVrNWfgPkZ-ZjwWPgFaY5N1jz-9uLIqmb1SZxb39cdRr8rxdhCrDyuD0FTNEM-A2F40XWjoL-FgSgThpj45SHtFbIL-6_OB0En4wkj5BzuiIu0_mGamSB1LR2RqTVzSVOLTeV5n5csDm41CTz5Rb7QQ8H7ZelD_bZ2AcG7LJRpFNtsDvyqYZLmiHtRINL-DRhiit7W4dFa0d-8CaqtG50GARsuWHheUrYQSa7asbHs__99_1cibMVdm-mD3jTi-1ovNsY"/>
+</div>
+<h1 class="text-headline-lg font-headline-lg tracking-tighter text-on-surface">ExpendX</h1>
+</div>
+<div class="flex items-center gap-compact-md">
+<button class="material-symbols-outlined text-primary hover:bg-surface-bright/10 p-compact-xs rounded-full transition-colors" data-icon="notifications">notifications</button>
+</div>
+</header>
+<main class="pt-[80px] pb-[100px] px-margin-mobile max-w-2xl mx-auto space-y-gutter">
+<!-- Search & Filter Bar -->
+<section class="flex gap-compact-sm items-center">
+<div class="flex-1 h-[44px] bg-surface-container rounded-xl flex items-center px-compact-md border border-white/[0.03]">
+<span class="material-symbols-outlined text-on-surface-variant mr-2" style="font-size: 20px;">search</span>
+<input class="bg-transparent border-none text-body-md focus:ring-0 placeholder:text-on-surface-variant w-full" placeholder="Search alerts..." type="text"/>
+</div>
+<button class="h-[44px] w-[44px] bg-surface-container rounded-xl flex items-center justify-center border border-white/[0.03] active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface">tune</span>
+</button>
+</section>
+<!-- Chronological Feed -->
+<div class="space-y-6">
+<!-- Today Section -->
+<div class="space-y-3">
+<h2 class="font-label-tabular text-label-tabular text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    TODAY
+                </h2>
+<!-- Alert: Budget Warning (Critical) -->
+<article class="alert-card p-4 bg-obsidian-card border border-finance-expense/20 rounded-[20px] flex gap-4">
+<div class="w-10 h-10 rounded-full bg-finance-expense/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-finance-expense" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-finance-expense">80% Budget Reached</h3>
+<span class="font-label-tabular text-[11px] text-on-surface-variant">14:20</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Your 'Dining Out' category has reached $400 of its $500 monthly limit. Consider adjusting your spending for the week.</p>
+<div class="pt-2 flex gap-2">
+<button class="px-4 py-2 bg-on-surface text-background rounded-full font-label-tabular text-[12px] active:scale-95 transition-transform">View Details</button>
+<button class="px-4 py-2 bg-surface-container text-on-surface rounded-full font-label-tabular text-[12px] active:scale-95 transition-transform">Mute</button>
+</div>
+</div>
+</article>
+<!-- Alert: System Sync (Info) -->
+<article class="alert-card p-4 bg-obsidian-card border border-white/[0.03] rounded-[20px] flex gap-4">
+<div class="w-10 h-10 rounded-full bg-finance-savings/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-finance-savings" style="font-variation-settings: 'FILL' 1;">sync</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">System Sync Alert</h3>
+<span class="font-label-tabular text-[11px] text-on-surface-variant">09:15</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">All 4 connected accounts were successfully synchronized. 12 new transactions found and categorized.</p>
+</div>
+</article>
+</div>
+<!-- Yesterday Section -->
+<div class="space-y-3">
+<h2 class="font-label-tabular text-label-tabular text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+                    YESTERDAY
+                </h2>
+<!-- Alert: Subscription Reminder (Urgent) -->
+<article class="alert-card p-4 bg-obsidian-card border border-finance-debt/20 rounded-[20px] flex gap-4">
+<div class="w-10 h-10 rounded-full bg-finance-debt/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-finance-debt" style="font-variation-settings: 'FILL' 1;">event_repeat</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-finance-debt">Subscription Renewal</h3>
+<span class="font-label-tabular text-[11px] text-on-surface-variant">Oct 24, 18:00</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Adobe Creative Cloud ($52.99) will renew tomorrow. Ensure your primary account has sufficient funds.</p>
+<div class="pt-2">
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-finance-debt"></div>
+</div>
+</div>
+</div>
+</article>
+<!-- Alert: Security (Critical) -->
+<article class="alert-card p-4 bg-obsidian-card border border-finance-expense/20 rounded-[20px] flex gap-4">
+<div class="w-10 h-10 rounded-full bg-finance-expense/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-finance-expense" style="font-variation-settings: 'FILL' 1;">gpp_maybe</span>
+</div>
+<div class="flex-1 space-y-1">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-finance-expense">New Device Login</h3>
+<span class="font-label-tabular text-[11px] text-on-surface-variant">Oct 24, 10:22</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">A login was detected from a new browser on Chrome (Macintosh). If this wasn't you, secure your account immediately.</p>
+</div>
+</article>
+</div>
+<!-- This Week Section -->
+<div class="space-y-3">
+<h2 class="font-label-tabular text-label-tabular text-on-surface-variant flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+                    THIS WEEK
+                </h2>
+<!-- Alert: Insights (Info/Blue) -->
+<article class="alert-card p-4 bg-obsidian-card border border-white/[0.03] rounded-[20px] flex gap-4 overflow-hidden relative">
+<div class="w-10 h-10 rounded-full bg-finance-savings/10 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-finance-savings" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex justify-between items-start">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Weekly Spending Report</h3>
+<span class="font-label-tabular text-[11px] text-on-surface-variant">Oct 21</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Your spending is 12% lower than last week. Great job! You've saved an estimated $142.</p>
+<!-- Visual Micro-graphic -->
+<div class="flex items-end gap-1 h-12 pt-2">
+<div class="w-full bg-surface-container-highest rounded-t-sm h-full"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-3/4"></div>
+<div class="w-full bg-surface-container-highest rounded-t-sm h-1/2"></div>
+<div class="w-full bg-finance-income rounded-t-sm h-[40%]"></div>
+<div class="w-full bg-finance-income rounded-t-sm h-[30%]"></div>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full h-[72px] pb-safe z-50 bg-background/80 backdrop-blur-md border-t border-white/[0.03] flex justify-around items-center px-4 shadow-sm">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-sm text-body-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Budget</span>
+</a>
+<button class="relative -top-4 w-12 h-12 bg-on-surface text-background rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform border-[4px] border-background">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 600;">add</span>
+</button>
+<a class="flex flex-col items-center justify-center text-on-surface font-semibold hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-body-sm text-body-sm">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80 transition-opacity active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for dismissing alerts (visual only)
+        document.querySelectorAll('.alert-card').forEach(card => {
+            let startX = 0;
+            card.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+            });
+            
+            card.addEventListener('touchend', (e) => {
+                const endX = e.changedTouches[0].clientX;
+                const diff = startX - endX;
+                
+                // Swipe left to simulate "dismiss"
+                if (diff > 100) {
+                    card.style.transform = 'translateX(-100%)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+
+        // Sticky Header Blur adjust
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-lg');
+            } else {
+                header.classList.remove('shadow-lg');
+            }
+        });
+    </script>
+</body></html>

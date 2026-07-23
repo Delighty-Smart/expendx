@@ -18,7 +18,7 @@ export function SavingsTotalCard({ totalSavings }: SavingsTotalCardProps) {
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">Total Savings</p>
-          <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
+          <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent font-numeric font-amount primary-total-amount">
             {formatValue(totalSavings)}
           </p>
         </div>

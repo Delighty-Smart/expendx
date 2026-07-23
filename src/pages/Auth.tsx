@@ -112,7 +112,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-pt">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl" />
@@ -125,11 +125,10 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center gap-2 mb-4">
             <img
-              src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-              alt="expendX"
-              className="h-16 object-contain"
+              src="/lucent-app-icon.png"
+              alt="Lucent"
+              className="h-20 object-contain"
             />
-            <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider relative -top-4">Beta</Badge>
           </div>
           <p className="text-muted-foreground">Your Smart Finance Companion</p>
         </div>

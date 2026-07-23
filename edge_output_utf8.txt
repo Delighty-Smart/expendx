@@ -1,0 +1,13 @@
+﻿msedge.exe : [21696:21028:0530/232832.926:ERROR:chrome\browser\task_manager\providers\fallback_task_provider.cc:126] 
+Every renderer should have at least one task provided by a primary task provider. If a "Renderer" fallback task is 
+shown, it is a bug. If you have repro steps, please file a new bug and tag it as a dependency of crbug.com/40528867.
+At line:1 char:1
++ & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --he ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([21696:21028:05...g.com/40528867.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[21696:21028:0530/232837.475:ERROR:chrome\browser\task_manager\providers\fallback_task_provider.cc:126] Every renderer 
+should have at least one task provided by a primary task provider. If a "Renderer" fallback task is shown, it is a 
+bug. If you have repro steps, please file a new bug and tag it as a dependency of crbug.com/40528867.
+15243 bytes written to file C:\Users\Owner\.gemini\antigravity-ide\screenshot_index.png

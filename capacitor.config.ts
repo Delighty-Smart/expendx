@@ -2,22 +2,22 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.expendx.app',
-  appName: 'expendX',
+  appName: 'Lucent',
   webDir: 'dist',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1800,
+      launchShowDuration: 500,
       backgroundColor: '#09090b',     // zinc-950 — matches the app dark bg
       androidSplashResourceName: 'splash',
       showSpinner: false,
-      launchAutoHide: false,           // we hide manually after app is ready
-      fadeInDuration: 200,
-      fadeOutDuration: 300,
+      launchAutoHide: true,           // let it hide automatically once resources are loaded
+      fadeInDuration: 150,
+      fadeOutDuration: 150,
     },
     StatusBar: {
       style: 'Dark',
       backgroundColor: '#09090b',
-      overlaysWebView: false,
+      overlaysWebView: true,
     },
     Keyboard: {
       resize: 'body',                  // prevents webview from being pushed up

@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatFulfillmentDescription } from "@/lib/utils";
 
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Trash2, Edit, Calendar, X, TrendingUp, TrendingDown, PiggyBank, Upload, Banknote, Landmark, ArrowDownToLine, ArrowUpFromLine, Repeat, LayoutGrid, ListFilter, FileUp, CirclePlus, BoxSelect, ArchiveRestore, Wallet, CreditCard, Receipt, Filter, SlidersHorizontal, Shapes } from "lucide-react";
+import { Search, Trash, ArrowUp, ArrowDown, RefreshCcw, Archive, Trash2, Edit, Calendar, X, TrendingUp, TrendingDown, PiggyBank, Upload, Banknote, Landmark, ArrowDownToLine, ArrowUpFromLine, Repeat, LayoutGrid, ListFilter, FileUp, CirclePlus, BoxSelect, ArchiveRestore, Wallet, CreditCard, Receipt, Filter, SlidersHorizontal, Shapes, Lock } from "lucide-react";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,6 +36,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useEnhancedOfflineSync } from "@/hooks/useEnhancedOfflineSync";
 import { PendingSyncIndicator } from "@/components/PendingSyncIndicator";
 import { StatementImporter } from "@/components/reports/StatementImporter";
+import PageHeader from "@/components/ui/page-header";
 
 const TransactionsPage = () => {
   const { currency, formatValue } = useSettings();
@@ -368,64 +369,63 @@ const TransactionsPage = () => {
     <PullToRefresh onRefresh={handleRefresh} containerClassName="h-full">
       <div className="space-y-6 pb-24">
 
-        <div className="relative md:sticky md:top-0 z-20 bg-background/95 backdrop-blur-md pb-3 mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-foreground">Transactions</h1>
-            <OfflineIndicator />
-          </div>
-          <div className="flex gap-1.5">
-            {selectionMode && selectedTransactions.length > 0 && (
-              <>
-                <Button
-                  variant="outline"
-                  size="compact"
-                  className="flex items-center gap-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border-none rounded-lg px-3.5 py-1.5 transition-all"
-                  onClick={() => setConfirmArchiveOpen(true)}
-                >
-                  <ArchiveRestore className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Archive ({selectedTransactions.length})
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="compact"
-                  className="flex items-center gap-1.5 text-xs border-none rounded-lg px-3.5 py-1.5 transition-all"
-                  onClick={() => setConfirmDeleteOpen(true)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Delete ({selectedTransactions.length})
-                </Button>
-              </>
-            )}
-            <Button
-              variant="outline"
-              size="compact"
-              className="flex items-center gap-1.5 text-xs bg-muted/40 hover:bg-muted/65 text-foreground border-none rounded-lg px-3.5 py-1.5 transition-all"
-              onClick={() => setIsImportOpen(true)}
-            >
-              <FileUp className="h-3.5 w-3.5" strokeWidth={1.5} />
-              Import
-            </Button>
-            <Button
-              size="compact"
-              className="flex items-center gap-1.5 text-xs border-none rounded-lg px-3.5 py-1.5 transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => navigate("/add-transaction")}
-            >
-              <CirclePlus className="h-3.5 w-3.5" strokeWidth={1.5} />
-              Add
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="Transactions"
+          actions={
+            <div className="flex gap-1.5">
+              {selectionMode && selectedTransactions.length > 0 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="compact"
+                    className="flex items-center gap-1.5 text-xs bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border-none rounded-lg px-3.5 py-1.5 transition-all"
+                    onClick={() => setConfirmArchiveOpen(true)}
+                  >
+                    <ArchiveRestore className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    Archive ({selectedTransactions.length})
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="compact"
+                    className="flex items-center gap-1.5 text-xs border-none rounded-lg px-3.5 py-1.5 transition-all"
+                    onClick={() => setConfirmDeleteOpen(true)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    Delete ({selectedTransactions.length})
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="outline"
+                size="compact"
+                className="flex items-center gap-1.5 text-xs bg-muted/40 hover:bg-muted/65 text-foreground border-none rounded-lg px-3.5 py-1.5 transition-all"
+                onClick={() => setIsImportOpen(true)}
+              >
+                <FileUp className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Import
+              </Button>
+              <Button
+                size="compact"
+                className="flex items-center gap-1.5 text-xs border-none rounded-lg px-3.5 py-1.5 transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => navigate("/add-transaction")}
+              >
+                <CirclePlus className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Add
+              </Button>
+            </div>
+          }
+        />
 
 
         {/* Filter Toolbar */}
         <div className="p-3.5 bg-card/40 backdrop-blur-sm rounded-2xl">
             <div className="flex gap-2 w-full">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" strokeWidth={1.5} />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" strokeWidth={1.5} />
 
                 <Input
                   placeholder="Search transactions..."
-                  className="pl-9 bg-background/50 hover:bg-background/85 focus-visible:bg-background border-none rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="pl-11 bg-background/50 hover:bg-background/85 focus-visible:bg-background border-none rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:ring-0 focus-visible:ring-offset-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -680,37 +680,50 @@ const TransactionsPage = () => {
                                 return (
                                   <div
                                     key={transaction.id}
-                                    className={`transaction-row py-2.5 px-3 flex items-center gap-4 bg-transparent hover:bg-accent/10 rounded-xl transition-all ${selectionMode ? 'cursor-pointer' : ''}`}
-                                    onClick={() => selectionMode
-                                      ? toggleTransactionSelection(transaction.id)
-
-                                      : handleEdit(transaction)
-                                    }
+                                    className={`transaction-row py-2.5 px-3 flex items-center gap-4 bg-transparent rounded-xl transition-all ${
+                                      transaction.is_locked
+                                        ? 'opacity-85 cursor-not-allowed hover:bg-transparent'
+                                        : 'hover:bg-accent/10 ' + (selectionMode ? 'cursor-pointer' : '')
+                                    }`}
+                                    onClick={() => {
+                                      if (transaction.is_locked) {
+                                        toast({
+                                          title: "Read-Only Transaction 🔒",
+                                          description: "This transaction is locked to protect your Fresh Start financial baseline.",
+                                        });
+                                        return;
+                                      }
+                                      if (selectionMode) {
+                                        toggleTransactionSelection(transaction.id);
+                                      } else {
+                                        handleEdit(transaction);
+                                      }
+                                    }}
                                   >
                                     {selectionMode && (
-
                                       <div
                                         className={`h-4.5 w-4.5 shrink-0 rounded border border-primary/45 ${selectedTransactions.includes(transaction.id) ? 'bg-primary border-none' : 'bg-background'
                                           }`}
-
                                       />
                                     )}
-
 
                                     <div className="h-9 w-9 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
                                       {getTypeIcon(transaction.type)}
                                     </div>
                                     <div className="flex-1 flex flex-col gap-0.5">
                                       <div className="flex items-center gap-2">
-                                        <p className="font-medium text-[15px] leading-tight text-foreground">
-
-                                          {transaction.description}
+                                        <p className="font-semibold text-[15px] leading-tight text-foreground">
+                                          {formatFulfillmentDescription(transaction.description)}
                                         </p>
+                                        {transaction.is_locked && (
+                                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-0.5">
+                                            <Lock className="h-2.5 w-2.5" /> Read-Only
+                                          </Badge>
+                                        )}
                                         <PendingSyncIndicator status={syncStatus} size="sm" />
                                       </div>
 
-                                      <p className="text-xs text-muted-foreground/70 leading-none">
-
+                                      <p className="text-[11px] text-muted-foreground/60 leading-none">
                                         {transaction.category}
                                       </p>
                                     </div>
@@ -724,7 +737,7 @@ const TransactionsPage = () => {
                                           : "text-sky-600 dark:text-sky-400"
                                         }`}
                                     >
-                                      <p className="font-medium text-[15px] leading-tight">
+                                      <p className="font-bold text-[15px] leading-tight font-numeric">
                                         {transaction.type === "credit"
                                           ? "+"
                                           : transaction.type === "debit" || transaction.type === "subscription"

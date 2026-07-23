@@ -68,42 +68,39 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
   };
 
   return (
+    <Card className="p-4.5 relative group overflow-hidden transition-colors duration-200 border border-border/45 hover:border-primary/20">
+      <div className="flex justify-between items-start mb-2.5">
+        <h3 className="font-bold text-[14.5px] text-foreground tracking-tight">{budget.category}</h3>
 
-    <Card className="p-5 relative group overflow-hidden transition-colors duration-200 border border-border/45 hover:border-primary/20">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-semibold text-lg text-foreground">{budget.category}</h3>
-
-        <div className="flex gap-1">
+        <div className="flex gap-0.5">
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 hover:bg-orange-100 dark:hover:bg-slate-700"
+            className="h-7 w-7 p-0 hover:bg-orange-100 dark:hover:bg-slate-700"
+            style={{ borderRadius: '9999px' }}
             onClick={() => onEdit(budget)}
           >
-
-            <Edit className="h-4 w-4" />
-
+            <Edit className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
+            style={{ borderRadius: '9999px' }}
             onClick={() => onDelete(budget)}
           >
-
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center text-sm">
-          <span className="text-muted-foreground font-medium">Budget:</span>
-          <span className="font-bold text-lg text-foreground">{formatValue(budget.monthly_limit)}</span>
+      <div className="space-y-3">
+        <div className="flex justify-between items-baseline text-xs">
+          <span className="text-text-secondary/60 font-semibold uppercase tracking-wider text-[10px]">Monthly Limit</span>
+          <span className="font-extrabold text-md text-foreground font-numeric font-amount">{formatValue(budget.monthly_limit)}</span>
         </div>
         <BudgetProgress
           category={budget.category}
           limit={budget.monthly_limit}
-
           spent={currentSpending}
           currency={currency}
         />
@@ -272,16 +269,16 @@ const BudgetsPage = () => {
           }
         />
 
-        <Card className="p-6">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 rounded-2xl bg-brand-primary-subtle flex items-center justify-center">
-              <TrendingUp className="h-8 w-8 text-text-primary" />
+        <Card className="p-4 px-5">
+          <div className="flex items-center gap-5">
+            <div className="w-12 h-12 rounded-xl bg-brand-primary-subtle flex items-center justify-center shrink-0">
+              <TrendingUp className="h-6 w-6 text-text-primary" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Total Budget</p>
-              <p className="text-3xl font-bold text-text-primary">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] font-bold text-text-secondary/60 uppercase tracking-wider leading-none">Total Budget</span>
+              <span className="text-2xl font-extrabold text-text-primary font-numeric font-amount mt-1 leading-none primary-total-amount">
                 {formatValue(budgets?.reduce((sum, budget) => sum + budget.monthly_limit, 0) || 0)}
-              </p>
+              </span>
             </div>
           </div>
         </Card>

@@ -18,33 +18,30 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
 
   const steps = [
     {
-      icon: <div className="relative">
-        <Wallet className="w-16 h-16 text-primary animate-pulse" />
-        <Zap className="w-6 h-6 text-yellow-500 absolute -top-2 -right-2 animate-bounce" />
+      icon: <div className="p-4 bg-muted/40 rounded-full flex items-center justify-center">
+        <Wallet className="w-12 h-12 text-primary" strokeWidth={1.5} />
       </div>,
-      title: "🛑 Stop the Money Leak",
-      description: "Ever wonder where your salary went by the 15th? expendX tracks every penny automatically so you can regain control and stop overspending today.",
-      gradient: "from-primary/20 to-primary/5 dark:from-primary/30 dark:to-primary/10",
+      title: "Trace expenditure flows",
+      description: "Automatically log and categorize card alerts, SMS and cash payouts. Understand exactly where resources flow without tracking manually.",
+      gradient: "from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5",
       accent: "text-primary"
     },
     {
-      icon: <div className="relative">
-        <Target className="w-16 h-16 text-secondary" />
-        <TrendingUp className="w-6 h-6 text-secondary absolute -top-2 -right-2 animate-pulse" />
+      icon: <div className="p-4 bg-muted/40 rounded-full flex items-center justify-center">
+        <Target className="w-12 h-12 text-primary" strokeWidth={1.5} />
       </div>,
-      title: "💰 Achieve Your Dream Goals",
-      description: "Saving for a house, car, or freedom? Set smart targets and watch your wealth grow. We keep you disciplined so you can reach your big milestones faster.",
-      gradient: "from-secondary/20 to-secondary/5 dark:from-secondary/30 dark:to-secondary/10",
+      title: "Set custom milestones",
+      description: "Define boundaries for dynamic budget limits. Keep track of saving goals, investments and purchase goals visually.",
+      gradient: "from-secondary/10 to-secondary/5 dark:from-secondary/20 dark:to-secondary/5",
       accent: "text-secondary"
     },
     {
-      icon: <div className="relative">
-        <Shield className="w-16 h-16 text-blue-500" />
-        <Lock className="w-6 h-6 text-blue-400 absolute -top-2 -right-2" />
+      icon: <div className="p-4 bg-muted/40 rounded-full flex items-center justify-center">
+        <Shield className="w-12 h-12 text-primary" strokeWidth={1.5} />
       </div>,
-      title: "🛡️ Total Peace of Mind",
-      description: "Your financial secrets are yours alone. With advanced data protection and full offline support, your data stays safe and accessible anywhere on earth.",
-      gradient: "from-blue-500/20 to-blue-500/5 dark:from-blue-500/30 dark:to-blue-500/10",
+      title: "Decentralized offline core",
+      description: "Maintain absolute control over your ledger. Fully offline capable local vault syncs securely when connectivity is available.",
+      gradient: "from-blue-500/10 to-blue-500/5 dark:from-blue-500/20 dark:to-blue-500/5",
       accent: "text-blue-500"
     }
   ];
@@ -56,7 +53,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
       setIsProcessing(true);
       try {
         toast({
-          title: "Welcome to expendX! 🎉",
+          title: "Welcome to Lucent! 🎉",
           description: "You're all set to master your finances.",
         });
         await onComplete();
@@ -80,76 +77,67 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-pt">
       {/* Background decoration with more vibrant blur */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 dark:bg-primary/20 rounded-full blur-[100px] animate-pulse" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-secondary/10 dark:bg-secondary/20 rounded-full blur-[100px] animate-pulse delay-1000" />
       </div>
 
-      <Card className="relative w-full max-w-sm sm:max-w-md shadow-2xl border-none bg-card/80 backdrop-blur-xl overflow-hidden rounded-[32px]">
-        {/* Subtle top border gradient */}
-        <div className={`h-1.5 w-full bg-gradient-to-r ${activeStep === 0 ? 'from-primary' : activeStep === 1 ? 'from-secondary' : 'from-blue-500'} to-transparent opacity-50`} />
-
-        <CardHeader className="text-center pb-2 pt-6">
+      <Card className="relative w-full max-w-[340px] border-0 bg-transparent shadow-none overflow-hidden rounded-[32px] select-none">
+        <CardHeader className="text-center pb-2 pt-2">
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center justify-center gap-2 mb-4">
-              <img
-                src="/lovable-uploads/87a85edd-1a8a-44f7-92c9-dd1273fccf8c.png"
-                alt="expendX"
-                className="h-16 object-contain"
-              />
-              <Badge variant="secondary" className="bg-primary/20 text-primary text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider relative -top-4">Beta</Badge>
-            </div>
+            <img
+              src="/lucent-header-dark.png"
+              alt="Lucent"
+              className="h-10 object-contain"
+            />
           </div>
 
-          {/* Progress indicators - more modern */}
-          <div className="flex justify-center space-x-3 mb-2">
+          {/* Progress indicators - minimal thin dashes */}
+          <div className="flex justify-center space-x-2.5 mb-2">
             {steps.map((_, index) => (
               <div
                 key={index}
-                className={`h-1.5 rounded-full transition-all duration-500 ${index === activeStep
-                  ? "w-8 bg-primary"
-                  : index < activeStep
-                    ? "w-4 bg-primary/40"
-                    : "w-4 bg-muted"
+                className={`h-1 rounded-full transition-all duration-300 ${index === activeStep
+                  ? "w-8 bg-foreground"
+                  : "w-2 bg-muted-foreground/30"
                   }`}
               />
             ))}
           </div>
         </CardHeader>
 
-        <CardContent className="px-6 pb-8">
-          {/* Current step content with smooth transition placeholder */}
-          <div className="min-h-[280px] flex flex-col items-center justify-center text-center">
-            <div className={`mb-6 p-8 rounded-full bg-gradient-to-br ${steps[activeStep].gradient} border border-white/10 shadow-inner scale-105`}>
+        <CardContent className="px-8 pb-4">
+          <div className="min-h-[260px] flex flex-col items-center justify-center text-center">
+            <div className="mb-8 scale-105 transition-transform duration-500">
               {steps[activeStep].icon}
             </div>
 
-            <h2 className="text-2xl font-bold text-foreground mb-3 tracking-tight">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4">
               {steps[activeStep].title}
             </h2>
 
-            <p className="text-muted-foreground text-base leading-relaxed max-w-[90%] mx-auto">
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-[95%] mx-auto">
               {steps[activeStep].description}
             </p>
           </div>
 
-          {/* Action buttons - more prominent Skip */}
+          {/* Action buttons - clean pill buttons */}
           <div className="flex flex-col gap-3 mt-6">
             <Button
               onClick={handleNext}
               disabled={isProcessing}
-              className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base rounded-lg shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-semibold text-sm rounded-full transition-all duration-200 flex items-center justify-center gap-2 group"
             >
               <ButtonLoading
                 isLoading={isProcessing}
-                loadingText="Securing your account..."
+                loadingText="Wait..."
               >
                 <>
                   {activeStep < steps.length - 1 ? "Keep going" : "Start My Journey"}
-                  <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </>
               </ButtonLoading>
             </Button>
@@ -158,7 +146,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
               variant="ghost"
               onClick={handleSkip}
               disabled={isProcessing}
-              className="w-full h-10 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors rounded-lg font-medium"
+              className="w-full h-10 text-muted-foreground/80 hover:text-foreground hover:bg-transparent transition-colors rounded-full text-xs font-semibold"
             >
               Skip and log in
             </Button>

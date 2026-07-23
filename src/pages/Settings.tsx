@@ -7,7 +7,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint, TrendingUp } from "lucide-react";
+import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint, TrendingUp, Sparkles } from "lucide-react";
+import { FreshStartWizard } from "@/components/FreshStartWizard";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -25,8 +27,11 @@ import "../components/ui/smoothScroll.css";
 import DeleteAccountSection from "@/components/DeleteAccountSection";
 import { cn } from "@/lib/utils";
 import { Capacitor } from "@capacitor/core";
+import { useNavigate } from "react-router-dom";
+import UserAvatar from "@/components/UserAvatar";
 import { useBiometricLock } from "@/hooks/useBiometricLock";
 import { LifeEnergySettings } from "@/components/LifeEnergySettings";
+import PageHeader from "@/components/ui/page-header";
 
 const Settings = () => {
   const {
@@ -35,7 +40,8 @@ const Settings = () => {
     theme,
     updateTheme
   } = useSettings();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { refreshData } = useRefresh();
   const { isBiometricEnabled, setBiometricEnabled, checkBiometricAvailability } = useBiometricLock();
@@ -44,6 +50,7 @@ const Settings = () => {
   const [openSection, setOpenSection] = useState<string>("");
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricOn, setBiometricOn] = useState(isBiometricEnabled());
+  const [showFreshStart, setShowFreshStart] = useState(false);
   const isMobile = useIsMobile();
 
 
@@ -119,15 +126,19 @@ const Settings = () => {
   return (
     <PullToRefresh onRefresh={refreshData} containerClassName="h-full min-h-[calc(100vh-100px)]">
       <div className="space-y-6 pb-24 min-h-full">
-        {/* Profile Header */}
+        <PageHeader title="Settings" />
         <div className="flex flex-col items-center text-center space-y-3 pt-4 pb-2">
-          <div className="relative group">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary/20 via-primary/10 to-transparent flex items-center justify-center border-2 border-primary/20 shadow-xl overflow-hidden backdrop-blur-sm">
-              <User className="w-10 h-10 text-primary" strokeWidth={1.5} />
-            </div>
+          <div className="relative group cursor-pointer" onClick={() => navigate('/profile')}>
+            <UserAvatar
+              url={profile?.avatar_url}
+              name={profile?.username || profile?.email || "User"}
+              className="w-20 h-20 border-2 border-primary/20 shadow-xl"
+              fallbackClassName="text-xl"
+              showDefaultGradient={true}
+            />
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold tracking-tight">{user?.email?.split('@')[0] || "User Settings"}</h2>
+            <h2 className="text-lg font-bold tracking-tight">{profile?.first_name || profile?.username || user?.email?.split('@')[0] || "User Settings"}</h2>
             <p className="text-xs text-muted-foreground font-medium">{user?.email}</p>
           </div>
         </div>
@@ -140,6 +151,7 @@ const Settings = () => {
             { id: "notifications", label: "Notification Centre", sub: "Smart alerts and auto-tracking", icon: Bell },
             { id: "categories", label: "Financial Structure", sub: "Categories and organization", icon: Shapes },
             { id: "archive", label: "Data Archive", sub: "Review your history", icon: Archive },
+            { id: "fresh-start", label: "Fresh Start", sub: "Reset balance without losing history", icon: Sparkles },
             { id: "offline", label: "Storage & Performance", sub: "Offline data and caching", icon: HardDrive },
             { id: "data-export", label: "Security & Export", sub: "Backup your records", icon: Download },
             ...(Capacitor.isNativePlatform() ? [{ id: "biometric", label: "Biometric Lock", sub: "Fingerprint or face unlock", icon: Fingerprint }] : []),
@@ -245,6 +257,19 @@ const Settings = () => {
                         </div>
                       )}
 
+                      {item.id === "fresh-start" && (
+                        <div className="space-y-4 p-1">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Have an unlogged gap in your expenses or want a clean financial slate? Launch Fresh Start to align your app balance with your bank account without wiping out your past charts.
+                          </p>
+                          <Button
+                            onClick={() => setShowFreshStart(true)}
+                            className="rounded-xl font-bold text-xs gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                          >
+                            <Sparkles className="h-4 w-4" /> Launch Fresh Start
+                          </Button>
+                        </div>
+                      )}
                       {item.id === "life-energy" && <LifeEnergySettings />}
                       {item.id === "notifications" && <NotificationPreferences />}
                       {item.id === "categories" && <CategoryManagement />}
@@ -286,6 +311,11 @@ const Settings = () => {
           })}
         </div>
       </div>
+      <FreshStartWizard
+        open={showFreshStart}
+        onOpenChange={setShowFreshStart}
+        calculatedBalance={enhancedOfflineManager.getTransactionSummary().balance}
+      />
     </PullToRefresh>
   );
 };

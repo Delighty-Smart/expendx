@@ -141,7 +141,7 @@ const SavingsPage = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active Goals</p>
-                <p className="text-2xl font-bold">{savingsGoals?.length || 0}</p>
+                <p className="text-2xl font-bold font-numeric font-amount">{savingsGoals?.length || 0}</p>
               </div>
             </div>
             <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-4 flex items-center gap-4">
@@ -150,7 +150,7 @@ const SavingsPage = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Saved</p>
-                <p className="text-2xl font-bold">{formatValue(totalSavings || 0)}</p>
+                <p className="text-2xl font-bold font-numeric font-amount">{formatValue(totalSavings || 0)}</p>
               </div>
             </div>
           </div>

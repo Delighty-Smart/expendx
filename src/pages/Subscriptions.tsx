@@ -194,7 +194,7 @@ export default function Subscriptions() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold font-numeric font-amount primary-total-amount">
               {formatValue(totalMonthlySpend)}
             </div>
           </CardContent>
@@ -206,7 +206,7 @@ export default function Subscriptions() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{subscriptions.length}</div>
+            <div className="text-2xl font-bold font-numeric font-amount">{subscriptions.length}</div>
           </CardContent>
         </Card>
       </div>

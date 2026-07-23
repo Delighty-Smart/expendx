@@ -37,7 +37,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] sm:w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-6 border border-white/10 bg-background/80 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-2xl",
-        "scroll-smooth overflow-y-auto max-h-[90vh] scrollable-container outline-none",
+        "scroll-smooth overflow-y-auto max-h-[calc(100vh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-48px)] scrollable-container outline-none",
         className
       )}
 

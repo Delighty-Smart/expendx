@@ -23,7 +23,15 @@ const CustomTooltip = ({ active, payload, currencySymbol, formatAmount, hideAmou
     if (active && payload && payload.length) {
         const data = payload[0].payload;
         return (
-            <div className="bg-bg-surface/90 dark:bg-bg-surface/90 border border-border-default shadow-xl rounded-[16px] p-3 flex flex-col gap-0.5 pointer-events-none select-none backdrop-blur-md">
+            <div 
+                className="rounded-xl p-3 flex flex-col gap-0.5 pointer-events-none select-none"
+                style={{
+                    backgroundColor: 'var(--bg-card)',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+                }}
+            >
                 <span className="text-sm font-bold text-foreground font-numeric leading-none">
                     {hideAmounts ? '***' : `${showLifeHours ? '' : currencySymbol}${formatAmount(data.balance)}`}
                 </span>
@@ -48,8 +56,8 @@ const BalanceTrendChart = ({
             <RechartAreaChart data={data} margin={{ top: 25, right: 30, left: 15, bottom: 5 }}>
                 <defs>
                     <linearGradient id="balance-area-gradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0084FF" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="#0084FF" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#1F5C82" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#1F5C82" stopOpacity={0} />
                     </linearGradient>
                 </defs>
                 {/* Thin, vertical-only grid lines corresponding to each data point */}
@@ -77,20 +85,22 @@ const BalanceTrendChart = ({
                             hideAmounts={hideAmounts} 
                         />
                     }
-                    cursor={{ stroke: '#0084FF', strokeWidth: 1.5, opacity: 0.6 }}
+                    contentStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}
+                    wrapperStyle={{ backgroundColor: 'transparent', border: 'none', boxShadow: 'none', outline: 'none' }}
+                    cursor={{ stroke: '#1F5C82', strokeWidth: 1.5, opacity: 0.6 }}
                 />
 
                 <Area
-                    type="linear"
+                    type="monotone"
                     dataKey="balance"
-                    stroke="#0084FF"
-                    strokeWidth={2}
+                    stroke="#1F5C82"
+                    strokeWidth={2.5}
                     fill="url(#balance-area-gradient)"
                     fillOpacity={1}
                     connectNulls={true}
-                    dot={{ r: 4, stroke: "#0084FF", strokeWidth: 2, fill: "var(--bg-card)" }}
-                    activeDot={{ r: 6, stroke: "#0084FF", strokeWidth: 2, fill: "var(--bg-card)" }}
-                    animationDuration={1500}
+                    dot={false}
+                    activeDot={{ r: 5, stroke: "#1F5C82", strokeWidth: 2, fill: "var(--bg-card)" }}
+                    animationDuration={1200}
                     animationEasing="ease-out"
                 />
             </RechartAreaChart>

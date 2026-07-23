@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { MessageReader } from '@solimanware/capacitor-sms-reader';
-import { NotificationsListener } from 'capacitor-notifications-listener';
+
 
 const PushOnboarding = () => {
     useEffect(() => {
@@ -20,12 +20,6 @@ const PushOnboarding = () => {
                 const smsPerm = await MessageReader.checkPermissions().catch(() => null);
                 if (smsPerm?.messages !== 'granted') {
                     await MessageReader.requestPermissions().catch(() => null);
-                }
-
-                // 3. Special app access notification listener
-                const isListening = await NotificationsListener.isListening().catch(() => ({ value: false }));
-                if (!isListening.value) {
-                    await NotificationsListener.requestPermission().catch(() => null);
                 }
             } catch (e) {
                 console.error("Native permission onboarding error:", e);

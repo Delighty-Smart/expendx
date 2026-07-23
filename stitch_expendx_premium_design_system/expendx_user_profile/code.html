@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ExpendX | User Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        body {
+            background-color: #111415;
+            color: #e1e2e4;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#323537",
+                      "surface-dim": "#111415",
+                      "on-secondary-container": "#003a5c",
+                      "primary-fixed-dim": "#c8c5c9",
+                      "border-subtle": "rgba(255, 255, 255, 0.03)",
+                      "tertiary-fixed": "#bef521",
+                      "inverse-on-surface": "#2e3132",
+                      "inverse-surface": "#e1e2e4",
+                      "tertiary-fixed-dim": "#a5d700",
+                      "error": "#ffb4ab",
+                      "background": "#111415",
+                      "surface-container-high": "#282a2c",
+                      "on-tertiary": "#263500",
+                      "outline-variant": "#47464b",
+                      "error-container": "#93000a",
+                      "on-surface-variant": "#c8c5cb",
+                      "carbon-surface": "#0E0E11",
+                      "finance-debt": "#FB923C",
+                      "inverse-primary": "#5f5e61",
+                      "surface-bright": "#37393b",
+                      "primary-container": "#050507",
+                      "finance-income": "#34D399",
+                      "surface-container-low": "#191c1e",
+                      "primary": "#c8c5c9",
+                      "surface-container-lowest": "#0c0f10",
+                      "on-primary": "#313033",
+                      "surface-container-highest": "#323537",
+                      "on-background": "#e1e2e4",
+                      "border-strong": "#242429",
+                      "secondary": "#93ccff",
+                      "finance-expense": "#F87171",
+                      "on-surface": "#e1e2e4",
+                      "on-secondary-fixed-variant": "#004b73",
+                      "on-error": "#690005",
+                      "surface": "#111415",
+                      "secondary-fixed-dim": "#93ccff",
+                      "surface-tint": "#c8c5c9",
+                      "on-primary-fixed": "#1c1b1e",
+                      "finance-savings": "#60A5FA",
+                      "on-tertiary-container": "#628200",
+                      "on-tertiary-fixed": "#151f00",
+                      "secondary-fixed": "#cce5ff",
+                      "secondary-container": "#00a9fd",
+                      "on-secondary-container": "#e1e2e4",
+                      "on-tertiary-container": "#e1e2e4",
+                      "on-primary-container": "#78777a",
+                      "outline": "#929095",
+                      "tertiary": "#a5d700",
+                      "primary-fixed": "#e5e1e5",
+                      "obsidian-card": "#121216",
+                      "on-secondary-fixed": "#001d31",
+                      "surface-container": "#1d2022",
+                      "on-tertiary-fixed-variant": "#394d00",
+                      "on-primary-fixed-variant": "#47464a",
+                      "on-error-container": "#ffdad6",
+                      "tertiary-container": "#030600",
+                      "on-secondary": "#003351"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "compact-sm": "0.625rem",
+                      "margin-desktop": "32px",
+                      "unit": "4px",
+                      "margin-mobile": "20px",
+                      "compact-md": "0.875rem",
+                      "gutter": "16px",
+                      "compact-xs": "0.375rem"
+              },
+              "fontFamily": {
+                      "body-md": ["Plus Jakarta Sans"],
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "headline-sm": ["Plus Jakarta Sans"],
+                      "label-tabular": ["Plus Jakarta Sans"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "body-sm": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "normal", "fontWeight": "400"}],
+                      "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.035em", "fontWeight": "700"}],
+                      "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+                      "label-tabular": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.035em", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+                      "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "normal", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen pb-[100px]">
+<!-- Top AppBar -->
+<header class="fixed top-0 left-0 w-full h-[64px] z-50 bg-[#0d0d0dcc] backdrop-blur-[20px] border-b border-border-subtle flex items-center justify-between px-margin-mobile">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-border-subtle">
+<img alt="Alexander Vance" class="w-full h-full object-cover" data-alt="A professional portrait of a stylish man in his 30s with a sharp haircut and a confident expression. The lighting is dramatic and moody, with cool blue and deep carbon tones emphasizing a high-end fintech aesthetic. The background is a blurred minimalist office with glass textures and subtle digital UI elements." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdisjDcXgEmgpXA2cOwKwlXRTCztTtH8NOUgLFVYbAT4UgxKQiPc1nWlhCkH1E8-qETs7dCBBHgll91pO0JRhHvDT8Kp3M-hJEnBbFaUOQKnuURshQ6Z84b2dJp3ulSmmWuh3ajRvajp8C_MJOLBdSD3GHnrNkbwyGqoZIAZpe7v8PTUFP06AutD9wyyoTSVVk_j1S07y6fWE4cRqu5uY955M_03INgtlzzw10lTh8KyLxIYk1JgNMH6JuuSU8x0ve8deDEwPCEU8"/>
+</div>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">ExpendX</span>
+</div>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-on-surface">notifications</span>
+</button>
+</header>
+<main class="pt-[80px] px-margin-mobile max-w-xl mx-auto space-y-6">
+<!-- Profile Hero Card -->
+<section class="relative bg-obsidian-card rounded-[24px] border border-border-subtle p-6 overflow-hidden">
+<!-- Background Decorative Elements -->
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 blur-[60px] rounded-full"></div>
+<div class="flex flex-col items-center text-center">
+<div class="relative mb-4">
+<div class="w-24 h-24 rounded-full p-[3px] bg-gradient-to-tr from-tertiary to-secondary">
+<div class="w-full h-full rounded-full border-4 border-obsidian-card overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A close-up high-resolution headshot of a sophisticated male user for a premium fintech application. The subject has a clean-shaven, professional look with soft overhead studio lighting. The color palette is dominated by dark obsidian tones, sleek blacks, and subtle glowing edges, reflecting a luxury minimalist design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQOUEhics8eyHBktGmrPVffu4iNE3gUTYFQtF5-LSIs6T3TTLFlWW0eob_zdgxQW_4OUJwm4iAlqWIVVT-Zq_Y8VDTetdgtLUd78v3dQ0ShUjPjywYRhV-VvzKq7ECSx4_xzc9Cu3QMkM7q67b4CXbAhJDLbifZxztfKQhaCrlIcKhyjVELCaYSvvOIADSGDEC6JDpw0_ybco6ac8qmYZ05MWFO7IdwzPeyUULXs42bUBy4ICO8qp9qMU2eV4vHPvApgnvrA7oI6k"/>
+</div>
+</div>
+<button class="absolute bottom-0 right-0 w-8 h-8 bg-on-surface rounded-full flex items-center justify-center border-4 border-obsidian-card active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-surface text-[18px]">edit</span>
+</button>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Alexander Vance</h1>
+<div class="flex items-center gap-2 mt-1">
+<span class="bg-tertiary/10 text-tertiary px-3 py-0.5 rounded-full font-body-sm text-body-sm font-bold tracking-wide">PREMIUM MEMBER</span>
+</div>
+<!-- Streak Flame -->
+<div class="mt-6 flex items-center gap-3 bg-surface-container-low px-4 py-3 rounded-[20px] border border-border-subtle group">
+<div class="relative">
+<span class="material-symbols-outlined text-[28px] text-finance-debt" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<div class="absolute inset-0 bg-finance-debt/30 blur-md animate-pulse"></div>
+</div>
+<div class="text-left">
+<p class="font-label-tabular text-label-tabular text-on-surface">14 Day Streak</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Top 2% of savers this month</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Stats Grid (Bento Style) -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-obsidian-card rounded-[24px] border border-border-subtle p-5 flex flex-col justify-between">
+<span class="material-symbols-outlined text-secondary mb-2">account_balance_wallet</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Net Worth</p>
+<p class="font-headline-md text-headline-md text-on-surface tabular-nums">$142,850</p>
+</div>
+</div>
+<div class="bg-obsidian-card rounded-[24px] border border-border-subtle p-5 flex flex-col justify-between">
+<span class="material-symbols-outlined text-tertiary mb-2">trending_up</span>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Monthly ROI</p>
+<p class="font-headline-md text-headline-md text-finance-income tabular-nums">+8.4%</p>
+</div>
+</div>
+</div>
+<!-- Account Settings List -->
+<div class="bg-obsidian-card rounded-[24px] border border-border-subtle p-2 space-y-1">
+<button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-low rounded-[18px] transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="text-left">
+<p class="font-headline-sm text-headline-sm">Personal Information</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage your identity and bio</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-low rounded-[18px] transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+<div class="text-left">
+<p class="font-headline-sm text-headline-sm">Security &amp; Privacy</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">2FA, Passkeys, and Data</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 hover:bg-surface-container-low rounded-[18px] transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+<div class="text-left">
+<p class="font-headline-sm text-headline-sm">Linked Accounts</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">4 banks connected</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+</div>
+<!-- Gamification Elements -->
+<div class="bg-obsidian-card rounded-[24px] border border-border-subtle p-6">
+<div class="flex justify-between items-center mb-4">
+<p class="font-headline-sm text-headline-sm">Badges &amp; Achievements</p>
+<button class="text-secondary font-body-sm text-body-sm hover:underline">View All</button>
+</div>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+<div class="flex-shrink-0 flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-subtle relative">
+<span class="material-symbols-outlined text-tertiary text-[32px]">workspace_premium</span>
+<div class="absolute -top-1 -right-1 w-5 h-5 bg-finance-income rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-on-primary">check</span>
+</div>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant uppercase tracking-tighter">Early Adopter</p>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-2 opacity-50">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-subtle">
+<span class="material-symbols-outlined text-on-surface-variant text-[32px]">savings</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant uppercase tracking-tighter">Goal Master</p>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-subtle relative">
+<span class="material-symbols-outlined text-finance-debt text-[32px]">stars</span>
+<div class="absolute -top-1 -right-1 w-5 h-5 bg-finance-income rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[12px] text-on-primary">check</span>
+</div>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant uppercase tracking-tighter">Streak Pro</p>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-2 opacity-50">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border border-border-subtle">
+<span class="material-symbols-outlined text-on-surface-variant text-[32px]">volunteer_activism</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant uppercase tracking-tighter">Investor</p>
+</div>
+</div>
+</div>
+<!-- Logout Button -->
+<button class="w-full h-14 bg-error-container/10 border border-error/20 rounded-full flex items-center justify-center gap-3 active:scale-[0.98] transition-all hover:bg-error-container/20 group">
+<span class="material-symbols-outlined text-error">logout</span>
+<span class="font-headline-sm text-headline-sm text-error">Logout Session</span>
+</button>
+<p class="text-center font-body-sm text-body-sm text-on-surface-variant/40 pb-4">
+            ExpendX Version 2.4.1 (Stable)<br/>
+            Made with precision by Carbon Systems
+        </p>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full h-[72px] z-50 bg-[#0d0d0dcc] backdrop-blur-[20px] border-t border-border-subtle flex justify-around items-center px-4">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-body-sm text-body-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-sm text-body-sm">Budget</span>
+</a>
+<div class="relative -top-4">
+<button class="w-14 h-14 bg-on-surface rounded-full flex items-center justify-center shadow-lg border-[4px] border-background active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-background font-bold">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-body-sm text-body-sm">Wealth</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary font-bold active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions and subtle effects
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.classList.add('scale-95');
+            });
+            el.addEventListener('mouseup', () => {
+                el.classList.remove('scale-95');
+            });
+            el.addEventListener('mouseleave', () => {
+                el.classList.remove('scale-95');
+            });
+        });
+    </script>
+</body></html>

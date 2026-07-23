@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F8F9FB; /* Level 0 Background */
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: #FFFFFF;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'wght' 300, 'opsz' 24;
+        }
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#c4c7c7",
+                        "tertiary-container": "#002113",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-surface-variant": "#444748",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "inverse-on-surface": "#f4f0ef",
+                        "on-secondary": "#ffffff",
+                        "background": "#fdf8f8",
+                        "on-secondary-fixed": "#151c27",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface": "#fdf8f8",
+                        "tertiary": "#000000",
+                        "surface-container-highest": "#e5e2e1",
+                        "error": "#ba1a1a",
+                        "primary-container": "#1c1b1b",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "secondary-fixed-dim": "#c0c7d6",
+                        "surface-tint": "#5f5e5e",
+                        "on-tertiary-fixed": "#002113",
+                        "secondary-fixed": "#dce2f3",
+                        "on-tertiary-container": "#009668",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#ddd9d8",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-variant": "#e5e2e1",
+                        "primary": "#000000",
+                        "on-secondary-container": "#5e6572",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#404754",
+                        "secondary": "#585f6c",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-container-high": "#ebe7e6",
+                        "secondary-container": "#dce2f3",
+                        "inverse-surface": "#313030",
+                        "on-background": "#1c1b1b",
+                        "inverse-primary": "#c8c6c5",
+                        "surface-container-low": "#f7f3f2",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-primary-container": "#858383",
+                        "surface-container": "#f1edec",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fdf8f8",
+                        "on-surface": "#1c1b1b",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747878"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "12px",
+                        "2xl": "24px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xl": "48px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "display": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-lg h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-md">
+<span class="font-display text-headline-md tracking-tight text-primary">ExpendX</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm active:scale-95 transition-transform cursor-pointer">
+<img alt="Alexander Vance" class="w-8 h-8 rounded-full object-cover border border-outline-variant/50" data-alt="A professional close-up studio portrait of a man with a clean-shaven face and confident expression. The lighting is bright and high-key, emphasizing a clinical and premium minimalist atmosphere. The background is a soft, solid neutral grey that complements the black-and-white high-end design aesthetic of the user interface. The overall mood is sophisticated and corporate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnXkzYRIQatub-XYSZsp28xNa3yBrI1vBtOyBHDL4U3CmnCFxXGbTLd-lHSzONrMUdDr-MiRyEbZYqhB1RhWDLoMo0GW3An9dIrNXnM199swltDv6aWyyMISHdjNh3LBQ6Y_XUh83QcHJJ9iDH3IONfZnkpBfvdw75sM5oE9kzuCK1BXeM3Tea0Zagr1OepKLVk99L4XYpMGE_SqpoZVMDJbq6tuf_G9XzA-qsOYW7c4h2nAbRCqZvEdBTz-2TMgE9Quw5fCqEgDQ"/>
+<span class="hidden md:inline font-label-md text-on-surface">Alexander Vance</span>
+</div>
+<button class="material-symbols-outlined text-primary active:scale-95 transition-transform" data-icon="notifications">notifications</button>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-md md:px-lg max-w-7xl mx-auto">
+<!-- Hero Section -->
+<section class="mb-xl">
+<h1 class="font-display text-4xl font-bold tracking-tight text-primary mb-sm">Settings</h1>
+<p class="font-body-lg text-on-surface-variant max-w-2xl">Manage your financial ecosystem, security protocols, and interface preferences with precision control.</p>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Profile Card -->
+<div class="lg:col-span-4 space-y-gutter">
+<div class="glass-card rounded-2xl p-lg flex flex-col items-center text-center">
+<div class="relative mb-md">
+<img alt="Alexander Vance Large" class="w-32 h-32 rounded-full object-cover shadow-lg border-2 border-surface" data-alt="An elegant, large-scale portrait of Alexander Vance, a professional male in his 30s, against a pristine white studio background. The lighting is exceptionally soft and diffused, creating a premium high-end look. The style is modern, minimalist, and focuses on clarity and reliability, reflecting the Carbon light theme's aesthetic of clinical precision and expansive space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0eRsnVR175bLUYjNJUhdRtzaiUDC4Cb-mzsnrv-8MNZGRItVuOFXo1zTor5WOxJtxG0UYnVW88AaPNr4OrAX_gcbcyAVnTelDNm_I6h5UywKhxl2sXJafFo6igqL93A8fg3NUdyyaWUWSXSPVud93JAFPM8v16odFEvYtN7dmhHKw4EKXUZ4CUDfJh3quj2eVklX7wu9blj9ydgTx-DYXpCrmwWMIU3C7-DPKsBGzMgBLy1V4ZDLmnNvADygEoNbU3CXrrby5N8I"/>
+<button class="absolute bottom-1 right-1 bg-primary text-on-primary p-xs rounded-full shadow-md active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<h2 class="font-headline-md text-primary">Alexander Vance</h2>
+<p class="font-label-md text-on-surface-variant mb-lg">Premium Private Account</p>
+<div class="w-full flex justify-between items-center p-md bg-surface-container-low rounded-xl">
+<div class="text-left">
+<p class="text-[10px] uppercase tracking-widest text-outline">Balance Status</p>
+<p class="font-data-tabular text-lg">$142,000.00</p>
+</div>
+<span class="material-symbols-outlined text-on-tertiary-container bg-tertiary-fixed-dim/20 p-xs rounded-full" data-icon="verified" data-weight="fill">verified</span>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-md">
+<button class="w-full flex items-center justify-between p-md text-error hover:bg-error-container/10 rounded-xl transition-colors">
+<span class="font-label-md">Sign Out of All Devices</span>
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</button>
+</div>
+</div>
+<!-- Right Column: Settings Sections -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Account & Security -->
+<section>
+<div class="flex items-center gap-sm mb-md px-sm">
+<span class="material-symbols-outlined text-primary" data-icon="shield">shield</span>
+<h3 class="font-headline-md text-lg">Account &amp; Security</h3>
+</div>
+<div class="glass-card rounded-2xl overflow-hidden">
+<div class="settings-item flex items-center justify-between p-lg border-b border-outline-variant/10 hover:bg-surface-container-low/30 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-secondary-container/30 rounded-full text-secondary">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Personal Information</p>
+<p class="text-xs text-on-surface-variant">Update your name, email, and tax ID</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="settings-item flex items-center justify-between p-lg border-b border-outline-variant/10 hover:bg-surface-container-low/30 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-secondary-container/30 rounded-full text-secondary">
+<span class="material-symbols-outlined" data-icon="vibration">vibration</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Two-Factor Authentication</p>
+<p class="text-xs text-on-tertiary-container font-medium">Active (App-based)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="settings-item flex items-center justify-between p-lg hover:bg-surface-container-low/30 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-secondary-container/30 rounded-full text-secondary">
+<span class="material-symbols-outlined" data-icon="credit_card">credit_card</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Payments &amp; Payouts</p>
+<p class="text-xs text-on-surface-variant">Manage cards and linked bank accounts</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- System Preferences -->
+<section>
+<div class="flex items-center gap-sm mb-md px-sm">
+<span class="material-symbols-outlined text-primary" data-icon="settings_suggest">settings_suggest</span>
+<h3 class="font-headline-md text-lg">System Preferences</h3>
+</div>
+<div class="glass-card rounded-2xl overflow-hidden">
+<!-- Theme Toggle -->
+<div class="settings-item flex items-center justify-between p-lg border-b border-outline-variant/10">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-surface-container-high rounded-full text-on-surface">
+<span class="material-symbols-outlined" data-icon="contrast">contrast</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Display Theme</p>
+<p class="text-xs text-on-surface-variant">Current: Carbon Light</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Notifications -->
+<div class="settings-item flex items-center justify-between p-lg border-b border-outline-variant/10 hover:bg-surface-container-low/30 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-surface-container-high rounded-full text-on-surface">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Notifications</p>
+<p class="text-xs text-on-surface-variant">Push, Email, and SMS alerts</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Language -->
+<div class="settings-item flex items-center justify-between p-lg hover:bg-surface-container-low/30 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 flex items-center justify-center bg-surface-container-high rounded-full text-on-surface">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Language &amp; Region</p>
+<p class="text-xs text-on-surface-variant">English (United States)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Data Management -->
+<div class="p-lg bg-surface-container-lowest border border-outline-variant/10 rounded-2xl flex items-center justify-between">
+<div>
+<h4 class="font-label-md text-on-surface">Privacy &amp; Data Export</h4>
+<p class="text-xs text-on-surface-variant">Download your transaction history or close account.</p>
+</div>
+<button class="px-md py-sm border border-outline-variant/30 rounded-full font-label-md hover:bg-surface-container-high transition-colors active:scale-95">Manage Data</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 dark:bg-surface-container-highest shadow-lg md:hidden">
+<div class="flex justify-around items-center px-md py-sm w-full bg-surface">
+<div class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md">Insights</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-md text-label-md">Transact</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-secondary-container hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Budgets</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-full px-4 py-1 active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</div>
+</div>
+</nav>
+<script>
+        // Micro-interactions and subtle effects
+        document.querySelectorAll('.settings-item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                const icon = item.querySelector('.material-symbols-outlined:last-child');
+                if (icon) {
+                    icon.style.transform = 'translateX(4px)';
+                    icon.style.transition = 'transform 0.2s ease';
+                }
+            });
+            item.addEventListener('mouseleave', () => {
+                const icon = item.querySelector('.material-symbols-outlined:last-child');
+                if (icon) {
+                    icon.style.transform = 'translateX(0px)';
+                }
+            });
+        });
+
+        // Simple feedback for clicks
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                console.log('Action performed on:', btn.innerText || btn.querySelector('span')?.innerText);
+            });
+        });
+    </script>
+</body></html>

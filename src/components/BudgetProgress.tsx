@@ -70,7 +70,9 @@ export function BudgetProgress({ category, limit, spent, currency }: BudgetProgr
       </div>
       <div className="flex justify-between items-center text-xs">
         <span className="text-muted-foreground">
-          {percentage.toFixed(1)}% used
+          {spent > limit
+            ? `${((spent / limit) * 100 - 100).toFixed(1)}% exceeded (${((spent / limit) * 100).toFixed(1)}% of budget)`
+            : `${((spent / limit) * 100).toFixed(1)}% used`}
         </span>
         <span className={`font-medium transition-colors duration-300 ${percentage >= 90
           ? "text-rose-600 dark:text-rose-400"
