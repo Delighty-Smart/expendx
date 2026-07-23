@@ -3,11 +3,10 @@ import { supabase } from '@/integrations/supabase/client'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { SettingsProvider } from '@/contexts/SettingsContext'
+import { SettingsProvider, syncStatusBarTheme } from '@/contexts/SettingsContext'
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { useToast } from '@/hooks/use-toast';
 
 import IndexPage from '@/pages/Index'
@@ -57,15 +56,19 @@ function AppContent() {
   const backPressedOnce = useRef(false);
   // Keep a ref so the onAuthStateChange closure always sees the current pathname
   const locationRef = useRef(location.pathname);
-  useEffect(() => { locationRef.current = location.pathname; }, [location.pathname]);
+  useEffect(() => { 
+    locationRef.current = location.pathname; 
+    // Always sync native status bar items color on page navigation
+    syncStatusBarTheme();
+  }, [location.pathname]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user?.id);
 
-      // Hide native plugins splash screen once session is resolved
+      // Hide native plugins splash screen once session is resolved ultra fast
       if (Capacitor.isNativePlatform()) {
-        SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => { });
+        SplashScreen.hide({ fadeOutDuration: 100 }).catch(() => { });
 
         // Hide our custom HTML splash screen gracefully
         const nativeSplash = document.getElementById('native-splash');
@@ -73,7 +76,7 @@ function AppContent() {
           nativeSplash.style.opacity = '0';
           setTimeout(() => {
             nativeSplash.remove();
-          }, 300); // Wait for the CSS transition to finish before dropping from DOM
+          }, 100);
         }
 
         // Skip landing page if running as native app
@@ -119,11 +122,8 @@ function AppContent() {
     window.addEventListener('resize', setVh);
     window.addEventListener('orientationchange', setVh);
 
-    // Set native status bar style from saved theme preference (Style.Dark = dark text for light theme)
-    if (Capacitor.isNativePlatform()) {
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      StatusBar.setStyle({ style: savedTheme === 'dark' ? Style.Light : Style.Dark }).catch(() => { });
-    }
+    // Set native status bar style from saved theme preference
+    syncStatusBarTheme();
 
     // Initial sync for enhanced offline manager
     if (navigator.onLine) {

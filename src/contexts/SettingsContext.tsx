@@ -6,6 +6,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
+export const syncStatusBarTheme = (themeMode?: 'light' | 'dark') => {
+    if (Capacitor.isNativePlatform()) {
+        const currentTheme = themeMode || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        const isDark = currentTheme === 'dark';
+        // Style.Light = white text/icons for dark background, Style.Dark = black text/icons for light background
+        StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark }).catch(() => { });
+        StatusBar.setBackgroundColor({ color: isDark ? '#111315' : '#FFFFFF' }).catch(() => { });
+    }
+};
+
 // Define type for the currency object
 interface Currency {
     code: string;
@@ -142,10 +152,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         // Update HTML class for theme immediately
         document.documentElement.classList.toggle('dark', theme === 'dark');
 
-        // Sync Android status bar style with app theme (Style.Light = light text for dark theme, Style.Dark = dark text for light theme)
-        if (Capacitor.isNativePlatform()) {
-            StatusBar.setStyle({ style: theme === 'dark' ? Style.Light : Style.Dark }).catch(() => { });
-        }
+        // Sync Android status bar style and background color with app theme
+        syncStatusBarTheme(theme);
 
         // Update theme-color meta tag for PWA/Mobile
         const themeColor = theme === 'dark' ? '#050507' : '#ffffff';

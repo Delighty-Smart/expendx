@@ -6,17 +6,17 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 500,
-      backgroundColor: '#09090b',     // zinc-950 — matches the app dark bg
+      launchShowDuration: 0,
+      backgroundColor: '#111315',     // Lucent dark background
       androidSplashResourceName: 'splash',
       showSpinner: false,
       launchAutoHide: true,           // let it hide automatically once resources are loaded
-      fadeInDuration: 150,
-      fadeOutDuration: 150,
+      fadeInDuration: 0,
+      fadeOutDuration: 100,
     },
     StatusBar: {
-      style: 'Dark',
-      backgroundColor: '#09090b',
+      style: 'Light',                 // Light = white icons for dark theme
+      backgroundColor: '#111315',
       overlaysWebView: true,
     },
     Keyboard: {
