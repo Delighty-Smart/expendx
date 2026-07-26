@@ -18,7 +18,8 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Eye,
-    EyeOff
+    EyeOff,
+    Hourglass
 } from "lucide-react";
 import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
 import { format } from "date-fns";
@@ -210,17 +211,17 @@ export default function Landing() {
                 >
                     <motion.div variants={fadeUp}>
                         <Badge className="mb-6 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-4 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm">
-                            Smarter Expense Tracking • Lucent v1.2.0
+                            Life Energy Analytics • Lucent v1.2.0
                         </Badge>
                     </motion.div>
                     <motion.h1 variants={fadeUp} style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 leading-tight">
-                        Take Control of Your <br className="hidden md:block" />
+                        Measure Expenses in <br className="hidden md:block" />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                            Finances, Effortlessly.
+                            Hours of Your Life.
                         </span>
                     </motion.h1>
                     <motion.p variants={fadeUp} className="text-base md:text-lg text-white/60 mb-10 max-w-2xl mx-auto leading-relaxed px-2">
-                        The intelligent way to track every expense, monitor your inflow, set monthly targets, and generate beautiful insights—anywhere, anytime.
+                        Discover your true hourly wage after working expenses. Transform currency prices into real life-hours worked and master your financial freedom.
                     </motion.p>
                     <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4 sm:px-0">
                         <Button asChild size="lg" className="rounded-full w-full sm:w-auto px-8 h-14 text-base bg-white text-black hover:bg-white/90 transition-transform active:scale-95">
@@ -510,6 +511,13 @@ export default function Landing() {
                     >
                         <motion.div variants={fadeUp}>
                             <FeatureCard
+                                icon={<Hourglass className="h-6 w-6 text-amber-400" />}
+                                title="Life Energy Mode"
+                                description="Convert prices into actual working hours needed based on your true net hourly wage."
+                            />
+                        </motion.div>
+                        <motion.div variants={fadeUp}>
+                            <FeatureCard
                                 icon={<Activity className="h-6 w-6 text-blue-400" />}
                                 title="Smart Tracking"
                                 description="Log and categorize every transaction instantly. Know exactly where your money goes."
@@ -527,13 +535,6 @@ export default function Landing() {
                                 icon={<Target className="h-6 w-6 text-purple-400" />}
                                 title="Set Targets"
                                 description="Define monthly limits for specific categories and monitor your pacing."
-                            />
-                        </motion.div>
-                        <motion.div variants={fadeUp}>
-                            <FeatureCard
-                                icon={<TrendingUp className="h-6 w-6 text-rose-400" />}
-                                title="Inflow Monitoring"
-                                description="Keep a close eye on income streams and measure your net growth over time."
                             />
                         </motion.div>
                     </motion.div>
