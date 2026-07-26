@@ -128,8 +128,8 @@ export default function Landing() {
                     className="flex flex-col items-center gap-4"
                 >
                     <img
-                        src="/lucent-header-dark.png"
-                        alt="Loading Lucent"
+                        src="/lucent-header-light.png"
+                        alt="Lucent"
                         className="h-10 sm:h-12 object-contain"
                     />
                     <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
@@ -180,7 +180,7 @@ export default function Landing() {
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
                             <img
-                                src="/lucent-header-dark.png"
+                                src="/lucent-header-light.png"
                                 alt="Lucent"
                                 className="h-5 sm:h-6 object-contain"
                             />
@@ -621,7 +621,7 @@ export default function Landing() {
                 <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
                     <div className="flex items-center gap-2 mb-4 md:mb-0">
                         <img
-                            src="/lucent-header-dark.png"
+                            src="/lucent-header-light.png"
                             alt="Lucent"
                             className="h-6 object-contain opacity-50 grayscale"
                         />

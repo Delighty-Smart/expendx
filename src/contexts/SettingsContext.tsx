@@ -10,9 +10,9 @@ export const syncStatusBarTheme = (themeMode?: 'light' | 'dark') => {
     if (Capacitor.isNativePlatform()) {
         const currentTheme = themeMode || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         const isDark = currentTheme === 'dark';
-        // Style.Light = white text/icons for dark background, Style.Dark = black text/icons for light background
+        // Style.Light = Light text/icons for dark background, Style.Dark = Dark text/icons for light background
         StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark }).catch(() => { });
-        StatusBar.setBackgroundColor({ color: isDark ? '#111315' : '#FFFFFF' }).catch(() => { });
+        StatusBar.setBackgroundColor({ color: isDark ? '#050507' : '#FFFFFF' }).catch(() => { });
     }
 };
 
@@ -221,7 +221,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
                 }
             }
 
-            // 2. Fetch Theme and HideAmounts from User Metadata
+            // 2. Fetch Theme, HideAmounts, and Life Energy data from User Metadata
             const metadata = user.user_metadata;
             if (metadata) {
                 if (metadata.theme && (metadata.theme === 'light' || metadata.theme === 'dark')) {
@@ -233,6 +233,23 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
                 if (typeof metadata.hideAmounts === 'boolean') {
                     setHideAmounts(metadata.hideAmounts);
                     localStorage.setItem('expendx_hideAmounts', metadata.hideAmounts.toString());
+                }
+
+                if (metadata.life_energy_data) {
+                    const dataStr = typeof metadata.life_energy_data === 'string' 
+                        ? metadata.life_energy_data 
+                        : JSON.stringify(metadata.life_energy_data);
+                    localStorage.setItem('lucent_life_energy_data', dataStr);
+                    localStorage.setItem('expendx_life_energy_data', dataStr);
+                    try {
+                        const parsed = typeof metadata.life_energy_data === 'string' ? JSON.parse(metadata.life_energy_data) : metadata.life_energy_data;
+                        if (parsed.trueHourlyRate) {
+                            setTrueHourlyRate(parsed.trueHourlyRate);
+                            localStorage.setItem('lucent_true_hourly_rate', parsed.trueHourlyRate.toString());
+                            localStorage.setItem('expendx_true_hourly_rate', parsed.trueHourlyRate.toString());
+                        }
+                    } catch (e) {}
+                    window.dispatchEvent(new Event('storage'));
                 }
             }
 
@@ -277,11 +294,13 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
             await Promise.race([currencyPromise, timeoutPromise]);
 
-            // Sync Theme & Visibility (Auth Metadata)
+            // Sync Theme, Visibility & Life Energy (Auth Metadata)
+            const savedLifeEnergy = localStorage.getItem('lucent_life_energy_data') || localStorage.getItem('expendx_life_energy_data');
             const metaPromise = supabase.auth.updateUser({
                 data: {
                     theme: theme,
-                    hideAmounts: hideAmounts
+                    hideAmounts: hideAmounts,
+                    ...(savedLifeEnergy ? { life_energy_data: savedLifeEnergy } : {})
                 }
             });
 

@@ -12,7 +12,7 @@ const DownloadPage = () => {
         const fetchApkInfo = async () => {
             try {
                 // Use a HEAD request to efficiently get the headers without downloading the file
-                const response = await fetch('/expendx-latest.apk', { method: 'HEAD' });
+                const response = await fetch('/lucent-latest.apk', { method: 'HEAD' });
                 const lastModified = response.headers.get('Last-Modified');
                 if (lastModified) {
                     setApkDate(new Date(lastModified));
@@ -53,7 +53,7 @@ const DownloadPage = () => {
     ];
 
     const copyDownloadLink = () => {
-        const link = "https://expendx.vercel.app/expendx-latest.apk";
+        const link = window.location.origin + "/lucent-latest.apk";
         navigator.clipboard.writeText(link);
         // Show a brief toast or alert if needed
     };

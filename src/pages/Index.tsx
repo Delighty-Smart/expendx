@@ -475,81 +475,75 @@ const IndexPage = () => {
           />
         )}
 
-        {/* Fintech Balance Card - High contrast mockup spacing */}
-        <div className="relative overflow-hidden rounded-[28px] bg-card py-9 px-6 md:py-12 md:px-8 select-none">
-          <div className="relative z-10 flex flex-col items-center justify-center text-center">
-            {/* Top Left Visibility toggle icon - Image 1 Note (4): Light color circular bg + Perfect Circle */}
-            <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
-              <button
-                type="button"
-                className="w-8 h-8 min-w-[32px] min-h-[32px] max-w-[32px] max-h-[32px] p-0 text-foreground bg-muted/80 hover:bg-muted dark:bg-white/15 dark:hover:bg-white/25 transition-colors flex items-center justify-center border border-border-default/50 shadow-xs !rounded-full shrink-0"
-                style={{ borderRadius: "9999px", aspectRatio: "1 / 1" }}
-                onClick={() => setHideAmounts(!hideAmounts)}
-                aria-label="Toggle Amount Visibility"
-              >
-                {hideAmounts ? (
-                  <EyeOff className="h-4 w-4" strokeWidth={1.8} />
-                ) : (
-                  <Eye className="h-4 w-4" strokeWidth={1.8} />
-                )}
-              </button>
-            </div>
+        {/* Fintech Balance Card - Inverted emphasis hero styling */}
+        <div className="relative overflow-hidden rounded-[20px] bg-brand-primary text-text-on-brand p-6 shadow-[var(--elevation-2)] transition-all select-none border border-brand-primary">
+          <div className="relative z-10 flex flex-col items-start justify-start">
+            {/* Top Bar: Eyebrow + Toggles */}
+            <div className="w-full flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-text-on-brand/70 uppercase tracking-wider">Total Balance</span>
 
-            {/* Top Right Life Energy Icon toggle - Image 1 Note (3): Light color circular bg + Perfect Circle */}
-            <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
-              <button
-                type="button"
-                className={cn(
-                  "w-8 h-8 min-w-[32px] min-h-[32px] max-w-[32px] max-h-[32px] p-0 transition-colors flex items-center justify-center border border-border-default/50 shadow-xs !rounded-full shrink-0",
-                  showLifeHours
-                    ? "text-brand-primary bg-brand-subtle dark:bg-white/30"
-                    : "text-foreground bg-muted/80 hover:bg-muted dark:bg-white/15 dark:hover:bg-white/25"
-                )}
-                style={{ borderRadius: "9999px", aspectRatio: "1 / 1" }}
-                onClick={toggleShowLifeHours}
-                title="Toggle Life Energy Mode"
-                aria-label="Toggle Life Energy Mode"
-              >
-                <LifeEnergyIcon className="h-4 w-4" />
-              </button>
-            </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="w-8 h-8 rounded-full p-0 text-text-on-brand bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center border border-white/10 shrink-0"
+                  onClick={() => setHideAmounts(!hideAmounts)}
+                  aria-label="Toggle Amount Visibility"
+                >
+                  {hideAmounts ? (
+                    <EyeOff className="h-4 w-4" strokeWidth={1.8} />
+                  ) : (
+                    <Eye className="h-4 w-4" strokeWidth={1.8} />
+                  )}
+                </button>
 
-            {/* Label and Info */}
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[13px] font-medium text-text-secondary/70 tracking-tight">Account balance</span>
-              
-              {/* Account Balance display digits matching exact mockup format */}
-              <div className="flex items-baseline justify-center mt-1">
-                {isAllTransactionsLoading ? (
-                  <Skeleton className="h-12 w-48" />
-                ) : (
-                  <>
-                    <span className="text-4xl sm:text-[40px] font-extrabold tracking-tight text-text-primary font-numeric font-amount leading-none primary-total-amount">
-                      {formattedBalance.primary}
-                    </span>
-                    {formattedBalance.secondary && (
-                      <span className="text-[20px] font-bold text-text-secondary/45 font-numeric font-amount leading-none ml-0.5">
-                        {formattedBalance.secondary}
-                      </span>
-                    )}
-                  </>
-                )}
+                <button
+                  type="button"
+                  className={cn(
+                    "w-8 h-8 rounded-full p-0 transition-colors flex items-center justify-center border border-white/10 shrink-0",
+                    showLifeHours
+                      ? "text-brand-primary bg-text-on-brand"
+                      : "text-text-on-brand bg-white/10 hover:bg-white/20"
+                  )}
+                  onClick={toggleShowLifeHours}
+                  title="Toggle Life Energy Mode"
+                  aria-label="Toggle Life Energy Mode"
+                >
+                  <LifeEnergyIcon className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
-            {/* Centered monthly Net Income details mimicking the mockup account sub-line */}
-            <div className="mt-3 flex justify-center">
-              {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
-                <Skeleton className="h-4 w-28" />
+            {/* Display Amount (tabular-nums) */}
+            <div className="flex items-baseline justify-start my-1">
+              {isAllTransactionsLoading ? (
+                <Skeleton className="h-10 w-48 bg-white/20" />
               ) : (
-                <div className="flex items-center gap-1 text-[11.5px] font-medium text-text-secondary/70">
-                  {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 stroke-[1.8]" />
-                  ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 stroke-[1.8]" />
+                <>
+                  <span className="text-[32px] sm:text-[36px] font-bold tracking-tight text-text-on-brand font-numeric leading-tight">
+                    {formattedBalance.primary}
+                  </span>
+                  {formattedBalance.secondary && (
+                    <span className="text-[20px] font-semibold text-text-on-brand/70 font-numeric leading-tight ml-1">
+                      {formattedBalance.secondary}
+                    </span>
                   )}
-                  <span className="font-medium">
-                    {!showLifeHours && currency.symbol}{formatAmount(Math.abs(monthlyIncomeTotal - monthlyExpenses))} {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? "Net Income" : "Deficit"}
+                </>
+              )}
+            </div>
+
+            {/* Delta indicator row (Caption + trend icon) */}
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-text-on-brand/80">
+              {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
+                <Skeleton className="h-4 w-28 bg-white/20" />
+              ) : (
+                <div className="flex items-center gap-1">
+                  {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? (
+                    <TrendingUp className="h-3.5 w-3.5 text-semantic-success-textStrong dark:text-semantic-success-text stroke-[2]" />
+                  ) : (
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-300 stroke-[2]" />
+                  )}
+                  <span className="font-medium text-text-on-brand/80">
+                    {!showLifeHours && currency.symbol}{formatAmount(Math.abs(monthlyIncomeTotal - monthlyExpenses))} {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? "Net Income this month" : "Deficit this month"}
                   </span>
                 </div>
               )}
@@ -678,8 +672,9 @@ const IndexPage = () => {
             </h3>
             <Button
               variant="ghost"
+              size="xs"
               onClick={() => navigate("/transactions")}
-              className="text-[9.5px] font-medium px-2 py-0 h-5 rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-all hover:scale-105 active:scale-95 border border-border/30"
+              className="text-[10px] font-semibold px-2.5 py-0.5 h-6 min-h-[24px] min-w-0 rounded-full bg-bg-sidebar-hover hover:bg-border-subtle text-text-tertiary hover:text-text-primary transition-all active:scale-95 border border-border-subtle"
             >
               see all
             </Button>
@@ -702,11 +697,11 @@ const IndexPage = () => {
                     className="flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-bg-overlay flex items-center justify-center text-foreground border border-border-default/40 shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-bg-overlay flex items-center justify-center text-foreground border border-border-default/40 shrink-0">
                         {isIncome ? (
-                          <ArrowDown className="w-4 h-4 text-text-primary" strokeWidth={1.8} />
+                          <ArrowDown className="w-3.5 h-3.5 text-text-primary" strokeWidth={1.8} />
                         ) : (
-                          <ArrowUp className="w-4 h-4 text-text-primary" strokeWidth={1.8} />
+                          <ArrowUp className="w-3.5 h-3.5 text-text-primary" strokeWidth={1.8} />
                         )}
                       </div>
 

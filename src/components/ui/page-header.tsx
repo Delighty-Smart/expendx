@@ -31,7 +31,7 @@ export function PageHeader({ title, subtitle, actions, className, backTo, backHi
   const showBack = !hideBack;
 
   return (
-    <header className={"sticky safe-top-header lg:!top-0 z-20 bg-background pb-1 mb-0.5 space-y-1 " + (className ?? "")}>
+    <header className={"sticky safe-top-header lg:!top-0 z-20 bg-background pt-1 pb-2 mb-3 space-y-2 " + (className ?? "")}>
       <div className="flex items-center justify-between gap-2 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
           {showBack && (

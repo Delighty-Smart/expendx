@@ -89,7 +89,7 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <img
-              src="/lucent-header-dark.png"
+              src="/lucent-header-light.png"
               alt="Lucent"
               className="h-6 object-contain"
             />

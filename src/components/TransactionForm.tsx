@@ -55,15 +55,14 @@ const transactionSchema = z.object({
     amount: z.number()
   })).optional(),
 }).refine(data => {
-  if (data.category === 'Subscriptions') {
-    if (!data.service_provider) return false;
-    if (data.service_provider === 'Other' && !data.custom_provider) return false;
-    if (!data.card_type || !data.last_four_digits || !data.subscription_type) return false;
+  if (data.type === 'subscription' || data.category === 'Subscriptions') {
+    if (data.service_provider && data.service_provider === 'Other' && !data.custom_provider) return false;
+    if (data.last_four_digits && (!/^\d{4}$/.test(data.last_four_digits))) return false;
   }
   return true;
 }, {
-  message: "All subscription fields are required",
-  path: ["category"]
+  message: "Please enter valid subscription details (last 4 digits must be 4 numbers)",
+  path: ["last_four_digits"]
 });
 
 interface TransactionFormProps {
@@ -347,17 +346,23 @@ export const TransactionForm = ({
       console.log("Saving transaction with enhanced offline support:", transactionData);
 
       // If this is a subscription transaction, update or link the subscription
-      if (values.category === 'Subscriptions') {
-        const finalProvider = values.service_provider === 'Other' ? values.custom_provider! : values.service_provider!;
+      if ((values.type === 'subscription' || values.category === 'Subscriptions') && (values.service_provider || values.description)) {
+        const provider = values.service_provider 
+          ? (values.service_provider === 'Other' ? (values.custom_provider || values.description) : values.service_provider)
+          : values.description;
+        
+        const cardType = values.card_type || 'Mastercard';
+        const lastFour = values.last_four_digits || '0000';
+        const subType = values.subscription_type || 'monthly';
 
         await upsertSubscriptionFromTransaction({
           subscriptionId: selectedSubscription || undefined,
           amount: parseFloat(values.amount),
-          service_provider: finalProvider,
-          card_type: values.card_type!,
-          last_four_digits: values.last_four_digits!,
-          subscription_type: values.subscription_type!
-        });
+          service_provider: provider,
+          card_type: cardType,
+          last_four_digits: lastFour,
+          subscription_type: subType
+        }).catch(err => console.warn("Failed to sync subscription record automatically:", err));
       }
 
       if (transaction) {
@@ -391,11 +396,12 @@ export const TransactionForm = ({
       if (onTransactionAdded) {
         onTransactionAdded();
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Transaction submission error:", error);
+      const errMsg = error?.message || error?.error_description || (typeof error === 'string' ? error : "An unexpected error occurred");
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: errMsg,
         variant: "destructive"
       });
     } finally {
@@ -447,7 +453,7 @@ export const TransactionForm = ({
             <FormField
               control={form.control}
               name="type"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Type</FormLabel>
                   <Select
@@ -456,7 +462,10 @@ export const TransactionForm = ({
                     disabled={loading}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-semibold px-3 focus:ring-0">
+                      <SelectTrigger className={cn(
+                        "h-10 bg-muted/30 border rounded-xl text-xs font-semibold px-3 focus:ring-0 transition-colors",
+                        fieldState.error ? "border-destructive text-destructive bg-destructive/5" : "border-border-default"
+                      )}>
                         <SelectValue placeholder="Select Type" />
                       </SelectTrigger>
                     </FormControl>
@@ -476,7 +485,7 @@ export const TransactionForm = ({
             <FormField
               control={form.control}
               name="category"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Category</FormLabel>
                   <Select
@@ -485,7 +494,10 @@ export const TransactionForm = ({
                     disabled={loading || categories.length === 0}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-semibold px-3 focus:ring-0">
+                      <SelectTrigger className={cn(
+                        "h-10 bg-muted/30 border rounded-xl text-xs font-semibold px-3 focus:ring-0 transition-colors",
+                        fieldState.error ? "border-destructive text-destructive bg-destructive/5" : "border-border-default"
+                      )}>
                         <SelectValue placeholder={categories.length === 0 ? "Loading..." : "Select"} />
                       </SelectTrigger>
                     </FormControl>
@@ -506,11 +518,19 @@ export const TransactionForm = ({
           <FormField
             control={form.control}
             name="date"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="space-y-1">
                 <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-medium px-3" disabled={loading} />
+                  <Input 
+                    type="date" 
+                    {...field} 
+                    className={cn(
+                      "h-10 bg-muted/30 border rounded-xl text-xs font-medium px-3 transition-colors",
+                      fieldState.error ? "border-destructive text-destructive bg-destructive/5" : "border-border-default"
+                    )} 
+                    disabled={loading} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -521,14 +541,17 @@ export const TransactionForm = ({
           <FormField
             control={form.control}
             name="description"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="space-y-1">
                 <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Notes</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Specify merchant details or notes..."
                     {...field}
-                    className="h-10 bg-muted/30 border border-border-default rounded-xl text-xs font-medium px-3"
+                    className={cn(
+                      "h-10 bg-muted/30 border rounded-xl text-xs font-medium px-3 transition-colors",
+                      fieldState.error ? "border-destructive text-destructive bg-destructive/5 placeholder:text-destructive/50" : "border-border-default"
+                    )}
                     disabled={loading}
                   />
                 </FormControl>

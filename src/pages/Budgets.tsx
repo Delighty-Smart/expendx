@@ -9,7 +9,7 @@ import { useTransactionData } from "@/hooks/useTransactionData";
 
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/ui/page-header";
-import { PlusCircle, Edit, Trash2, TrendingUp, DollarSign } from "lucide-react";
+import { PlusCircle, Edit, Trash2, TrendingUp, DollarSign, MoreVertical } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -19,6 +19,12 @@ import { BudgetProgress } from "@/components/BudgetProgress";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useRefresh } from "@/hooks/useRefresh";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Budget {
   id: string;
@@ -60,44 +66,48 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
     },
   });
 
-  const formatAmount = (amount: number) => {
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
   return (
-    <Card className="p-4.5 relative group overflow-hidden transition-colors duration-200 border border-border/45 hover:border-primary/20">
-      <div className="flex justify-between items-start mb-2.5">
-        <h3 className="font-bold text-[14.5px] text-foreground tracking-tight">{budget.category}</h3>
+    <Card className="p-4 relative group overflow-hidden transition-colors duration-200 rounded-[16px] border border-border-default bg-bg-card hover:bg-bg-card-hover shadow-[var(--elevation-1)]">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-text-primary text-sm font-semibold">
+            {budget.category.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3 className="font-semibold text-base text-text-heading leading-snug">{budget.category}</h3>
+            <span className="text-xs text-text-tertiary">Monthly limit</span>
+          </div>
+        </div>
 
-        <div className="flex gap-0.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 hover:bg-orange-100 dark:hover:bg-slate-700"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => onEdit(budget)}
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => onDelete(budget)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-bg-sidebar-hover text-text-secondary transition-colors"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-36 rounded-[12px] bg-bg-surface border border-border-default shadow-lg p-1">
+            <DropdownMenuItem
+              onClick={() => onEdit(budget)}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-text-primary hover:bg-bg-sidebar-hover rounded-[8px] cursor-pointer"
+            >
+              <Edit className="h-3.5 w-3.5 text-text-secondary" />
+              <span>Edit</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDelete(budget)}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-semantic-danger-text hover:bg-semantic-danger-bg rounded-[8px] cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5 text-semantic-danger-text" />
+              <span>Delete</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <div className="space-y-3">
-        <div className="flex justify-between items-baseline text-xs">
-          <span className="text-text-secondary/60 font-semibold uppercase tracking-wider text-[10px]">Monthly Limit</span>
-          <span className="font-extrabold text-md text-foreground font-numeric font-amount">{formatValue(budget.monthly_limit)}</span>
-        </div>
+      <div className="mt-2">
         <BudgetProgress
           category={budget.category}
           limit={budget.monthly_limit}
@@ -258,12 +268,12 @@ const BudgetsPage = () => {
           backTo="/dashboard"
           actions={
             <div className="flex items-center gap-2">
-              <Button onClick={() => navigate('/set-income')} variant="outline" className="flex items-center gap-2 flex-none whitespace-nowrap">
-                <DollarSign className="h-4 w-4" />
+              <Button onClick={() => navigate('/set-income')} variant="outline" size="compact" className="flex items-center gap-1.5 flex-none whitespace-nowrap text-xs">
+                <DollarSign className="h-3.5 w-3.5" />
                 Set Income
               </Button>
-              <Button onClick={() => navigate('/add-budget')} className="flex items-center gap-2 flex-none whitespace-nowrap">
-                <PlusCircle className="h-4 w-4" />
+              <Button onClick={() => navigate('/add-budget')} size="compact" className="flex items-center gap-1.5 flex-none whitespace-nowrap text-xs">
+                <PlusCircle className="h-3.5 w-3.5" />
                 Add Budget
               </Button>
             </div>

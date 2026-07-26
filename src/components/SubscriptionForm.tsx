@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCategories } from '@/hooks/useCategories';
 import { addDays, addYears } from 'date-fns';
 import { useSettings } from '@/contexts/SettingsContext';
+import { cn } from '@/lib/utils';
 
 interface SubscriptionFormProps {
   open: boolean;
@@ -51,43 +52,42 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
         last_four_digits: '',
         subscription_type: 'monthly',
         amount: '',
-        status: 'inactive',
+        status: 'active',
         next_billing_date: ''
       });
     }
   }, [subscription, open]);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.service_provider || !formData.card_type || !formData.last_four_digits || !formData.amount) {
+    const newErrors: Record<string, string> = {};
+    if (!formData.amount || parseFloat(formData.amount) <= 0 || isNaN(parseFloat(formData.amount))) {
+      newErrors.amount = "Please enter a valid amount";
+    }
+    if (!formData.service_provider) {
+      newErrors.service_provider = "Select a service provider";
+    }
+    if (!formData.card_type) {
+      newErrors.card_type = "Select payment method";
+    }
+    if (!formData.last_four_digits || formData.last_four_digits.length !== 4 || !/^\d{4}$/.test(formData.last_four_digits)) {
+      newErrors.last_four_digits = "Must be 4 digits";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Validation Error",
+        description: "Please fill in all highlighted fields correctly",
         variant: "destructive"
       });
       return;
     }
 
-    if (formData.last_four_digits.length !== 4 || !/^\d{4}$/.test(formData.last_four_digits)) {
-      toast({
-        title: "Error",
-        description: "Last 4 digits must be exactly 4 numbers",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid amount",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    setErrors({});
     setLoading(true);
 
     try {
@@ -105,7 +105,7 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
         card_type: formData.card_type,
         last_four_digits: formData.last_four_digits,
         subscription_type: formData.subscription_type,
-        amount,
+        amount: parseFloat(formData.amount),
         status: formData.status,
         next_billing_date: nextBillingDate || undefined,
         last_transaction_date: formData.status === 'active' ? new Date().toISOString().split('T')[0] : undefined
@@ -142,33 +142,44 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                className="bg-transparent border-none text-center text-4xl font-extrabold tracking-tight focus:outline-none focus:ring-0 w-48 text-foreground placeholder:text-muted-foreground/30 font-numeric"
+                className={cn(
+                  "bg-transparent border-b-2 text-center text-4xl font-extrabold tracking-tight focus:outline-none w-48 text-foreground placeholder:text-muted-foreground/30 font-numeric transition-colors",
+                  errors.amount ? "border-destructive bg-destructive/5 text-destructive" : "border-transparent focus:border-primary"
+                )}
                 value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, amount: e.target.value }));
+                  if (errors.amount) setErrors(prev => ({ ...prev, amount: "" }));
+                }}
                 disabled={loading}
               />
             </div>
+            {errors.amount && <p className="text-[10px] text-destructive font-semibold mt-1">{errors.amount}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="service_provider" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Service Provider</Label>
+              <Label htmlFor="service_provider" className={cn("text-xs font-bold uppercase tracking-wider", errors.service_provider ? "text-destructive" : "text-muted-foreground/60")}>Service Provider</Label>
               <Select
                 value={formData.service_provider}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, service_provider: value }))}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, service_provider: value }));
+                  if (errors.service_provider) setErrors(prev => ({ ...prev, service_provider: "" }));
+                }}
                 disabled={loading}
               >
-                <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                <SelectTrigger className={cn("h-11 bg-muted/30 border rounded-xl font-medium transition-colors", errors.service_provider ? "border-destructive bg-destructive/5 text-destructive" : "border-none")}>
                   <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customProviders.map((provider) => (
+                  {Array.from(new Set([...SERVICE_PROVIDERS, ...customProviders])).map((provider) => (
                     <SelectItem key={provider} value={provider}>
                       {provider}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {errors.service_provider && <p className="text-[10px] text-destructive font-semibold">{errors.service_provider}</p>}
             </div>
 
             <div className="space-y-2">
@@ -196,13 +207,16 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="card_type" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Payment Method</Label>
+              <Label htmlFor="card_type" className={cn("text-xs font-bold uppercase tracking-wider", errors.card_type ? "text-destructive" : "text-muted-foreground/60")}>Payment Method</Label>
               <Select
                 value={formData.card_type}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, card_type: value }))}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, card_type: value }));
+                  if (errors.card_type) setErrors(prev => ({ ...prev, card_type: "" }));
+                }}
                 disabled={loading}
               >
-                <SelectTrigger className="h-11 bg-muted/30 border-none rounded-xl font-medium">
+                <SelectTrigger className={cn("h-11 bg-muted/30 border rounded-xl font-medium transition-colors", errors.card_type ? "border-destructive bg-destructive/5 text-destructive" : "border-none")}>
                   <SelectValue placeholder="Card type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,23 +227,26 @@ export function SubscriptionForm({ open, onOpenChange, onSubmit, subscription }:
                   ))}
                 </SelectContent>
               </Select>
+              {errors.card_type && <p className="text-[10px] text-destructive font-semibold">{errors.card_type}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="last_four_digits" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Last 4 Digits</Label>
+              <Label htmlFor="last_four_digits" className={cn("text-xs font-bold uppercase tracking-wider", errors.last_four_digits ? "text-destructive" : "text-muted-foreground/60")}>Last 4 Digits</Label>
               <Input
                 id="last_four_digits"
                 type="text"
                 placeholder="1234"
                 maxLength={4}
-                className="h-11 bg-muted/30 border-none rounded-xl font-medium"
+                className={cn("h-11 bg-muted/30 border rounded-xl font-medium transition-colors", errors.last_four_digits ? "border-destructive bg-destructive/5 text-destructive placeholder:text-destructive/50" : "border-none")}
                 value={formData.last_four_digits}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '');
                   setFormData(prev => ({ ...prev, last_four_digits: value }));
+                  if (errors.last_four_digits) setErrors(prev => ({ ...prev, last_four_digits: "" }));
                 }}
                 disabled={loading}
               />
+              {errors.last_four_digits && <p className="text-[10px] text-destructive font-semibold">{errors.last_four_digits}</p>}
             </div>
           </div>
 

@@ -3,9 +3,9 @@ import { Transaction, TransactionType } from '@/types/transactions';
 
 // Enhanced offline storage with full data caching
 const CACHE_VERSION = '1.0';
-const CACHE_PREFIX = 'expendx_cache_';
-const SYNC_QUEUE_KEY = 'expendx_sync_queue';
-const LAST_SYNC_KEY = 'expendx_last_sync';
+const CACHE_PREFIX = 'lucent_cache_';
+const SYNC_QUEUE_KEY = 'lucent_sync_queue';
+const LAST_SYNC_KEY = 'lucent_last_sync';
 
 export interface CachedData {
   transactions: Transaction[];
@@ -353,7 +353,12 @@ class EnhancedOfflineManager {
     const userId = await this.getCurrentUserId();
 
     // Clean payload to ensure compatibility with standard schema columns
-    const { is_locked, is_system_adjustment, ...dbPayload } = transactionData as any;
+    const { is_locked, is_system_adjustment, unit_price, quantity, ...dbPayload } = transactionData as any;
+
+    // Database check constraint allows only: ('debit', 'credit', 'savings'). Map 'subscription' to 'debit'.
+    if (dbPayload.type === 'subscription') {
+      dbPayload.type = 'debit';
+    }
 
     const { data, error } = await supabase
       .from('transactions')
@@ -406,9 +411,15 @@ class EnhancedOfflineManager {
   private async updateTransactionOnline(id: string, updates: Partial<Transaction>): Promise<void> {
     const userId = await this.getCurrentUserId();
 
+    const { is_locked, is_system_adjustment, unit_price, quantity, ...cleanUpdates } = updates as any;
+
+    if (cleanUpdates.type === 'subscription') {
+      cleanUpdates.type = 'debit';
+    }
+
     const { error } = await supabase
       .from('transactions')
-      .update(updates)
+      .update(cleanUpdates)
       .eq('id', id)
       .eq('user_id', userId);
 
@@ -592,7 +603,8 @@ class EnhancedOfflineManager {
 
     switch (type) {
       case 'INSERT': {
-        const { is_locked, is_system_adjustment, ...cleanData } = data || {};
+        const { is_locked, is_system_adjustment, unit_price, quantity, ...cleanData } = data || {};
+        if (cleanData.type === 'subscription') cleanData.type = 'debit';
         const { data: insertedData, error: insertError } = await supabase
           .from('transactions')
           .insert({ ...cleanData, user_id: userId })
@@ -616,7 +628,8 @@ class EnhancedOfflineManager {
       }
 
       case 'UPDATE': {
-        const { is_locked, is_system_adjustment, id, ...cleanUpdateData } = data || {};
+        const { is_locked, is_system_adjustment, unit_price, quantity, id, ...cleanUpdateData } = data || {};
+        if (cleanUpdateData.type === 'subscription') cleanUpdateData.type = 'debit';
         const { error: updateError } = await supabase
           .from('transactions')
           .update(cleanUpdateData)

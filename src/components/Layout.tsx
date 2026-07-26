@@ -159,7 +159,7 @@ const Layout = ({
 
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-7.5 w-7.5 text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary rounded-full transition-colors p-0 flex items-center justify-center">
-              {theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <Button
               variant="ghost"
@@ -242,8 +242,8 @@ const Layout = ({
         </div>
       </aside>
 
-      <main className={`flex-1 lg:pl-64 safe-pt-main min-h-screen transition-all duration-300 pb-20 lg:pb-6`}>
-        <div className="container mx-auto px-3.5 py-1.5 md:p-6 lg:p-8 animate-fadeIn max-w-7xl">
+      <main className={`flex-1 lg:pl-64 safe-pt-main min-h-screen transition-all duration-300 pb-20 lg:pb-6 pt-2`}>
+        <div className="container mx-auto px-3.5 py-2.5 md:p-6 lg:p-8 animate-fadeIn max-w-7xl">
           {children || <Outlet />}
         </div>
       </main>

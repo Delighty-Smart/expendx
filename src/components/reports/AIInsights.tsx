@@ -80,11 +80,11 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
         <GlassCard className="overflow-hidden border-none shadow-xl bg-gradient-to-br from-card/60 to-card/40">
             <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-expendx-blue/10">
-                        <Brain className="w-5 h-5 text-expendx-blue" />
+                    <div className="p-2 rounded-lg bg-primary/10">
+                        <Brain className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                        <CardTitle className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-expendx-blue to-expendx-lime">
+                        <CardTitle className="text-lg font-bold text-foreground">
                             Lucent Intelligence
                         </CardTitle>
                         <p className="text-xs text-muted-foreground">AI-Powered Financial Feedback</p>
@@ -116,14 +116,14 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                                 <motion.div
                                     animate={{ rotate: 360 }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                    className="w-16 h-16 rounded-full border-2 border-dashed border-expendx-blue/30"
+                                    className="w-16 h-16 rounded-full border-2 border-dashed border-primary/30"
                                 />
                                 <motion.div
                                     animate={{ scale: [1, 1.2, 1] }}
                                     transition={{ duration: 2, repeat: Infinity }}
                                     className="absolute inset-0 flex items-center justify-center"
                                 >
-                                    <Sparkles className="w-6 h-6 text-expendx-lime" />
+                                    <Sparkles className="w-6 h-6 text-emerald-500" />
                                 </motion.div>
                             </div>
                             <div className="text-center">
@@ -164,7 +164,7 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                                 {/* Quantitative Analysis */}
                                 <div className="space-y-4">
                                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                        <CheckCircle2 className="w-3 h-3 text-expendx-blue" />
+                                        <CheckCircle2 className="w-3 h-3 text-primary" />
                                         Key Observations
                                     </h4>
                                     <ul className="space-y-3">
@@ -176,7 +176,7 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                                                 transition={{ delay: i * 0.1 }}
                                                 className="text-sm flex gap-2 group"
                                             >
-                                                <ChevronRight className="w-4 h-4 text-expendx-blue opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                                                <ChevronRight className="w-4 h-4 text-primary opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                                                 <span className="text-muted-foreground group-hover:text-foreground transition-colors">{obs}</span>
                                             </motion.li>
                                         ))}
@@ -186,7 +186,7 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                                 {/* Actionable Advice */}
                                 <div className="space-y-4">
                                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                        <Lightbulb className="w-3 h-3 text-expendx-lime" />
+                                        <Lightbulb className="w-3 h-3 text-emerald-500" />
                                         Smart Recommendations
                                     </h4>
                                     <ul className="space-y-3">
@@ -196,7 +196,7 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
                                                 initial={{ opacity: 0, x: 10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: (i + 3) * 0.1 }}
-                                                className="text-sm p-3 rounded-lg bg-white/5 border border-white/5 hover:border-expendx-lime/30 transition-all cursor-default"
+                                                className="text-sm p-3 rounded-lg bg-white/5 border border-white/5 hover:border-emerald-500/30 transition-all cursor-default"
                                             >
                                                 <span className="text-muted-foreground hover:text-foreground transition-colors">{advice}</span>
                                             </motion.li>

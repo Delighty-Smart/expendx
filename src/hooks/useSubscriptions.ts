@@ -96,11 +96,11 @@ export function useSubscriptions() {
         title: "Success",
         description: "Subscription added successfully"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding subscription:', error);
       toast({
         title: "Error",
-        description: "Failed to add subscription",
+        description: error?.message || "Failed to add subscription",
         variant: "destructive"
       });
       throw error;

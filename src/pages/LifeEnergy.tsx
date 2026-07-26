@@ -133,6 +133,15 @@ const LifeEnergy = () => {
       localStorage.setItem("lucent_true_hourly_rate", wizardCalculations.trueHourly.toString());
       localStorage.setItem("expendx_true_hourly_rate", wizardCalculations.trueHourly.toString());
       
+      // Sync to Supabase user metadata for cloud persistence per user
+      if (user) {
+        supabase.auth.updateUser({
+          data: {
+            life_energy_data: savedData
+          }
+        }).catch(err => console.error("Error syncing life energy to cloud:", err));
+      }
+
       // Dispatch storage change event to sync headers & settings immediately
       window.dispatchEvent(new Event("storage"));
       

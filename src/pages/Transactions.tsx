@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO, isValid } from "date-fns";
-import { TransactionType } from "@/types/transactions";
+import { Transaction, TransactionType } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useEnhancedTransactionData } from "@/hooks/useEnhancedTransactionData";
@@ -281,7 +281,7 @@ const TransactionsPage = () => {
   };
 
   // Memoized filtered transactions — avoids re-filtering on every unrelated state change
-  const filteredTransactions = useMemo(() => transactions?.filter(transaction => {
+  const filteredTransactions = useMemo(() => transactions?.filter((transaction: Transaction) => {
     const matchesSearch =
       transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -300,14 +300,12 @@ const TransactionsPage = () => {
     );
   };
 
-
-
   const clearAllCategories = () => {
     setSelectedCategories([]);
   };
 
   // Memoized grouped transactions — only recomputed when filtered list changes
-  const groupedTransactions = useMemo(() => filteredTransactions?.reduce((groups, transaction) => {
+  const groupedTransactions = useMemo(() => filteredTransactions?.reduce((groups, transaction: Transaction) => {
     const month = format(new Date(transaction.date), "MMMM yyyy");
     if (!groups[month]) {
       groups[month] = {};
@@ -318,7 +316,7 @@ const TransactionsPage = () => {
     }
     groups[month][day].push(transaction);
     return groups;
-  }, {} as Record<string, Record<string, any[]>>) || {}, [filteredTransactions]);
+  }, {} as Record<string, Record<string, Transaction[]>>) || {}, [filteredTransactions]);
 
   // Calculate monthly totals
   const getMonthlyTotals = (month: string) => {
@@ -629,13 +627,13 @@ const TransactionsPage = () => {
                            {selectionMode && (
                              <div className={cn(
                                "h-4.5 w-4.5 rounded border flex items-center justify-center transition-all",
-                               allDayTransactions.every(t => selectedTransactions.includes(t.id))
+                               (allDayTransactions as Transaction[]).every(t => selectedTransactions.includes(t.id))
                                  ? 'bg-primary border-primary text-primary-foreground'
-                                 : allDayTransactions.some(t => selectedTransactions.includes(t.id))
+                                 : (allDayTransactions as Transaction[]).some(t => selectedTransactions.includes(t.id))
                                    ? 'bg-primary/30 border-primary/50'
                                    : 'bg-background border-primary/45'
                              )}>
-                               {allDayTransactions.every(t => selectedTransactions.includes(t.id)) && (
+                               {(allDayTransactions as Transaction[]).every(t => selectedTransactions.includes(t.id)) && (
                                  <Check className="h-3 w-3 stroke-[3] text-primary-foreground" />
                                )}
                              </div>
@@ -653,25 +651,27 @@ const TransactionsPage = () => {
                      <div className="space-y-4">
                        {Object.entries(days)
                          .sort(([dayA], [dayB]) => new Date(dayB).getTime() - new Date(dayA).getTime())
-                         .map(([day, dayTransactions]) => (
+                         .map(([day, dayTransactions]) => {
+                           const typedDayTransactions = dayTransactions as Transaction[];
+                           return (
                            <div key={day} className="transaction-day-group">
 
                              <div
                                className={`px-6 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between ${selectionMode ? 'cursor-pointer' : ''}`}
-                               onClick={(e) => selectionMode ? selectAllInDay(dayTransactions, e) : undefined}
+                               onClick={(e) => selectionMode ? selectAllInDay(typedDayTransactions, e) : undefined}
                              >
                                <span>{format(new Date(day), "EEEE, MMM d")}</span>
 
                                {selectionMode && (
                                  <div className={cn(
                                    "h-4.5 w-4.5 rounded border flex items-center justify-center transition-all",
-                                   dayTransactions.every(t => selectedTransactions.includes(t.id))
+                                   typedDayTransactions.every(t => selectedTransactions.includes(t.id))
                                      ? 'bg-primary border-primary text-primary-foreground'
-                                     : dayTransactions.some(t => selectedTransactions.includes(t.id))
+                                     : typedDayTransactions.some(t => selectedTransactions.includes(t.id))
                                        ? 'bg-primary/30 border-primary/50'
                                        : 'bg-background border-primary/45'
                                  )}>
-                                   {dayTransactions.every(t => selectedTransactions.includes(t.id)) && (
+                                   {typedDayTransactions.every(t => selectedTransactions.includes(t.id)) && (
                                      <Check className="h-3 w-3 stroke-[3] text-primary-foreground" />
                                    )}
                                  </div>
@@ -679,7 +679,7 @@ const TransactionsPage = () => {
                              </div>
 
                              <div className="space-y-1 px-4">
-                               {dayTransactions.sort((a, b) => {
+                               {typedDayTransactions.sort((a, b) => {
                                  const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
                                  const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
                                  return timeB - timeA;
@@ -688,88 +688,92 @@ const TransactionsPage = () => {
                                  const isSelected = selectedTransactions.includes(transaction.id);
 
                                  return (
-                                   <div
-                                     key={transaction.id}
-                                     className={`transaction-row py-2.5 px-3 flex items-center gap-4 rounded-xl transition-all ${
-                                       transaction.is_locked
-                                         ? 'opacity-85 cursor-not-allowed hover:bg-transparent'
-                                         : isSelected
-                                           ? 'bg-primary/15 dark:bg-primary/25 border border-primary/40 shadow-xs'
-                                           : 'bg-transparent border border-transparent hover:bg-accent/10 ' + (selectionMode ? 'cursor-pointer' : '')
-                                     }`}
-                                     onClick={() => {
-                                       if (transaction.is_locked) {
-                                         toast({
-                                           title: "Read-Only Transaction 🔒",
-                                           description: "This transaction is locked to protect your Fresh Start financial baseline.",
-                                         });
-                                         return;
-                                       }
-                                       if (selectionMode) {
-                                         toggleTransactionSelection(transaction.id);
-                                       } else {
-                                         handleEdit(transaction);
-                                       }
-                                     }}
-                                   >
-                                     {selectionMode && (
-                                       <div
-                                         className={cn(
-                                           "h-5 w-5 shrink-0 rounded-md border flex items-center justify-center transition-all",
-                                           isSelected
-                                             ? "bg-primary border-primary text-primary-foreground shadow-xs"
-                                             : "bg-background border-primary/45 hover:border-primary"
-                                         )}
-                                       >
-                                         {isSelected && <Check className="h-3.5 w-3.5 stroke-[3] text-primary-foreground" />}
-                                       </div>
-                                     )}
+                                    <div
+                                      key={transaction.id}
+                                      className={`transaction-row h-[72px] min-h-[72px] py-3 px-4 flex items-center gap-3 rounded-[16px] transition-all border-b border-border-subtle ${
+                                        transaction.is_locked
+                                          ? 'opacity-85 cursor-not-allowed hover:bg-transparent'
+                                          : isSelected
+                                            ? 'bg-brand-primary/10 border border-brand-primary/30 shadow-sm'
+                                            : 'bg-bg-surface hover:bg-bg-card-hover ' + (selectionMode ? 'cursor-pointer' : '')
+                                      }`}
+                                      onClick={() => {
+                                        if (transaction.is_locked) {
+                                          toast({
+                                            title: "Read-Only Transaction 🔒",
+                                            description: "This transaction is locked to protect your Fresh Start financial baseline.",
+                                          });
+                                          return;
+                                        }
+                                        if (selectionMode) {
+                                          toggleTransactionSelection(transaction.id);
+                                        } else {
+                                          handleEdit(transaction);
+                                        }
+                                      }}
+                                    >
+                                      {selectionMode && (
+                                        <div
+                                          className={cn(
+                                            "h-5 w-5 shrink-0 rounded-full border flex items-center justify-center transition-all",
+                                            isSelected
+                                              ? "bg-brand-primary border-brand-primary text-text-on-brand"
+                                              : "bg-bg-base border-border-strong hover:border-brand-primary"
+                                          )}
+                                        >
+                                          {isSelected && <Check className="h-3.5 w-3.5 stroke-[3] text-text-on-brand" />}
+                                        </div>
+                                      )}
 
-                                    <div className="h-9 w-9 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
-                                      {getTypeIcon(transaction.type)}
-                                    </div>
-                                    <div className="flex-1 flex flex-col gap-0.5">
-                                      <div className="flex items-center gap-2">
-                                        <p className="font-semibold text-[15px] leading-tight text-foreground">
-                                          {formatFulfillmentDescription(transaction.description)}
-                                        </p>
-                                        {transaction.is_locked && (
-                                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-0.5">
-                                            <Lock className="h-2.5 w-2.5" /> Read-Only
-                                          </Badge>
-                                        )}
-                                        <PendingSyncIndicator status={syncStatus} size="sm" />
+                                      {/* Left zone: 40x40 circular container */}
+                                      <div className="h-10 w-10 min-h-[40px] min-w-[40px] rounded-full bg-brand-primary/10 flex items-center justify-center shrink-0">
+                                        {getTypeIcon(transaction.type)}
                                       </div>
 
-                                      <p className="text-[11px] text-muted-foreground/60 leading-none">
-                                        {transaction.category}
-                                      </p>
-                                    </div>
+                                      {/* Center zone (flex) */}
+                                      <div className="flex-1 flex flex-col justify-center min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <p className="font-semibold text-base leading-tight text-text-heading truncate">
+                                            {formatFulfillmentDescription(transaction.description)}
+                                          </p>
+                                          {transaction.is_locked && (
+                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-semantic-warning-border bg-semantic-warning-bg text-semantic-warning-text gap-0.5 shrink-0">
+                                              <Lock className="h-2.5 w-2.5" /> Read-Only
+                                            </Badge>
+                                          )}
+                                          <PendingSyncIndicator status={syncStatus} size="sm" />
+                                        </div>
 
-                                    <div
+                                        <p className="text-xs text-text-tertiary leading-none mt-1 truncate">
+                                          {transaction.category}
+                                        </p>
+                                      </div>
 
-                                      className={`text-right ${transaction.type === "credit"
-                                        ? "text-emerald-600 dark:text-emerald-400"
-                                        : transaction.type === "debit" || transaction.type === "subscription"
-                                          ? "text-rose-600 dark:text-rose-400"
-                                          : "text-sky-600 dark:text-sky-400"
-                                        }`}
-                                    >
-                                      <p className="font-bold text-[15px] leading-tight font-numeric">
-                                        {transaction.type === "credit"
-                                          ? "+"
+                                      {/* Right zone: tabular amount */}
+                                      <div
+                                        className={`text-right shrink-0 ${transaction.type === "credit"
+                                          ? "text-finance-income font-semibold"
                                           : transaction.type === "debit" || transaction.type === "subscription"
-                                            ? "-"
-                                            : ""}
-                                        {formatValue(transaction.amount)}
-                                      </p>
+                                            ? "text-finance-expense font-semibold"
+                                            : "text-finance-savings font-semibold"
+                                          }`}
+                                      >
+                                        <p className="font-semibold text-base leading-tight font-numeric tracking-tight">
+                                          {transaction.type === "credit"
+                                            ? "+"
+                                            : transaction.type === "debit" || transaction.type === "subscription"
+                                              ? "-"
+                                              : ""}
+                                          {formatValue(transaction.amount)}
+                                        </p>
+                                      </div>
                                     </div>
-                                  </div>
                                 );
                               })}
-                            </div>
-                          </div>
-                        ))}
+                             </div>
+                           </div>
+                         );
+                       })}
                     </div>
                   </div>
                 );

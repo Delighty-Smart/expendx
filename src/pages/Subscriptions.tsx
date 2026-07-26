@@ -14,6 +14,7 @@ import { format, isAfter, isBefore, addDays } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { cn } from '@/lib/utils';
 
 export default function Subscriptions() {
   const [showForm, setShowForm] = useState(false);
@@ -73,14 +74,12 @@ export default function Subscriptions() {
 
     const now = new Date();
     const nextBilling = new Date(subscription.next_billing_date);
-    const lastBilling = subscription.subscription_type === 'monthly'
-      ? addDays(nextBilling, -30)
-      : addDays(nextBilling, -365);
-
+    const daysUntil = Math.ceil((nextBilling.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const totalDays = subscription.subscription_type === 'monthly' ? 30 : 365;
-    const daysPassed = Math.floor((now.getTime() - lastBilling.getTime()) / (1000 * 60 * 60 * 24));
 
-    return Math.min(Math.max((daysPassed / totalDays) * 100, 0), 100);
+    // Remaining percentage: 30d remaining = 100% full ring, 0d remaining = 0% empty ring
+    const remainingDays = Math.max(0, Math.min(daysUntil, totalDays));
+    return (remainingDays / totalDays) * 100;
   };
 
   const getDaysUntilRenewal = (subscription: Subscription) => {
@@ -164,48 +163,50 @@ export default function Subscriptions() {
         title="Subscriptions"
         backTo="/dashboard"
         actions={
-          <Button onClick={() => setShowForm(true)} className="gap-2 flex-none whitespace-nowrap">
-            <Plus className="h-4 w-4" />
+          <Button onClick={() => setShowForm(true)} size="compact" className="gap-1.5 flex-none whitespace-nowrap text-xs">
+            <Plus className="h-3.5 w-3.5" />
             Add Subscription
           </Button>
         }
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+      <div className="space-y-2.5">
+        {/* Prominent Hero Card: Monthly Spend */}
+        <div className="rounded-[20px] bg-bg-card border border-border-default shadow-[var(--elevation-1)] p-6 flex items-center justify-between select-none">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Total Monthly Spend</span>
+            <span className="text-[32px] sm:text-[36px] font-bold tracking-tight font-numeric text-text-heading mt-1 leading-tight">
+              {formatValue(totalMonthlySpend)}
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center shrink-0">
+            <CreditCard className="h-6 w-6 text-brand-primary" />
+          </div>
+        </div>
+
+        {/* 2 Sub Cards Below */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <Card className="bg-bg-surface border border-border-default/60 shadow-xs p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Active Subscriptions</span>
+              <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            </div>
+            <div className="text-xl font-black tracking-tight font-numeric text-foreground mt-2">
               {subscriptions.filter(sub => sub.status === 'active').length}
             </div>
-          </CardContent>
-        </Card>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Spend</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold font-numeric font-amount primary-total-amount">
-              {formatValue(totalMonthlySpend)}
+          <Card className="bg-bg-surface border border-border-default/60 shadow-xs p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Subscriptions</span>
+              <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Subscriptions</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold font-numeric font-amount">{subscriptions.length}</div>
-          </CardContent>
-        </Card>
+            <div className="text-xl font-black tracking-tight font-numeric text-foreground mt-2">
+              {subscriptions.length}
+            </div>
+          </Card>
+        </div>
       </div>
 
       {/* Subscriptions List */}
@@ -229,19 +230,32 @@ export default function Subscriptions() {
             const progress = getBillingProgress(subscription);
             const daysUntilRenewal = getDaysUntilRenewal(subscription);
 
+            // Ring color & track: Red fill if 0d (due today), Amber if <=3d, Brand primary otherwise
+            const ringColor = daysUntilRenewal === 0
+              ? "text-red-500"
+              : (daysUntilRenewal !== null && daysUntilRenewal <= 3 ? "text-amber-500" : "text-brand-primary");
+            
+            const trackColor = daysUntilRenewal === 0
+              ? "text-red-500/20"
+              : "text-muted/20";
+
             return (
               <Card key={subscription.id} className="transition-colors duration-200 border border-border/40 hover:border-primary/20">
                 <CardContent className="p-5 flex gap-5 items-center">
                   {subscription.status === 'active' && daysUntilRenewal !== null ? (
                     <CircularProgress
-                      value={progress}
+                      value={daysUntilRenewal === 0 ? 100 : progress}
                       size={60}
                       strokeWidth={6}
-                      ringColor="text-primary"
-                      glow={false}
+                      ringColor={ringColor}
+                      trackColor={trackColor}
+                      glow={daysUntilRenewal === 0}
                       className="flex-shrink-0"
                     >
-                      <span className="text-[12px] font-extrabold tracking-tight font-numeric">
+                      <span className={cn(
+                        "text-[12px] font-extrabold tracking-tight font-numeric",
+                        daysUntilRenewal === 0 ? "text-red-500" : "text-foreground"
+                      )}>
                         {daysUntilRenewal}d
                       </span>
                     </CircularProgress>
@@ -266,27 +280,38 @@ export default function Subscriptions() {
                             <Settings className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditSubscription(subscription)}>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => handleEditSubscription(subscription)} className="cursor-pointer font-medium">
+                            <Settings className="h-4 w-4 mr-2 text-muted-foreground" />
                             Edit Subscription
                           </DropdownMenuItem>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Subscription
+                              <DropdownMenuItem 
+                                onSelect={(e) => e.preventDefault()} 
+                                className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 font-medium"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2 text-destructive" />
+                                <span className="text-destructive font-semibold">Delete Subscription</span>
                               </DropdownMenuItem>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Subscription</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this subscription? This action cannot be undone.
+                            <AlertDialogContent className="max-w-sm rounded-2xl p-6 border border-border-default bg-bg-surface shadow-2xl">
+                              <AlertDialogHeader className="text-left mb-4 space-y-2">
+                                <AlertDialogTitle className="text-lg font-bold text-foreground">
+                                  Delete Subscription?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                                  This will permanently remove <span className="font-bold text-foreground">{subscription.service_provider}</span> from your recurring subscription list. This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteSubscription(subscription.id)}>
+                              <AlertDialogFooter className="flex flex-row items-center justify-end gap-3 mt-6 pt-0 border-none">
+                                <AlertDialogCancel className="h-10 px-4 text-xs font-semibold rounded-xl border border-border-default bg-transparent hover:bg-muted text-foreground">
+                                  Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteSubscription(subscription.id)}
+                                  className="h-10 px-4 text-xs font-semibold rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                                >
                                   Delete
                                 </AlertDialogAction>
                               </AlertDialogFooter>

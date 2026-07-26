@@ -98,8 +98,47 @@
     --chart-grid: #E5E4DF;
     --chart-axis: #8C94A6;
     --chart-label: #525866;
-    --chart-tooltip: #FFFFFF;
-    --chart-crosshair: #C8C7C2;
+    /* Spacing Scale (8pt base grid) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+
+    /* Corner Radius Scale */
+    --radius-xs: 8px;
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --radius-full: 9999px;
+
+    /* Elevation Scale */
+    --elevation-0: none;
+    --elevation-1: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+    --elevation-2: 0 4px 12px rgba(0,0,0,0.08);
+    --elevation-3: 0 8px 24px rgba(0,0,0,0.12);
+
+    /* Typography Scale */
+    --font-display-size: 32px;
+    --font-display-lh: 40px;
+    --font-display-weight: 700;
+    --font-h1-size: 24px;
+    --font-h1-lh: 32px;
+    --font-h1-weight: 600;
+    --font-h2-size: 20px;
+    --font-h2-lh: 28px;
+    --font-h2-weight: 600;
+    --font-body-l-size: 16px;
+    --font-body-l-lh: 24px;
+    --font-body-l-weight: 500;
+    --font-body-m-size: 14px;
+    --font-body-m-lh: 20px;
+    --font-body-m-weight: 400;
+    --font-caption-size: 12px;
+    --font-caption-lh: 16px;
+    --font-caption-weight: 500;
   }
 
   .dark {
@@ -195,8 +234,11 @@
     --chart-grid: #1D2025;
     --chart-axis: #474D58;
     --chart-label: #9DA3B0;
-    --chart-tooltip: #17191C;
-    --chart-crosshair: #383D47;
+    /* Elevation Scale Dark Mode Overrides (reduced opacity + border reliance) */
+    --elevation-0: none;
+    --elevation-1: 0 1px 2px rgba(0,0,0,0.02), 0 1px 3px rgba(0,0,0,0.03);
+    --elevation-2: 0 4px 12px rgba(0,0,0,0.05);
+    --elevation-3: 0 8px 24px rgba(0,0,0,0.07);
   }
 }
 
@@ -747,13 +789,11 @@ header.lg\:hidden.fixed .container {
   letter-spacing: -0.02em;
 }
 
-/* Global Border Radius Reductions for Flat Premium Design */
-button:not(.w-8):not(.h-8):not(.w-9):not(.h-9):not(.w-10):not(.h-10):not(.w-14):not(.h-14):not(.rounded-full),
+/* Global Form Input Radius Standard */
 input,
 select,
-textarea,
-.btn {
-  border-radius: 8px !important;
+textarea {
+  border-radius: var(--radius-sm) !important;
 }
 
 /* Card layout corners override: reduce to clean 12px instead of large pill-like/circular 28px/22px */
@@ -789,13 +829,12 @@ div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-trans
   color: var(--text-heading) !important;
 }
 
-/* Global Premium Card Hierarchy Overrides - Only applied to content cards */
 /* 1. Muted Uppercase Small Titles */
-.card:not(.border-none):not([class*="bg-card/25"]) h3,
-.bg-card:not(.border-none):not([class*="bg-card/25"]) h3,
-.card:not(.border-none):not([class*="bg-card/25"]) [class*="CardTitle"],
-.card:not(.border-none):not([class*="bg-card/25"]) [class*="CardHeader"] [class*="CardTitle"],
-.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="CardHeader"] [class*="CardTitle"] {
+.card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) h3,
+.bg-card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) h3,
+.card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="CardTitle"],
+.card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="CardHeader"] [class*="CardTitle"],
+.bg-card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="CardHeader"] [class*="CardTitle"] {
   font-size: 9.5px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
@@ -805,12 +844,10 @@ div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-trans
 }
 
 /* 2. Prominent Stand-out Amounts */
-.card:not(.border-none):not([class*="bg-card/25"]) [class*="text-2xl"]:not(.primary-total-amount),
-.card:not(.border-none):not([class*="bg-card/25"]) [class*="text-3xl"]:not(.primary-total-amount),
-.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="text-2xl"]:not(.primary-total-amount),
-.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="text-3xl"]:not(.primary-total-amount),
-.card:not(.border-none):not([class*="bg-card/25"]) [class*="text-lg"].font-bold:not(.primary-total-amount),
-.bg-card:not(.border-none):not([class*="bg-card/25"]) [class*="text-lg"].font-bold:not(.primary-total-amount),
+.card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="text-2xl"]:not(.primary-total-amount),
+.card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="text-3xl"]:not(.primary-total-amount),
+.bg-card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="text-2xl"]:not(.primary-total-amount),
+.bg-card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="text-3xl"]:not(.primary-total-amount),
 .card-amount,
 .font-amount:not(.primary-total-amount) {
   font-family: 'Space Grotesk', sans-serif !important;
@@ -818,19 +855,11 @@ div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-trans
   font-weight: 800 !important;
   color: var(--text-heading) !important;
   letter-spacing: -0.02em !important;
-  margin-top: 4px !important;
-  margin-bottom: 2px !important;
 }
 
 /* 3. Description / Detail Subtexts */
-.card:not(.border-none):not([class*="bg-card/25"]) p:not([class*="text-2xl"]):not([class*="text-3xl"]):not(.card-amount):not(.font-amount),
-.bg-card:not(.border-none):not([class*="bg-card/25"]) p:not([class*="text-2xl"]):not([class*="text-3xl"]):not(.card-amount):not(.font-amount),
-.card:not(.border-none):not([class*="bg-card/25"]) span.text-muted-foreground,
-.bg-card:not(.border-none):not([class*="bg-card/25"]) span.text-muted-foreground,
 .card-subtext {
   font-size: 11px !important;
   color: var(--text-secondary) !important;
   opacity: 0.7 !important;
-  margin-top: 2px !important;
-  margin-bottom: 0 !important;
 }

@@ -85,16 +85,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
             {/* More sheet backdrop */}
             {showMore && (
                 <div
-                    className="fixed inset-0 bg-bg-base/60 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-black/40 backdrop-blur-xs z-30"
                     onClick={() => setShowMore(false)}
                 />
             )}
 
-            {/* More sheet — slides up from bottom */}
+            {/* More sheet — slides up from bottom behind the bottom bar */}
             <div
                 ref={sheetRef}
                 className={cn(
-                    "fixed bottom-[64px] left-0 right-0 bg-bg-surface border-t border-border-default z-50 px-4 pt-3 pb-4 rounded-t-[32px] shadow-xl transition-all duration-300 ease-out",
+                    "fixed bottom-[64px] left-0 right-0 bg-bg-surface border-t border-border-default z-30 px-4 pt-3 pb-4 rounded-t-[32px] shadow-2xl transition-all duration-300 ease-out",
                     showMore
                         ? "translate-y-0 opacity-100"
                         : "translate-y-full opacity-0 pointer-events-none"
@@ -135,7 +135,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ unreadAlerts }
 
             {/* Bottom Tab Bar */}
             <nav
-                className="fixed bottom-0 left-0 right-0 h-[64px] bg-bg-surface border-t border-border-default z-40 flex items-center safe-pb px-4"
+                className="fixed bottom-0 left-0 right-0 h-[64px] bg-bg-surface border-t border-border-default z-50 flex items-center safe-pb px-4"
                 style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             >
                 <div className="flex w-full items-center justify-between h-full">

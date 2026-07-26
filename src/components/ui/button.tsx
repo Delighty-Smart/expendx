@@ -6,25 +6,26 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-bg-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 active:scale-[0.98] transition-transform",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[16px] text-sm font-semibold ring-offset-bg-base transition-all duration-100 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 active:scale-[0.97]",
   {
     variants: {
       variant: {
-        default: "bg-brand-primary text-text-inverse hover:bg-brand-primary-hover active:bg-brand-primary-active shadow-sm hover:shadow dark:shadow-none", // Primary CTA
-        action: "bg-bg-surface dark:bg-bg-overlay/40 text-text-primary border border-border-default dark:border-zinc-800/80 shadow-xs hover:bg-bg-sidebar-hover dark:hover:bg-bg-overlay/80 hover:border-zinc-300 dark:hover:border-zinc-700", // Action Button
-        destructive: "bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 dark:hover:bg-rose-500/20 border border-rose-500/10 dark:border-rose-500/20",
-        outline: "border border-border-default dark:border-zinc-800/80 bg-transparent hover:bg-bg-sidebar-hover dark:hover:bg-bg-overlay/60 hover:text-text-primary hover:border-zinc-300 dark:hover:border-zinc-700",
-        secondary: "bg-bg-overlay/80 dark:bg-bg-overlay/50 text-text-primary border border-transparent dark:border-zinc-800/20 hover:bg-bg-sidebar-hover dark:hover:bg-bg-overlay/90",
-        ghost: "hover:bg-bg-sidebar-hover dark:hover:bg-bg-overlay/60 hover:text-text-primary text-text-secondary bg-transparent",
-        link: "text-brand-primary underline-offset-4 hover:underline",
+        default: "bg-brand-primary text-text-inverse hover:bg-brand-primary-hover active:bg-brand-primary-active shadow-sm dark:shadow-none", // Primary CTA (52px height spec)
+        action: "bg-bg-surface text-text-primary border border-border-default hover:bg-bg-sidebar-hover hover:border-border-strong", // Action Button
+        destructive: "bg-semantic-danger-bg text-semantic-danger-text hover:bg-semantic-danger-bgSubtle border border-semantic-danger-border",
+        outline: "border-[1.5px] border-border-default bg-transparent text-text-primary hover:bg-bg-sidebar-hover hover:border-border-strong",
+        secondary: "border-[1.5px] border-border-default bg-transparent text-text-primary hover:bg-bg-sidebar-hover",
+        ghost: "hover:bg-bg-sidebar-hover text-text-secondary hover:text-text-primary bg-transparent underline-offset-4 active:underline",
+        link: "text-brand-primary underline-offset-4 hover:underline h-auto p-0",
+        fab: "h-[56px] w-[56px] min-h-[56px] min-w-[56px] rounded-full bg-brand-primary text-text-inverse shadow-[var(--elevation-3)] hover:bg-brand-primary-hover active:scale-[0.97]",
       },
       size: {
-        default: "h-11 px-5 min-h-[44px] text-sm [&_svg]:size-5",
-        sm: "h-9 px-4 min-h-[36px] text-xs [&_svg]:size-4",
-        lg: "h-[54px] px-8 min-h-[54px] text-base [&_svg]:size-6",
-        icon: "h-11 w-11 min-h-[44px] min-w-[44px] [&_svg]:size-5",
-        xs: "h-8 px-3 text-xs min-h-[32px] [&_svg]:size-3.5",
-        compact: "h-10 px-4 text-sm min-h-[40px] [&_svg]:size-4",
+        default: "h-[44px] px-5 min-h-[44px] min-w-[120px] text-sm font-semibold [&_svg]:size-4",
+        sm: "h-[36px] px-3.5 min-h-[36px] text-xs font-semibold [&_svg]:size-3.5",
+        lg: "h-[48px] px-6 min-h-[48px] min-w-[140px] text-base font-semibold [&_svg]:size-5",
+        icon: "h-[40px] w-[40px] min-h-[40px] min-w-[40px] p-0 rounded-full [&_svg]:size-4.5",
+        xs: "h-[32px] px-3 text-xs min-h-[32px] rounded-[8px] [&_svg]:size-3.5",
+        compact: "h-[38px] px-3.5 text-xs min-h-[38px] [&_svg]:size-3.5",
       },
     },
     defaultVariants: {
