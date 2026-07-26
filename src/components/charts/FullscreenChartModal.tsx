@@ -22,8 +22,8 @@ const FullscreenChartModal = ({
 }: FullscreenChartModalProps) => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-[95vw] w-full h-[90vh] flex flex-col overflow-hidden transition-all duration-500">
-                <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/10 mb-2">
+            <DialogContent className="max-w-[95vw] w-full h-[90vh] max-h-[90vh] flex flex-col overflow-hidden transition-all duration-500 p-4 sm:p-6">
+                <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b border-border/10 mb-2 shrink-0">
                     <div className="flex items-center gap-2">
                         {icon && <div className="text-primary p-2 bg-primary/10 rounded-xl">{icon}</div>}
                         <DialogTitle className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
@@ -32,15 +32,15 @@ const FullscreenChartModal = ({
                     </div>
                 </DialogHeader>
 
-                <div className="flex-1 w-full min-h-0 relative animate-in fade-in zoom-in duration-300">
-                    <div className="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden">
+                <div className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-auto scrollable-container animate-in fade-in zoom-in duration-300">
+                    <div className="w-full h-full min-h-[350px] min-w-[300px] flex items-center justify-center">
                         {children}
                     </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-border/10 text-center md:hidden">
+                <div className="mt-2 pt-2 border-t border-border/10 text-center shrink-0">
                     <p className="text-xs text-muted-foreground font-medium">
-                        Tip: Rotate your device to landscape for a wider view
+                        Tip: You can scroll vertically and horizontally to inspect full chart data
                     </p>
                 </div>
             </DialogContent>

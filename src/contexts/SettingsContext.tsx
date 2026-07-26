@@ -10,9 +10,11 @@ export const syncStatusBarTheme = (themeMode?: 'light' | 'dark') => {
     if (Capacitor.isNativePlatform()) {
         const currentTheme = themeMode || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         const isDark = currentTheme === 'dark';
-        // Style.Light = Light text/icons for dark background, Style.Dark = Dark text/icons for light background
-        StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark }).catch(() => { });
-        StatusBar.setBackgroundColor({ color: isDark ? '#050507' : '#FFFFFF' }).catch(() => { });
+        // Swapped status bar colors:
+        // Dark Mode: Style.Dark (dark status bar content) with #FFFFFF background
+        // Light Mode: Style.Light (light status bar content) with #050507 background
+        StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => { });
+        StatusBar.setBackgroundColor({ color: isDark ? '#FFFFFF' : '#050507' }).catch(() => { });
     }
 };
 
