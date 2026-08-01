@@ -476,16 +476,19 @@ const IndexPage = () => {
         )}
 
         {/* Fintech Balance Card - Inverted emphasis hero styling */}
-        <div className="relative overflow-hidden rounded-[20px] bg-brand-primary text-text-on-brand p-6 shadow-[var(--elevation-2)] transition-all select-none border border-brand-primary">
+        <div
+          className="relative overflow-hidden rounded-[24px] text-white p-6 shadow-xl transition-all select-none border-none"
+          style={{ background: 'linear-gradient(45deg, #3F95BF 0%, #91C13F 100%)' }}
+        >
           <div className="relative z-10 flex flex-col items-start justify-start">
             {/* Top Bar: Eyebrow + Toggles */}
             <div className="w-full flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-text-on-brand/70 uppercase tracking-wider">Total Balance</span>
+              <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Total Balance</span>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="w-8 h-8 rounded-full p-0 text-text-on-brand bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center border border-white/10 shrink-0"
+                  className="w-8 h-8 rounded-full p-0 text-white bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center border border-white/20 shrink-0"
                   onClick={() => setHideAmounts(!hideAmounts)}
                   aria-label="Toggle Amount Visibility"
                 >
@@ -499,10 +502,10 @@ const IndexPage = () => {
                 <button
                   type="button"
                   className={cn(
-                    "w-8 h-8 rounded-full p-0 transition-colors flex items-center justify-center border border-white/10 shrink-0",
+                    "w-8 h-8 rounded-full p-0 transition-colors flex items-center justify-center border border-white/20 shrink-0",
                     showLifeHours
-                      ? "text-brand-primary bg-text-on-brand"
-                      : "text-text-on-brand bg-white/10 hover:bg-white/20"
+                      ? "text-slate-900 bg-white shadow-xs font-bold"
+                      : "text-white bg-white/20 hover:bg-white/30"
                   )}
                   onClick={toggleShowLifeHours}
                   title="Toggle Life Energy Mode"
@@ -519,11 +522,11 @@ const IndexPage = () => {
                 <Skeleton className="h-10 w-48 bg-white/20" />
               ) : (
                 <>
-                  <span className="text-[32px] sm:text-[36px] font-bold tracking-tight text-text-on-brand font-numeric leading-tight">
+                  <span className="text-[32px] sm:text-[36px] font-bold tracking-tight text-white font-numeric leading-tight drop-shadow-xs">
                     {formattedBalance.primary}
                   </span>
                   {formattedBalance.secondary && (
-                    <span className="text-[20px] font-semibold text-text-on-brand/70 font-numeric leading-tight ml-1">
+                    <span className="text-[20px] font-semibold text-white/80 font-numeric leading-tight ml-1">
                       {formattedBalance.secondary}
                     </span>
                   )}
@@ -532,17 +535,17 @@ const IndexPage = () => {
             </div>
 
             {/* Delta indicator row (Caption + trend icon) */}
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-text-on-brand/80">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-white/90">
               {isMonthlyTransactionsLoading || isMonthlyIncomeLoading ? (
                 <Skeleton className="h-4 w-28 bg-white/20" />
               ) : (
                 <div className="flex items-center gap-1">
                   {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? (
-                    <TrendingUp className="h-3.5 w-3.5 text-semantic-success-textStrong dark:text-semantic-success-text stroke-[2]" />
+                    <TrendingUp className="h-3.5 w-3.5 text-emerald-200 stroke-[2.5]" />
                   ) : (
-                    <TrendingDown className="h-3.5 w-3.5 text-rose-300 stroke-[2]" />
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-200 stroke-[2.5]" />
                   )}
-                  <span className="font-medium text-text-on-brand/80">
+                  <span className="font-semibold text-white/90">
                     {!showLifeHours && currency.symbol}{formatAmount(Math.abs(monthlyIncomeTotal - monthlyExpenses))} {(monthlyIncomeTotal - monthlyExpenses) >= 0 ? "Net Income this month" : "Deficit this month"}
                   </span>
                 </div>

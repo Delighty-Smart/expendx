@@ -12,7 +12,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
   project_ref TEXT := 'wulhjbwijgbticuslygm'; 
-  service_role_key TEXT := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1bGhqYndpamdidGljdXNseWdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNzExNDk4MiwiZXhwIjoyMDUyNjkwOTgyfQ.-LtWEKQfoSLCcyaJhVRhUTFDv7oiIVdv4B8HnkK1jtw';
+  service_role_key TEXT := 'REPLACE_WITH_SERVICE_ROLE_KEY';
   payload JSONB;
 BEGIN
   -- Construct the payload

@@ -690,7 +690,7 @@ const TransactionsPage = () => {
                                  return (
                                     <div
                                       key={transaction.id}
-                                      className={`transaction-row h-[72px] min-h-[72px] py-3 px-4 flex items-center gap-3 rounded-[16px] transition-all border-b border-border-subtle ${
+                                      className={`transaction-row h-[60px] min-h-[60px] py-2 px-3.5 flex items-center gap-3 rounded-[14px] transition-all border-b border-border-subtle ${
                                         transaction.is_locked
                                           ? 'opacity-85 cursor-not-allowed hover:bg-transparent'
                                           : isSelected

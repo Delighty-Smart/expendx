@@ -7,7 +7,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { currencies } from "@/lib/currencies";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint, TrendingUp, Sparkles } from "lucide-react";
+import { OpenRouterSettings } from "@/components/OpenRouterSettings";
+import { NvidiaSettings } from "@/components/NvidiaSettings";
+import { Moon, Search, Sun, Palette, Shapes, Archive, HardDrive, Settings as SettingsIcon, Bell, Trash2, Download, ChevronRight, User, Fingerprint, TrendingUp, Sparkles, Cpu } from "lucide-react";
 import { FreshStartWizard } from "@/components/FreshStartWizard";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { Button } from "@/components/ui/button";
@@ -256,6 +258,8 @@ const Settings = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* AI settings rely directly on environment variables */}
 
                       {item.id === "fresh-start" && (
                         <div className="space-y-4 p-1">

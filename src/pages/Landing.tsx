@@ -308,7 +308,10 @@ export default function Landing() {
                             </div>
 
                             {/* Total Balance */}
-                            <GlassCard className="p-5 flex flex-col justify-between transition-opacity duration-500 bg-emerald-500/5 hover:bg-emerald-500/10 border-white/10 relative overflow-hidden">
+                            <GlassCard
+                              className="p-5 flex flex-col justify-between transition-opacity duration-500 text-white border-white/20 relative overflow-hidden shadow-lg"
+                              style={{ background: 'linear-gradient(45deg, #3F95BF 0%, #91C13F 100%)' }}
+                            >
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none" />
                                 <div className="relative z-10 flex justify-between items-start w-full">
                                     <div>

@@ -41,6 +41,13 @@ import { CapacitorShareTarget } from '@capgo/capacitor-share-target';
 // Import enhanced offline manager
 import { enhancedOfflineManager } from './services/enhancedOfflineManager';
 
+import FinancialTimeline from '@/pages/FinancialTimeline'
+import Insights from '@/pages/Insights'
+import Missions from '@/pages/Missions'
+import TrustCenter from '@/pages/TrustCenter'
+import AIMarketplace from '@/pages/AIMarketplace'
+import LucentChat from '@/pages/LucentChat'
+import { ChatProvider } from '@/contexts/ChatContext'
 import Layout from '@/components/Layout'
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
 
@@ -82,7 +89,7 @@ function AppContent() {
         // Skip landing page if running as native app
         if (locationRef.current === '/') {
           if (session?.user) {
-            navigate('/dashboard', { replace: true });
+            navigate('/chat', { replace: true });
           } else {
             navigate('/auth', { replace: true });
           }
@@ -95,12 +102,11 @@ function AppContent() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       setUserId(session?.user?.id);
 
-      // On successful sign-in (including native Google Sign-In via signInWithIdToken),
-      // redirect to dashboard if the user is currently on a public route.
+      // On successful sign-in, redirect to chat
       if (event === 'SIGNED_IN' && session?.user) {
         const publicRoutes = ['/', '/auth'];
         if (publicRoutes.includes(locationRef.current)) {
-          navigate('/dashboard', { replace: true });
+          navigate('/chat', { replace: true });
         }
       }
     });
@@ -212,12 +218,17 @@ function AppContent() {
     <div className="app-container">
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/download" element={<Download />} />
-        <Route path="/" element={<Landing />} />
-
         {/* Protected Routes with Persistent Layout */}
-        <Route element={<AuthGuard><Layout /></AuthGuard>}>
+        <Route element={<AuthGuard><ChatProvider><Layout /></ChatProvider></AuthGuard>}>
+          <Route path="/chat" element={<LucentChat />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/missions" element={<Missions />} />
+          <Route path="/time-travel" element={<FinancialTimeline />} />
+          <Route path="/trust-center" element={<TrustCenter />} />
+          <Route path="/ai-marketplace" element={<AIMarketplace />} />
           <Route path="/dashboard" element={<IndexPage />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/add-transaction" element={<AddTransaction />} />

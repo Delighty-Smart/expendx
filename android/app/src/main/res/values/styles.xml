@@ -13,6 +13,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Status-bar: black icons on warm-white bg (matches Capacitor JS syncStatusBarTheme) -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#F5F4F0</item>
     </style>
 
 

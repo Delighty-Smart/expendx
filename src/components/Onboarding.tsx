@@ -89,9 +89,9 @@ export const Onboarding = ({ onComplete }: OnboardingProps) => {
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <img
-              src="/lucent-header-light.png"
+              src={document.documentElement.classList.contains('dark') ? "/lucent-portrait-dark.png" : "/lucent-portrait-light.png"}
               alt="Lucent"
-              className="h-6 object-contain"
+              className="h-10 object-contain"
             />
           </div>
 

@@ -14,6 +14,7 @@ export interface Transaction {
   type: TransactionType;
   category: TransactionCategory;
   description: string;
+  merchant?: string; // Merchant / store / vendor name
   archived?: boolean; // Add archived property
   is_locked?: boolean; // Lock past transactions during Fresh Start
   is_system_adjustment?: boolean; // Flag adjustment transactions
@@ -27,6 +28,8 @@ export interface SavingsGoal {
   user_id: string;
   category: string;
   target_amount: number;
+  current_amount?: number;
+  target_date?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -39,14 +42,17 @@ const DEFAULT_CATEGORIES = {
     "Business Sales",
     "Cash Gifts",
     "Child Support / Alimony",
+    "Client Payment",
     "Commissions Earned",
     "Contract Income",
+    "Crypto Gains",
     "Dividend Income",
     "Freelance Income",
     "Government Benefits",
     "Grant Funds",
     "Interest Earned",
     "Investment Gains",
+    "Overtime Pay",
     "Pension Income",
     "Prizes and Winnings",
     "Refunds and Reimbursements",
@@ -60,13 +66,16 @@ const DEFAULT_CATEGORIES = {
     "Accommodation Rent",
     "Airtime",
     "Bank Charges",
+    "Body Care & Skincare",
     "Childcare and Babysitting",
     "Clothing Apparel",
     "Data and Internet",
+    "Debt Payoff & Loans",
     "Dining Out",
     "Education Fees",
     "Electronics and Gadgets",
     "Entertainment Leisure",
+    "Family Support & Black Tax",
     "Fitness and Health Club",
     "Fuel Transport",
     "Gift Donations",
@@ -75,9 +84,11 @@ const DEFAULT_CATEGORIES = {
     "Home Maintenance",
     "Household Supplies",
     "Insurance Premiums",
+    "Laundry & Dry Cleaning",
     "Personal Care",
     "Pets and Veterinary",
     "Refreshments",
+    "Software & Apps",
     "Subscriptions",
     "Taxes Levies",
     "Tithes",
@@ -97,6 +108,7 @@ const DEFAULT_CATEGORIES = {
     "Retirement Savings",
     "Short Term Savings",
     "Sinking Fund",
+    "Tech & Gadget Fund",
     "Travel Fund",
     "Vehicle Purchase",
     "Wealth Building"

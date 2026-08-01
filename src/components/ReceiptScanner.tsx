@@ -157,7 +157,6 @@ export function ReceiptScanner({ onDataExtracted, categories = [], sharedFileUri
           title: "Success",
           description: "Receipt scanned successfully!"
         });
-        setPreviewImage(null);
       } else {
         throw new Error(data?.error || 'Failed to extract receipt data');
       }

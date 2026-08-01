@@ -26,8 +26,8 @@ const Auth = () => {
           console.log("Showing onboarding for new user (authenticated)");
           setView('onboarding');
         } else {
-          console.log("Redirecting existing user to dashboard");
-          navigate('/dashboard');
+          console.log("Redirecting existing user to chat");
+          navigate('/chat');
         }
       } else {
         // User not logged in, check if they've already seen onboarding in this sessions
@@ -125,9 +125,9 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center gap-2 mb-4">
             <img
-              src="/lucent-app-icon.png"
+              src={document.documentElement.classList.contains('dark') ? "/lucent-portrait-dark.png" : "/lucent-portrait-light.png"}
               alt="Lucent"
-              className="h-12 object-contain"
+              className="h-16 object-contain"
             />
           </div>
           <p className="text-muted-foreground">Your Smart Finance Companion</p>

@@ -15,9 +15,9 @@ const config: CapacitorConfig = {
       fadeOutDuration: 100,
     },
     StatusBar: {
-      style: 'Light',                 // Light = white icons for dark theme
-      backgroundColor: '#111315',
-      overlaysWebView: true,
+      style: 'Dark',                  // Dark = dark/black icons, correct for light-mode launch
+      backgroundColor: '#F5F4F0',     // Warm-white matching --bg-base
+      overlaysWebView: false,
     },
     Keyboard: {
       resize: 'body',                  // prevents webview from being pushed up

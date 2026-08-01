@@ -23,7 +23,7 @@ Deno.serve(async (req: Request) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || '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';
+    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 
     if (!OPENROUTER_API_KEY) {
       throw new Error('OPENROUTER_API_KEY is not configured');
@@ -44,20 +44,19 @@ Deno.serve(async (req: Request) => {
         'X-Title': 'ExpendX', // Required by OpenRouter
       },
       body: JSON.stringify({
-        model: 'nvidia/nemotron-nano-12b-v2-vl:free',
+        model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
         messages: [
           {
             role: 'system',
-            content: `You are an expert financial AI assistant. Your task is to analyze receipt images and extract precise, highly granular structured data.
+            content: `You are an expert OCR vision AI specializing in financial documents, invoices, and receipt extraction.
             
 INSTRUCTIONS:
-1. Deduce Context: Determine the true nature of the transaction based on merchant name and items bought.
-2. Formulate Summary: Create a highly descriptive 'summary' outlining what was actually purchased (e.g., 'Groceries at Whole Foods, including fresh produce and dairy').
-3. Itemize: Extract a list of explicit line items. If there is a quantity, calculate or extract the unit price. If a single item, extract it with quantity 1.
+1. Merchant/Company Name: Locate the main business name, vendor, store, or company title at the top of the invoice/receipt. Do NOT output 'Unknown' if any vendor or business name is readable anywhere on the document.
+2. Date: Locate the transaction or invoice date (e.g. 2026-07-29, 29/07/2026, or July 29, 2026) and convert it to 'YYYY-MM-DD' format. If no date is found, use today's date.
+3. Itemize: Extract line items with item name, quantity, unit price, and subtotal amount.
+4. Summary: Provide a clear summary of what this document or invoice represents.
 ${categoryRule}
-5. Accuracy: The 'amount' MUST match the receipt's grand total.
-
-Respond STRICTLY with valid JSON matching the schema provided.`
+5. Accuracy: Extract exact total amount and currency.`
           },
           {
             role: 'user',

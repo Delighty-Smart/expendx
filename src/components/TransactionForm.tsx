@@ -35,6 +35,7 @@ const transactionSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   type: z.enum(["credit", "debit", "savings", "subscription"] as const),
   category: z.string().min(1, "Category is required"),
+  merchant: z.string().optional(),
   description: z.string().min(1, "Description is required"),
   fulfillment_rating: z.string().optional(),
 
@@ -103,6 +104,7 @@ export const TransactionForm = ({
       amount: transaction?.amount.toString() || "",
       type: transaction?.type || "debit",
       category: transaction?.category || "",
+      merchant: transaction?.merchant || "",
       description: transaction?.description || "",
       unit_price: "",
       quantity: "",
@@ -537,6 +539,29 @@ export const TransactionForm = ({
             )}
           />
 
+          {/* Merchant Field */}
+          <FormField
+            control={form.control}
+            name="merchant"
+            render={({ field, fieldState }) => (
+              <FormItem className="space-y-1">
+                <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Merchant / Store</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. Shell, Jumia, Shoprite..."
+                    {...field}
+                    className={cn(
+                      "h-10 bg-muted/30 border rounded-xl text-xs font-medium px-3 transition-colors",
+                      fieldState.error ? "border-destructive text-destructive bg-destructive/5" : "border-border-default"
+                    )}
+                    disabled={loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Description area */}
           <FormField
             control={form.control}
@@ -546,7 +571,7 @@ export const TransactionForm = ({
                 <FormLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase">Notes</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Specify merchant details or notes..."
+                    placeholder="Specify purchase details or context..."
                     {...field}
                     className={cn(
                       "h-10 bg-muted/30 border rounded-xl text-xs font-medium px-3 transition-colors",

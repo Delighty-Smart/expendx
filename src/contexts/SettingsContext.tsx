@@ -6,17 +6,37 @@ import { useAuth } from '@/hooks/useAuth';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
-export const syncStatusBarTheme = (themeMode?: 'light' | 'dark') => {
-    if (Capacitor.isNativePlatform()) {
-        const currentTheme = themeMode || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-        const isDark = currentTheme === 'dark';
-        // Swapped status bar colors:
-        // Dark Mode: Style.Dark (dark status bar content) with #FFFFFF background
-        // Light Mode: Style.Light (light status bar content) with #050507 background
-        StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => { });
-        StatusBar.setBackgroundColor({ color: isDark ? '#FFFFFF' : '#050507' }).catch(() => { });
-    }
-};
+/**
+ * Sync the native Android / iOS status-bar icon colour + background
+ * to match the current app theme.
+ *
+ * Capacitor StatusBar.Style values:
+ *   Style.Dark  = dark *icons* (black text/icons) → use on LIGHT backgrounds
+ *   Style.Light = light *icons* (white text/icons) → use on DARK backgrounds
+ *
+ * Call this:
+ *   • whenever the theme is toggled
+ *   • on every route navigation (App.tsx)
+ *   • once at cold-start (App.tsx mount)
+ */
+export async function syncStatusBarTheme(themeOverride?: string) {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    // Determine the active theme: explicit arg → DOM class → localStorage → default
+    const isDark =
+      themeOverride === 'dark' ||
+      (!themeOverride && document.documentElement.classList.contains('dark'));
+
+    // Style.Dark  = black icons  (for light mode backgrounds)
+    // Style.Light = white icons  (for dark mode backgrounds)
+    await StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark });
+    await StatusBar.setBackgroundColor({ color: isDark ? '#111315' : '#F5F4F0' });
+    await StatusBar.setOverlaysWebView({ overlay: false });
+  } catch (e) {
+    console.warn('StatusBar sync failed', e);
+  }
+}
+
 
 // Define type for the currency object
 interface Currency {
@@ -158,7 +178,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         syncStatusBarTheme(theme);
 
         // Update theme-color meta tag for PWA/Mobile
-        const themeColor = theme === 'dark' ? '#050507' : '#ffffff';
+        const themeColor = theme === 'dark' ? '#111315' : '#F5F4F0';
 
         // Update all theme-color meta tags (including those with media queries)
         const metaTags = document.querySelectorAll('meta[name="theme-color"]');
