@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, doc, getDoc, getDocs, query, where, setDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { savingsCategories, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -50,19 +51,10 @@ export function SavingsGoalForm({
     if (open && savingsGoalId) {
       const fetchSavingsGoal = async () => {
         try {
-          const { data, error } = await supabase
-            .from("savings_goals" as any)
-            .select("*")
-            .eq("id", savingsGoalId)
-            .single();
+          const docSnap = await getDoc(doc(db, 'savings_goals', savingsGoalId));
 
-          if (error) {
-            console.error("Error fetching savings goal:", error);
-            return;
-          }
-
-          if (data) {
-            const goalData = data as unknown as SavingsGoal;
+          if (docSnap.exists()) {
+            const goalData = docSnap.data() as SavingsGoal;
             form.reset({
               category: goalData.category,
               target_amount: goalData.target_amount.toString(),
@@ -85,26 +77,18 @@ export function SavingsGoalForm({
   const onSubmit = async (values: z.infer<typeof savingsGoalSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
-      const savingsGoalData = {
-        category: values.category,
-        target_amount: parseFloat(values.target_amount),
-        user_id: user.id
-      };
+      const targetAmount = parseFloat(values.target_amount);
 
-      if (isEditing) {
+      if (isEditing && savingsGoalId) {
         // Update existing savings goal
-        const { error } = await supabase
-          .from("savings_goals" as any)
-          .update(savingsGoalData)
-          .eq('id', savingsGoalId);
-
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
-        }
+        await updateDoc(doc(db, 'savings_goals', savingsGoalId), {
+          category: values.category,
+          target_amount: targetAmount,
+          updated_at: new Date().toISOString()
+        });
 
         toast({
           title: "Success",
@@ -112,31 +96,19 @@ export function SavingsGoalForm({
         });
       } else {
         // Check if a goal for this category already exists
-        const { data: existingGoal, error: checkError } = await supabase
-          .from("savings_goals" as any)
-          .select('*')
-          .eq('category', values.category)
-          .eq('user_id', user.id)
-          .maybeSingle();
+        const q = query(
+          collection(db, 'savings_goals'),
+          where('category', '==', values.category),
+          where('user_id', '==', user.uid)
+        );
+        const snapshot = await getDocs(q);
 
-        if (checkError) {
-          console.error("Check error:", checkError);
-          throw checkError;
-        }
-
-        if (existingGoal && 'id' in existingGoal) {
-          // Update the existing goal instead of creating a new one
-          const { error } = await supabase
-            .from("savings_goals" as any)
-            .update({
-              target_amount: parseFloat(values.target_amount)
-            })
-            .eq('id', existingGoal.id);
-
-          if (error) {
-            console.error("Update error:", error);
-            throw error;
-          }
+        if (!snapshot.empty) {
+          const existingDoc = snapshot.docs[0];
+          await updateDoc(doc(db, 'savings_goals', existingDoc.id), {
+            target_amount: targetAmount,
+            updated_at: new Date().toISOString()
+          });
 
           toast({
             title: "Success",
@@ -144,14 +116,16 @@ export function SavingsGoalForm({
           });
         } else {
           // Insert new savings goal
-          const { error } = await supabase
-            .from("savings_goals" as any)
-            .insert([savingsGoalData]);
-
-          if (error) {
-            console.error("Insert error:", error);
-            throw error;
-          }
+          const newDocRef = doc(collection(db, 'savings_goals'));
+          await setDoc(newDocRef, {
+            id: newDocRef.id,
+            category: values.category,
+            target_amount: targetAmount,
+            current_amount: 0,
+            user_id: user.uid,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
 
           toast({
             title: "Success",

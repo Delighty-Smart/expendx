@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Mic, Send, ScanLine, Square } from 'lucide-react';
+import { Plus, Mic, Send, ScanLine, Square, Camera, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { aiDownloadManager } from '@/services/ai/ai-download-manager';
 
@@ -20,11 +20,28 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const paddleOcrState = aiDownloadManager.getModuleState('paddle-ocr-tiny');
   const isOcrInstalled = paddleOcrState.status === 'installed';
+
+  // Close popup menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
 
   // Auto-resize textarea height as text grows
   useEffect(() => {
@@ -39,6 +56,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
     onSend(text.trim());
     setText('');
+    setIsMenuOpen(false);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -51,9 +69,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
-  const handleScanClick = () => {
+  const openGallery = () => {
+    setIsMenuOpen(false);
     Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
-    fileInputRef.current?.click();
+    galleryInputRef.current?.click();
+  };
+
+  const openCamera = () => {
+    setIsMenuOpen(false);
+    Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
+    cameraInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,7 +88,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       reader.onload = async (event) => {
         const rawBase64 = event.target?.result as string;
         if (rawBase64 && rawBase64.startsWith('data:image')) {
-          // Canvas compression to stay under Supabase 500 error payload limits
+          // Canvas compression to stay under Supabase payload limits
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
@@ -99,6 +124,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       };
       reader.readAsDataURL(file);
     }
+
+    // Reset file input value so re-selecting same file triggers onChange
+    e.target.value = '';
   };
 
   const whisperState = aiDownloadManager.getModuleState('whisper-tiny');
@@ -179,84 +207,138 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="relative flex items-center bg-bg-surface text-text-primary rounded-[28px] p-2 px-4 shadow-xl border border-border-default/80 transition-all focus-within:border-brand-primary">
-      {/* Hidden file input for OCR receipt scan */}
+    <div className="relative">
+      {/* Hidden file input for Photo Gallery picker */}
       <input
-        ref={fileInputRef}
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
         className="hidden"
       />
 
-      {/* Plus action menu button */}
-      <button
-        type="button"
-        onClick={handleScanClick}
-        className="p-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover transition-colors shrink-0"
-        title="Scan receipt or document"
-      >
-        <Plus className="w-5 h-5" />
-      </button>
-
-      {/* Text input area */}
-      <textarea
-        ref={textareaRef}
-        rows={1}
-        value={text}
-        onChange={e => setText(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="flex-1 bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-none px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 max-h-32 min-h-[38px] leading-relaxed scrollbar-none"
+      {/* Hidden file input for Native Camera capture */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileChange}
+        className="hidden"
       />
 
-      {/* Right controls: Mic & Scan / Send / Stop */}
-      <div className="flex items-center gap-1.5 shrink-0 ml-1">
+      {/* Sleek Popover Menu for Camera & Gallery choice */}
+      {isMenuOpen && (
+        <div
+          ref={menuRef}
+          className="absolute bottom-full mb-2.5 left-2 z-50 bg-bg-surface/95 backdrop-blur-xl border border-border-default/80 rounded-2xl p-1.5 shadow-2xl space-y-0.5 min-w-[200px] animate-in fade-in slide-in-from-bottom-2 duration-150"
+        >
+          <button
+            type="button"
+            onClick={openCamera}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-text-primary hover:bg-bg-sidebar-hover transition-colors text-left"
+          >
+            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
+              <Camera className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-semibold leading-tight">Take Photo</p>
+              <p className="text-[10px] text-text-secondary">Open native camera</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={openGallery}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-text-primary hover:bg-bg-sidebar-hover transition-colors text-left"
+          >
+            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-500">
+              <ImageIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="font-semibold leading-tight">Choose from Gallery</p>
+              <p className="text-[10px] text-text-secondary">Select image or document</p>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Minimalist Gemini Pill Bar */}
+      <div className="relative flex items-center bg-bg-surface text-text-primary rounded-full p-1.5 px-3.5 shadow-xl border border-border-default/70 transition-all focus-within:border-brand-primary/60 focus-within:ring-1 focus-within:ring-brand-primary/30">
+        {/* Plus action menu button */}
         <button
           type="button"
-          onClick={toggleMic}
-          className={`p-2.5 rounded-full transition-all flex items-center justify-center ${
-            isRecording
-              ? 'bg-rose-500 text-white animate-pulse'
-              : 'text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover'
+          onClick={() => {
+            Haptics.impact({ style: ImpactStyle.Light }).catch(() => {});
+            setIsMenuOpen(!isMenuOpen);
+          }}
+          className={`p-2 rounded-full transition-colors shrink-0 ${
+            isMenuOpen ? 'bg-bg-sidebar-active text-text-primary' : 'text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover'
           }`}
-          title="Voice input"
+          title="Add photo or receipt"
         >
-          <Mic className="w-5 h-5" />
+          <Plus className="w-5 h-5" />
         </button>
 
-        {disabled ? (
-          /* Stop button when request is loading */
+        {/* Text input area */}
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={text}
+          onChange={e => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="flex-1 bg-transparent border-none outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-none px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 max-h-32 min-h-[38px] leading-relaxed scrollbar-none"
+        />
+
+        {/* Right controls: Mic & Scan / Send / Stop */}
+        <div className="flex items-center gap-1 shrink-0 ml-1">
           <button
             type="button"
-            onClick={onStop}
-            className="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center transition-all active:scale-95 shadow-md"
-            title="Stop generation"
+            onClick={toggleMic}
+            className={`p-2 rounded-full transition-all flex items-center justify-center ${
+              isRecording
+                ? 'bg-rose-500 text-white animate-pulse'
+                : 'text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover'
+            }`}
+            title="Voice input"
           >
-            <Square className="w-4 h-4 fill-current" />
+            <Mic className="w-5 h-5" />
           </button>
-        ) : text.trim() ? (
-          /* Send button when text is entered */
-          <button
-            type="button"
-            onClick={handleSend}
-            className="w-9 h-9 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center transition-all active:scale-95 shadow-md"
-            title="Send message"
-          >
-            <Send className="w-4 h-4 -mr-0.5" />
-          </button>
-        ) : (
-          /* Scan button when input is empty */
-          <button
-            type="button"
-            onClick={handleScanClick}
-            className="w-9 h-9 rounded-full bg-bg-sidebar-hover text-brand-primary hover:bg-bg-sidebar-active flex items-center justify-center transition-colors"
-            title={isOcrInstalled ? "Scan receipt with PaddleOCR" : "Scan receipt or bill"}
-          >
-            <ScanLine className="w-5 h-5" />
-          </button>
-        )}
+
+          {disabled ? (
+            /* Stop button when request is loading */
+            <button
+              type="button"
+              onClick={onStop}
+              className="w-8.5 h-8.5 rounded-full bg-rose-500 text-white flex items-center justify-center transition-all active:scale-95 shadow-md"
+              title="Stop generation"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+            </button>
+          ) : text.trim() ? (
+            /* Send button when text is entered */
+            <button
+              type="button"
+              onClick={handleSend}
+              className="w-8.5 h-8.5 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center transition-all active:scale-95 shadow-md"
+              title="Send message"
+            >
+              <Send className="w-4 h-4 -mr-0.5" />
+            </button>
+          ) : (
+            /* Scan button when input is empty — opens camera or options menu */
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover transition-colors"
+              title="Scan or capture receipt"
+            >
+              <ScanLine className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

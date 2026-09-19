@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, orderBy, getDocs, doc, getDoc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 interface SlideshowProps {
@@ -22,38 +22,29 @@ const Slideshow = ({ className }: SlideshowProps) => {
       try {
         setLoading(true);
 
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         
         if (!user) {
           setLoading(false);
           return;
         }
 
-        // Get user role
-        const { data: profileData, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
+        const profileSnap = await getDoc(doc(db, 'user_profiles', user.uid));
+        const role = profileSnap.exists() ? (profileSnap.data().role || 'free') : 'free';
+        setUserRole(role);
 
-        if (profileError) throw profileError;
-        
-        setUserRole(profileData?.role || 'free');
+        // Get banners
+        const q = query(
+          collection(db, 'slideshow_banners'),
+          where('active', '==', true),
+          orderBy('display_order', 'asc')
+        );
+        const snapshot = await getDocs(q);
+        const bannerData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Get banners for this user's role
-        const { data: bannerData, error: bannerError } = await supabase
-          .from('slideshow_banners')
-          .select('*')
-          .eq('active', true)
-          .order('display_order', { ascending: true });
-
-        if (bannerError) throw bannerError;
-        
-        // Filter banners by role
-        const filteredBanners = bannerData?.filter(banner => 
-          banner.visible_to.includes(profileData?.role || 'free')
-        ) || [];
+        const filteredBanners = bannerData.filter((banner: any) => 
+          banner.visible_to && Array.isArray(banner.visible_to) ? banner.visible_to.includes(role) : true
+        );
         
         setBanners(filteredBanners);
       } catch (error) {

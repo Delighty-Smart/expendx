@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useLucentChat } from '@/contexts/ChatContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import type { SavingsGoal } from '@/types/transactions';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,17 +18,20 @@ export const Missions: React.FC = () => {
 
   // Fetch live savings goals from database
   const { data: dbGoals = [], isLoading } = useQuery({
-    queryKey: ['savings_goals', user?.id],
+    queryKey: ['savings_goals', user?.id || user?.uid],
     enabled: !!user,
     queryFn: async () => {
       if (!user) return [] as SavingsGoal[];
-      const { data, error } = await supabase
-        .from('savings_goals' as any)
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data as unknown as SavingsGoal[]) || [];
+      const userId = user.uid || user.id;
+      const snap = await getDocs(collection(db, 'savings_goals'));
+      const goals: SavingsGoal[] = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.user_id === userId) {
+          goals.push({ id: d.id, ...data } as SavingsGoal);
+        }
+      });
+      return goals;
     },
   });
 

@@ -36,7 +36,7 @@ export const FormattedMarkdownText: React.FC<{ content: string; className?: stri
         if (/^#{1,3}\s+/.test(trimmed)) {
           const headerText = trimmed.replace(/^#{1,3}\s+/, '');
           return (
-            <div key={idx} className="font-extrabold text-base tracking-tight text-text-primary pt-1 pb-0.5">
+            <div key={idx} className="font-semibold text-sm sm:text-base tracking-tight text-text-primary pt-1 pb-0.5">
               {renderInlineFormatting(headerText)}
             </div>
           );
@@ -57,7 +57,7 @@ function renderInlineFormatting(text: string): React.ReactNode {
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={i} className="font-extrabold text-text-primary">
+        <strong key={i} className="font-semibold text-text-primary">
           {part.slice(2, -2)}
         </strong>
       );

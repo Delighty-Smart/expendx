@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Camera, Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { extractReceiptData } from "@/services/ai/extract-receipt-data";
 import { useToast } from "@/hooks/use-toast";
 import { Capacitor } from '@capacitor/core';
 
@@ -123,42 +123,21 @@ export function ReceiptScanner({ onDataExtracted, categories = [], sharedFileUri
       const compressedBase64 = await compressImage(file);
       console.log("Image compressed. Base64 length:", compressedBase64.length);
 
-      console.log("Step 1: Connectivity pulse check...");
-      const pulseResult = await supabase.functions.invoke('extract-receipt-data', {
-        body: { pulse: true }
-      });
-
-      if (pulseResult.error) {
-        console.error("Pulse check failed:", pulseResult.error);
-        throw new Error(`Connection test failed: ${pulseResult.error.message}`);
-      }
-      console.log("Pulse check successful!");
-
       if (!compressedBase64.startsWith('data:image')) {
         throw new Error("Invalid image format generated during compression");
       }
 
-      console.log("Step 2: Sending image payload with categories...");
-      // Call edge function
-      const { data, error } = await supabase.functions.invoke('extract-receipt-data', {
-        body: { imageBase64: compressedBase64, categories }
-      });
+      console.log("Sending image payload with categories...");
+      const result = await extractReceiptData(compressedBase64, categories);
 
-      if (error) {
-        console.error("Supabase function error:", error);
-        throw error;
-      }
-
-      console.log("Edge function response received:", data);
-
-      if (data?.success && data?.data) {
-        onDataExtracted(data.data);
+      if (result?.success && result?.data) {
+        onDataExtracted(result.data);
         toast({
           title: "Success",
           description: "Receipt scanned successfully!"
         });
       } else {
-        throw new Error(data?.error || 'Failed to extract receipt data');
+        throw new Error(result?.error || 'Failed to extract receipt data');
       }
     } catch (error) {
       console.error('CRITICAL: Error scanning receipt:', error);

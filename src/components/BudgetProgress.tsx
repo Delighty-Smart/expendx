@@ -1,7 +1,6 @@
 
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface BudgetProgressProps {
   category: string;

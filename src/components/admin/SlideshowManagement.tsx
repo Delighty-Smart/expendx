@@ -11,10 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Image, MoveUp, MoveDown, Eye, EyeOff, MoreVertical, ChevronLeft, ChevronRight, Layout } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { auth, db, storage } from "@/lib/firebase";
+import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const SlideshowManagement = () => {
   const [banners, setBanners] = useState<any[]>([]);
@@ -43,13 +42,14 @@ const SlideshowManagement = () => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('slideshow_banners')
-        .select('*')
-        .order('display_order', { ascending: true });
+      const q = query(collection(db, 'slideshow_banners'), orderBy('display_order', 'asc'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }));
 
-      if (error) throw error;
-      if (data) setBanners(data);
+      setBanners(data);
     } catch (error) {
       console.error('Error fetching banners:', error);
       toast({ title: "Error fetching banners", variant: "destructive" });
@@ -75,10 +75,9 @@ const SlideshowManagement = () => {
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `${fileName}`;
-    const { error: uploadError } = await supabase.storage.from('banner_images').upload(filePath, file);
-    if (uploadError) throw uploadError;
-    return filePath;
+    const storageRef = ref(storage, `banner_images/${fileName}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
   };
 
   const handleCreate = async () => {
@@ -87,13 +86,7 @@ const SlideshowManagement = () => {
         toast({ title: "Title required", variant: "destructive" });
         return;
       }
-      let { data: { user }, error: userError } = await supabase.auth.getUser();
-
-      if (!user || userError) {
-        const { data: { session } } = await supabase.auth.getSession();
-        user = session?.user || null;
-      }
-
+      const user = auth.currentUser;
       if (!user) {
         toast({ title: "No authenticated session", description: "Please log in again", variant: "destructive" });
         return;
@@ -107,20 +100,22 @@ const SlideshowManagement = () => {
       if (formData.visible_to.pro) visibleToArray.push('pro');
       if (formData.visible_to.premium) visibleToArray.push('premium');
 
-      const highestOrder = banners.length > 0 ? Math.max(...banners.map(b => b.display_order)) : -1;
+      const highestOrder = banners.length > 0 ? Math.max(...banners.map(b => b.display_order || 0)) : -1;
 
-      const { error } = await supabase.from('slideshow_banners').insert({
+      const docRef = doc(collection(db, 'slideshow_banners'));
+      await setDoc(docRef, {
+        id: docRef.id,
         title: formData.title,
         description: formData.description,
         link_url: formData.link_url,
         image_url: finalImageUrl,
         active: formData.active,
         visible_to: visibleToArray,
-        created_by: user.id,
-        display_order: highestOrder + 1
+        created_by: user.uid,
+        display_order: highestOrder + 1,
+        created_at: new Date().toISOString()
       });
 
-      if (error) throw error;
       toast({ title: "Banner created" });
       setCreateModalOpen(false);
       resetForm();
@@ -142,7 +137,7 @@ const SlideshowManagement = () => {
       if (formData.visible_to.pro) visibleToArray.push('pro');
       if (formData.visible_to.premium) visibleToArray.push('premium');
 
-      const { error } = await supabase.from('slideshow_banners').update({
+      await updateDoc(doc(db, 'slideshow_banners', selectedBanner.id), {
         title: formData.title,
         description: formData.description,
         link_url: formData.link_url,
@@ -150,9 +145,8 @@ const SlideshowManagement = () => {
         active: formData.active,
         visible_to: visibleToArray,
         updated_at: new Date().toISOString()
-      }).eq('id', selectedBanner.id);
+      });
 
-      if (error) throw error;
       toast({ title: "Banner updated" });
       setEditModalOpen(false);
       resetForm();
@@ -165,8 +159,7 @@ const SlideshowManagement = () => {
 
   const handleDelete = async (bannerId: string) => {
     try {
-      const { error } = await supabase.from('slideshow_banners').delete().eq('id', bannerId);
-      if (error) throw error;
+      await deleteDoc(doc(db, 'slideshow_banners', bannerId));
       toast({ title: "Banner deleted" });
       fetchBanners();
     } catch (error) {
@@ -186,8 +179,8 @@ const SlideshowManagement = () => {
       const swapBanner = banners[swapIndex];
 
       await Promise.all([
-        supabase.from('slideshow_banners').update({ display_order: swapBanner.display_order }).eq('id', currentBanner.id),
-        supabase.from('slideshow_banners').update({ display_order: currentBanner.display_order }).eq('id', swapBanner.id)
+        updateDoc(doc(db, 'slideshow_banners', currentBanner.id), { display_order: swapBanner.display_order }),
+        updateDoc(doc(db, 'slideshow_banners', swapBanner.id), { display_order: currentBanner.display_order })
       ]);
 
       fetchBanners();

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -12,15 +13,12 @@ export const useDataExport = () => {
     const convertToCSV = (data: any[]) => {
         if (!data || data.length === 0) return "";
 
-        // Get headers from the first object, excluding technical IDs
         const excludedKeys = ["id", "user_id", "admin_id", "created_by", "related_id"];
         const headers = Object.keys(data[0]).filter(key => !excludedKeys.includes(key));
         const csvRows = [];
 
-        // Add header row
         csvRows.push(headers.join(","));
 
-        // Add data rows
         for (const row of data) {
             const values = headers.map(header => {
                 const val = row[header];
@@ -76,25 +74,29 @@ export const useDataExport = () => {
             ] as const;
 
             const results = await Promise.all(
-                tables.map(table =>
-                    supabase
-                        .from(table as any)
-                        .select("*")
-                        .eq(table === "user_profiles" ? "id" : "user_id", user.id)
-                )
+                tables.map(async (table) => {
+                    try {
+                        if (table === "user_profiles") {
+                            const docSnap = await getDoc(doc(db, "user_profiles", user.id));
+                            return docSnap.exists() ? [{ id: docSnap.id, ...docSnap.data() }] : [];
+                        } else {
+                            const q = query(collection(db, table), where("user_id", "==", user.id));
+                            const snap = await getDocs(q);
+                            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        }
+                    } catch (err) {
+                        console.error(`Error exporting ${table}:`, err);
+                        return [];
+                    }
+                })
             );
 
             let successCount = 0;
             const timestamp = format(new Date(), "yyyy-MM-dd_HHmm");
 
-            results.forEach((result, index) => {
-                if (result.error) {
-                    console.error(`Error exporting ${tables[index]}:`, result.error);
-                    return;
-                }
-
-                if (result.data && result.data.length > 0) {
-                    const csv = convertToCSV(result.data);
+            results.forEach((data, index) => {
+                if (data && data.length > 0) {
+                    const csv = convertToCSV(data);
                     downloadCSV(csv, `expendx_${tables[index]}_${timestamp}.csv`);
                     successCount++;
                 }

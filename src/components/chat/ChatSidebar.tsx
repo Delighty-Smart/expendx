@@ -56,14 +56,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose, onNew
     setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const sampleRecentConversations = [
-    { id: 'c1', title: 'Monthly budget review & savings plan', prompt: 'Show me my monthly budget review and savings breakdown' },
-    { id: 'c2', title: 'Emergency fund goal setup', prompt: 'Help me plan an emergency fund goal' },
-    { id: 'c3', title: 'Subscription audit & recurring charges', prompt: 'Audit my active subscriptions and recurring expenses' },
-  ];
+  const { conversations, loadConversation, deleteConversation } = useLucentChat();
 
-  const filteredHistory = sampleRecentConversations.filter(c =>
-    c.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredHistory = (conversations || []).filter(c =>
+    c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.lastMessageSnippet?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (!isOpen) return null;
@@ -285,20 +282,31 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose, onNew
           <p className="px-2 mb-1.5 text-[11px] font-semibold text-text-secondary">Recents</p>
           <div className="space-y-0.5 max-h-32 overflow-y-auto scrollbar-none">
             {filteredHistory.map(item => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onClose();
-                  if (location.pathname !== '/chat') {
-                    navigate('/chat');
-                  }
-                  sendMessage(item.prompt);
-                }}
-                className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover truncate transition-colors flex items-center gap-2"
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-text-secondary/70 shrink-0" />
-                <span className="truncate">{item.title}</span>
-              </button>
+              <div key={item.id} className="group relative flex items-center">
+                <button
+                  onClick={() => {
+                    loadConversation(item.id);
+                    onClose();
+                    if (location.pathname !== '/chat') {
+                      navigate('/chat');
+                    }
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover truncate transition-colors flex items-center gap-2 pr-6"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-text-secondary/70 shrink-0" />
+                  <span className="truncate">{item.title}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(item.id);
+                  }}
+                  className="absolute right-1 p-1 rounded hover:bg-rose-500/10 text-text-muted hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete chat"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

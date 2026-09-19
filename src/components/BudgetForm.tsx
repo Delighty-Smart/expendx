@@ -29,7 +29,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, collection, addDoc, updateDoc } from "firebase/firestore";
 import { getCategoriesForType } from "@/types/transactions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -88,31 +89,26 @@ export function BudgetForm({
   async function onSubmit(values: z.infer<typeof budgetSchema>) {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
       const budgetData = {
         category: values.category,
         monthly_limit: parseFloat(values.monthlyLimit),
-        user_id: user.id,
+        user_id: user.uid,
+        updated_at: new Date().toISOString(),
       };
 
       // Handling both insert and update cases
       if (budgetId) {
         // Update existing budget
-        const { error } = await supabase
-          .from("budget_categories")
-          .update(budgetData)
-          .eq("id", budgetId);
-
-        if (error) throw error;
+        await updateDoc(doc(db, "budget_categories", budgetId), budgetData);
       } else {
         // Insert new budget
-        const { error } = await supabase
-          .from("budget_categories")
-          .insert([budgetData]);
-
-        if (error) throw error;
+        await addDoc(collection(db, "budget_categories"), {
+          ...budgetData,
+          created_at: new Date().toISOString(),
+        });
       }
 
       toast({

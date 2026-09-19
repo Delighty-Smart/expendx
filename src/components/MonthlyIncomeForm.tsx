@@ -22,7 +22,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const monthlyIncomeSchema = z.object({
   amount: z.string().min(1, "Monthly income is required"),
@@ -49,24 +50,14 @@ export function MonthlyIncomeForm({
 
   async function onSubmit(values: z.infer<typeof monthlyIncomeSchema>) {
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
-      const incomeData = {
+      await setDoc(doc(db, "monthly_income_estimates", user.uid), {
+        user_id: user.uid,
         amount: parseFloat(values.amount),
-        user_id: user.id,
-      };
-
-      const { error } = await supabase
-        .from("monthly_income_estimates")
-        .upsert(
-          incomeData,
-          {
-            onConflict: "user_id",
-          }
-        );
-
-      if (error) throw error;
+        updated_at: new Date().toISOString()
+      }, { merge: true });
 
       toast({
         title: "Success",

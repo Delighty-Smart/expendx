@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Sparkles, TrendingUp, AlertCircle, CheckCircle2, Lightbulb, ChevronRight } from "lucide-react";
 import { GlassCard, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { generateFinancialInsights, InsightData } from "@/services/ai/financial-insights";
 import { cn } from "@/lib/utils";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -12,13 +12,6 @@ interface AIInsightsProps {
     transactions: any[];
     budgets: any[];
     dateRange: { from: string; to: string };
-}
-
-interface InsightData {
-    summary: string;
-    quantitative_analysis: string[];
-    actionable_advice: string[];
-    sentiment: "positive" | "neutral" | "caution";
 }
 
 export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps) => {
@@ -34,22 +27,13 @@ export const AIInsights = ({ transactions, budgets, dateRange }: AIInsightsProps
         setError(null);
 
         try {
-            const { data, error: invokeError } = await supabase.functions.invoke('generate-financial-insights', {
-                body: {
-                    transactions: transactions.slice(0, 50),
-                    budgets: budgets,
-                    dateRange: dateRange,
-                    currency: currency.code
-                }
+            const result = await generateFinancialInsights({
+                transactions: transactions.slice(0, 50),
+                budgets: budgets,
+                dateRange: dateRange,
+                currency: currency.code
             });
-
-            if (invokeError) {
-                // Try to extract error message from the response body if it's a Supabase error
-                const errorBody = await (invokeError as any).context?.json?.().catch(() => null);
-                const message = errorBody?.error || invokeError.message || "Unknown error";
-                throw new Error(message);
-            }
-            setInsights(data);
+            setInsights(result);
         } catch (err: any) {
             console.error("Failed to generate AI insights:", err);
             setError(err.message || "Lucent AI is currently unavailable. Please try again later.");

@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, doc, getDoc, getDocs, setDoc, query, orderBy } from "firebase/firestore";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { format } from "date-fns";
 import { Eye, EyeOff, MessageSquare, Image as ImageIcon, CheckCircle2, Clock, AlertCircle, ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
@@ -56,29 +57,28 @@ const FeedbackManagement = () => {
     try {
       setLoading(true);
 
-      const { data: feedbackData, error: feedbackError } = await supabase
-        .from('user_feedback')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (feedbackError) throw feedbackError;
+      const q = query(collection(db, 'user_feedback'), orderBy('created_at', 'desc'));
+      const feedbackSnapshot = await getDocs(q);
+      const feedbackData = feedbackSnapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      })) as any[];
 
       // Check for responses to determine status
-      const { data: responseData, error: responseError } = await supabase
-        .from('feedback_responses')
-        .select('feedback_id');
+      const responseSnapshot = await getDocs(collection(db, 'feedback_responses'));
+      const responseData = responseSnapshot.docs.map(docSnap => docSnap.data());
 
-      if (responseError) throw responseError;
-
-      const respondedIds = new Set(responseData.map(r => r.feedback_id));
+      const respondedIds = new Set(responseData.map((r: any) => r.feedback_id));
 
       const processedData = await Promise.all(
         feedbackData.map(async (feedback) => {
-          const { data: userData } = await supabase
-            .from('user_profiles')
-            .select('email, first_name, last_name')
-            .eq('id', feedback.user_id)
-            .single();
+          let userData = null;
+          if (feedback.user_id) {
+            const userSnap = await getDoc(doc(db, 'user_profiles', feedback.user_id));
+            if (userSnap.exists()) {
+              userData = userSnap.data() as UserProfile;
+            }
+          }
 
           return {
             ...feedback,
@@ -110,12 +110,7 @@ const FeedbackManagement = () => {
     }
 
     try {
-      let { data: { user }, error: userError } = await supabase.auth.getUser();
-
-      if (!user || userError) {
-        const { data: { session } } = await supabase.auth.getSession();
-        user = session?.user || null;
-      }
+      const user = auth.currentUser;
 
       if (!user) {
         toast({
@@ -126,13 +121,14 @@ const FeedbackManagement = () => {
         return;
       }
 
-      const { error } = await supabase.from('feedback_responses').insert({
+      const responseRef = doc(collection(db, 'feedback_responses'));
+      await setDoc(responseRef, {
+        id: responseRef.id,
         feedback_id: responseDialog.feedbackId,
-        admin_id: user.id,
-        response_text: responseDialog.response
+        admin_id: user.uid,
+        response_text: responseDialog.response,
+        created_at: new Date().toISOString()
       });
-
-      if (error) throw error;
 
       toast({ title: "Response sent", description: `Response sent to ${responseDialog.userEmail}` });
       setResponseDialog({ isOpen: false, feedbackId: null, response: "", userEmail: "" });

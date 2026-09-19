@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -92,12 +93,13 @@ export const LifeEnergySettings: React.FC = () => {
     localStorage.setItem("lucent_true_hourly_rate", updatedData.trueHourlyRate.toString());
     localStorage.setItem("expendx_true_hourly_rate", updatedData.trueHourlyRate.toString());
     
-    // Sync to Supabase user metadata
-    supabase.auth.updateUser({
-      data: {
+    // Sync to Firestore user_profiles
+    const user = auth.currentUser;
+    if (user) {
+      setDoc(doc(db, "user_profiles", user.uid), {
         life_energy_data: updatedData
-      }
-    }).catch(err => console.error("Error syncing life energy to cloud:", err));
+      }, { merge: true }).catch(err => console.error("Error syncing life energy to cloud:", err));
+    }
 
     // Dispatch storage event to sync all listeners globally
     window.dispatchEvent(new Event("storage"));

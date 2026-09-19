@@ -2,8 +2,8 @@ import { useState, useMemo } from "react";
 import { CalendarIcon, Download, TrendingUp, TrendingDown, DollarSign, BarChart3, FileText, Calendar, PieChart, Shapes, FileSpreadsheet } from "lucide-react";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
+import { generateFinancialInsights } from "@/services/ai/financial-insights";
 import { Input } from "@/components/ui/input";
 
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -100,9 +100,7 @@ const ReportsPage = () => {
   const filteredTransactions = useMemo((): Transaction[] => {
     if (!transactions) return [];
 
-
     const typedTransactions = transactions as Transaction[];
-
 
     return typedTransactions.filter(transaction => {
       if (transaction.category === "System-Adjustment" || (transaction as any).is_system_adjustment) return false;
@@ -116,7 +114,6 @@ const ReportsPage = () => {
   const summaryMetrics = useMemo(() => {
     if (!filteredTransactions || filteredTransactions.length === 0) return { income: 0, expenses: 0, savings: 0, net: 0 };
 
-
     const income = filteredTransactions
       .filter(t => t.type?.toLowerCase() === 'credit')
       .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -128,8 +125,6 @@ const ReportsPage = () => {
     const savings = filteredTransactions
       .filter(t => t.type?.toLowerCase() === 'savings')
       .reduce((sum, t) => sum + Number(t.amount), 0);
-
-
 
     return {
       income,
@@ -143,14 +138,12 @@ const ReportsPage = () => {
   const chartData = useMemo((): ChartDataPoint[] => {
     if (!filteredTransactions || filteredTransactions.length === 0) return [];
 
-
     const dailyData = filteredTransactions.reduce((acc, transaction) => {
       const date = format(new Date(transaction.date), 'MMM dd');
 
       if (!acc[date]) {
         acc[date] = { date, income: 0, expenses: 0, savings: 0 };
       }
-
 
       const amount = Number(transaction.amount);
       if (transaction.type === 'credit') {
@@ -161,12 +154,10 @@ const ReportsPage = () => {
         acc[date].savings += amount;
       }
 
-
       return acc;
     }, {} as Record<string, ChartDataPoint>);
 
     return Object.values(dailyData).sort((a, b) =>
-
       new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   }, [filteredTransactions]);
@@ -175,8 +166,6 @@ const ReportsPage = () => {
   const categoryData = useMemo((): CategoryDataPoint[] => {
     if (!filteredTransactions || filteredTransactions.length === 0) return [];
 
-
-
     const categoryTotals = filteredTransactions.reduce((acc, transaction) => {
       if (!acc[transaction.category]) {
         acc[transaction.category] = 0;
@@ -184,8 +173,6 @@ const ReportsPage = () => {
       acc[transaction.category] += Number(transaction.amount);
       return acc;
     }, {} as Record<string, number>);
-
-
 
     return Object.entries(categoryTotals)
       .map(([category, amount]) => ({ category, amount }))
@@ -215,20 +202,20 @@ const ReportsPage = () => {
         description: "Fetching all transactions for your report...",
       });
 
-      if (!user?.id) {
+      const userId = user?.uid || user?.id;
+      if (!userId) {
         throw new Error("User not authenticated. Please log in and try again.");
       }
 
       // Fetch ALL transactions for the period
-      const { data: allTransactions, error: fetchError } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("date", format(dateFrom, 'yyyy-MM-dd'))
-        .lte("date", format(dateTo, 'yyyy-MM-dd'))
-        .order("date", { ascending: false });
+      const allTx = await enhancedOfflineManager.getTransactions(userId);
+      const fromStr = format(dateFrom, 'yyyy-MM-dd');
+      const toStr = format(dateTo, 'yyyy-MM-dd');
 
-      if (fetchError) throw fetchError;
+      const allTransactions = allTx.filter(t => {
+        const d = t.date ? format(new Date(t.date), 'yyyy-MM-dd') : '';
+        return d >= fromStr && d <= toStr;
+      });
 
       const csvContent = [
         ['Date', 'Amount', 'Type', 'Category', 'Description'],
@@ -245,7 +232,7 @@ const ReportsPage = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Lucent_Export_${format(dateFrom, 'yyyy-MM-dd')}_to_${format(dateTo, 'yyyy-MM-dd')}.csv`;
+      a.download = `Lucent_Export_${fromStr}_to_${toStr}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
 
@@ -270,20 +257,20 @@ const ReportsPage = () => {
         description: "Please wait while we generate your comprehensive report...",
       });
 
-      if (!user?.id) {
+      const userId = user?.uid || user?.id;
+      if (!userId) {
         throw new Error("User not authenticated. Please log in and try again.");
       }
 
-      // 1. Fetch ALL transactions for the selected period (bypassing infinite scroll)
-      const { data: allTransactions, error: fetchError } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("date", format(dateFrom, 'yyyy-MM-dd'))
-        .lte("date", format(dateTo, 'yyyy-MM-dd'))
-        .order("date", { ascending: false });
+      // 1. Fetch ALL transactions for the selected period
+      const allTx = await enhancedOfflineManager.getTransactions(userId);
+      const fromStr = format(dateFrom, 'yyyy-MM-dd');
+      const toStr = format(dateTo, 'yyyy-MM-dd');
 
-      if (fetchError) throw fetchError;
+      const allTransactions = allTx.filter(t => {
+        const d = t.date ? format(new Date(t.date), 'yyyy-MM-dd') : '';
+        return d >= fromStr && d <= toStr;
+      });
 
       const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
@@ -347,23 +334,17 @@ const ReportsPage = () => {
           description: "Lucent Intelligence is generating your insights...",
         });
 
-        const { data: edgeData, error: invokeError } = await supabase.functions.invoke('generate-financial-insights', {
-          body: {
-            transactions: (allTransactions || []).slice(0, 50),
-            budgets: budgets || [],
-            dateRange: {
-              from: format(dateFrom, 'yyyy-MM-dd'),
-              to: format(dateTo, 'yyyy-MM-dd')
-            },
-            currency: currency.code
-          }
+        aiInsights = await generateFinancialInsights({
+          transactions: (allTransactions || []).slice(0, 50),
+          budgets: budgets || [],
+          dateRange: {
+            from: fromStr,
+            to: toStr
+          },
+          currency: currency.code
         });
-
-        if (invokeError) throw invokeError;
-        aiInsights = edgeData;
       } catch (aiErr) {
         console.warn("AI Insights generation failed or timed out during PDF build:", aiErr);
-        // We catch and swallow this error so the PDF still generates even if AI fails
       }
 
       if (aiInsights && aiInsights.summary) {

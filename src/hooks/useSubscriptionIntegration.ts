@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSubscriptions } from './useSubscriptions';
 import { Subscription } from '@/types/subscriptions';
-import { supabase } from '@/integrations/supabase/client';
+import { auth, db } from '@/lib/firebase';
+import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { addDays, addYears } from 'date-fns';
 
 export interface SubscriptionOption {
@@ -45,30 +46,24 @@ export function useSubscriptionIntegration() {
         amount: data.amount,
         status: 'active' as const,
         last_transaction_date: today.toISOString().split('T')[0],
-        next_billing_date: nextBillingDate.toISOString().split('T')[0]
+        next_billing_date: nextBillingDate.toISOString().split('T')[0],
+        updated_at: new Date().toISOString()
       };
 
       if (data.subscriptionId) {
         // Update existing subscription
-        const { error } = await supabase
-          .from('subscriptions')
-          .update(payload)
-          .eq('id', data.subscriptionId);
-
-        if (error) throw error;
+        await updateDoc(doc(db, 'subscriptions', data.subscriptionId), payload);
       } else {
-        // Need user_id for insert
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) throw new Error('User not authenticated');
 
-        const { error } = await supabase
-          .from('subscriptions')
-          .insert({
-            ...payload,
-            user_id: user.id
-          });
-
-        if (error) throw error;
+        const docRef = doc(collection(db, 'subscriptions'));
+        await setDoc(docRef, {
+          ...payload,
+          id: docRef.id,
+          user_id: user.uid,
+          created_at: new Date().toISOString()
+        });
       }
     } catch (error) {
       console.error('Error upserting subscription from transaction:', error);
@@ -86,15 +81,11 @@ export function useSubscriptionIntegration() {
         ? addDays(today, 30)
         : addYears(today, 1);
 
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({
-          last_transaction_date: today.toISOString().split('T')[0],
-          next_billing_date: nextBillingDate.toISOString().split('T')[0]
-        })
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
+      await updateDoc(doc(db, 'subscriptions', subscriptionId), {
+        last_transaction_date: today.toISOString().split('T')[0],
+        next_billing_date: nextBillingDate.toISOString().split('T')[0],
+        updated_at: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error updating subscription status:', error);
       throw error;

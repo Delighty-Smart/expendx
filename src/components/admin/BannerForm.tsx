@@ -33,7 +33,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
 
 const bannerSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -51,7 +52,7 @@ type BannerFormValues = z.infer<typeof bannerSchema>;
 interface BannerFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    banner?: any; // Using any for simplicity with Supabase types, ideally proper type
+    banner?: any; // Using any for simplicity
     onSuccess: () => void;
 }
 
@@ -116,83 +117,48 @@ const BannerForm = ({ open, onOpenChange, banner, onSuccess }: BannerFormProps) 
                 return;
             }
 
-            // Try to get user via getUser() first (most secure)
-            let { data: { user }, error: userError } = await supabase.auth.getUser();
-
-            // Fallback to getSession() if getUser() fails or returns no user
-            // This is sometimes necessary in local dev or specific session states
-            if (!user || userError) {
-                console.warn("BannerForm: getUser() failed or returned null, trying getSession()...", userError);
-                const { data: { session } } = await supabase.auth.getSession();
-                user = session?.user || null;
-            }
-
+            const user = auth.currentUser;
             if (!user) {
-                console.error("BannerForm: No authenticated user found in both getUser() and getSession()");
                 throw new Error("No authenticated session found. Please try refreshing or logging in again.");
             }
 
             const payload = {
                 ...values,
-                // sanitize empty strings to null for optional fields
                 message: values.message || null,
                 image_url: values.image_url || null,
                 cta_text: values.cta_text || null,
                 cta_link: values.cta_link || null,
-                created_by: user.id
+                created_by: user.uid
             };
-
-            let error;
 
             if (banner?.id) {
                 // Update
-                const response = await supabase
-                    .from('admin_banners' as any)
-                    .update(payload)
-                    .eq('id', banner.id);
-                error = response.error;
+                await updateDoc(doc(db, 'admin_banners', banner.id), {
+                    ...payload,
+                    updated_at: new Date().toISOString()
+                });
             } else {
                 // Create
-                const response = await supabase
-                    .from('admin_banners' as any)
-                    .insert([payload]);
-                error = response.error;
+                const docRef = doc(collection(db, 'admin_banners'));
+                await setDoc(docRef, {
+                    id: docRef.id,
+                    ...payload,
+                    created_at: new Date().toISOString()
+                });
             }
-
-            if (error) throw error;
 
             toast({
                 title: "Success",
                 description: `Banner ${banner ? 'updated' : 'created'} successfully`,
             });
             onSuccess();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving banner:", error);
-
-            // Check for specific error codes
-            if (error.code === '42P01') { // PostgreSQL code for undefined table
-                toast({
-                    title: "Missing Database Table",
-                    description: "The 'admin_banners' table does not exist. Please run the migration file.",
-                    variant: "destructive",
-                });
-            } else {
-                // Handle various error types (native Error, Supabase error, unknown object)
-                let errorMessage = "Unknown error occurred";
-                if (error instanceof Error) {
-                    errorMessage = error.message;
-                } else if (typeof error === 'object' && error !== null) {
-                    errorMessage = (error as any).message || (error as any).details || JSON.stringify(error);
-                } else if (typeof error === 'string') {
-                    errorMessage = error;
-                }
-
-                toast({
-                    title: "Error Saving",
-                    description: errorMessage,
-                    variant: "destructive",
-                });
-            }
+            toast({
+                title: "Error Saving",
+                description: error.message || "Could not save banner",
+                variant: "destructive",
+            });
         }
     };
 

@@ -52,7 +52,8 @@ function calculateLifeEnergyCost(
   });
 }
 
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 async function updateLifeEnergyRate(
   params: Record<string, any>,
@@ -61,7 +62,14 @@ async function updateLifeEnergyRate(
   const { hourlyRate } = params;
   const rate = Number(hourlyRate);
 
-  await supabase.from('user_settings' as any).upsert({ user_id: ctx.userId, hourly_rate: rate });
+  if (ctx.userId) {
+    await setDoc(doc(db, 'user_settings', ctx.userId), {
+      user_id: ctx.userId,
+      hourly_rate: rate,
+      updated_at: new Date().toISOString()
+    }, { merge: true });
+  }
+
   ctx.invalidateQueries?.(['settings']);
   lucentEventBus.emit('settings:updated', { hourly_rate: rate }, 'life-energy-service');
 

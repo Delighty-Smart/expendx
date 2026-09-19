@@ -11,7 +11,8 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Maximize2, ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, PieChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard, ArrowUp, ArrowDown, ArrowDownToLine, ArrowUpFromLine, Repeat, Landmark, Banknote, CirclePlus, Hourglass } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { Capacitor } from "@capacitor/core";
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -87,16 +88,19 @@ const IndexPage = () => {
 
   // Fetch unread alerts via useQuery for proper caching + deduplication
   const { data: unreadAlertsData } = useQuery({
-    queryKey: ['unread_alerts', user?.id],
+    queryKey: ['unread_alerts', user?.id || user?.uid],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('alerts')
-        .select('id')
-        .eq('user_id', user!.id)
-        .eq('read', false);
-      if (error) throw error;
-      return data?.length || 0;
+      const userId = user?.uid || user?.id;
+      const snap = await getDocs(collection(db, 'alerts'));
+      let unreadCount = 0;
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.user_id === userId && !data.read) {
+          unreadCount++;
+        }
+      });
+      return unreadCount;
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
@@ -147,18 +151,14 @@ const IndexPage = () => {
 
   // Query to fetch the estimated monthly income
   const { data: monthlyIncomeData, isLoading: isMonthlyIncomeLoading } = useQuery({
-    queryKey: ["monthly_income", user?.id],
+    queryKey: ["monthly_income", user?.id || user?.uid],
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes — income estimates rarely change mid-session
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("monthly_income_estimates")
-        .select("*")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data?.amount || 0;
+      const userId = user?.uid || user?.id;
+      if (!userId) return 0;
+      const snap = await getDoc(doc(db, "monthly_income_estimates", userId));
+      return snap.exists() ? snap.data()?.amount || 0 : 0;
     },
   });
 
@@ -166,18 +166,14 @@ const IndexPage = () => {
   const monthlyIncome = monthlyIncomeData || 0;
 
   const { data: streakData, isLoading: isStreakLoading, refetch: refetchStreak } = useQuery({
-    queryKey: ["user_streak", user?.id],
+    queryKey: ["user_streak", user?.id || user?.uid],
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes — streak data doesn't change every second
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_streaks")
-        .select("*")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
+      const userId = user?.uid || user?.id;
+      if (!userId) return null;
+      const snap = await getDoc(doc(db, "user_streaks", userId));
+      return snap.exists() ? snap.data() : null;
     },
   });
 
@@ -405,16 +401,20 @@ const IndexPage = () => {
 
   // Fetch total budget for expense percentage calculation
   const { data: totalBudget } = useQuery({
-    queryKey: ["total_budget", user?.id],
+    queryKey: ["total_budget", user?.id || user?.uid],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("budget_categories")
-        .select("monthly_limit")
-        .eq("user_id", user!.id);
-
-      if (error) throw error;
-      return data?.reduce((sum, item) => sum + item.monthly_limit, 0) || 0;
+      const userId = user?.uid || user?.id;
+      if (!userId) return 0;
+      const snap = await getDocs(collection(db, "budget_categories"));
+      let total = 0;
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.user_id === userId) {
+          total += Number(data.monthly_limit || 0);
+        }
+      });
+      return total;
     },
   });
 

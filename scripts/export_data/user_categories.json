@@ -1,0 +1,23 @@
+[
+  {
+    "id": "5718ce47-9b4e-4136-81c5-f1f3e178a4e6",
+    "user_id": "c6185957-5984-4711-ad10-20e0654d5d1b",
+    "type": "debit",
+    "name": "Starch",
+    "created_at": "2025-06-09T16:42:22.78206+00:00"
+  },
+  {
+    "id": "7f4ea188-0b1e-4d41-b8b3-8d1429a950fd",
+    "user_id": "291f6f51-992a-47ef-9d61-ae0252c9902d",
+    "type": "credit",
+    "name": "Side Hustle",
+    "created_at": "2025-06-10T14:37:32.559105+00:00"
+  },
+  {
+    "id": "492d5308-5e8d-4aa5-930e-4cc525506e95",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "type": "subscription",
+    "name": "Brilliant App",
+    "created_at": "2026-02-26T11:44:13.158896+00:00"
+  }
+]

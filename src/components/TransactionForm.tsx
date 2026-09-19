@@ -13,7 +13,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/lib/firebase";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Transaction, TransactionType, getCategoriesForType } from "@/types/transactions";
 import { SERVICE_PROVIDERS, CARD_TYPES, SUBSCRIPTION_TYPES } from "@/types/subscriptions";
@@ -272,9 +272,9 @@ export const TransactionForm = ({
     const cacheUserIdOnOpen = async () => {
       if (open && navigator.onLine) {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
+          const user = auth.currentUser;
           if (user) {
-            cacheUserId(user.id);
+            cacheUserId(user.uid);
           }
         } catch (error) {
           console.error("Failed to cache user ID on dialog open:", error);
@@ -300,9 +300,9 @@ export const TransactionForm = ({
       // Get user ID from cache or auth
       let userId = getCachedUserId();
       if (!userId && navigator.onLine) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (user) {
-          userId = user.id;
+          userId = user.uid;
           cacheUserId(userId);
         }
       }

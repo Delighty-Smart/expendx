@@ -1,20 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Bell, Clock, Smartphone, AlertTriangle, Award, TrendingUp, Info, LucideIcon } from "lucide-react";
-import { NOTIFICATION_SCHEDULES, getDefaultTimeForNotification, getNotificationDescription, notificationScheduler } from "@/services/notificationScheduler";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { Bell, Clock, Smartphone, AlertTriangle, Award, TrendingUp, LucideIcon } from "lucide-react";
+import { NOTIFICATION_SCHEDULES, notificationScheduler } from "@/services/notificationScheduler";
 import { notificationService } from "@/services/notificationService";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Capacitor } from "@capacitor/core";
-import { App } from "@capacitor/app";
 import { useAuth } from "@/hooks/useAuth";
-
 
 interface NotificationPreference {
   id: string;
@@ -93,35 +89,23 @@ const NotificationPreferences = () => {
       try {
         if (!user) return;
 
-        const { data, error } = await supabase
-          .from('notification_preferences')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        const docRef = doc(db, 'notification_preferences', user.id);
+        const docSnap = await getDoc(docRef);
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching preferences:', error);
-          return;
-        }
-
-        if (data) {
+        if (docSnap.exists()) {
+          const data = { id: docSnap.id, ...docSnap.data() } as NotificationPreference;
           setPreferences(data);
           scheduleAllNotifications(user.id, data);
         } else {
-          const { data: newPrefs, error: createError } = await supabase
-            .from('notification_preferences')
-            .insert({
-              user_id: user.id,
-              preferred_time: '19:00'
-            })
-            .select('*')
-            .maybeSingle();
-          if (createError) {
-            console.error('Error creating preferences:', createError);
-          } else if (newPrefs) {
-            setPreferences(newPrefs);
-            scheduleAllNotifications(user.id, newPrefs);
-          }
+          const newPrefs: NotificationPreference = {
+            id: user.id,
+            user_id: user.id,
+            preferred_time: '19:00',
+            created_at: new Date().toISOString()
+          };
+          await setDoc(docRef, newPrefs);
+          setPreferences(newPrefs);
+          scheduleAllNotifications(user.id, newPrefs);
         }
       } catch (error) {
         console.error('Error in fetchPreferences:', error);
@@ -133,8 +117,6 @@ const NotificationPreferences = () => {
     fetchPreferences();
     checkPushStatus();
   }, [user, scheduleAllNotifications]);
-
-  // getPreferredTimeForCategory moved to top of component
 
   const updatePreferredTime = async (category: string, newTime: string) => {
     if (!preferences) return;
@@ -155,12 +137,12 @@ const NotificationPreferences = () => {
       timePreference[category] = newTime;
       if (category === 'consistency') timePreference.default = newTime;
       const jsonString = JSON.stringify(timePreference);
-      const { error } = await supabase
-        .from('notification_preferences')
-        .update({ preferred_time: jsonString })
-        .eq('id', preferences.id);
 
-      if (error) throw error;
+      await updateDoc(doc(db, 'notification_preferences', preferences.id), {
+        preferred_time: jsonString,
+        updated_at: new Date().toISOString()
+      });
+
       const updatedPrefs = { ...preferences, preferred_time: jsonString };
       setPreferences(updatedPrefs);
       if (user) scheduleAllNotifications(user.id, updatedPrefs);
@@ -172,8 +154,6 @@ const NotificationPreferences = () => {
     }
   };
 
-  // scheduleAllNotifications moved to top of component
-
   const toggleCategory = async (category: string, enabled: boolean) => {
     if (!preferences) return;
     setSaving(true);
@@ -181,11 +161,12 @@ const NotificationPreferences = () => {
       const fieldsToUpdate: Record<string, boolean> = {};
       const categoryData = CATEGORY_MAPPING[category];
       categoryData.fields.forEach(field => { fieldsToUpdate[field] = enabled; });
-      const { error } = await supabase
-        .from('notification_preferences')
-        .update(fieldsToUpdate)
-        .eq('id', preferences.id);
-      if (error) throw error;
+
+      await updateDoc(doc(db, 'notification_preferences', preferences.id), {
+        ...fieldsToUpdate,
+        updated_at: new Date().toISOString()
+      });
+
       const updatedPrefs = { ...preferences, ...fieldsToUpdate };
       setPreferences(updatedPrefs);
       if (user) scheduleAllNotifications(user.id, updatedPrefs);

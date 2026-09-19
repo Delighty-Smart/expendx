@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, DollarSign } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -29,12 +30,10 @@ const SetIncomePage = () => {
   const { data: monthlyIncome } = useQuery({
     queryKey: ["monthly_income"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("monthly_income_estimates")
-        .select("*")
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      const user = auth.currentUser;
+      if (!user) return null;
+      const snap = await getDoc(doc(db, "monthly_income_estimates", user.uid));
+      return snap.exists() ? snap.data() : null;
     },
   });
 
@@ -57,22 +56,16 @@ const SetIncomePage = () => {
   const onSubmit = useCallback(async (values: z.infer<typeof incomeSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
       const incomeData = {
         amount: parseFloat(values.amount),
-        user_id: user.id,
+        user_id: user.uid,
+        updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from("monthly_income_estimates")
-        .upsert(
-          incomeData,
-          { onConflict: 'user_id' }
-        );
-
-      if (error) throw error;
+      await setDoc(doc(db, "monthly_income_estimates", user.uid), incomeData, { merge: true });
 
       toast({
         title: "Success",

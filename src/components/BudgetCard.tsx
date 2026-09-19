@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { doc, deleteDoc } from "firebase/firestore";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface BudgetCardProps {
@@ -48,12 +49,7 @@ export function BudgetCard({
       setIsDeleting(true);
 
       // Delete the budget from the database
-      const { error } = await supabase
-        .from("budget_categories")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, "budget_categories", id));
 
       toast({
         title: "Budget Deleted",

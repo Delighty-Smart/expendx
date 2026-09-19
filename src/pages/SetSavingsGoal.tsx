@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, PiggyBank } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -28,12 +29,10 @@ const SetSavingsGoalPage = () => {
   const { data: budgetCategories } = useQuery({
     queryKey: ["budgets"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("budget_categories")
-        .select("*")
-        .order("category");
-      if (error) throw error;
-      return data || [];
+      const snap = await getDocs(collection(db, "budget_categories"));
+      const categories: any[] = [];
+      snap.forEach(d => categories.push({ id: d.id, ...d.data() }));
+      return categories.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
     },
   });
 
@@ -64,22 +63,24 @@ const SetSavingsGoalPage = () => {
         throw new Error("Please enter a valid savings goal");
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
       if (savingsCategory) {
-        await supabase
-          .from("budget_categories")
-          .update({ monthly_limit: goalAmount })
-          .eq("id", savingsCategory.id);
+        await updateDoc(doc(db, "budget_categories", savingsCategory.id), {
+          monthly_limit: goalAmount,
+          updated_at: new Date().toISOString()
+        });
       } else {
-        await supabase
-          .from("budget_categories")
-          .insert({
-            category: "Savings",
-            monthly_limit: goalAmount,
-            user_id: user.id
-          });
+        const newRef = doc(collection(db, "budget_categories"));
+        await setDoc(newRef, {
+          id: newRef.id,
+          category: "Savings",
+          monthly_limit: goalAmount,
+          user_id: user.uid,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
       }
 
       toast({

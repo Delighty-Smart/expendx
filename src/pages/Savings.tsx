@@ -6,7 +6,8 @@ import { SavingsGoal } from "@/types/transactions";
 import { useToast } from "@/hooks/use-toast";
 import { useTransactionData } from "@/hooks/useTransactionData";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { SavingsGoalForm } from "@/components/SavingsGoalForm";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -38,19 +39,20 @@ const SavingsPage = () => {
 
   // Fetch savings goals separately
   const { data: savingsGoals } = useQuery({
-    queryKey: ["savings_goals", user?.id],
+    queryKey: ["savings_goals", user?.id || user?.uid],
     enabled: !!user,
     queryFn: async () => {
       if (!user) return [] as SavingsGoal[];
-      // Using 'as any' because savings_goals table is not yet in the generated types
-      // TODO: Run `npx supabase gen types typescript` to update types
-      const { data, error } = await supabase
-        .from("savings_goals" as any)
-        .select("*")
-        .eq("user_id", user.id)
-        .order("category");
-      if (error) throw error;
-      return (data as unknown as SavingsGoal[]) || [];
+      const snap = await getDocs(collection(db, "savings_goals"));
+      const goals: SavingsGoal[] = [];
+      const userId = user.uid || user.id;
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.user_id === userId) {
+          goals.push({ id: d.id, ...data } as SavingsGoal);
+        }
+      });
+      return goals.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
     }
   });
 
@@ -85,11 +87,7 @@ const SavingsPage = () => {
 
   const handleDeleteGoal = async (goal: SavingsGoal) => {
     try {
-      const { error } = await supabase
-        .from("savings_goals" as any)
-        .delete()
-        .eq("id", goal.id);
-      if (error) throw error;
+      await deleteDoc(doc(db, "savings_goals", goal.id));
 
 
 

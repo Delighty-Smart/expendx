@@ -1,0 +1,123 @@
+[
+  {
+    "id": "3e711cd2-6405-418a-a102-d578467b9767",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "❌ Budget Exceeded",
+    "message": "You've exceeded your Shopping budget by 15000.00",
+    "type": "budget_breach",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-19T22:49:43.168139+00:00",
+    "hour_bucket": "2026-02-19T22:00:00+00:00"
+  },
+  {
+    "id": "d4650610-984d-4b0a-a64c-71242f7cd81a",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "Achievement Unlocked!",
+    "message": "🏆 New personal record! 5 days is your longest streak yet!",
+    "type": "achievement",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-21T14:13:54.646747+00:00",
+    "hour_bucket": "2026-02-21T14:00:00+00:00"
+  },
+  {
+    "id": "8fecb0ac-6a5e-4fd3-b98e-8a0fdac1e545",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "Streak Update",
+    "message": "🌟 Level up! You've earned the \"Penny Pioneer\" title!",
+    "type": "streak",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-23T15:33:44.461042+00:00",
+    "hour_bucket": "2026-02-23T15:00:00+00:00"
+  },
+  {
+    "id": "1811d296-e0a2-4a93-88a6-69e39a58c8a9",
+    "user_id": "cf3c58f9-44f5-4889-a6bb-8efea124abb1",
+    "title": "Streak Update",
+    "message": "Welcome! Your streak journey begins now. Keep logging in daily to build your streak!",
+    "type": "streak",
+    "related_id": null,
+    "read": true,
+    "created_at": "2025-06-14T23:37:25.476956+00:00",
+    "hour_bucket": "2025-06-14T23:00:00+00:00"
+  },
+  {
+    "id": "a76a1aae-4da0-4f35-a372-bb20e813c334",
+    "user_id": "43d71d0b-d80f-4a12-a065-3f7f278c037b",
+    "title": "Achievement Unlocked!",
+    "message": "🏆 New personal record! 2 days is your longest streak yet!",
+    "type": "achievement",
+    "related_id": null,
+    "read": true,
+    "created_at": "2025-06-14T23:48:36.32741+00:00",
+    "hour_bucket": "2025-06-14T23:00:00+00:00"
+  },
+  {
+    "id": "e626ce06-768f-480b-8327-d7802ea44722",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "❌ Budget Exceeded",
+    "message": "You've exceeded your Transportation budget by 1000.00",
+    "type": "budget_breach",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-19T22:49:43.411133+00:00",
+    "hour_bucket": "2026-02-19T22:00:00+00:00"
+  },
+  {
+    "id": "48406be7-6076-4952-8b6d-435898634994",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "Achievement Unlocked!",
+    "message": "🏆 New personal record! 4 days is your longest streak yet!",
+    "type": "achievement",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-20T05:37:46.771999+00:00",
+    "hour_bucket": "2026-02-20T05:00:00+00:00"
+  },
+  {
+    "id": "0d242d27-ce7a-413e-9ff9-d73599624218",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "Achievement Unlocked!",
+    "message": "🏆 New personal record! 6 days is your longest streak yet!",
+    "type": "achievement",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-22T22:45:05.822516+00:00",
+    "hour_bucket": "2026-02-22T22:00:00+00:00"
+  },
+  {
+    "id": "f34c43af-b72e-43a5-b29a-c87a297ce4ee",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "title": "Achievement Unlocked!",
+    "message": "🏆 New personal record! 7 days is your longest streak yet!",
+    "type": "achievement",
+    "related_id": null,
+    "read": true,
+    "created_at": "2026-02-23T15:33:43.813777+00:00",
+    "hour_bucket": "2026-02-23T15:00:00+00:00"
+  },
+  {
+    "id": "5e62a20b-b6fb-4480-85c9-e6da17414d83",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "title": "Streak Update",
+    "message": "💔 Your streak has been reset. Log in daily to build it back up!",
+    "type": "streak",
+    "related_id": null,
+    "read": false,
+    "created_at": "2026-02-18T14:46:47.417593+00:00",
+    "hour_bucket": "2026-02-18T14:00:00+00:00"
+  },
+  {
+    "id": "ebb099bb-6a00-43ff-ac86-89f582b9edd0",
+    "user_id": "5fdeb0a6-d906-4e7b-841d-38961fd5a890",
+    "title": "Achievement Unlocked!",
+    "message": "🏆 New personal record! 3 days is your longest streak yet!",
+    "type": "achievement",
+    "related_id": null,
+    "read": false,
+    "created_at": "2026-02-16T23:02:48.379408+00:00",
+    "hour_bucket": "2026-02-16T23:00:00+00:00"
+  }
+]

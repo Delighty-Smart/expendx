@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { formatDistanceToNow } from "date-fns";
 import { Users, CreditCard, MessageSquare, TrendingUp, PiggyBank, Bell } from "lucide-react";
 
@@ -21,23 +22,28 @@ const AdminActivityFeed = () => {
             setLoading(true);
 
             const [
-                { data: users },
-                { data: transactions },
-                { data: feedback },
-                { data: alerts }
+                usersSnap,
+                transactionsSnap,
+                feedbackSnap,
+                alertsSnap
             ] = await Promise.all([
-                supabase.from('user_profiles').select('id, email, created_at').order('created_at', { ascending: false }).limit(5),
-                supabase.from('transactions').select('id, amount, description, created_at').order('created_at', { ascending: false }).limit(5),
-                supabase.from('user_feedback').select('id, rating, created_at').order('created_at', { ascending: false }).limit(5),
-                supabase.from('alerts').select('id, title, type, created_at').order('created_at', { ascending: false }).limit(20)
+                getDocs(query(collection(db, 'user_profiles'), orderBy('created_at', 'desc'), limit(5))).catch(() => getDocs(collection(db, 'user_profiles'))),
+                getDocs(query(collection(db, 'transactions'), orderBy('created_at', 'desc'), limit(5))).catch(() => getDocs(collection(db, 'transactions'))),
+                getDocs(query(collection(db, 'user_feedback'), orderBy('created_at', 'desc'), limit(5))).catch(() => getDocs(collection(db, 'user_feedback'))),
+                getDocs(query(collection(db, 'alerts'), orderBy('created_at', 'desc'), limit(20))).catch(() => getDocs(collection(db, 'alerts')))
             ]);
+
+            const users = usersSnap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })) as any[];
+            const transactions = transactionsSnap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })) as any[];
+            const feedback = feedbackSnap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })) as any[];
+            const alerts = alertsSnap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })) as any[];
 
             const allActivities: Activity[] = [
                 ...(users || []).map(u => ({
                     id: u.id,
                     type: 'user' as const,
                     title: 'New User Join',
-                    description: `${u.email} joined the platform.`,
+                    description: `${u.email || u.username || 'User'} joined the platform.`,
                     timestamp: u.created_at || new Date().toISOString()
                 })),
                 ...(transactions || []).map(t => ({
@@ -73,17 +79,6 @@ const AdminActivityFeed = () => {
 
     useEffect(() => {
         fetchActivities();
-
-        // Set up realtime subscriptions for activity updates
-        const channels = [
-            supabase.channel('public:user_profiles').on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles' }, fetchActivities).subscribe(),
-            supabase.channel('public:transactions').on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchActivities).subscribe(),
-            supabase.channel('public:user_feedback').on('postgres_changes', { event: '*', schema: 'public', table: 'user_feedback' }, fetchActivities).subscribe()
-        ];
-
-        return () => {
-            channels.forEach(channel => supabase.removeChannel(channel));
-        };
     }, []);
 
     const getIcon = (type: Activity['type']) => {

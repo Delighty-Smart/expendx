@@ -10,7 +10,8 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 type Banner = {
@@ -37,31 +38,30 @@ const GlobalBanner = () => {
 
     useEffect(() => {
         fetchActiveBanners();
-    }, [location.pathname]); // Re-check on route change if needed, or just once on mount
+    }, [location.pathname]);
 
     const fetchActiveBanners = async () => {
         try {
-            const now = new Date().toISOString();
-            const { data, error } = await supabase
-                .from('admin_banners' as any)
-                .select('*')
-                .eq('is_active', true)
-                .or(`start_date.is.null,start_date.lte.${now}`)
-                .or(`end_date.is.null,end_date.gte.${now}`);
+            const q = query(
+                collection(db, 'admin_banners'),
+                where('is_active', '==', true)
+            );
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as unknown as Banner[];
 
-            if (error) throw error;
+            if (data && data.length > 0) {
+                const now = new Date();
+                const filtered = data.filter(b => {
+                    const startDateOk = !b.start_date || new Date(b.start_date) <= now;
+                    const endDateOk = !b.end_date || new Date(b.end_date) >= now;
+                    return startDateOk && endDateOk;
+                });
 
-            if (data) {
-                const typedData = data as unknown as Banner[];
-
-                // Prioritize: Latest created banner/popup
-                // We can have multiple active, but let's show the most recent one of each type
-                const banners = typedData.filter(b => b.type === 'banner').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                const popups = typedData.filter(b => b.type === 'popup').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const banners = filtered.filter(b => b.type === 'banner').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const popups = filtered.filter(b => b.type === 'popup').sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
                 if (banners.length > 0) {
                     const banner = banners[0];
-                    // Check if dismissed in session
                     const dismissed = sessionStorage.getItem(`dismissed_banner_${banner.id}`);
                     if (!dismissed) {
                         setActiveBanner(banner);
@@ -71,7 +71,6 @@ const GlobalBanner = () => {
 
                 if (popups.length > 0) {
                     const popup = popups[0];
-                    // Check if dismissed in local storage (longer persistence for popups usually)
                     const dismissed = localStorage.getItem(`dismissed_popup_${popup.id}`);
                     if (!dismissed) {
                         setActivePopup(popup);

@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileForm from "@/components/profile/ProfileForm";
 import StreakProgress from "@/components/profile/StreakProgress";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { updateUserStreak } from "@/lib/streak";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
@@ -43,7 +44,8 @@ const Profile = () => {
           setUserStreak(updatedStreak);
         } else {
           // Fallback
-          const { data } = await supabase.from("user_streaks").select("*").eq("user_id", user.id).maybeSingle();
+          const streakSnap = await getDoc(doc(db, "user_streaks", user.uid));
+          const data = streakSnap.exists() ? streakSnap.data() : null;
           setUserStreak(data || {
             current_streak: 1,
             highest_streak: 1,

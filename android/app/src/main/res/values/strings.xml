@@ -4,6 +4,7 @@
     <string name="title_activity_main">Lucent</string>
     <string name="package_name">com.expendx.app</string>
     <string name="custom_url_scheme">com.expendx.app</string>
+    <string name="server_client_id">1017507024256-b9578otb04n5gammmjo8samslpkpup6t.apps.googleusercontent.com</string>
 
     <!-- App Shortcut labels -->
     <string name="shortcut_add_transaction_short">Add</string>

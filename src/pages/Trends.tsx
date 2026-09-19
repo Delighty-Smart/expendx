@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/contexts/SettingsContext";
 import {
@@ -403,14 +403,13 @@ const Trends = () => {
         queryKey: ["trends_transactions", user?.id],
         queryFn: async () => {
             if (!user) return [];
-            const { data, error } = await supabase
-                .from("transactions")
-                .select("id, date, amount, category, description, type")
-                .eq("user_id", user.id)
-                .eq("archived", false)
-                .order("date", { ascending: true });
-            if (error) throw error;
-            return (data ?? []) as TxRow[];
+            const userId = user.uid || user.id;
+            const data = await enhancedOfflineManager.getTransactions(userId);
+            const activeData = data
+                .filter(t => !t.archived)
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+            return activeData as TxRow[];
         },
         enabled: !!user,
     });

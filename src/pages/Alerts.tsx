@@ -7,7 +7,8 @@ import PageHeader from "@/components/ui/page-header";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useAuth } from "@/hooks/useAuth";
 
 type Alert = {
@@ -53,18 +54,20 @@ const Alerts = () => {
   const fetchAlerts = async () => {
     try {
       setLoading(true);
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
 
-      if (!user) return;
+      const snap = await getDocs(collection(db, 'alerts'));
+      const list: Alert[] = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.user_id === currentUser.uid) {
+          list.push({ id: d.id, ...data } as Alert);
+        }
+      });
 
-      // Get all alerts for the current user
-      const { data, error } = await supabase
-        .from('alerts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setAlerts(data || []);
+      list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      setAlerts(list);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       toast({
@@ -79,17 +82,9 @@ const Alerts = () => {
 
   const handleMarkAsRead = async (alertId: string) => {
     try {
-      const { error } = await supabase
-        .from('alerts')
-        .update({ read: true })
-        .eq('id', alertId);
-
-      if (error) throw error;
-
-      // Update local state
+      await updateDoc(doc(db, 'alerts', alertId), { read: true });
 
       setAlerts(alerts.map(alert =>
-
         alert.id === alertId ? { ...alert, read: true } : alert
       ));
 
@@ -109,11 +104,9 @@ const Alerts = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      const unreadAlertIds = alerts
-        .filter(alert => !alert.read)
-        .map(alert => alert.id);
+      const unreadAlerts = alerts.filter(alert => !alert.read);
 
-      if (unreadAlertIds.length === 0) {
+      if (unreadAlerts.length === 0) {
         toast({
           title: "Info",
           description: "No unread alerts to mark",
@@ -121,12 +114,9 @@ const Alerts = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('alerts')
-        .update({ read: true })
-        .in('id', unreadAlertIds);
-
-      if (error) throw error;
+      await Promise.all(
+        unreadAlerts.map(alert => updateDoc(doc(db, 'alerts', alert.id), { read: true }))
+      );
 
       // Update local state
       setAlerts(alerts.map(alert => ({ ...alert, read: true })));
@@ -173,12 +163,9 @@ const Alerts = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('alerts')
-        .delete()
-        .in('id', Array.from(selectedAlerts));
-
-      if (error) throw error;
+      await Promise.all(
+        Array.from(selectedAlerts).map(id => deleteDoc(doc(db, 'alerts', id)))
+      );
 
       // Update local state
       setAlerts(alerts.filter(alert => !selectedAlerts.has(alert.id)));

@@ -35,9 +35,9 @@ if %errorlevel% neq 0 (
 )
 echo.
 
-echo 4. Compiling Android Debug APK (gradlew clean assembleDebug)...
+echo 4. Compiling Android Signed Release & Debug APK (gradlew clean assembleRelease assembleDebug)...
 cd android
-call gradlew.bat clean assembleDebug
+call gradlew.bat clean assembleRelease assembleDebug
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] Gradle Android compilation failed!
@@ -49,12 +49,14 @@ cd ..
 echo.
 
 echo 5. Copying built APK to root and dist folders...
-copy "android\app\build\outputs\apk\debug\app-debug.apk" "lucent-latest.apk" /Y
-copy "android\app\build\outputs\apk\debug\app-debug.apk" "expendx-latest.apk" /Y
+copy "android\app\build\outputs\apk\release\app-release.apk" "lucent-release-signed.apk" /Y
+copy "android\app\build\outputs\apk\release\app-release.apk" "expendx-release-signed.apk" /Y
+copy "android\app\build\outputs\apk\release\app-release.apk" "lucent-latest.apk" /Y
+copy "android\app\build\outputs\apk\release\app-release.apk" "expendx-latest.apk" /Y
 copy "android\app\build\outputs\apk\debug\app-debug.apk" "expendx-debug.apk" /Y
 if exist "dist" (
-    copy "android\app\build\outputs\apk\debug\app-debug.apk" "dist\lucent-latest.apk" /Y
-    copy "android\app\build\outputs\apk\debug\app-debug.apk" "dist\expendx-latest.apk" /Y
+    copy "android\app\build\outputs\apk\release\app-release.apk" "dist\lucent-latest.apk" /Y
+    copy "android\app\build\outputs\apk\release\app-release.apk" "dist\expendx-latest.apk" /Y
 )
 
 if %errorlevel% neq 0 (

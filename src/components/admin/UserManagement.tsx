@@ -11,13 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, SlidersHorizontal, Send, UserPlus, Edit, Eye, EyeOff, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, MapPin, Calendar, Mail, User as UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
-import UserAvatar from "@/components/UserAvatar";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
+import { auth, db } from "@/lib/firebase";
+import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, query, where } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 type UserRoleType = 'free' | 'pro' | 'premium' | 'admin';
 
@@ -61,17 +57,15 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*');
+      const snapshot = await getDocs(collection(db, 'user_profiles'));
+      const data = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }));
 
-      if (error) throw error;
-
-      if (data) {
-        setUsers(data);
-        const uniqueCountries = [...new Set(data.map(user => user.country).filter(Boolean))];
-        setCountries(uniqueCountries as string[]);
-      }
+      setUsers(data);
+      const uniqueCountries = [...new Set(data.map(user => user.country).filter(Boolean))];
+      setCountries(uniqueCountries as string[]);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -90,11 +84,10 @@ const UserManagement = () => {
 
   const handleRoleChange = async (userId: string, newRole: UserRoleType) => {
     try {
-      const { error } = await supabase.from('user_profiles').update({
-        role: newRole
-      }).eq('id', userId);
-
-      if (error) throw error;
+      await updateDoc(doc(db, 'user_profiles', userId), {
+        role: newRole,
+        updated_at: new Date().toISOString()
+      });
 
       toast({
         title: "Role updated",
@@ -114,11 +107,32 @@ const UserManagement = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const { data, error } = await supabase.rpc('delete_user_account', {
-        target_user_id: userId
-      });
+      const userCollections = [
+        'transactions',
+        'budget_categories',
+        'savings_goals',
+        'user_settings',
+        'alerts',
+        'push_subscriptions',
+        'user_streaks',
+        'notification_preferences',
+        'user_categories',
+        'user_profiles'
+      ];
 
-      if (error) throw error;
+      for (const colName of userCollections) {
+        try {
+          const q = query(collection(db, colName), where("user_id", "==", userId));
+          const snapshot = await getDocs(q);
+          for (const docSnap of snapshot.docs) {
+            await deleteDoc(docSnap.ref);
+          }
+        } catch (err) {
+          console.warn(`Error deleting collection ${colName} for user:`, err);
+        }
+      }
+
+      await deleteDoc(doc(db, 'user_profiles', userId)).catch(() => {});
 
       toast({
         title: "User deleted",
@@ -144,12 +158,17 @@ const UserManagement = () => {
         return;
       }
       const recipientIds = selectedUsers.length > 0 ? selectedUsers : users.map(user => user.id);
-      const alertPromises = recipientIds.map(userId => supabase.from('alerts').insert({
-        user_id: userId,
-        title: messageDetails.title,
-        message: messageDetails.message,
-        type: 'admin_message'
-      }));
+      const alertPromises = recipientIds.map(async (userId) => {
+        const docRef = doc(collection(db, 'alerts'));
+        await setDoc(docRef, {
+          id: docRef.id,
+          user_id: userId,
+          title: messageDetails.title,
+          message: messageDetails.message,
+          type: 'admin_message',
+          created_at: new Date().toISOString()
+        });
+      });
       await Promise.all(alertPromises);
       toast({ title: "Message sent", description: `Message sent to ${recipientIds.length} user(s)` });
       setMessageModalOpen(false);
@@ -169,27 +188,19 @@ const UserManagement = () => {
         return;
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email: newUserDetails.email,
-        password: newUserDetails.password,
-        options: {
-          data: {
-            first_name: newUserDetails.firstName,
-            last_name: newUserDetails.lastName
-          }
-        }
-      });
+      const userCredential = await createUserWithEmailAndPassword(auth, newUserDetails.email, newUserDetails.password);
+      const newUser = userCredential.user;
 
-      if (error) throw error;
-
-      if (data?.user) {
-        const { error: profileError } = await supabase.from('user_profiles').update({
-          role: newUserDetails.role,
+      if (newUser) {
+        await setDoc(doc(db, 'user_profiles', newUser.uid), {
+          id: newUser.uid,
+          email: newUserDetails.email,
           first_name: newUserDetails.firstName,
-          last_name: newUserDetails.lastName
-        }).eq('id', data.user.id);
-
-        if (profileError) throw profileError;
+          last_name: newUserDetails.lastName,
+          role: newUserDetails.role,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
 
         toast({ title: "User created", description: "The user has been created successfully" });
         setCreateUserModalOpen(false);

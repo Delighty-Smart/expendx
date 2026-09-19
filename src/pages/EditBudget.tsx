@@ -10,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 import { getCategoriesForType } from "@/types/transactions";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
@@ -76,21 +77,15 @@ const EditBudgetPage = () => {
 
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
-      const budgetData = {
+      await updateDoc(doc(db, "budget_categories", budget.id), {
         category: values.category,
         monthly_limit: parseFloat(values.monthlyLimit),
-        user_id: user.id,
-      };
-
-      const { error } = await supabase
-        .from("budget_categories")
-        .update(budgetData)
-        .eq("id", budget.id);
-
-      if (error) throw error;
+        user_id: user.uid,
+        updated_at: new Date().toISOString()
+      });
 
       toast({
         title: "Success",

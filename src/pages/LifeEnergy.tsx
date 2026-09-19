@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/contexts/SettingsContext";
 import { format, eachMonthOfInterval, subMonths } from "date-fns";
-import {
+import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
@@ -133,13 +135,12 @@ const LifeEnergy = () => {
       localStorage.setItem("lucent_true_hourly_rate", wizardCalculations.trueHourly.toString());
       localStorage.setItem("expendx_true_hourly_rate", wizardCalculations.trueHourly.toString());
       
-      // Sync to Supabase user metadata for cloud persistence per user
+      // Sync to Firestore user profile for cloud persistence per user
       if (user) {
-        supabase.auth.updateUser({
-          data: {
-            life_energy_data: savedData
-          }
-        }).catch(err => console.error("Error syncing life energy to cloud:", err));
+        const userId = user.uid || user.id;
+        setDoc(doc(db, "user_profiles", userId), {
+          life_energy_data: savedData
+        }, { merge: true }).catch(err => console.error("Error syncing life energy to cloud:", err));
       }
 
       // Dispatch storage change event to sync headers & settings immediately
@@ -161,17 +162,16 @@ const LifeEnergy = () => {
 
   // Fetch all transactions
   const { data: transactions = [], isLoading } = useQuery<TxRow[]>({
-    queryKey: ["life_energy_transactions", user?.id],
+    queryKey: ["life_energy_transactions", user?.id || user?.uid],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("id, date, amount, category, description, type")
-        .eq("user_id", user.id)
-        .eq("archived", false)
-        .order("date", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as TxRow[];
+      const userId = user.uid || user.id;
+      const data = await enhancedOfflineManager.getTransactions(userId);
+      const activeData = data
+        .filter(t => !t.archived)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      return activeData as TxRow[];
     },
     enabled: !!user,
   });

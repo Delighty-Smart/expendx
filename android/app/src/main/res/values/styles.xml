@@ -13,13 +13,16 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
-        <!-- Status-bar: black icons on warm-white bg (matches Capacitor JS syncStatusBarTheme) -->
-        <item name="android:windowLightStatusBar">true</item>
+        <!-- Status-bar: light/white icons on warm-white bg -->
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">#F5F4F0</item>
     </style>
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:statusBarColor">#F5F4F0</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

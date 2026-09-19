@@ -1,16 +1,11 @@
-
 import { useEffect, useRef, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 /**
- * A hook to subscribe to real-time changes on a Supabase table
- * 
- * @param table The table name to subscribe to
- * @param event The event to listen for (INSERT, UPDATE, DELETE, or * for all)
- * @param callback The function to call when an event occurs
- * @param filter Optional filter configuration
+ * A hook to subscribe to real-time changes on a Firestore collection
  */
 export function useRealtimeSubscription(
   table: string,
@@ -18,60 +13,40 @@ export function useRealtimeSubscription(
   callback: (payload: any) => void,
   filter?: { column?: string; value?: string }
 ) {
-  // Use refs to store stable references and prevent unnecessary re-subscriptions
   const callbackRef = useRef(callback);
-  const filterRef = useRef(filter);
-
-  // Update refs when values change
   callbackRef.current = callback;
-  filterRef.current = filter;
 
-  // Memoize the stable callback to prevent re-subscriptions
   const stableCallback = useCallback((payload: any) => {
     callbackRef.current(payload);
   }, []);
 
   useEffect(() => {
-    // Create a unique channel identifier
-    const channelId = `${table}-${event}-${filterRef.current?.column || 'all'}-${filterRef.current?.value || 'all'}`;
-
-    console.log(`Setting up realtime subscription for ${table} table with event ${event}`);
+    console.log(`Setting up Firestore realtime subscription for ${table}`);
 
     try {
-      // Build filter string if provided
-      let filterString: string | undefined;
-      if (filterRef.current?.column && filterRef.current?.value) {
-        // Supabase expects filter in the form: column=eq.value
-        filterString = `${filterRef.current.column}=eq.${filterRef.current.value}`;
+      let q = query(collection(db, table));
+      if (filter?.column && filter?.value) {
+        q = query(collection(db, table), where(filter.column, '==', filter.value));
       }
 
-      // Set up the subscription with the correct type casting
-      const channel = supabase
-        .channel(channelId)
-        .on(
-          'postgres_changes' as any, // Use type assertion to avoid the typescript error
-          {
-            event: event,
-            schema: 'public',
-            table: table,
-            ...(filterString ? { filter: filterString } : {})
-          },
-          (payload) => {
-            console.log(`Realtime event received for ${table}:`, payload);
-            stableCallback(payload);
-          }
-        )
-        .subscribe((status) => {
-          console.log(`Subscription status for ${table}:`, status);
-        });
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          stableCallback({
+            docs: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          });
+        },
+        (error) => {
+          console.error(`Error in Firestore realtime subscription for ${table}:`, error);
+        }
+      );
 
-      // Cleanup function to remove the subscription when component unmounts
       return () => {
-        console.log(`Cleaning up realtime subscription for ${table}`);
-        supabase.removeChannel(channel);
+        console.log(`Cleaning up Firestore subscription for ${table}`);
+        unsubscribe();
       };
     } catch (error) {
       console.error(`Error setting up realtime subscription for ${table}:`, error);
     }
-  }, [table, event, stableCallback]); // Removed callback and filter from dependencies
+  }, [table, event, filter?.column, filter?.value, stableCallback]);
 }

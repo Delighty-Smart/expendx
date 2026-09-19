@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/firebase';
+import { collection, doc, getDoc, addDoc } from 'firebase/firestore';
 import { notificationService } from './notificationService';
 
 export type NotificationType =
@@ -51,35 +52,23 @@ class NotificationManager {
       }
 
       // Check user preferences
-      const { data: preferences } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      const prefSnap = await getDoc(doc(db, 'notification_preferences', userId));
+      const preferences = prefSnap.exists() ? prefSnap.data() : null;
 
       if (preferences && preferences[notification.type] === false) {
         console.log(`User has disabled ${notification.type} notifications`);
         return false;
       }
 
-      // Create alert in database (deduped by unique index)
-      const { error: alertError } = await supabase
-        .from('alerts')
-        .upsert(
-          {
-            user_id: userId,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            read: false
-          },
-          { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
-        );
-
-      if (alertError) {
-        console.error('Error creating alert:', alertError);
-        return false;
-      }
+      // Create alert in database
+      await addDoc(collection(db, 'alerts'), {
+        user_id: userId,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        read: false,
+        created_at: new Date().toISOString()
+      });
 
       // Send browser notification if supported and permitted
       await notificationService.sendNotification(

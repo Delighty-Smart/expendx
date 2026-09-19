@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, doc, getDocs, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import BannerForm from "@/components/admin/BannerForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -50,33 +51,23 @@ const BannerManagement = () => {
     const [tableError, setTableError] = useState<string | null>(null);
 
     const checkTable = async () => {
-        try {
-            const { error } = await supabase.from('admin_banners' as any).select('id').limit(1);
-            if (error && (error.code === '42P01' || error.message?.includes('does not exist'))) {
-                setTableError("Database table 'admin_banners' is missing. You MUST run the migration SQL file.");
-            } else {
-                setTableError(null);
-            }
-        } catch (e) {
-            console.error("Failed to check table:", e);
-        }
+        setTableError(null);
     };
 
     const fetchBanners = async () => {
         try {
             setIsLoading(true);
-            const { data, error } = await supabase
-                .from('admin_banners' as any)
-                .select('*')
-                .order('created_at', { ascending: false });
+            const q = query(collection(db, 'admin_banners'), orderBy('created_at', 'desc'));
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(docSnap => ({
+                id: docSnap.id,
+                ...docSnap.data()
+            })) as Banner[];
 
-            if (error) throw error;
-            setBanners((data as unknown as Banner[]) || []);
+            setBanners(data || []);
         } catch (error: any) {
             console.error("Error fetching banners:", error);
-            if (error.code !== '42P01') {
-                toast({ title: "Error", description: error.message || "Failed to load banners", variant: "destructive" });
-            }
+            toast({ title: "Error", description: error.message || "Failed to load banners", variant: "destructive" });
         } finally {
             setIsLoading(false);
         }
@@ -91,12 +82,10 @@ const BannerManagement = () => {
 
     const toggleActive = async (banner: Banner) => {
         try {
-            const { error } = await supabase
-                .from('admin_banners' as any)
-                .update({ is_active: !banner.is_active })
-                .eq('id', banner.id);
-
-            if (error) throw error;
+            await updateDoc(doc(db, 'admin_banners', banner.id), {
+                is_active: !banner.is_active,
+                updated_at: new Date().toISOString()
+            });
 
             toast({ title: "Success", description: `Banner ${banner.is_active ? 'deactivated' : 'activated'} successfully` });
             setBanners(prev => prev.map(b => b.id === banner.id ? { ...b, is_active: !b.is_active } : b));
@@ -107,8 +96,7 @@ const BannerManagement = () => {
 
     const deleteBanner = async (id: string) => {
         try {
-            const { error } = await supabase.from('admin_banners' as any).delete().eq('id', id);
-            if (error) throw error;
+            await deleteDoc(doc(db, 'admin_banners', id));
             toast({ title: "Success", description: "Banner deleted successfully" });
             setBanners(prev => prev.filter(b => b.id !== id));
         } catch (error: any) {

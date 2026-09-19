@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { auth, db } from '@/lib/firebase';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { TransactionType } from '@/types/transactions';
@@ -28,18 +29,17 @@ export function RecurringTemplateSelector({
   const { data: templates, isLoading } = useQuery({
     queryKey: ['recurring-templates', transactionType],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('recurring_templates')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('type', transactionType)
-        .order('name');
-
-      if (error) throw error;
-      return data as RecurringTemplate[];
+      const q = query(
+        collection(db, 'recurring_templates'),
+        where('user_id', '==', user.uid),
+        where('type', '==', transactionType),
+        orderBy('name')
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RecurringTemplate[];
     },
   });
 

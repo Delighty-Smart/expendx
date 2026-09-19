@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
@@ -84,16 +85,20 @@ export const FreshStartWizard: React.FC<FreshStartWizardProps> = ({
         });
       }
 
-      // 2. Lock all transactions prior to today (safely fallback if database column is missing)
+      // 2. Lock all transactions prior to today
       if (navigator.onLine) {
         try {
-          await supabase
-            .from("transactions")
-            .update({ is_locked: true })
-            .eq("user_id", user.id)
-            .lt("date", todayStr);
+          const q = query(
+            collection(db, "transactions"),
+            where("user_id", "==", user.uid),
+            where("date", "<", todayStr)
+          );
+          const snapshot = await getDocs(q);
+          for (const docSnap of snapshot.docs) {
+            await updateDoc(docSnap.ref, { is_locked: true });
+          }
         } catch (dbError) {
-          console.warn("Could not update is_locked on database schema:", dbError);
+          console.warn("Could not update is_locked in Firestore:", dbError);
         }
       }
 

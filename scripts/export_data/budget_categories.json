@@ -1,0 +1,130 @@
+[
+  {
+    "id": "c657c49a-52bb-4935-9d32-e43c68171984",
+    "user_id": "77dc3f21-af5f-4a3b-bbf3-339e40f248e4",
+    "category": "Internet",
+    "monthly_limit": 25000,
+    "created_at": "2025-04-17T22:53:39.915074+00:00",
+    "updated_at": "2025-04-17T22:53:39.915074+00:00"
+  },
+  {
+    "id": "7e330885-1c82-477c-ae03-794bd3a88e25",
+    "user_id": "77dc3f21-af5f-4a3b-bbf3-339e40f248e4",
+    "category": "Savings",
+    "monthly_limit": 500000,
+    "created_at": "2025-04-17T22:54:14.146486+00:00",
+    "updated_at": "2025-04-17T22:54:14.146486+00:00"
+  },
+  {
+    "id": "6530b8ca-194c-43bc-965b-498dd885fae5",
+    "user_id": "43d71d0b-d80f-4a12-a065-3f7f278c037b",
+    "category": "Food & Dining",
+    "monthly_limit": 50000,
+    "created_at": "2025-06-22T07:44:54.686236+00:00",
+    "updated_at": "2025-06-22T07:44:54.686236+00:00"
+  },
+  {
+    "id": "60517d8b-3808-4466-a930-e1705cd36235",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "category": "Airtime",
+    "monthly_limit": 2000,
+    "created_at": "2026-02-22T22:52:36.640639+00:00",
+    "updated_at": "2026-02-22T22:52:36.640639+00:00"
+  },
+  {
+    "id": "a67c6fcb-6deb-495c-bc39-2a5a47971dca",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "category": "Gift Donations",
+    "monthly_limit": 5000,
+    "created_at": "2026-02-26T23:50:49.242505+00:00",
+    "updated_at": "2026-02-26T23:50:49.242505+00:00"
+  },
+  {
+    "id": "ea82a990-d14f-4cdf-92df-1782c56a536f",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Data and Internet",
+    "monthly_limit": 5000,
+    "created_at": "2026-02-28T18:50:42.224426+00:00",
+    "updated_at": "2026-02-28T18:50:42.224426+00:00"
+  },
+  {
+    "id": "e3058020-6bcb-48ec-b830-8af5d502e802",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Airtime",
+    "monthly_limit": 2000,
+    "created_at": "2026-02-28T18:51:02.362776+00:00",
+    "updated_at": "2026-02-28T18:51:02.362776+00:00"
+  },
+  {
+    "id": "6e6b9a3d-a788-4423-a502-614689c131db",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Clothing Apparel",
+    "monthly_limit": 10000,
+    "created_at": "2026-02-28T18:51:32.401741+00:00",
+    "updated_at": "2026-02-28T18:51:32.401741+00:00"
+  },
+  {
+    "id": "9f7fde08-dcae-4460-836f-c88bbb0a05dc",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Childcare and Babysitting",
+    "monthly_limit": 22000,
+    "created_at": "2026-02-28T18:58:04.446284+00:00",
+    "updated_at": "2026-02-28T18:58:04.446284+00:00"
+  },
+  {
+    "id": "99b4bb8d-2fe7-4a2d-8630-54b21f25716a",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Fuel Transport",
+    "monthly_limit": 2000,
+    "created_at": "2026-02-28T19:01:32.83668+00:00",
+    "updated_at": "2026-02-28T19:01:32.83668+00:00"
+  },
+  {
+    "id": "f8ebe527-0a38-49db-b96b-e71aade8ac98",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "category": "Data and Internet",
+    "monthly_limit": 20000,
+    "created_at": "2026-02-22T22:48:41.14758+00:00",
+    "updated_at": "2026-02-22T22:48:41.14758+00:00"
+  },
+  {
+    "id": "13bbb66f-5188-475b-94a3-fc359491fb69",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "category": "Entertainment Leisure",
+    "monthly_limit": 2000,
+    "created_at": "2026-02-22T22:51:36.872372+00:00",
+    "updated_at": "2026-02-22T22:51:36.872372+00:00"
+  },
+  {
+    "id": "088ac07f-3be1-4164-8fbb-377561e54b5b",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "category": "Fuel Transport",
+    "monthly_limit": 5000,
+    "created_at": "2026-02-22T22:50:21.811312+00:00",
+    "updated_at": "2026-02-22T22:50:21.811312+00:00"
+  },
+  {
+    "id": "7c8c1d6e-5d1f-4e1d-8328-61cb4c6d39f1",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Tithes",
+    "monthly_limit": 20000,
+    "created_at": "2026-02-28T18:56:05.096609+00:00",
+    "updated_at": "2026-02-28T18:56:05.096609+00:00"
+  },
+  {
+    "id": "d5f5934b-bc60-4fea-825a-3b4fd9098426",
+    "user_id": "05eeab41-9498-442b-bf24-1ac73165247b",
+    "category": "Groceries Food",
+    "monthly_limit": 30000,
+    "created_at": "2026-02-28T19:00:31.263471+00:00",
+    "updated_at": "2026-02-28T19:00:31.263471+00:00"
+  },
+  {
+    "id": "7a6fa08d-25cb-40a3-8ff5-6b9f1ec122c9",
+    "user_id": "bd47f177-5899-49f1-a697-cc4996d08f81",
+    "category": "Groceries Food",
+    "monthly_limit": 10000,
+    "created_at": "2026-02-22T22:53:25.514485+00:00",
+    "updated_at": "2026-02-22T22:53:25.514485+00:00"
+  }
+]

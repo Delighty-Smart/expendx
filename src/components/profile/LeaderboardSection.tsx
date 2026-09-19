@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -46,23 +47,22 @@ const LeaderboardSection = ({ type, continent, country }: LeaderboardSectionProp
   const fetchLeaderboardData = async () => {
     try {
       setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
+      const user = auth.currentUser;
+      setCurrentUserId(user?.uid || null);
 
       // First get all user profiles with their locations
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('id, username, first_name, last_name, email, avatar_url, country, continent');
-
-      if (profilesError) throw profilesError;
+      const profilesSnapshot = await getDocs(collection(db, 'user_profiles'));
+      const profilesData = profilesSnapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }));
 
       // Now get all user streaks 
-      const { data: streaksData, error: streaksError } = await supabase
-        .from('user_streaks')
-        .select('user_id, current_streak, highest_streak')
-        .order('current_streak', { ascending: false });
-
-      if (streaksError) throw streaksError;
+      const streaksSnapshot = await getDocs(collection(db, 'user_streaks'));
+      const streaksData = streaksSnapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }));
 
       if (!profilesData || !streaksData) {
         setLeaderboard([]);

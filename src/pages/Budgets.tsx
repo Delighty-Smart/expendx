@@ -6,12 +6,14 @@ import { Card, GlassCard } from "@/components/ui/card";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { useCategories } from "@/hooks/useCategories";
 import { useTransactionData } from "@/hooks/useTransactionData";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/ui/page-header";
 import { PlusCircle, Edit, Trash2, TrendingUp, DollarSign, MoreVertical } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -43,26 +45,23 @@ const BudgetCard = ({ budget, onEdit, onDelete }: { budget: Budget; onEdit: (bud
 
   const { user } = useAuth();
   const { data: currentSpending = 0 } = useQuery({
-    queryKey: ['category-spending', budget.category, user?.id, monthKey],
+    queryKey: ['category-spending', budget.category, user?.id || user?.uid, monthKey],
     enabled: !!user,
     queryFn: async () => {
-      if (!user) return 0;
+      const userId = user?.uid || user?.id;
+      if (!userId) return 0;
 
       const firstDay = format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd');
       const lastDay = format(new Date(now.getFullYear(), now.getMonth() + 1, 0), 'yyyy-MM-dd');
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('amount')
-        .eq('user_id', user.id)
-        .eq('category', budget.category)
-        .eq('type', 'debit')
-        .eq('archived', false)
-        .gte('date', firstDay)
-        .lte('date', lastDay);
-
-      if (error) throw error;
-      return data?.reduce((sum, t) => sum + t.amount, 0) || 0;
+      const allTx = await enhancedOfflineManager.getTransactions(userId);
+      return allTx
+        .filter(t => t.category === budget.category && t.type === 'debit' && !t.archived)
+        .filter(t => {
+          const d = t.date ? format(new Date(t.date), 'yyyy-MM-dd') : '';
+          return d >= firstDay && d <= lastDay;
+        })
+        .reduce((sum, t) => sum + Number(t.amount), 0);
     },
   });
 
@@ -135,21 +134,21 @@ const BudgetsPage = () => {
   });
 
   const { data: budgets, isLoading, isError } = useQuery({
-    queryKey: ['budgets', user?.id],
+    queryKey: ['budgets', user?.id || user?.uid],
     enabled: !!user,
     queryFn: async () => {
-      if (!user) return [] as Budget[];
-      const { data, error } = await supabase
-        .from('budget_categories')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('category');
+      const userId = user?.uid || user?.id;
+      if (!userId) return [] as Budget[];
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return data as Budget[];
+      const snap = await getDocs(collection(db, 'budget_categories'));
+      const list: Budget[] = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.user_id === userId) {
+          list.push({ id: d.id, ...data } as Budget);
+        }
+      });
+      return list.sort((a, b) => (a.category || '').localeCompare(b.category || ''));
     },
   });
 
@@ -164,14 +163,7 @@ const BudgetsPage = () => {
     if (!budgetToDelete) return;
 
     try {
-      const { error } = await supabase
-        .from('budget_categories')
-        .delete()
-        .eq('id', budgetToDelete.id);
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      await deleteDoc(doc(db, 'budget_categories', budgetToDelete.id));
 
       toast({
         title: "Success",

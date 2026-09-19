@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, doc, getDocs, query, where, setDoc, deleteDoc } from "firebase/firestore";
 import { TransactionType } from "@/types/transactions";
 import { Trash2, Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,28 +30,28 @@ export const CategoryManagement = () => {
 
   useEffect(() => {
     fetchUserCategories();
-  }, []);
+  }, [user]);
 
   const fetchUserCategories = async () => {
     try {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from("user_categories")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("type", { ascending: true })
-        .order("name", { ascending: true });
+      const q = query(
+        collection(db, "user_categories"),
+        where("user_id", "==", user.uid)
+      );
+      const snapshot = await getDocs(q);
 
-      if (error) throw error;
+      const typedCategories: UserCategory[] = snapshot.docs.map(docSnap => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          name: data.name,
+          type: data.type as TransactionType
+        };
+      });
 
-      // Type the data properly to ensure type is TransactionType
-      const typedCategories: UserCategory[] = (data || []).map(category => ({
-        id: category.id,
-        name: category.name,
-        type: category.type as TransactionType
-      }));
-
+      typedCategories.sort((a, b) => a.name.localeCompare(b.name));
       setCategories(typedCategories);
     } catch (error: any) {
       console.error("Error fetching categories:", error);
@@ -90,24 +91,20 @@ export const CategoryManagement = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("user_categories")
-        .insert({
-          user_id: user.id,
-          name: newCategoryName.trim(),
-          type: newCategoryType
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Type the new category properly
+      const docRef = doc(collection(db, "user_categories"));
       const newCategory: UserCategory = {
-        id: data.id,
-        name: data.name,
-        type: data.type as TransactionType
+        id: docRef.id,
+        name: newCategoryName.trim(),
+        type: newCategoryType
       };
+
+      await setDoc(docRef, {
+        id: docRef.id,
+        user_id: user.uid,
+        name: newCategory.name,
+        type: newCategory.type,
+        created_at: new Date().toISOString()
+      });
 
       setCategories(prev => [...prev, newCategory]);
       setNewCategoryName("");
@@ -135,12 +132,7 @@ export const CategoryManagement = () => {
     try {
       setLoading(true);
 
-      const { error } = await supabase
-        .from("user_categories")
-        .delete()
-        .eq("id", categoryId);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, "user_categories", categoryId));
 
       setCategories(prev => prev.filter(cat => cat.id !== categoryId));
 

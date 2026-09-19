@@ -8,10 +8,12 @@ import type { TransactionDraft } from '@/types/transaction-draft';
 
 interface InlineCardProps {
   attachment: ChatAttachment;
+  onActionClick?: (action: string) => void;
   onConfirmDraft?: (draft: TransactionDraft) => void;
+  onCancelDraft?: () => void;
 }
 
-export const InlineCard: React.FC<InlineCardProps> = ({ attachment, onConfirmDraft }) => {
+export const InlineCard: React.FC<InlineCardProps> = ({ attachment, onActionClick, onConfirmDraft, onCancelDraft }) => {
   const { type, data } = attachment;
 
   if (type === 'image_preview' && data.imageUrl) {
@@ -35,6 +37,7 @@ export const InlineCard: React.FC<InlineCardProps> = ({ attachment, onConfirmDra
       <TransactionReviewCard
         draft={data.draft as TransactionDraft}
         onConfirm={(draft) => onConfirmDraft?.(draft)}
+        onCancel={() => onCancelDraft?.()}
       />
     );
   }
@@ -126,11 +129,11 @@ export const InlineCard: React.FC<InlineCardProps> = ({ attachment, onConfirmDra
               key={idx}
               type="button"
               onClick={() => {
-                if (onConfirmDraft && typeof (window as any).__sendLucentMessage === 'function') {
-                  (window as any).__sendLucentMessage(act.query);
+                const queryText = act.query || act.label;
+                if (onActionClick) {
+                  onActionClick(queryText);
                 } else {
-                  const event = new CustomEvent('lucent:send_message', { detail: { message: act.query } });
-                  window.dispatchEvent(event);
+                  window.dispatchEvent(new CustomEvent('lucent:send_message', { detail: { message: queryText } }));
                 }
               }}
               className="w-full text-left text-xs font-semibold px-3 py-2 rounded-xl bg-muted/50 hover:bg-brand-primary/10 hover:text-brand-primary border border-border-subtle transition-all active:scale-[0.98] flex items-center justify-between"

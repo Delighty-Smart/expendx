@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
+import { auth, db } from '@/lib/firebase';
+import { collection, doc, query, where, orderBy, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Subscription } from '@/types/subscriptions';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,60 +18,66 @@ export function useSubscriptions() {
       return;
     }
 
-    fetchSubscriptions();
+    const q = query(
+      collection(db, 'subscriptions'),
+      where('user_id', '==', user.id),
+      orderBy('created_at', 'desc')
+    );
 
-    // Set up real-time subscription scoped to current user
-    const channel = supabase
-      .channel(`subscriptions-changes-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscriptions',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Subscription change detected:', payload);
-          fetchSubscriptions();
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status for subscriptions:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to subscription changes');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Error subscribing to subscription changes');
-        }
-      });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const items = snapshot.docs.map((d) => {
+          const item = d.data();
+          return {
+            id: d.id,
+            ...item,
+            subscription_type: item.subscription_type as 'monthly' | 'annual',
+            status: item.status as 'inactive' | 'active' | 'canceled' | 'expired'
+          } as Subscription;
+        });
+        setSubscriptions(items);
+        setLoading(false);
+      },
+      (error) => {
+        console.warn('Subscription listener error:', error);
+        setLoading(false);
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [user?.id]);
 
   const fetchSubscriptions = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const q = query(
+        collection(db, 'subscriptions'),
+        where('user_id', '==', currentUser.uid),
+        orderBy('created_at', 'desc')
+      );
+      const snapshot = await getDocs(q);
 
-      if (error) throw error;
-      setSubscriptions((data || []).map(item => ({
-        ...item,
-        subscription_type: item.subscription_type as 'monthly' | 'annual',
-        status: item.status as 'inactive' | 'active' | 'canceled' | 'expired'
-      })));
+      setSubscriptions(
+        snapshot.docs.map((d) => {
+          const item = d.data();
+          return {
+            id: d.id,
+            ...item,
+            subscription_type: item.subscription_type as 'monthly' | 'annual',
+            status: item.status as 'inactive' | 'active' | 'canceled' | 'expired'
+          } as Subscription;
+        })
+      );
     } catch (error) {
-      console.warn('Silent failure: Could not load subscriptions for integration:', error);
+      console.warn('Could not fetch subscriptions:', error);
     } finally {
       setLoading(false);
     }
@@ -78,19 +85,17 @@ export function useSubscriptions() {
 
   const addSubscription = async (subscriptionData: Omit<Subscription, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      const currentUser = auth.currentUser;
+      if (!currentUser) throw new Error('User not authenticated');
 
-      const { error } = await supabase
-        .from('subscriptions')
-        .insert({
-          ...subscriptionData,
-          user_id: user.id,
-        });
-
-      if (error) throw error;
-
-      await fetchSubscriptions();
+      const docRef = doc(collection(db, 'subscriptions'));
+      await setDoc(docRef, {
+        ...subscriptionData,
+        id: docRef.id,
+        user_id: currentUser.uid,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
       toast({
         title: "Success",
@@ -109,14 +114,10 @@ export function useSubscriptions() {
 
   const updateSubscription = async (id: string, updates: Partial<Subscription>) => {
     try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update(updates)
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await fetchSubscriptions();
+      await updateDoc(doc(db, 'subscriptions', id), {
+        ...updates,
+        updated_at: new Date().toISOString()
+      });
 
       toast({
         title: "Success",
@@ -135,14 +136,7 @@ export function useSubscriptions() {
 
   const deleteSubscription = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      await fetchSubscriptions();
+      await deleteDoc(doc(db, 'subscriptions', id));
 
       toast({
         title: "Success",

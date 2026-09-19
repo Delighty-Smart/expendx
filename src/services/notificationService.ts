@@ -21,7 +21,8 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-import { supabase } from '@/integrations/supabase/client';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -181,17 +182,14 @@ export const notificationService = {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
 
-      // Store subscription in Supabase
-      const { data: { user } } = await supabase.auth.getUser();
+      // Store subscription in Firestore
+      const user = auth.currentUser;
       if (user) {
-        const { error } = await supabase
-          .from('push_subscriptions')
-          .upsert({
-            user_id: user.id,
-            subscription: subscription.toJSON()
-          }, { onConflict: 'user_id,subscription->>endpoint' });
-
-        if (error) throw error;
+        await setDoc(doc(db, 'push_subscriptions', user.uid), {
+          user_id: user.uid,
+          subscription: subscription.toJSON(),
+          updated_at: new Date().toISOString()
+        }, { merge: true });
       }
 
       console.log('Successfully subscribed to Push Notifications');
@@ -210,13 +208,10 @@ export const notificationService = {
       if (subscription) {
         await subscription.unsubscribe();
 
-        // Remove from Supabase
-        const { data: { user } } = await supabase.auth.getUser();
+        // Remove from Firestore
+        const user = auth.currentUser;
         if (user) {
-          await supabase
-            .from('push_subscriptions')
-            .delete()
-            .match({ user_id: user.id, 'subscription->>endpoint': subscription.endpoint });
+          await deleteDoc(doc(db, 'push_subscriptions', user.uid));
         }
       }
       return true;

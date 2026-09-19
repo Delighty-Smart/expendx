@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
 import { Send, ThumbsUp, ThumbsDown, MessageCircle, AlertCircle, Sparkles, Heart, Zap, Bug, MessageSquare } from "lucide-react";
 import FeedbackSuccess from "@/components/FeedbackSuccess";
 
@@ -75,7 +76,7 @@ const FeedbackPage = () => {
 
     try {
       setIsSubmitting(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
 
       if (!user) {
         toast({
@@ -87,17 +88,15 @@ const FeedbackPage = () => {
         return;
       }
 
-      const { error } = await supabase
-        .from('user_feedback')
-        .insert({
-          user_id: user.id,
-          rating: selectedRating,
-          comments: comments.trim() || null,
-          contact_permission: contactPermission,
-          screenshot_url: null
-        });
+      await addDoc(collection(db, 'user_feedback'), {
+        user_id: user.uid,
+        rating: selectedRating,
+        comments: comments.trim() || null,
+        contact_permission: contactPermission,
+        screenshot_url: null,
+        created_at: new Date().toISOString()
+      });
 
-      if (error) throw error;
       setIsSuccess(true);
     } catch (error) {
       console.error("Error submitting feedback:", error);

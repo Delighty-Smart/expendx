@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
 import { getCategoriesForType, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -69,26 +70,19 @@ const AddSavingsGoalPage = () => {
   const onSubmit = async (values: z.infer<typeof savingsGoalSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
-      const savingsGoalData = {
-        category: values.category,
-        target_amount: parseFloat(values.target_amount),
-        user_id: user.id
-      };
+      const targetAmt = parseFloat(values.target_amount);
 
       if (isEditing) {
         // Update existing savings goal
-        const { error } = await supabase
-          .from("savings_goals" as any)
-          .update(savingsGoalData)
-          .eq('id', savingsGoalToEdit.id);
-
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
-        }
+        await updateDoc(doc(db, "savings_goals", savingsGoalToEdit.id), {
+          category: values.category,
+          target_amount: targetAmt,
+          user_id: user.uid,
+          updated_at: new Date().toISOString()
+        });
 
         toast({
           title: "Success",
@@ -96,32 +90,21 @@ const AddSavingsGoalPage = () => {
         });
       } else {
         // Check if a goal for this category already exists
-        const { data: existingGoal, error: checkError } = await supabase
-          .from("savings_goals" as any)
-          .select('*')
-          .eq('category', values.category)
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (checkError) {
-          console.error("Check error:", checkError);
-          throw checkError;
-        }
-
-        // Fix: Check if existingGoal exists and has an id property before accessing it
-        if (existingGoal && 'id' in existingGoal) {
-          // Update the existing goal instead of creating a new one
-          const { error } = await supabase
-            .from("savings_goals" as any)
-            .update({
-              target_amount: parseFloat(values.target_amount)
-            })
-            .eq('id', existingGoal.id);
-
-          if (error) {
-            console.error("Update error:", error);
-            throw error;
+        const snap = await getDocs(collection(db, "savings_goals"));
+        let existingGoal: any = null;
+        snap.forEach(d => {
+          const data = d.data();
+          if (data.user_id === user.uid && data.category === values.category) {
+            existingGoal = { id: d.id, ...data };
           }
+        });
+
+        if (existingGoal) {
+          // Update the existing goal instead of creating a new one
+          await updateDoc(doc(db, "savings_goals", existingGoal.id), {
+            target_amount: targetAmt,
+            updated_at: new Date().toISOString()
+          });
 
           toast({
             title: "Success",
@@ -129,14 +112,16 @@ const AddSavingsGoalPage = () => {
           });
         } else {
           // Insert new savings goal
-          const { error } = await supabase
-            .from("savings_goals" as any)
-            .insert([savingsGoalData]);
-
-          if (error) {
-            console.error("Insert error:", error);
-            throw error;
-          }
+          const newRef = doc(collection(db, "savings_goals"));
+          await setDoc(newRef, {
+            id: newRef.id,
+            category: values.category,
+            target_amount: targetAmt,
+            current_amount: 0,
+            user_id: user.uid,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
 
           toast({
             title: "Success",

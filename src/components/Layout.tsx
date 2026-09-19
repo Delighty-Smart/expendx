@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { updateUserStreak, getUserProfile } from "@/lib/streak";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import StreakModal from "./StreakModal";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import GlobalBanner from "@/components/GlobalBanner";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import { useLucentChat } from "@/contexts/ChatContext";
 
 const Layout = ({
   children
@@ -28,6 +30,7 @@ const Layout = ({
   const [unreadAlerts, setUnreadAlerts] = useState(0);
   const { theme, updateTheme } = useSettings();
   const { user, profile, isAdmin, signOut } = useAuth();
+  const { conversations, loadConversation, deleteConversation } = useLucentChat();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -45,15 +48,13 @@ const Layout = ({
 
     const fetchUnreadAlerts = async () => {
       try {
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Alerts fetch timed out')), 6000);
-        });
-
-        const alertPromise = supabase.from('alerts').select('id').eq('user_id', user.id).eq('read', false);
-        const { data, error } = await (Promise.race([alertPromise, timeoutPromise]) as any);
-
-        if (error) throw error;
-        setUnreadAlerts(data?.length || 0);
+        const q = query(
+          collection(db, 'alerts'),
+          where('user_id', '==', user.id),
+          where('read', '==', false)
+        );
+        const snap = await getDocs(q);
+        setUnreadAlerts(snap.size);
       } catch (error) {
         console.error('Error fetching unread alerts:', error);
       }
@@ -62,35 +63,18 @@ const Layout = ({
     fetchInitialData();
     fetchUnreadAlerts();
 
-    const channel = supabase.channel(`alerts-${user.id}`).on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'alerts',
-      filter: `user_id=eq.${user.id}`
-    }, (payload) => {
-      fetchUnreadAlerts();
+    const q = query(collection(db, 'alerts'), where('user_id', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let unreadCount = 0;
+      snapshot.docs.forEach((docSnap) => {
+        if (!docSnap.data().read) unreadCount++;
+      });
+      setUnreadAlerts(unreadCount);
       window.dispatchEvent(new CustomEvent('alerts-updated'));
-
-      // Trigger device notification for real-time inserts
-      if (payload.new) {
-        const alert = payload.new;
-        const highPriorityTypes = ['budget_alert', 'budget_breach', 'payment', 'unusual_activity'];
-
-        if (highPriorityTypes.includes(alert.type) || !alert.read) {
-          notificationService.sendServiceWorkerNotification(
-            alert.title || "New Alert",
-            alert.message || "You have a new high-priority notification.",
-            {
-              tag: alert.id,
-              requireInteraction: highPriorityTypes.includes(alert.type)
-            }
-          );
-        }
-      }
-    }).subscribe();
+    }, (error) => console.error("Alerts listener error:", error));
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [user]);
 
@@ -153,7 +137,7 @@ const Layout = ({
   }
 
   return (
-    <div className="min-h-screen bg-bg-base text-text-primary flex flex-col font-sans transition-colors duration-200">
+    <div className={`bg-bg-base text-text-primary flex flex-col font-sans transition-colors duration-200 ${location.pathname === '/chat' ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}>
       <GlobalBanner />
 
       {/* Global Drawer Sidebar */}
@@ -165,41 +149,43 @@ const Layout = ({
       <StreakModal open={showStreakModal} onOpenChange={setShowStreakModal} streak={userStreak} className="max-w-sm mx-auto" />
 
       {/* Header for mobile */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-bg-surface/90 backdrop-blur-lg border-b border-border-default pt-[calc(max(env(safe-area-inset-top,0px),8px))] pb-1.5 px-3.5">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-1.5 rounded-full hover:bg-bg-sidebar-hover text-text-secondary hover:text-text-primary transition-colors"
-              title="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <Link to="/chat" className="flex items-center gap-1.5">
-              <img src={theme === "dark" ? "/lucent-header-dark.png?v=3" : "/lucent-header-light.png?v=3"} alt="Lucent" className="h-[18px] sm:h-[20px] max-w-[118px] object-contain" />
-            </Link>
-          </div>
+      {location.pathname !== '/chat' && (
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-bg-surface/90 backdrop-blur-lg border-b border-border-default pt-[calc(max(env(safe-area-inset-top,0px),8px))] pb-1.5 px-3.5">
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-1.5 rounded-full hover:bg-bg-sidebar-hover text-text-secondary hover:text-text-primary transition-colors"
+                title="Open menu"
+              >
+                <Menu className="w-5 h-5 text-text-primary" />
+              </button>
+              <Link to="/chat" className="flex items-center gap-1.5">
+                <img src={theme === "dark" ? "/lucent-header-dark.png?v=3" : "/lucent-header-light.png?v=3"} alt="Lucent" className="h-[18px] sm:h-[20px] max-w-[118px] object-contain" />
+              </Link>
+            </div>
 
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-7.5 w-7.5 text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary rounded-full transition-colors p-0 flex items-center justify-center">
-              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleProfileClick}
-              className="ml-0.5 rounded-full overflow-hidden border border-border-default active:scale-95 transition-transform h-7 w-7 p-0"
-            >
-              <UserAvatar
-                url={profile?.avatar_url}
-                name={profile?.username || "U"}
-                className="w-full h-full"
-                showDefaultGradient={false}
-              />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-7.5 w-7.5 text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary rounded-full transition-colors p-0 flex items-center justify-center">
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleProfileClick}
+                className="ml-0.5 rounded-full overflow-hidden border border-border-default active:scale-95 transition-transform h-7 w-7 p-0"
+              >
+                <UserAvatar
+                  url={profile?.avatar_url}
+                  name={profile?.username || "U"}
+                  className="w-full h-full"
+                  showDefaultGradient={false}
+                />
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Desktop sidebar nav (Hidden on lg < screens) */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-bg-sidebar border-r border-border-default z-40 hidden lg:flex flex-col`}>
@@ -313,20 +299,32 @@ const Layout = ({
         <div className="pt-2.5 pb-2 border-t border-border-default/40 px-3 shrink-0">
           <p className="px-2 mb-1.5 text-[11px] font-semibold text-text-secondary">Recents</p>
           <div className="space-y-0.5 max-h-28 overflow-y-auto scrollbar-none">
-            <button
-              onClick={() => navigate('/chat')}
-              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover truncate transition-colors flex items-center gap-2"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-text-secondary/70 shrink-0" />
-              <span className="truncate">Monthly budget review & savings...</span>
-            </button>
-            <button
-              onClick={() => navigate('/chat')}
-              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover truncate transition-colors flex items-center gap-2"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-text-secondary/70 shrink-0" />
-              <span className="truncate">Emergency fund goal plan</span>
-            </button>
+            {conversations.slice(0, 5).map(item => (
+              <div key={item.id} className="group relative flex items-center">
+                <button
+                  onClick={() => {
+                    loadConversation(item.id);
+                    if (location.pathname !== '/chat') {
+                      navigate('/chat');
+                    }
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-sidebar-hover truncate transition-colors flex items-center gap-2 pr-6"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-text-secondary/70 shrink-0" />
+                  <span className="truncate">{item.title}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(item.id);
+                  }}
+                  className="absolute right-1 p-1 rounded hover:bg-rose-500/10 text-text-muted hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete chat"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -354,8 +352,8 @@ const Layout = ({
         </div>
       </aside>
 
-      <main className={`flex-1 lg:pl-64 safe-pt-main min-h-screen transition-all duration-300 pb-2 pt-2`}>
-        <div className="container mx-auto px-4 py-2 md:px-8 md:py-6 lg:px-10 lg:py-8 animate-fadeIn max-w-7xl">
+      <main className={`flex-1 lg:pl-64 transition-all duration-300 ${location.pathname === '/chat' ? 'pt-[calc(max(env(safe-area-inset-top,0px),8px)+44px)] lg:pt-0 h-full min-h-0 max-h-full overflow-hidden flex flex-col' : 'pb-2 pt-14 lg:pt-2 min-h-screen'}`}>
+        <div className={location.pathname === '/chat' ? 'w-full h-full flex flex-col min-h-0 flex-1 overflow-hidden' : 'container mx-auto px-4 py-2 md:px-8 md:py-6 lg:px-10 lg:py-8 animate-fadeIn max-w-7xl'}>
           {children || <Outlet />}
         </div>
       </main>

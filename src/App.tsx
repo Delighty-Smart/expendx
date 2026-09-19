@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { auth } from '@/lib/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SettingsProvider, syncStatusBarTheme } from '@/contexts/SettingsContext'
 import { Capacitor } from '@capacitor/core';
-import { App as CapacitorApp } from '@capacitor/app';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { useToast } from '@/hooks/use-toast';
+import { App as CapacitorApp } from '@capacitor/app';
 
 import IndexPage from '@/pages/Index'
 import Landing from '@/pages/Landing'
@@ -47,6 +48,7 @@ import Missions from '@/pages/Missions'
 import TrustCenter from '@/pages/TrustCenter'
 import AIMarketplace from '@/pages/AIMarketplace'
 import LucentChat from '@/pages/LucentChat'
+import LucentGuide from '@/pages/LucentGuide'
 import { ChatProvider } from '@/contexts/ChatContext'
 import Layout from '@/components/Layout'
 import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary'
@@ -70,14 +72,12 @@ function AppContent() {
   }, [location.pathname]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUserId(user?.uid);
 
-      // Hide native plugins splash screen once session is resolved ultra fast
       if (Capacitor.isNativePlatform()) {
         SplashScreen.hide({ fadeOutDuration: 100 }).catch(() => { });
 
-        // Hide our custom HTML splash screen gracefully
         const nativeSplash = document.getElementById('native-splash');
         if (nativeSplash) {
           nativeSplash.style.opacity = '0';
@@ -86,24 +86,14 @@ function AppContent() {
           }, 100);
         }
 
-        // Skip landing page if running as native app
         if (locationRef.current === '/') {
-          if (session?.user) {
+          if (user) {
             navigate('/chat', { replace: true });
           } else {
             navigate('/auth', { replace: true });
           }
         }
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUserId(session?.user?.id);
-
-      // On successful sign-in, redirect to chat
-      if (event === 'SIGNED_IN' && session?.user) {
+      } else if (user) {
         const publicRoutes = ['/', '/auth'];
         if (publicRoutes.includes(locationRef.current)) {
           navigate('/chat', { replace: true });
@@ -111,7 +101,7 @@ function AppContent() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, [navigate]);
 
   useAutoTracker(userId);
@@ -136,42 +126,9 @@ function AppContent() {
       enhancedOfflineManager.forceSync().catch(console.error);
     }
 
-    // Handle deep links from App opening with custom scheme (for Supabase Redirects)
+    // Handle deep links from App opening with custom scheme
     let appUrlListener: any;
     if (Capacitor.isNativePlatform()) {
-      CapacitorApp.addListener('appUrlOpen', async (event) => {
-        // e.g. io.expendx.app://login-callback#access_token=....
-        if (event.url.includes('login-callback')) {
-          // Send the URL to supabase to extract the session
-          try {
-            const urlObj = new URL(event.url);
-
-            // Check for PKCE code first
-            const code = urlObj.searchParams.get('code');
-            if (code) {
-              await supabase.auth.exchangeCodeForSession(code);
-              navigate('/dashboard', { replace: true });
-              return;
-            }
-
-            // Fallback to implicit flow tokens in hash
-            const hashFragment = urlObj.hash.substring(1);
-            const params = new URLSearchParams(hashFragment);
-            const access_token = params.get('access_token');
-            const refresh_token = params.get('refresh_token');
-
-            if (access_token && refresh_token) {
-              await supabase.auth.setSession({ access_token, refresh_token });
-              navigate('/dashboard', { replace: true });
-            }
-          } catch (err) {
-            console.error("Deep link Auth parsing Error", err);
-          }
-        }
-      }).then(listener => {
-        appUrlListener = listener;
-      });
-
       // Share Target listener
       CapacitorShareTarget.addListener('shareReceived', (event: any) => {
         if (event.files && event.files.length > 0) {
@@ -224,6 +181,7 @@ function AppContent() {
         {/* Protected Routes with Persistent Layout */}
         <Route element={<AuthGuard><ChatProvider><Layout /></ChatProvider></AuthGuard>}>
           <Route path="/chat" element={<LucentChat />} />
+          <Route path="/lucent-guide" element={<LucentGuide />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/missions" element={<Missions />} />
           <Route path="/time-travel" element={<FinancialTimeline />} />

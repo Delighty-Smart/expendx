@@ -9,14 +9,17 @@ interface TransactionReviewCardProps {
   draft: TransactionDraft;
   onConfirm: (confirmedDraft: TransactionDraft) => void;
   onEdit?: (draft: TransactionDraft) => void;
+  onCancel?: () => void;
 }
 
 export const TransactionReviewCard: React.FC<TransactionReviewCardProps> = ({
   draft: initialDraft,
   onConfirm,
+  onCancel,
 }) => {
   const [draft, setDraft] = useState<TransactionDraft>(initialDraft);
   const [isSaved, setIsSaved] = useState(false);
+  const [isCancelled, setIsCancelled] = useState(false);
   const [showExplain, setShowExplain] = useState(false);
   const [editingField, setEditingField] = useState<'amount' | 'category' | 'merchant' | 'date' | 'notes' | null>(null);
 
@@ -345,14 +348,29 @@ export const TransactionReviewCard: React.FC<TransactionReviewCardProps> = ({
       </div>
 
       {/* Action Buttons */}
-      {!isSaved && (
-        <div className="pt-1">
+      {isCancelled && (
+        <div className="pt-1 flex items-center justify-center gap-1 text-text-muted text-[10px] font-medium">
+          <span>Cancelled — no changes were made.</span>
+        </div>
+      )}
+      {!isSaved && !isCancelled && (
+        <div className="pt-1 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsCancelled(true);
+              onCancel?.();
+            }}
+            className="flex-1 py-2 rounded-xl bg-bg-sidebar-hover hover:bg-bg-sidebar-active text-text-secondary font-semibold text-xs transition-all flex items-center justify-center gap-1 active:scale-98"
+          >
+            Cancel
+          </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 shadow-2xs active:scale-98"
+            className="flex-[2] py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 shadow-2xs active:scale-98"
           >
-            <Check className="w-3.5 h-3.5" /> Save Transaction
+            <Check className="w-3.5 h-3.5" /> Confirm & Save
           </button>
         </div>
       )}

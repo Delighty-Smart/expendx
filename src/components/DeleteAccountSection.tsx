@@ -8,7 +8,9 @@ import { ButtonLoading } from "@/components/ui/loading-state";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs, deleteDoc, doc, setDoc } from "firebase/firestore";
+import { deleteUser } from "firebase/auth";
 
 type DeletionOption = "data-only" | "account-and-data" | null;
 type FeedbackReason = "not-useful" | "privacy-concerns" | "different-tool" | "technical-issues" | "other";
@@ -48,6 +50,32 @@ const DeleteAccountSection = () => {
     });
   };
 
+  const deleteUserDataFromFirestore = async (userId: string) => {
+    const userCollections = [
+      'transactions',
+      'budget_categories',
+      'savings_goals',
+      'user_settings',
+      'alerts',
+      'push_subscriptions',
+      'user_streaks',
+      'notification_preferences',
+      'user_categories'
+    ];
+
+    for (const colName of userCollections) {
+      try {
+        const q = query(collection(db, colName), where("user_id", "==", userId));
+        const snapshot = await getDocs(q);
+        for (const docSnap of snapshot.docs) {
+          await deleteDoc(docSnap.ref);
+        }
+      } catch (err) {
+        console.warn(`Error deleting collection ${colName} for user:`, err);
+      }
+    }
+  };
+
   const handleFinalDelete = async () => {
     if (!selectedOption || !user) return;
 
@@ -57,23 +85,19 @@ const DeleteAccountSection = () => {
       // Save feedback if provided
       if (feedbackReason) {
         const feedbackText = feedbackReason === "other" ? otherReason : feedbackReason;
-        await supabase.from('user_feedback').insert({
-          user_id: user.id,
+        const feedbackRef = doc(collection(db, 'user_feedback'));
+        await setDoc(feedbackRef, {
+          id: feedbackRef.id,
+          user_id: user.uid,
           rating: 'negative',
           comments: `Deletion reason: ${feedbackText}`,
-          contact_permission: false
+          contact_permission: false,
+          created_at: new Date().toISOString()
         });
       }
 
       if (selectedOption === "data-only") {
-        // Use the secure database function to delete only user data
-        const { error } = await supabase.rpc('delete_user_data', {
-          target_user_id: user.id
-        });
-
-        if (error) {
-          throw error;
-        }
+        await deleteUserDataFromFirestore(user.uid);
 
         // Clear only expendX-specific localStorage keys (preserve other apps/extensions)
         const keysToRemove = Object.keys(localStorage).filter(k =>
@@ -89,16 +113,15 @@ const DeleteAccountSection = () => {
         navigate('/dashboard');
         window.location.reload();
       } else if (selectedOption === "account-and-data") {
-        // Use the secure database function to delete account + all data
-        const { error: accountError } = await supabase.rpc('delete_user_account', {
-          target_user_id: user.id
-        });
+        await deleteUserDataFromFirestore(user.uid);
 
-        if (accountError) {
-          throw accountError;
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await deleteUser(currentUser).catch(err => {
+            console.warn("deleteUser error (might need re-auth):", err);
+          });
         }
 
-        // Sign out first (needs session token still in localStorage)
         await signOut();
 
         // Clear only expendX-specific localStorage keys after sign out

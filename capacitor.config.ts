@@ -14,8 +14,13 @@ const config: CapacitorConfig = {
       fadeInDuration: 0,
       fadeOutDuration: 100,
     },
+    GoogleSignIn: {
+      clientId: '1017507024256-b9578otb04n5gammmjo8samslpkpup6t.apps.googleusercontent.com',
+      serverClientId: '1017507024256-b9578otb04n5gammmjo8samslpkpup6t.apps.googleusercontent.com',
+      scopes: ['profile', 'email'],
+    },
     StatusBar: {
-      style: 'Dark',                  // Dark = dark/black icons, correct for light-mode launch
+      style: 'Light',                 // Light = white icons for warm-white bg launch per inverted setting
       backgroundColor: '#F5F4F0',     // Warm-white matching --bg-base
       overlaysWebView: false,
     },

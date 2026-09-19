@@ -1,4 +1,17 @@
-import { supabase } from '@/integrations/supabase/client';
+import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy
+} from 'firebase/firestore';
 import { Transaction, TransactionType } from '@/types/transactions';
 
 // Enhanced offline storage with full data caching
@@ -42,8 +55,8 @@ class EnhancedOfflineManager {
     this.setupNetworkListeners();
 
     // Keep cached user id in sync with auth state
-    supabase.auth.onAuthStateChange((_event, session) => {
-      this.cachedUserId = session?.user?.id ?? null;
+    onAuthStateChanged(auth, (fbUser) => {
+      this.cachedUserId = fbUser?.uid ?? null;
       try {
         if (this.cachedUserId) {
           localStorage.setItem('cached_user_id', this.cachedUserId);
@@ -99,29 +112,12 @@ class EnhancedOfflineManager {
         return cached;
       }
 
-      // Add timeout for auth checks
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('User ID retrieval timed out')), 10000); // 10s timeout
-      });
-
-      // 2. Try auth session (snappier than getUser)
-      const sessionPromise = supabase.auth.getSession();
-      const { data: { session } } = await (Promise.race([sessionPromise, timeoutPromise]) as any);
-
-      if (session?.user) {
-        this.cachedUserId = session.user.id;
-        localStorage.setItem('cached_user_id', session.user.id);
-        return session.user.id;
-      }
-
-      // 3. Last resort - get user (expensive)
-      const userPromise = supabase.auth.getUser();
-      const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
-
+      // 2. Try Firebase Auth currentUser
+      const user = auth.currentUser;
       if (user) {
-        this.cachedUserId = user.id;
-        localStorage.setItem('cached_user_id', user.id);
-        return user.id;
+        this.cachedUserId = user.uid;
+        localStorage.setItem('cached_user_id', user.uid);
+        return user.uid;
       }
     } catch (error) {
       console.warn('Failed to retrieve user ID for sync:', error);
@@ -138,24 +134,17 @@ class EnhancedOfflineManager {
     this.notifyStatusChange();
 
     try {
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Full data sync timed out')), 30000); // 30s total timeout
-      });
-
       const userId = await this.getCurrentUserId();
-
       console.log('Starting full data sync for user:', userId);
 
       // Fetch all user data in parallel
-      const syncPromise = Promise.all([
+      const [transactions, budgets, savings, profile, settings] = await Promise.all([
         this.fetchTransactions(userId),
         this.fetchBudgets(userId),
         this.fetchSavings(userId),
         this.fetchProfile(userId),
         this.fetchSettings(userId)
       ]);
-
-      const [transactions, budgets, savings, profile, settings] = await (Promise.race([syncPromise, timeoutPromise]) as any);
 
       // Update local cache with properly typed transactions
       this.dataCache = {
@@ -185,61 +174,51 @@ class EnhancedOfflineManager {
   }
 
   private async fetchTransactions(userId: string): Promise<Transaction[]> {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('archived', false)
-      .order('date', { ascending: false });
-
-    if (error) throw error;
-
-    return (data || []).map(item => ({
-      ...item,
-      type: item.type as TransactionType
-    }));
+    const q = query(
+      collection(db, 'transactions'),
+      where('user_id', '==', userId),
+      where('archived', '==', false),
+      orderBy('date', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        ...data,
+        type: data.type as TransactionType
+      } as Transaction;
+    });
   }
 
   private async fetchBudgets(userId: string) {
-    const { data, error } = await supabase
-      .from('budget_categories')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (error) throw error;
-    return data;
+    const q = query(
+      collection(db, 'budget_categories'),
+      where('user_id', '==', userId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
   }
 
   private async fetchSavings(userId: string) {
-    const { data, error } = await supabase
-      .from('savings_goals')
-      .select('*')
-      .eq('user_id', userId);
-
-    if (error) throw error;
-    return data;
+    const q = query(
+      collection(db, 'savings_goals'),
+      where('user_id', '==', userId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
   }
 
   private async fetchProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+    const docRef = doc(db, 'user_profiles', userId);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
   }
 
   private async fetchSettings(userId: string) {
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+    const docRef = doc(db, 'user_settings', userId);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
   }
 
   // Local data access methods with sync status
@@ -317,12 +296,10 @@ class EnhancedOfflineManager {
 
   // Enhanced offline operations - ONLY queue when offline
   async addTransactionOffline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
-    // If online, save directly to database
     if (this.isOnline) {
       return await this.addTransactionOnline(transactionData);
     }
 
-    // If offline, use offline queue system
     const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const transaction: Transaction = {
@@ -330,13 +307,11 @@ class EnhancedOfflineManager {
       id: tempId
     };
 
-    // Add to local cache immediately
     if (this.dataCache) {
       this.dataCache.transactions.unshift(transaction);
       await this.saveDataCache();
     }
 
-    // Add to sync queue for when we're back online
     await this.addToSyncQueue({
       type: 'INSERT',
       table: 'transactions',
@@ -352,43 +327,37 @@ class EnhancedOfflineManager {
   private async addTransactionOnline(transactionData: Omit<Transaction, 'id'>): Promise<string> {
     const userId = await this.getCurrentUserId();
 
-    // Clean payload to ensure compatibility with standard schema columns
     const { is_locked, is_system_adjustment, unit_price, quantity, ...dbPayload } = transactionData as any;
 
-    // Database check constraint allows only: ('debit', 'credit', 'savings'). Map 'subscription' to 'debit'.
     if (dbPayload.type === 'subscription') {
       dbPayload.type = 'debit';
     }
 
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert({ ...dbPayload, user_id: userId })
-      .select()
-      .single();
+    const newDocRef = doc(collection(db, 'transactions'));
+    const newTxData = {
+      ...dbPayload,
+      user_id: userId,
+      id: newDocRef.id,
+      archived: dbPayload.archived ?? false,
+      created_at: new Date().toISOString()
+    };
 
-    if (error) throw error;
+    await setDoc(newDocRef, newTxData);
 
-    // Update local cache with the new transaction
     if (this.dataCache) {
-      const newTransaction = {
-        ...data,
-        type: data.type as TransactionType
-      };
-      this.dataCache.transactions.unshift(newTransaction);
+      this.dataCache.transactions.unshift(newTxData as Transaction);
       await this.saveDataCache();
     }
 
-    console.log('Transaction saved online:', data.id);
-    return data.id;
+    console.log('Transaction saved online:', newDocRef.id);
+    return newDocRef.id;
   }
 
   async updateTransactionOffline(id: string, updates: Partial<Transaction>): Promise<void> {
-    // If online, update directly in database
     if (this.isOnline) {
       return await this.updateTransactionOnline(id, updates);
     }
 
-    // If offline, use offline queue system
     if (this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
@@ -409,23 +378,17 @@ class EnhancedOfflineManager {
   }
 
   private async updateTransactionOnline(id: string, updates: Partial<Transaction>): Promise<void> {
-    const userId = await this.getCurrentUserId();
-
     const { is_locked, is_system_adjustment, unit_price, quantity, ...cleanUpdates } = updates as any;
 
     if (cleanUpdates.type === 'subscription') {
       cleanUpdates.type = 'debit';
     }
 
-    const { error } = await supabase
-      .from('transactions')
-      .update(cleanUpdates)
-      .eq('id', id)
-      .eq('user_id', userId);
+    await updateDoc(doc(db, 'transactions', id), {
+      ...cleanUpdates,
+      updated_at: new Date().toISOString()
+    });
 
-    if (error) throw error;
-
-    // Update local cache
     if (this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
@@ -441,18 +404,15 @@ class EnhancedOfflineManager {
   }
 
   async deleteTransactionOffline(id: string): Promise<void> {
-    // If online, delete directly from database
     if (this.isOnline) {
       return await this.deleteTransactionOnline(id);
     }
 
-    // If offline, use offline queue system
     if (this.dataCache) {
       this.dataCache.transactions = this.dataCache.transactions.filter(t => t.id !== id);
       await this.saveDataCache();
     }
 
-    // Only queue if not a temp ID
     if (!id.startsWith('temp_')) {
       await this.addToSyncQueue({
         type: 'DELETE',
@@ -461,7 +421,6 @@ class EnhancedOfflineManager {
         status: 'pending'
       });
     } else {
-      // Remove temp transaction from sync queue if it exists
       this.syncQueue = this.syncQueue.filter(item =>
         !(item.tempId === id || (item.data && item.data.id === id))
       );
@@ -470,17 +429,8 @@ class EnhancedOfflineManager {
   }
 
   private async deleteTransactionOnline(id: string): Promise<void> {
-    const userId = await this.getCurrentUserId();
+    await deleteDoc(doc(db, 'transactions', id));
 
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
-
-    if (error) throw error;
-
-    // Remove from local cache
     if (this.dataCache) {
       this.dataCache.transactions = this.dataCache.transactions.filter(t => t.id !== id);
       await this.saveDataCache();
@@ -489,7 +439,6 @@ class EnhancedOfflineManager {
     console.log('Transaction deleted online:', id);
   }
 
-  // Enhanced sync queue management with better retry logic
   private async addToSyncQueue(operation: Omit<SyncQueueItem, 'id' | 'timestamp' | 'retryCount'>) {
     const queueItem: SyncQueueItem = {
       id: crypto.randomUUID(),
@@ -502,7 +451,6 @@ class EnhancedOfflineManager {
     await this.saveSyncQueue();
     this.notifyStatusChange();
 
-    // Try immediate sync if online
     if (this.isOnline && !this.isSyncing) {
       setTimeout(() => this.processSyncQueue(), 1000);
     }
@@ -514,7 +462,6 @@ class EnhancedOfflineManager {
     this.isSyncing = true;
     this.notifyStatusChange();
 
-    // Sort queue by timestamp to maintain order
     const pendingItems = this.syncQueue
       .filter(item => item.status === 'pending')
       .sort((a, b) => a.timestamp - b.timestamp);
@@ -526,7 +473,6 @@ class EnhancedOfflineManager {
         item.status = 'syncing';
         await this.syncItem(item);
 
-        // Mark as synced and set sync timestamp
         item.status = 'synced';
         item.lastSyncedAt = Date.now();
 
@@ -536,15 +482,9 @@ class EnhancedOfflineManager {
         console.error(`Failed to sync item ${item.id}:`, error);
         item.status = 'failed';
         item.retryCount++;
-
-        // Remove item if max retries exceeded
-        if (item.retryCount >= 3) {
-          console.log(`Removed item ${item.id} after max retries`);
-        }
       }
     }
 
-    // Clean up successfully synced items
     this.syncQueue = this.syncQueue.filter(item =>
       item.status !== 'synced' && item.retryCount < 3
     );
@@ -562,7 +502,6 @@ class EnhancedOfflineManager {
         await this.syncTransaction(type, data, item);
         break;
       default:
-        // Generic handler for other tables (budget_categories, savings_goals, subscriptions, etc.)
         await this.syncGenericItem(type, table, data, item);
         break;
     }
@@ -572,25 +511,20 @@ class EnhancedOfflineManager {
     switch (type) {
       case 'INSERT': {
         const insertData = { ...data };
-        // Remove temp IDs for insert
-        if (item.tempId && insertData.id === item.tempId) {
-          delete insertData.id;
-        }
-        const { error } = await supabase.from(table as any).insert(insertData);
-        if (error) throw error;
+        const docId = insertData.id || item.tempId || doc(collection(db, table)).id;
+        insertData.id = docId;
+        await setDoc(doc(db, table, docId), insertData);
         break;
       }
       case 'UPDATE': {
         if (!data.id) throw new Error(`Cannot update ${table}: missing id`);
         const { id, ...updateFields } = data;
-        const { error } = await supabase.from(table as any).update(updateFields).eq('id', id);
-        if (error) throw error;
+        await updateDoc(doc(db, table, id), updateFields);
         break;
       }
       case 'DELETE': {
         if (!data.id) throw new Error(`Cannot delete from ${table}: missing id`);
-        const { error } = await supabase.from(table as any).delete().eq('id', data.id);
-        if (error) throw error;
+        await deleteDoc(doc(db, table, data.id));
         break;
       }
       default:
@@ -605,22 +539,20 @@ class EnhancedOfflineManager {
       case 'INSERT': {
         const { is_locked, is_system_adjustment, unit_price, quantity, ...cleanData } = data || {};
         if (cleanData.type === 'subscription') cleanData.type = 'debit';
-        const { data: insertedData, error: insertError } = await supabase
-          .from('transactions')
-          .insert({ ...cleanData, user_id: userId })
-          .select()
-          .single();
+        
+        const docRef = doc(collection(db, 'transactions'));
+        const newTx = {
+          ...cleanData,
+          user_id: userId,
+          id: docRef.id,
+          created_at: new Date().toISOString()
+        };
+        await setDoc(docRef, newTx);
 
-        if (insertError) throw insertError;
-
-        // Update local cache with real ID and properly cast the type
         if (this.dataCache && item.tempId) {
           const tempIndex = this.dataCache.transactions.findIndex(t => t.id === item.tempId);
           if (tempIndex !== -1) {
-            this.dataCache.transactions[tempIndex] = {
-              ...insertedData,
-              type: insertedData.type as TransactionType
-            };
+            this.dataCache.transactions[tempIndex] = newTx as Transaction;
             await this.saveDataCache();
           }
         }
@@ -630,24 +562,16 @@ class EnhancedOfflineManager {
       case 'UPDATE': {
         const { is_locked, is_system_adjustment, unit_price, quantity, id, ...cleanUpdateData } = data || {};
         if (cleanUpdateData.type === 'subscription') cleanUpdateData.type = 'debit';
-        const { error: updateError } = await supabase
-          .from('transactions')
-          .update(cleanUpdateData)
-          .eq('id', id)
-          .eq('user_id', userId);
-
-        if (updateError) throw updateError;
+        
+        await updateDoc(doc(db, 'transactions', id), {
+          ...cleanUpdateData,
+          updated_at: new Date().toISOString()
+        });
         break;
       }
 
       case 'DELETE':
-        const { error: deleteError } = await supabase
-          .from('transactions')
-          .delete()
-          .eq('id', data.id)
-          .eq('user_id', userId);
-
-        if (deleteError) throw deleteError;
+        await deleteDoc(doc(db, 'transactions', data.id));
         break;
 
       default:
@@ -655,10 +579,9 @@ class EnhancedOfflineManager {
     }
   }
 
-  // Storage methods using IndexedDB for large payloads
   private async getDB(): Promise<IDBDatabase> {
     const DB_NAME = 'expendx_offline';
-    const DB_VERSION = 2; // Increment version to ensure clean upgrade for consolidated stores
+    const DB_VERSION = 2;
     const TRANSACTIONS_STORE = 'transactions';
     const PENDING_CHANGES_STORE = 'pending_changes';
 
@@ -668,12 +591,10 @@ class EnhancedOfflineManager {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
 
-        // Create transactions store for cached data
         if (!db.objectStoreNames.contains(TRANSACTIONS_STORE)) {
           db.createObjectStore(TRANSACTIONS_STORE, { keyPath: 'id' });
         }
 
-        // Create pending changes store for offline sync (replacing/augmenting syncQueue)
         if (!db.objectStoreNames.contains(PENDING_CHANGES_STORE)) {
           db.createObjectStore(PENDING_CHANGES_STORE, { keyPath: 'id' });
         }
@@ -691,38 +612,26 @@ class EnhancedOfflineManager {
     try {
       if (!this.dataCache) return;
 
-      // 1. Save metadata to localStorage (fast)
       const { transactions, ...metadata } = this.dataCache;
       localStorage.setItem(`${CACHE_PREFIX}metadata`, JSON.stringify(metadata));
 
-      // 2. Save transactions to IndexedDB (asynchronous, high capacity)
       const db = await this.getDB();
       const tx = db.transaction('transactions', 'readwrite');
       const store = tx.objectStore('transactions');
 
-      // Efficiently sync the store with the current transactions array
-      // Instead of clearing every time (which can be heavy), we'll do a batch update
-      // But for "Full Data Sync", clearing is often simpler to ensure no stale data
       await new Promise<void>((resolve, reject) => {
         const clearRequest = store.clear();
         clearRequest.onsuccess = () => resolve();
         clearRequest.onerror = () => reject(clearRequest.error);
       });
 
-      // Batch add items efficiently
       for (const t of transactions) {
         store.put(t);
       }
 
       return new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => {
-          console.log(`Successfully saved ${transactions.length} transactions to IndexedDB`);
-          resolve();
-        };
-        tx.onerror = () => {
-          console.error('IndexedDB transaction failed:', tx.error);
-          reject(tx.error);
-        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
       });
     } catch (error) {
       console.error('Failed to save data cache to IndexedDB:', error);
@@ -731,7 +640,6 @@ class EnhancedOfflineManager {
 
   private async loadDataCache(): Promise<void> {
     try {
-      // 1. Load metadata
       const metaStr = localStorage.getItem(`${CACHE_PREFIX}metadata`);
       if (!metaStr) {
         this.dataCache = null;
@@ -740,7 +648,6 @@ class EnhancedOfflineManager {
 
       const metadata = JSON.parse(metaStr);
 
-      // 2. Load transactions from IndexedDB
       const db = await this.getDB();
       const tx = db.transaction('transactions', 'readonly');
       const store = tx.objectStore('transactions');
@@ -767,16 +674,12 @@ class EnhancedOfflineManager {
     try {
       localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(this.syncQueue));
     } catch (error: any) {
-      // Handle quota exceeded by clearing cache to make space for the queue (priority)
       if (error.name === 'QuotaExceededError' || error.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
         console.warn('LocalStorage quota exceeded. Clearing cache to save sync queue.');
         try {
-          // Clear large data caches to free space
           localStorage.removeItem(`${CACHE_PREFIX}data`);
           this.dataCache = null;
-          // Retry saving queue
           localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(this.syncQueue));
-          console.log('Successfully saved sync queue after clearing cache');
         } catch (retryError) {
           console.error('Failed to save sync queue even after clearing cache:', retryError);
         }
@@ -799,7 +702,6 @@ class EnhancedOfflineManager {
     }
   }
 
-  // Status and callbacks
   getSyncStatus() {
     return {
       isOnline: this.isOnline,
@@ -824,19 +726,16 @@ class EnhancedOfflineManager {
     this.syncStatusCallbacks.forEach(callback => callback(status));
   }
 
-  // Force sync method
   async forceSync(): Promise<void> {
     await this.performFullDataSync();
   }
 
-  // Clear sync queue
   clearSyncQueue(): void {
     this.syncQueue = [];
     this.saveSyncQueue();
     this.notifyStatusChange();
   }
 
-  // Check if transaction is pending sync
   isTransactionPending(transactionId: string): boolean {
     if (transactionId.startsWith('temp_')) return true;
 
@@ -863,12 +762,10 @@ class EnhancedOfflineManager {
     );
   }
 
-  // Get cached data age
   getCacheAge(): number | null {
     if (!this.dataCache) return null;
     return Date.now() - this.dataCache.timestamp;
   }
 }
 
-// Export singleton instance
 export const enhancedOfflineManager = new EnhancedOfflineManager();

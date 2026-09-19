@@ -1,5 +1,6 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { auth, db } from '@/lib/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 import { Transaction } from '@/types/transactions';
 
 interface BudgetCategory {
@@ -46,26 +47,21 @@ export const getBudgetAlerts = (
 
 export const createBudgetAlert = async (alert: BudgetAlert): Promise<void> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) return;
 
     const alertLevel = alert.percentage >= 100 ? 'exceeded' : 'warning';
     const title = alertLevel === 'exceeded' ? 'Budget Exceeded' : 'Budget Alert';
     const message = `You've spent ${alert.percentage.toFixed(1)}% of your ${alert.category} budget (${alert.spent.toFixed(2)} of ${alert.limit.toFixed(2)}) - based on active transactions only`;
     
-    const { error } = await supabase
-      .from('alerts')
-      .insert({
-        user_id: user.id,
-        title,
-        message,
-        type: 'budget_alert',
-        read: false
-      });
-      
-    if (error) {
-      console.error("Error creating budget alert:", error);
-    }
+    await addDoc(collection(db, 'alerts'), {
+      user_id: user.uid,
+      title,
+      message,
+      type: 'budget_alert',
+      read: false,
+      created_at: new Date().toISOString()
+    });
   } catch (error) {
     console.error("Error in createBudgetAlert:", error);
   }

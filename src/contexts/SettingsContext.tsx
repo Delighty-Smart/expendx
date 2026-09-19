@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useRef, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { currencies } from '@/lib/currencies';
 import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,16 +23,30 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 export async function syncStatusBarTheme(themeOverride?: string) {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    // Determine the active theme: explicit arg → DOM class → localStorage → default
+    const savedTheme = localStorage.getItem('expendx_theme');
+    // Determine the active theme: explicit arg → DOM class → localStorage → system preference
     const isDark =
       themeOverride === 'dark' ||
-      (!themeOverride && document.documentElement.classList.contains('dark'));
+      (themeOverride !== 'light' && (
+        document.documentElement.classList.contains('dark') ||
+        savedTheme === 'dark' ||
+        (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ));
 
-    // Style.Dark  = black icons  (for light mode backgrounds)
-    // Style.Light = white icons  (for dark mode backgrounds)
-    await StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark });
-    await StatusBar.setBackgroundColor({ color: isDark ? '#111315' : '#F5F4F0' });
-    await StatusBar.setOverlaysWebView({ overlay: false });
+    const targetColor = isDark ? '#111315' : '#F5F4F0';
+
+    // Style.Light = white text/icons
+    // Style.Dark  = black/dark text/icons
+    // Inverted per user request: dark icons on dark mode, light icons on light mode
+    await StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+    await StatusBar.setBackgroundColor({ color: targetColor }).catch(() => {});
+
+    // Sync HTML theme-color meta tags
+    const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+    metaTags.forEach(tag => {
+      tag.setAttribute('content', targetColor);
+    });
   } catch (e) {
     console.warn('StatusBar sync failed', e);
   }
@@ -139,11 +154,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
     // Initialize settings on mount and fetch when user changes
     useEffect(() => {
-        // Initial theme application from localStorage (for fast UI response)
+        // Initial theme application from localStorage or system preference (for fast UI response)
         const savedTheme = localStorage.getItem('expendx_theme') as 'light' | 'dark' | null;
-        if (savedTheme) {
-            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-        }
+        const isDark = savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', isDark);
+        syncStatusBarTheme(isDark ? 'dark' : 'light');
     }, []);
 
     // Fetch user settings when user logs in or changes
@@ -196,39 +211,19 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         return () => clearTimeout(saveTimeout);
     }, [currency, theme, hideAmounts, user?.id]);
 
-    // Get user settings from Supabase
+    // Get user settings from Firestore
     const fetchUserSettings = async () => {
         try {
             console.log('fetchUserSettings called');
-
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Settings fetch timed out')), 8000);
-            });
-
-            const userPromise = supabase.auth.getUser();
-            const { data: { user }, error: userError } = await (Promise.race([userPromise, timeoutPromise]) as any);
-
-            if (userError || !user) {
-                console.log('No user or error in fetchUserSettings, using local: ', userError);
-                return;
-            }
-
-
+            const currentUser = auth.currentUser;
+            if (!currentUser) return;
 
             // 1. Fetch Currency from user_settings table
-            const settingsPromise = supabase
-                .from('user_settings')
-                .select('currency_code')
-                .eq('user_id', user.id)
-                .single();
+            const settingsRef = doc(db, 'user_settings', currentUser.uid);
+            const settingsSnap = await getDoc(settingsRef);
 
-            const { data: settingsData, error: settingsError } = await (Promise.race([settingsPromise, timeoutPromise]) as any);
-
-            if (settingsError && !settingsError.message.includes('No rows found')) {
-                console.error('Error fetching user_settings:', settingsError);
-            } else if (settingsData?.currency_code) {
-                // SERVER WINS: Update state and localStorage with server value
-                const currencyObj = currencies.find(c => c.code === settingsData.currency_code);
+            if (settingsSnap.exists() && settingsSnap.data()?.currency_code) {
+                const currencyObj = currencies.find(c => c.code === settingsSnap.data().currency_code);
                 if (currencyObj) {
                     setCurrency(currencyObj);
                     localStorage.setItem('expendx_currency', currencyObj.code);
@@ -236,35 +231,39 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
             } else {
                 const localCurrency = localStorage.getItem('expendx_currency');
                 if (localCurrency) {
-                    await supabase.from('user_settings').upsert({
-                        user_id: user.id,
-                        currency_code: localCurrency
-                    });
+                    await setDoc(settingsRef, {
+                        user_id: currentUser.uid,
+                        currency_code: localCurrency,
+                        updated_at: new Date().toISOString()
+                    }, { merge: true });
                 }
             }
 
-            // 2. Fetch Theme, HideAmounts, and Life Energy data from User Metadata
-            const metadata = user.user_metadata;
-            if (metadata) {
-                if (metadata.theme && (metadata.theme === 'light' || metadata.theme === 'dark')) {
-                    setTheme(metadata.theme);
-                    document.documentElement.classList.toggle('dark', metadata.theme === 'dark');
-                    localStorage.setItem('expendx_theme', metadata.theme);
+            // 2. Fetch Theme, HideAmounts, and Life Energy data from user_profiles collection
+            const profileRef = doc(db, 'user_profiles', currentUser.uid);
+            const profileSnap = await getDoc(profileRef);
+
+            if (profileSnap.exists()) {
+                const profileData = profileSnap.data();
+                if (profileData.theme && (profileData.theme === 'light' || profileData.theme === 'dark')) {
+                    setTheme(profileData.theme);
+                    document.documentElement.classList.toggle('dark', profileData.theme === 'dark');
+                    localStorage.setItem('expendx_theme', profileData.theme);
                 }
 
-                if (typeof metadata.hideAmounts === 'boolean') {
-                    setHideAmounts(metadata.hideAmounts);
-                    localStorage.setItem('expendx_hideAmounts', metadata.hideAmounts.toString());
+                if (typeof profileData.hideAmounts === 'boolean') {
+                    setHideAmounts(profileData.hideAmounts);
+                    localStorage.setItem('expendx_hideAmounts', profileData.hideAmounts.toString());
                 }
 
-                if (metadata.life_energy_data) {
-                    const dataStr = typeof metadata.life_energy_data === 'string' 
-                        ? metadata.life_energy_data 
-                        : JSON.stringify(metadata.life_energy_data);
+                if (profileData.life_energy_data) {
+                    const dataStr = typeof profileData.life_energy_data === 'string' 
+                        ? profileData.life_energy_data 
+                        : JSON.stringify(profileData.life_energy_data);
                     localStorage.setItem('lucent_life_energy_data', dataStr);
                     localStorage.setItem('expendx_life_energy_data', dataStr);
                     try {
-                        const parsed = typeof metadata.life_energy_data === 'string' ? JSON.parse(metadata.life_energy_data) : metadata.life_energy_data;
+                        const parsed = typeof profileData.life_energy_data === 'string' ? JSON.parse(profileData.life_energy_data) : profileData.life_energy_data;
                         if (parsed.trueHourlyRate) {
                             setTrueHourlyRate(parsed.trueHourlyRate);
                             localStorage.setItem('lucent_true_hourly_rate', parsed.trueHourlyRate.toString());
@@ -293,40 +292,27 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
             localStorage.setItem('expendx_currency', currency.code);
 
             // 2. Server Sync
-            // Only sync if online AND initialized (to prevent overwriting server with local defaults)
             if (!navigator.onLine || !isInitialized.current) return;
-
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Settings update timed out')), 5000);
-            });
-
-            const userPromise = supabase.auth.getUser();
-            const { data: { user } } = await (Promise.race([userPromise, timeoutPromise]) as any);
-
-            if (!user) return;
+            const currentUser = auth.currentUser;
+            if (!currentUser) return;
 
             // Sync Currency (Table)
-            const currencyPromise = supabase
-                .from('user_settings')
-                .upsert({
-                    user_id: user.id,
-                    currency_code: currency.code,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
+            const settingsRef = doc(db, 'user_settings', currentUser.uid);
+            await setDoc(settingsRef, {
+                user_id: currentUser.uid,
+                currency_code: currency.code,
+                updated_at: new Date().toISOString()
+            }, { merge: true });
 
-            await Promise.race([currencyPromise, timeoutPromise]);
-
-            // Sync Theme, Visibility & Life Energy (Auth Metadata)
+            // Sync Theme, Visibility & Life Energy (user_profiles doc)
             const savedLifeEnergy = localStorage.getItem('lucent_life_energy_data') || localStorage.getItem('expendx_life_energy_data');
-            const metaPromise = supabase.auth.updateUser({
-                data: {
-                    theme: theme,
-                    hideAmounts: hideAmounts,
-                    ...(savedLifeEnergy ? { life_energy_data: savedLifeEnergy } : {})
-                }
-            });
-
-            await Promise.race([metaPromise, timeoutPromise]);
+            const profileRef = doc(db, 'user_profiles', currentUser.uid);
+            await setDoc(profileRef, {
+                theme: theme,
+                hideAmounts: hideAmounts,
+                ...(savedLifeEnergy ? { life_energy_data: savedLifeEnergy } : {}),
+                updated_at: new Date().toISOString()
+            }, { merge: true });
 
         } catch (error) {
             console.error('Error in updateUserSettings:', error);

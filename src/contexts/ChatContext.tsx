@@ -27,6 +27,14 @@ import { useTransactionData } from '@/hooks/useTransactionData';
 import { useEnhancedBudgetData } from '@/hooks/useEnhancedBudgetData';
 import { useQueryClient } from '@tanstack/react-query';
 
+export interface SavedConversation {
+  id: string;
+  title: string;
+  timestamp: number;
+  messages: ChatMessage[];
+  lastMessageSnippet: string;
+}
+
 interface ChatContextType {
   messages: ChatMessage[];
   mode: ChatMode;
@@ -37,6 +45,10 @@ interface ChatContextType {
   clearChat: () => void;
   financialContext: FinancialContext;
   conversationState: ConversationState;
+  conversations: SavedConversation[];
+  activeConversationId: string | null;
+  loadConversation: (id: string) => void;
+  deleteConversation: (id: string) => void;
   undoAction?: (undoId: string) => Promise<void>;
 }
 
@@ -52,10 +64,42 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const queryClient = useQueryClient();
 
   const { transactions } = useTransactionData();
-  const { budgetCategories } = useEnhancedBudgetData();
+  const { budgets: budgetCategories } = useEnhancedBudgetData();
+
+  const [conversations, setConversations] = useState<SavedConversation[]>(() => {
+    try {
+      const saved = localStorage.getItem('lucent_chat_conversations');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to load saved chat conversations', e);
+    }
+    return [
+      {
+        id: 'default_1',
+        title: 'Monthly budget review & savings plan',
+        timestamp: Date.now() - 3600000 * 2,
+        messages: [],
+        lastMessageSnippet: 'Show me my monthly budget review and savings breakdown',
+      },
+      {
+        id: 'default_2',
+        title: 'Emergency fund goal setup',
+        timestamp: Date.now() - 3600000 * 24,
+        messages: [],
+        lastMessageSnippet: 'Help me plan an emergency fund goal',
+      },
+    ];
+  });
+
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('lucent_active_chat_id');
+    } catch (e) {
+      return null;
+    }
+  });
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    // Try to load cached session messages
     try {
       const cached = sessionStorage.getItem('lucent_chat_messages');
       if (cached) return JSON.parse(cached);
@@ -64,6 +108,74 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return [];
   });
+
+  // Save conversation list to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('lucent_chat_conversations', JSON.stringify(conversations));
+    } catch (e) {
+      console.warn('Failed to save chat conversations list', e);
+    }
+  }, [conversations]);
+
+  // Persist messages of current session
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('lucent_chat_messages', JSON.stringify(messages.slice(-50)));
+    } catch (e) {
+      console.warn('Failed to cache chat messages', e);
+    }
+
+    // Auto-update active conversation record in list
+    if (messages.length > 0) {
+      const firstUserMsg = messages.find(m => m.role === 'user');
+      const title = firstUserMsg ? (firstUserMsg.content.slice(0, 36) + (firstUserMsg.content.length > 36 ? '...' : '')) : 'New Conversation';
+      const lastMsg = messages[messages.length - 1];
+      const snippet = lastMsg ? lastMsg.content.slice(0, 60) : '';
+
+      setConversations(prev => {
+        const idToUse = activeConversationId || `session_${Date.now()}`;
+        if (!activeConversationId) {
+          setActiveConversationId(idToUse);
+          try { localStorage.setItem('lucent_active_chat_id', idToUse); } catch (e) {}
+        }
+        const existingIdx = prev.findIndex(c => c.id === idToUse);
+        const updatedItem: SavedConversation = {
+          id: idToUse,
+          title,
+          timestamp: Date.now(),
+          messages,
+          lastMessageSnippet: snippet,
+        };
+
+        if (existingIdx >= 0) {
+          const next = [...prev];
+          next[existingIdx] = updatedItem;
+          return next;
+        } else {
+          return [updatedItem, ...prev];
+        }
+      });
+    }
+  }, [messages, activeConversationId]);
+
+  const loadConversation = useCallback((id: string) => {
+    const target = conversations.find(c => c.id === id);
+    if (target) {
+      setActiveConversationId(id);
+      try { localStorage.setItem('lucent_active_chat_id', id); } catch (e) {}
+      setMessages(target.messages || []);
+    }
+  }, [conversations]);
+
+  const deleteConversation = useCallback((id: string) => {
+    setConversations(prev => prev.filter(c => c.id !== id));
+    if (activeConversationId === id) {
+      setActiveConversationId(null);
+      setMessages([]);
+      try { localStorage.removeItem('lucent_active_chat_id'); } catch (e) {}
+    }
+  }, [activeConversationId]);
 
   const [mode, setModeState] = useState<ChatMode>(() => {
     try {
@@ -272,6 +384,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearChat,
         financialContext,
         conversationState,
+        conversations,
+        activeConversationId,
+        loadConversation,
+        deleteConversation,
       }}
     >
       {children}

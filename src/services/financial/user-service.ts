@@ -48,7 +48,8 @@ function getPreferences(
   });
 }
 
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 async function updateCurrency(
   params: Record<string, any>,
@@ -57,7 +58,15 @@ async function updateCurrency(
   const { currency } = params;
   const curr = String(currency).toUpperCase();
 
-  await supabase.from('user_settings' as any).upsert({ user_id: ctx.userId, currency: curr });
+  if (ctx.userId) {
+    await setDoc(doc(db, 'user_settings', ctx.userId), {
+      user_id: ctx.userId,
+      currency_code: curr,
+      currency: curr,
+      updated_at: new Date().toISOString()
+    }, { merge: true });
+  }
+
   ctx.invalidateQueries?.(['settings']);
   lucentEventBus.emit('settings:updated', { currency: curr }, 'user-service');
 

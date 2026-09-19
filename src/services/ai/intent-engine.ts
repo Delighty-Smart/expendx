@@ -308,10 +308,20 @@ const INTENT_PATTERNS: IntentPattern[] = [
     type: 'log_savings',
     patterns: [
       /(?:save|saved|saving|put aside|set aside)\b/i,
-      /(?:move|transfer)\s+.*(?:to\s+)?savings\b/i,
+      /(?:move|transfer)\s+[\d₦N$€£kmb\s]+(?:to\s+)?savings\b/i,
     ],
     confidence: 0.80,
     transactionType: 'savings',
+  },
+
+  // ── Move / Recategorize / Edit Transaction ──
+  {
+    type: 'help',
+    patterns: [
+      /(?:move|change|recategorize|update|switch)\s+.*(?:transaction|expense|income|this|last)?\s+to\s+[a-z\s]+/i,
+      /(?:delete|remove|clear)\s+.*(?:last|this|recent)?\s*transaction/i,
+    ],
+    confidence: 0.95,
   },
 
   // ── Balance Queries ──

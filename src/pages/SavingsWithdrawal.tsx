@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/lib/firebase";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { savingsCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -46,13 +47,10 @@ const SavingsWithdrawalPage = () => {
   const { data: transactionsData } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("type", "savings");
-
-      if (error) throw error;
-      return data || [];
+      const user = auth.currentUser;
+      if (!user) return [];
+      const data = await enhancedOfflineManager.getTransactions(user.uid);
+      return data.filter(t => t.type === 'savings') || [];
     },
   });
 
@@ -61,13 +59,13 @@ const SavingsWithdrawalPage = () => {
 
     return transactionsData
       .filter((t) => t.category === category)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
   };
 
   const onSubmit = async (values: z.infer<typeof withdrawalSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
       const withdrawalAmount = parseFloat(values.amount);

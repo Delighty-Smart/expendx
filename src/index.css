@@ -505,16 +505,16 @@ progress,
   overflow: hidden !important;
 }
 
-/* Top mobile header backdrop styling */
+/* Top mobile header backdrop styling - harmonized with native status bar colors */
 header.lg\:hidden.fixed {
-  background-color: rgba(255, 255, 255, 0.8) !important;
+  background-color: rgba(245, 244, 240, 0.95) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  border-bottom: 1px solid var(--border-default) !important;
 }
 .dark header.lg\:hidden.fixed {
-  background-color: rgba(13, 13, 13, 0.8) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  background-color: rgba(17, 19, 21, 0.95) !important;
+  border-bottom: 1px solid var(--border-default) !important;
 }
 
 /* --- Premium Sleek Docked Mobile Bottom Navigation --- */

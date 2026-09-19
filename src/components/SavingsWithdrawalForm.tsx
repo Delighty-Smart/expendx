@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/lib/firebase";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { useEffect, useState } from "react";
 import { savingsCategories } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -48,13 +49,8 @@ export function SavingsWithdrawalForm({
   const { data: transactionsData } = useQuery({
     queryKey: ["transactions"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("type", "savings");
-
-      if (error) throw error;
-      return data || [];
+      const allTx = await enhancedOfflineManager.getTransactions();
+      return allTx.filter((t) => t.type === "savings");
     },
   });
 
@@ -79,7 +75,7 @@ export function SavingsWithdrawalForm({
   const onSubmit = async (values: z.infer<typeof withdrawalSchema>) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = auth.currentUser;
       if (!user) throw new Error("No user found");
 
       const withdrawalAmount = parseFloat(values.amount);
@@ -97,38 +93,24 @@ export function SavingsWithdrawalForm({
       const today = new Date().toISOString().split('T')[0];
 
       // Create withdrawal transaction (negative savings entry)
-      const { error: savingsError } = await supabase
-        .from('transactions')
-        .insert([{
-          date: today,
-          amount: -withdrawalAmount, // Negative to reduce savings
-          type: "savings",
-          category: values.category,
-          description: `Withdrawal: ${values.description}`,
-          user_id: user.id
-        }]);
-
-      if (savingsError) {
-        console.error("Savings error:", savingsError);
-        throw savingsError;
-      }
+      await enhancedOfflineManager.addTransactionOffline({
+        date: today,
+        amount: -withdrawalAmount, // Negative to reduce savings
+        type: "savings",
+        category: values.category,
+        description: `Withdrawal: ${values.description}`,
+        user_id: user.uid
+      });
 
       // Add to wallet balance (credit entry)
-      const { error: creditError } = await supabase
-        .from('transactions')
-        .insert([{
-          date: today,
-          amount: withdrawalAmount,
-          type: "credit",
-          category: "Withdrawal from Savings",
-          description: `From ${values.category}: ${values.description}`,
-          user_id: user.id
-        }]);
-
-      if (creditError) {
-        console.error("Credit error:", creditError);
-        throw creditError;
-      }
+      await enhancedOfflineManager.addTransactionOffline({
+        date: today,
+        amount: withdrawalAmount,
+        type: "credit",
+        category: "Withdrawal from Savings",
+        description: `From ${values.category}: ${values.description}`,
+        user_id: user.uid
+      });
 
       toast({
         title: "Success",

@@ -4,7 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import UserManagement from "@/components/admin/UserManagement";
 import FeedbackManagement from "@/components/admin/FeedbackManagement";
 import BannerManagement from "@/components/admin/BannerManagement";
@@ -65,25 +66,25 @@ const AdminDashboard = () => {
   const fetchDashboardStats = async () => {
     try {
       const [
-        { count: userCount },
-        { count: transactionCount },
-        { count: feedbackCount },
-        { count: streakCount },
-        { count: savingsCount }
+        usersSnap,
+        txsSnap,
+        feedbackSnap,
+        streaksSnap,
+        savingsSnap
       ] = await Promise.all([
-        supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('transactions').select('*', { count: 'exact', head: true }),
-        supabase.from('user_feedback').select('*', { count: 'exact', head: true }),
-        supabase.from('user_streaks').select('*', { count: 'exact', head: true }),
-        supabase.from('savings_goals').select('*', { count: 'exact', head: true })
+        getDocs(collection(db, 'user_profiles')),
+        getDocs(collection(db, 'transactions')),
+        getDocs(collection(db, 'user_feedback')),
+        getDocs(collection(db, 'user_streaks')),
+        getDocs(collection(db, 'savings_goals'))
       ]);
 
       const counts = {
-        userCount: userCount || 0,
-        transactionCount: transactionCount || 0,
-        feedbackCount: feedbackCount || 0,
-        streakCount: streakCount || 0,
-        savingsCount: savingsCount || 0
+        userCount: usersSnap.size || 0,
+        transactionCount: txsSnap.size || 0,
+        feedbackCount: feedbackSnap.size || 0,
+        streakCount: streaksSnap.size || 0,
+        savingsCount: savingsSnap.size || 0
       };
 
       setStats(counts);
@@ -107,19 +108,14 @@ const AdminDashboard = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) {
           navigate('/auth');
           return;
         }
 
-        const { data: profileData, error } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
+        const profileDoc = await getDoc(doc(db, 'user_profiles', user.uid));
+        const profileData = profileDoc.data();
 
         if (profileData?.role !== 'admin') {
           toast({

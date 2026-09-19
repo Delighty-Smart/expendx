@@ -1,5 +1,6 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/lib/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 import { notificationService } from './notificationService';
 
 export interface NotificationSchedule {
@@ -131,14 +132,14 @@ class NotificationScheduler {
         });
       }
 
-      await supabase
-        .from('alerts')
-        .insert({
-          user_id: userId,
-          title,
-          message,
-          type
-        });
+      await addDoc(collection(db, 'alerts'), {
+        user_id: userId,
+        title,
+        message,
+        type,
+        read: false,
+        created_at: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error handling immediate alert:', error);
     }
@@ -154,17 +155,14 @@ class NotificationScheduler {
         });
       }
 
-      await supabase
-        .from('alerts')
-        .upsert(
-          {
-            user_id: userId,
-            title: notificationData.title,
-            message: notificationData.message,
-            type: notificationType
-          },
-          { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
-        );
+      await addDoc(collection(db, 'alerts'), {
+        user_id: userId,
+        title: notificationData.title,
+        message: notificationData.message,
+        type: notificationType,
+        read: false,
+        created_at: new Date().toISOString()
+      });
 
     } catch (error) {
       console.error('Error triggering notification:', error);

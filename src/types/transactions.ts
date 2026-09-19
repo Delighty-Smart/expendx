@@ -1,4 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { SERVICE_PROVIDERS } from "@/types/subscriptions";
 
 export type TransactionType = "credit" | "debit" | "savings" | "subscription";
@@ -126,26 +127,22 @@ export function getDefaultCategoriesForType(type: TransactionType): readonly str
 
 export async function getCategoriesForType(type: TransactionType): Promise<string[]> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = auth.currentUser;
     if (!user) {
       return [...getDefaultCategoriesForType(type)];
     }
 
     // Get user's custom categories
-    const { data: userCategories, error } = await supabase
-      .from("user_categories")
-      .select("name")
-      .eq("user_id", user.id)
-      .eq("type", type);
-
-    if (error) {
-      console.error("Error fetching user categories:", error);
-      return [...getDefaultCategoriesForType(type)];
-    }
+    const q = query(
+      collection(db, "user_categories"),
+      where("user_id", "==", user.uid),
+      where("type", "==", type)
+    );
+    const snap = await getDocs(q);
+    const customCategories = snap.docs.map(doc => doc.data().name).filter(Boolean);
 
     // Combine default and user categories, removing duplicates
     const defaultCategories = getDefaultCategoriesForType(type);
-    const customCategories = userCategories?.map(cat => cat.name) || [];
 
     const allCategories = [
       ...defaultCategories,

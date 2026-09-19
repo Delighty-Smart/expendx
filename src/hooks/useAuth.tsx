@@ -1,17 +1,32 @@
-
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { safelyUnwrapResponse } from '@/services/supabaseHelpers';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut as firebaseSignOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 
 import { updateUserStreak, getUserProfile } from '@/lib/streak';
 
+export interface AppUser {
+  id: string;
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  [key: string]: any;
+}
+
 interface AuthContextType {
-  session: Session | null;
-  user: User | null;
+  session: { user: AppUser } | null;
+  user: AppUser | null;
   profile: any | null;
   isAdmin: boolean;
   isLoading: boolean;
@@ -25,8 +40,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<{ user: AppUser } | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
 
   // Hydrate profile from localStorage for immediate display
   const [profile, setProfile] = useState<any | null>(() => {
@@ -89,75 +104,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  useEffect(() => {
-    // Initial session check
-    const initAuth = async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-
-        if (initialSession?.user) {
-          cacheUserData(initialSession.user.id);
-          await fetchProfile(initialSession.user.id);
-        }
-
-        if (Capacitor.isNativePlatform()) {
-          try {
-            await GoogleSignIn.initialize({
-              clientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || 'YOUR_WEB_CLIENT_ID_HERE',
-            });
-          } catch (e) {
-            console.error("Failed to initialize GoogleSignIn", e);
-          }
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  const formatUser = (fbUser: FirebaseUser | null): AppUser | null => {
+    if (!fbUser) return null;
+    return {
+      id: fbUser.uid,
+      uid: fbUser.uid,
+      email: fbUser.email,
+      displayName: fbUser.displayName,
+      photoURL: fbUser.photoURL,
+      ...fbUser
     };
+  };
 
-    initAuth();
-
-    // Set up state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log(`Auth state change [${event}]:`, currentSession?.user?.id || 'No user');
-
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        if (currentSession?.user) {
-          cacheUserData(currentSession.user.id);
-          await fetchProfile(currentSession.user.id);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
-          cacheUserData(null);
-        }
-
-        setIsLoading(false);
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        GoogleSignIn.initialize({
+          clientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID || 'YOUR_WEB_CLIENT_ID_HERE',
+        });
+      } catch (e) {
+        console.error("Failed to initialize GoogleSignIn", e);
       }
-    );
+    }
+
+    // Set up Firebase Auth state listener
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      const appUser = formatUser(fbUser);
+      console.log(`Auth state change:`, appUser?.id || 'No user');
+
+      setUser(appUser);
+      setSession(appUser ? { user: appUser } : null);
+
+      if (appUser) {
+        cacheUserData(appUser.id);
+        await fetchProfile(appUser.id);
+      } else {
+        setProfile(null);
+        setIsAdmin(false);
+        cacheUserData(null);
+      }
+
+      setIsLoading(false);
+    });
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
 
-  const getRedirectUrl = () => {
-    return Capacitor.isNativePlatform() ? 'io.expendx.app://login-callback/' : window.location.origin;
-  };
-
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      if (data.user) {
-        cacheUserData(data.user.id);
-        await fetchProfile(data.user.id);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const appUser = formatUser(userCredential.user);
+      if (appUser) {
+        cacheUserData(appUser.id);
+        await fetchProfile(appUser.id);
       }
 
       showToast({
@@ -177,21 +178,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata,
-          emailRedirectTo: getRedirectUrl()
-        }
-      });
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const appUser = formatUser(userCredential.user);
 
-      if (error) throw error;
-
-      if (data.user) {
-        cacheUserData(data.user.id);
-        // Profile will be created by getUserProfile if it doesn't exist
-        await fetchProfile(data.user.id);
+      if (appUser) {
+        cacheUserData(appUser.id);
+        await fetchProfile(appUser.id);
       }
 
       showToast({
@@ -212,31 +204,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        const result = await GoogleSignIn.signIn();
-        if (result && result.idToken) {
-          const { data, error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: result.idToken,
-          });
-          if (error) throw error;
-          if (data.user) {
-            cacheUserData(data.user.id);
-            await fetchProfile(data.user.id);
+        try {
+          const result = await GoogleSignIn.signIn();
+          if (result && result.idToken) {
+            const credential = GoogleAuthProvider.credential(result.idToken);
+            const userCredential = await signInWithCredential(auth, credential);
+            const appUser = formatUser(userCredential.user);
+            if (appUser) {
+              cacheUserData(appUser.id);
+              await fetchProfile(appUser.id);
+            }
+            showToast({ title: "Welcome back!" });
+            return;
           }
-          showToast({ title: "Welcome back!" });
-          return;
-        } else {
-          throw new Error("Google Sign-In failed or returned empty token.");
+        } catch (nativeErr: any) {
+          console.warn("Native GoogleSignIn unavailable, falling back to popup:", nativeErr);
         }
-      } else {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: getRedirectUrl(),
-          }
-        });
-        if (error) throw error;
       }
+
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      const appUser = formatUser(userCredential.user);
+      if (appUser) {
+        cacheUserData(appUser.id);
+        await fetchProfile(appUser.id);
+      }
+      showToast({ title: "Welcome back!" });
     } catch (error: any) {
       console.error("Google sign in error caught:", error);
       showToast({
@@ -244,7 +237,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Google login failed",
         description: error.message || "Could not connect to Google",
       });
-      throw error;
     }
   };
 
@@ -257,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cacheUserData(null);
       sessionStorage.removeItem('expendx_onboarding_seen');
 
-      await supabase.auth.signOut();
+      await firebaseSignOut(auth);
       if (Capacitor.isNativePlatform()) {
         try { await GoogleSignIn.signOut(); } catch (e) { }
       }
@@ -271,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       showToast({
         variant: "destructive",
         title: "Sign out completed with notice",
-        description: "You have been signed out locally. Some server sessions may persist.",
+        description: "You have been signed out locally.",
       });
     }
   };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/lib/firebase';
 import { TransactionType } from '@/types/transactions';
+import { enhancedOfflineManager } from '@/services/enhancedOfflineManager';
 
 interface CategorySuggestion {
   category: string;
@@ -21,24 +22,26 @@ export function useSmartCategorization(description: string, type: TransactionTyp
     const getSuggestions = async () => {
       setLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) return;
 
-        // Get past transactions with similar descriptions
-        const { data: transactions, error } = await supabase
-          .from('transactions')
-          .select('category, description, type')
-          .eq('user_id', user.id)
-          .eq('type', type)
-          .ilike('description', `%${description.substring(0, 5)}%`)
-          .limit(20);
+        // Get past transactions with similar descriptions from cache / offline manager
+        const allTransactions = enhancedOfflineManager.getTransactions({ type });
+        const term = description.substring(0, 5).toLowerCase();
 
-        if (error) throw error;
+        const transactions = allTransactions.filter(t =>
+          t.description?.toLowerCase().includes(term)
+        ).slice(0, 20);
+
+        if (transactions.length === 0) {
+          setSuggestions([]);
+          return;
+        }
 
         // Count category occurrences
         const categoryMap = new Map<string, { count: number; examples: string[] }>();
         
-        transactions?.forEach(t => {
+        transactions.forEach(t => {
           const existing = categoryMap.get(t.category) || { count: 0, examples: [] };
           existing.count++;
           if (existing.examples.length < 2) {
@@ -51,7 +54,7 @@ export function useSmartCategorization(description: string, type: TransactionTyp
         const newSuggestions: CategorySuggestion[] = Array.from(categoryMap.entries())
           .map(([category, data]) => ({
             category,
-            confidence: Math.min(data.count / transactions!.length, 1),
+            confidence: Math.min(data.count / transactions.length, 1),
             reason: `Used ${data.count} times for similar transactions`
           }))
           .sort((a, b) => b.confidence - a.confidence)

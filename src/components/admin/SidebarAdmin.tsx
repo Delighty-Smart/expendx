@@ -4,20 +4,16 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, MessageSquare, Users, Settings, Megaphone, Layers, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import { cn } from '@/lib/utils';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const SidebarAdmin = () => {
   const [unreadFeedback, setUnreadFeedback] = useState(0);
 
   const fetchUnreadFeedbacks = async () => {
     try {
-      const { count, error } = await supabase
-        .from('user_feedback')
-        .select('id', { count: 'exact', head: true });
-      if (error) throw error;
-      setUnreadFeedback(count || 0);
+      const snapshot = await getDocs(collection(db, 'user_feedback'));
+      setUnreadFeedback(snapshot.size || 0);
     } catch (error) {
       console.error('Error fetching unread feedback:', error);
     }

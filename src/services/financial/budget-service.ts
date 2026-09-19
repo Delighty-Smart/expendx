@@ -13,81 +13,8 @@ import type {
 import { capabilityRegistry } from '@/services/ai/capability-registry';
 import { lucentEventBus } from '@/services/ai/event-bus';
 import { enhancedOfflineManager } from '@/services/enhancedOfflineManager';
-import { supabase } from '@/integrations/supabase/client';
-
-// ─── Service Functions ───────────────────────────────────────────────────────
-
-function getBudgets(
-  _params: Record<string, any>,
-  _ctx: ExecutionContext,
-): Promise<ToolResult<BudgetStatus[]>> {
-  const budgets = enhancedOfflineManager.getBudgets();
-  const allTxns = enhancedOfflineManager.getTransactions();
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthTxns = allTxns.filter(t => t.date?.startsWith(currentMonth));
-
-  const statuses: BudgetStatus[] = budgets.map((b: any) => {
-    const limit = Number(b.monthly_limit || 0);
-    const spent = monthTxns
-      .filter(t => t.type === 'debit' && t.category === b.category)
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    const percentUsed = limit > 0 ? Math.round((spent / limit) * 100) : 0;
-
-    return {
-      category: b.category,
-      limit,
-      spent,
-      percentUsed,
-      remaining: Math.max(0, limit - spent),
-      status: percentUsed > 100 ? 'over' as const : percentUsed > 80 ? 'warning' as const : 'ok' as const,
-    };
-  });
-
-  return Promise.resolve({
-    success: true,
-    data: statuses,
-    source: 'budgets',
-    timestamp: Date.now(),
-  });
-}
-
-function getBudgetStatus(
-  params: Record<string, any>,
-  ctx: ExecutionContext,
-): Promise<ToolResult<BudgetStatus | null>> {
-  return getBudgets({}, ctx).then(result => {
-    const match = result.data?.find(b => b.category.toLowerCase().includes((params.category || '').toLowerCase()));
-    return {
-      success: true,
-      data: match || null,
-      source: 'budgets',
-      timestamp: Date.now(),
-    };
-  });
-}
-
-function getBudgetHealth(
-  _params: Record<string, any>,
-  ctx: ExecutionContext,
-): Promise<ToolResult<{ score: number; overBudgetCount: number; onTrackCount: number; totalBudgeted: number; totalSpent: number }>> {
-  return getBudgets({}, ctx).then(result => {
-    const budgets = result.data || [];
-    const overCount = budgets.filter(b => b.status === 'over').length;
-    const okCount = budgets.filter(b => b.status === 'ok').length;
-    const totalBudgeted = budgets.reduce((sum, b) => sum + b.limit, 0);
-    const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
-    const score = budgets.length > 0
-      ? Math.round(((budgets.length - overCount) / budgets.length) * 100)
-      : 100;
-
-    return {
-      success: true,
-      data: { score, overBudgetCount: overCount, onTrackCount: okCount, totalBudgeted, totalSpent },
-      source: 'budgets',
-      timestamp: Date.now(),
-    };
-  });
-}
+import { db } from '@/lib/firebase';
+import { collection, doc, addDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 async function createBudget(
   params: Record<string, any>,
@@ -95,18 +22,24 @@ async function createBudget(
 ): Promise<ToolResult<{ created: boolean }>> {
   const { category, monthlyLimit } = params;
 
-  const { error } = await supabase
-    .from('budget_categories')
-    .insert({ category, monthly_limit: Number(monthlyLimit), user_id: ctx.userId });
+  try {
+    const docRef = doc(collection(db, 'budget_categories'));
+    await setDoc(docRef, {
+      id: docRef.id,
+      category,
+      monthly_limit: Number(monthlyLimit),
+      user_id: ctx.userId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
 
-  if (error) {
-    return { success: false, error: error.message, source: 'budgets', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['enhanced_budgets', 'budgets']);
+    lucentEventBus.emit('budget:created', { category, limit: Number(monthlyLimit) }, 'budget-service');
+
+    return { success: true, data: { created: true }, source: 'budgets', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'budgets', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['enhanced_budgets', 'budgets']);
-  lucentEventBus.emit('budget:created', { category, limit: Number(monthlyLimit) }, 'budget-service');
-
-  return { success: true, data: { created: true }, source: 'budgets', timestamp: Date.now() };
 }
 
 async function updateBudget(
@@ -115,20 +48,19 @@ async function updateBudget(
 ): Promise<ToolResult<{ updated: boolean }>> {
   const { id, monthlyLimit } = params;
 
-  const { error } = await supabase
-    .from('budget_categories')
-    .update({ monthly_limit: Number(monthlyLimit) })
-    .eq('id', id)
-    .eq('user_id', ctx.userId);
+  try {
+    await updateDoc(doc(db, 'budget_categories', id), {
+      monthly_limit: Number(monthlyLimit),
+      updated_at: new Date().toISOString()
+    });
 
-  if (error) {
-    return { success: false, error: error.message, source: 'budgets', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['enhanced_budgets', 'budgets']);
+    lucentEventBus.emit('budget:updated', { id, limit: Number(monthlyLimit) }, 'budget-service');
+
+    return { success: true, data: { updated: true }, source: 'budgets', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'budgets', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['enhanced_budgets', 'budgets']);
-  lucentEventBus.emit('budget:updated', { id, limit: Number(monthlyLimit) }, 'budget-service');
-
-  return { success: true, data: { updated: true }, source: 'budgets', timestamp: Date.now() };
 }
 
 async function deleteBudget(
@@ -137,20 +69,16 @@ async function deleteBudget(
 ): Promise<ToolResult<{ deleted: boolean }>> {
   const { id } = params;
 
-  const { error } = await supabase
-    .from('budget_categories')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', ctx.userId);
+  try {
+    await deleteDoc(doc(db, 'budget_categories', id));
 
-  if (error) {
-    return { success: false, error: error.message, source: 'budgets', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['enhanced_budgets', 'budgets']);
+    lucentEventBus.emit('budget:deleted', { id }, 'budget-service');
+
+    return { success: true, data: { deleted: true }, source: 'budgets', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'budgets', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['enhanced_budgets', 'budgets']);
-  lucentEventBus.emit('budget:deleted', { id }, 'budget-service');
-
-  return { success: true, data: { deleted: true }, source: 'budgets', timestamp: Date.now() };
 }
 
 function recommendBudget(

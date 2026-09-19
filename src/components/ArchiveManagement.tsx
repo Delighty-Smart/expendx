@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 import { format } from "date-fns";
 import { Search, RotateCcw, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { TransactionType } from "@/types/transactions";
@@ -46,23 +46,19 @@ export const ArchiveManagement = () => {
   const fetchArchivedTransactions = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("archived", true)
-        .order("date", { ascending: false });
-
-      if (error) throw error;
+      const allTx = await enhancedOfflineManager.getTransactions();
+      const archived = allTx.filter(t => t.archived);
+      archived.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       // Transform the data to match our interface
-      const transformedData: ArchivedTransaction[] = (data || []).map(transaction => ({
+      const transformedData: ArchivedTransaction[] = archived.map(transaction => ({
         id: transaction.id,
         date: transaction.date,
         amount: transaction.amount,
         type: transaction.type as TransactionType,
         category: transaction.category,
         description: transaction.description,
-        archived: transaction.archived
+        archived: transaction.archived || false
       }));
 
       setArchivedTransactions(transformedData);
@@ -85,12 +81,9 @@ export const ArchiveManagement = () => {
     const idsToUnarchive = transactionIds || selectedTransactions;
 
     try {
-      const { error } = await supabase
-        .from("transactions")
-        .update({ archived: false })
-        .in("id", idsToUnarchive);
-
-      if (error) throw error;
+      for (const id of idsToUnarchive) {
+        await enhancedOfflineManager.updateTransactionOffline(id, { archived: false });
+      }
 
       await fetchArchivedTransactions();
       setSelectedTransactions([]);
@@ -110,12 +103,9 @@ export const ArchiveManagement = () => {
 
   const handleUnarchiveAll = async () => {
     try {
-      const { error } = await supabase
-        .from("transactions")
-        .update({ archived: false })
-        .eq("archived", true);
-
-      if (error) throw error;
+      for (const t of archivedTransactions) {
+        await enhancedOfflineManager.updateTransactionOffline(t.id, { archived: false });
+      }
 
       await fetchArchivedTransactions();
       setSelectedTransactions([]);
@@ -138,12 +128,9 @@ export const ArchiveManagement = () => {
 
   const handleDeletePermanently = async () => {
     try {
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .in("id", selectedTransactions);
-
-      if (error) throw error;
+      for (const id of selectedTransactions) {
+        await enhancedOfflineManager.deleteTransactionOffline(id);
+      }
 
       await fetchArchivedTransactions();
       setSelectedTransactions([]);

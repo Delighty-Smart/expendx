@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, User } from 'lucide-react';
 import type { ChatMessage } from '@/types/ai-types';
+import type { TransactionDraft } from '@/types/transaction-draft';
 import { InlineCard } from './InlineCard';
 import { FormattedMarkdownText } from './FormattedMarkdownText';
 import { ReasoningTraceDrawer } from './ReasoningTraceDrawer';
@@ -9,9 +10,11 @@ import { ReasoningTraceDrawer } from './ReasoningTraceDrawer';
 interface ChatBubbleProps {
   message: ChatMessage;
   onActionClick?: (action: string) => void;
+  onConfirmDraft?: (draft: TransactionDraft) => void;
+  onCancelDraft?: () => void;
 }
 
-export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onActionClick }) => {
+export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onActionClick, onConfirmDraft, onCancelDraft }) => {
   const isUser = message.role === 'user';
 
   return (
@@ -19,19 +22,9 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onActionClick }
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className={`flex gap-2.5 my-3 ${isUser ? 'justify-end' : 'justify-start'} w-full max-w-full overflow-hidden`}
+      className={`flex my-2.5 ${isUser ? 'justify-end' : 'justify-start'} w-full max-w-full overflow-hidden`}
     >
-      {!isUser && (
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs mt-0.5 overflow-hidden border border-border-default/50 bg-bg-surface p-0.5">
-          <img
-            src="/lucent-avatar-light.png?v=3"
-            alt="AI Avatar"
-            className="w-full h-full object-contain"
-          />
-        </div>
-      )}
-
-      <div className={`max-w-[92%] sm:max-w-[80%] space-y-2 min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
+      <div className={`max-w-[92%] sm:max-w-[85%] md:max-w-[80%] space-y-2 min-w-0 ${isUser ? 'items-end' : 'items-start'}`}>
         <div
           className={`px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed break-words overflow-hidden ${
             isUser
@@ -43,7 +36,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onActionClick }
 
           {/* Render inline cards if attachments exist */}
           {message.attachments?.map((att, i) => (
-            <InlineCard key={i} attachment={att} />
+            <InlineCard key={i} attachment={att} onActionClick={onActionClick} onConfirmDraft={onConfirmDraft} onCancelDraft={onCancelDraft} />
           ))}
 
           {/* Render suggested action chips if provided */}

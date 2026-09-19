@@ -1,5 +1,6 @@
 import { addDays, differenceInDays, isSameDay, startOfDay, isToday, isYesterday } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, updateDoc, collection, addDoc } from "firebase/firestore";
 
 export interface UserStreak {
   id?: string;
@@ -13,7 +14,6 @@ export interface UserStreak {
   updated_at: string;
 }
 
-// More flexible interface for status checking
 export interface StreakStatusData {
   current_streak: number;
   last_login: string;
@@ -34,70 +34,41 @@ export const MAX_FREEZE_DAYS = 3;
 
 export async function updateUserStreak(): Promise<UserStreak | null> {
   try {
-    console.log("updateUserStreak called");
-
-    // Timeout for Supabase operations
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Streak update timed out')), 8000);
-    });
-
-    // Check if user is authenticated
-    const userPromise = supabase.auth.getUser();
-    const { data: { user }, error: authError } = await (Promise.race([userPromise, timeoutPromise]) as any);
-
-    if (authError || !user) {
+    const user = auth.currentUser;
+    if (!user) {
       console.log("No user in updateUserStreak, skipping");
       return null;
     }
 
-    // Get current user streak or create if not exists
-    const streakPromise = supabase
-      .from("user_streaks")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const { data: streakData, error: streakError } = await (Promise.race([streakPromise, timeoutPromise]) as any);
-
-    if (streakError && !streakError.message.includes("no rows")) {
-      console.error("Error fetching streak:", streakError);
-      return null;
-    }
-
+    const streakRef = doc(db, "user_streaks", user.uid);
+    const streakSnap = await getDoc(streakRef);
     const now = new Date();
     const today = startOfDay(now);
 
-    // If no streak data exists yet, create new streak record
-    if (!streakData) {
-      console.log("Creating new streak record for user:", user.id);
-      const insertPromise = supabase
-        .from("user_streaks")
-        .insert([{
-          user_id: user.id,
-          current_streak: 1,
-          highest_streak: 1,
-          current_title: "Budget Beginner",
-          freeze_count: MAX_FREEZE_DAYS,
-          last_login: today.toISOString()
-        }])
-        .select()
-        .single();
+    if (!streakSnap.exists()) {
+      console.log("Creating new streak record for user:", user.uid);
+      const newStreakData: UserStreak = {
+        id: user.uid,
+        user_id: user.uid,
+        current_streak: 1,
+        highest_streak: 1,
+        current_title: "Budget Beginner",
+        freeze_count: MAX_FREEZE_DAYS,
+        last_login: today.toISOString(),
+        created_at: now.toISOString(),
+        updated_at: now.toISOString()
+      };
 
-      const { data: newStreak, error: insertError } = await (Promise.race([insertPromise, timeoutPromise]) as any);
-
-      if (insertError) {
-        console.error("Error creating streak:", insertError);
-        return null;
-      }
-
+      await setDoc(streakRef, newStreakData);
       try {
-        await createStreakAlert(user.id, "Welcome! Your streak journey begins now. Keep logging in daily to build your streak!", "streak");
+        await createStreakAlert(user.uid, "Welcome! Your streak journey begins now. Keep logging in daily to build your streak!", "streak");
       } catch (err) {
         console.warn("Failed to create initial streak alert, ignoring.");
       }
-      return newStreak;
+      return newStreakData;
     }
 
+    const streakData = streakSnap.data() as UserStreak;
     const lastLogin = startOfDay(new Date(streakData.last_login));
     const daysSinceLastLogin = differenceInDays(today, lastLogin);
 
@@ -141,7 +112,6 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
     // 2. Always verify title consistency regardless of same day
     const correctTitle = determineUserTitle(newStreak);
     if (correctTitle !== currentTitle) {
-      // Check if it's a level up for alerting
       if (getMilestoneRank(correctTitle) > getMilestoneRank(currentTitle) && newStreak > streakData.current_streak) {
         shouldCreateAlert = true;
         alertMessage = `🌟 Level up! You've earned the "${correctTitle}" title!`;
@@ -155,66 +125,49 @@ export async function updateUserStreak(): Promise<UserStreak | null> {
       highestStreak = newStreak;
       shouldUpdateDB = true;
       if (newStreak > 1 && !isSameDay(today, lastLogin)) {
-        await createStreakAlert(user.id, `🏆 New personal record! ${newStreak} days is your longest streak yet!`, "achievement");
+        await createStreakAlert(user.uid, `🏆 New personal record! ${newStreak} days is your longest streak yet!`, "achievement");
       }
     }
 
     // 4. Perform database update if needed
     if (shouldUpdateDB || !isSameDay(today, lastLogin)) {
-      const updatePromise = supabase
-        .from("user_streaks")
-        .update({
-          current_streak: newStreak,
-          highest_streak: highestStreak,
-          last_login: today.toISOString(),
-          freeze_count: freezeCount,
-          current_title: currentTitle
-        })
-        .eq("user_id", user.id)
-        .select()
-        .single();
+      const updatedFields = {
+        current_streak: newStreak,
+        highest_streak: highestStreak,
+        last_login: today.toISOString(),
+        freeze_count: freezeCount,
+        current_title: currentTitle,
+        updated_at: now.toISOString()
+      };
 
-      const { data: updatedStreak, error: updateError } = await (Promise.race([updatePromise, timeoutPromise]) as any);
-
-      if (updateError) {
-        console.error("Error updating streak:", updateError);
-        return streakData; // Return old data on failure
-      }
+      await updateDoc(streakRef, updatedFields);
 
       if (shouldCreateAlert && alertMessage) {
-        await createStreakAlert(user.id, alertMessage, "streak");
+        await createStreakAlert(user.uid, alertMessage, "streak");
       }
 
-      return updatedStreak;
+      return { ...streakData, ...updatedFields };
     }
 
     return streakData;
   } catch (error) {
-    console.error("Error in updateUserStreak or timeout:", error);
+    console.error("Error in updateUserStreak:", error);
     return null;
   }
 }
 
-// Helper function to create streak alerts with deduplication
+// Helper function to create streak alerts
 async function createStreakAlert(userId: string, message: string, type: string) {
   try {
-    // Create the alert if no duplicate exists
-    const { error: insertError } = await supabase
-      .from('alerts')
-      .upsert(
-        {
-          user_id: userId,
-          title: type === 'achievement' ? 'Achievement Unlocked!' : 'Streak Update',
-          message: message,
-          type: type,
-          read: false
-        },
-        { onConflict: 'user_id,type,message,hour_bucket', ignoreDuplicates: true }
-      );
-
-    if (insertError) {
-      console.error("Error creating streak alert:", insertError);
-    }
+    const alertsRef = collection(db, 'alerts');
+    await addDoc(alertsRef, {
+      user_id: userId,
+      title: type === 'achievement' ? 'Achievement Unlocked!' : 'Streak Update',
+      message: message,
+      type: type,
+      read: false,
+      created_at: new Date().toISOString()
+    });
   } catch (error) {
     console.error("Error creating streak alert:", error);
   }
@@ -252,7 +205,7 @@ export function canMaintainStreak(lastLogin: string, freezeCount: number): boole
   return daysSince - 1 <= freezeCount; // Can use freeze credits
 }
 
-// Get streak status for UI display - updated to use flexible interface
+// Get streak status for UI display
 export function getStreakStatus(streak: StreakStatusData): {
   status: 'active' | 'at_risk' | 'broken';
   message: string;
@@ -293,63 +246,37 @@ export function getStreakStatus(streak: StreakStatusData): {
   };
 }
 
-// Get user profile data including email
+// Get user profile data from Firestore
 export async function getUserProfile() {
   try {
-    console.log("getUserProfile called");
-
-    // Timeout for Supabase operations
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Profile fetch timed out')), 8000);
-    });
-
-    const userPromise = supabase.auth.getUser();
-    const { data: { user }, error: authError } = await (Promise.race([userPromise, timeoutPromise]) as any);
-
-    if (authError || !user) {
+    const user = auth.currentUser;
+    if (!user) {
       console.log("No user in getUserProfile, skipping");
       return null;
     }
 
-    const profilePromise = supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    const profileRef = doc(db, "user_profiles", user.uid);
+    const profileSnap = await getDoc(profileRef);
 
-    const { data: profile, error } = await (Promise.race([profilePromise, timeoutPromise]) as any);
-
-    if (error && !error.message.includes("no rows")) {
-      console.error("Error fetching user profile:", error);
-      return null;
+    if (profileSnap.exists()) {
+      return { id: profileSnap.id, ...profileSnap.data() };
     }
 
     // If profile doesn't exist, create one
-    if (!profile) {
-      console.log("Creating new profile for user:", user.id);
-      const insertPromise = supabase
-        .from("user_profiles")
-        .insert({
-          id: user.id,
-          email: user.email,
-          username: user.email?.split('@')[0] || 'user'
-        })
-        .select()
-        .single();
+    console.log("Creating new profile for user:", user.uid);
+    const newProfile = {
+      id: user.uid,
+      email: user.email || "",
+      username: user.email?.split('@')[0] || 'user',
+      role: 'free',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-      const { data: newProfile, error: createError } = await (Promise.race([insertPromise, timeoutPromise]) as any);
-
-      if (createError) {
-        console.error("Error creating user profile:", createError);
-        return null;
-      }
-
-      return newProfile;
-    }
-
-    return profile;
+    await setDoc(profileRef, newProfile);
+    return newProfile;
   } catch (error) {
-    console.error("Error in getUserProfile or timeout:", error);
+    console.error("Error in getUserProfile:", error);
     return null;
   }
 }

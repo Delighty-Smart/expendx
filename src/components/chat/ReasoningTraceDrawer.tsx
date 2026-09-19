@@ -22,13 +22,12 @@ export const ReasoningTraceDrawer: React.FC<ReasoningTraceDrawerProps> = ({ reas
       {/* Minimal Inline Text Link Trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        style={{ fontSize: '9.5px', lineHeight: '12px', transform: 'scale(0.95)', transformOrigin: 'left center' }}
-        className="inline-flex items-center gap-1 font-medium text-text-muted/70 hover:text-text-secondary transition-colors cursor-pointer group py-0.5 tracking-tight"
+        className="inline-flex items-center gap-0.5 sm:gap-1 text-[9.5px] leading-none font-normal text-text-muted/60 hover:text-text-secondary transition-colors cursor-pointer group py-0.5 tracking-tight scale-75 sm:scale-100 origin-left"
       >
-        <Sparkles className="w-2.5 h-2.5 text-amber-500/80 group-hover:text-amber-500 shrink-0" />
+        <Sparkles className="w-2.5 h-2.5 text-amber-500/70 group-hover:text-amber-500 shrink-0" />
         <span className="group-hover:underline whitespace-nowrap">Thought process ({formattedTime}s)</span>
         <ChevronDown
-          className={`w-2.5 h-2.5 text-text-muted/70 transition-transform duration-200 shrink-0 ${
+          className={`w-2.5 h-2.5 text-text-muted/60 transition-transform duration-200 shrink-0 ${
             isOpen ? 'rotate-180 text-amber-500' : ''
           }`}
         />

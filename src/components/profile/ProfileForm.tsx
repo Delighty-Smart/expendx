@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 import { PROFILE_AVATARS } from "@/lib/gradients";
 import UserAvatar from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
@@ -63,20 +64,16 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
     try {
       setIsSubmitting(true);
 
-      const { error } = await supabase
-        .from("user_profiles")
-        .update({
-          username: data.username,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          bio: data.bio,
-          age_bracket: data.age_bracket,
-          continent: data.continent,
-          country: data.country,
-        })
-        .eq("id", profile.id);
-
-      if (error) throw error;
+      await setDoc(doc(db, "user_profiles", profile.id), {
+        username: data.username,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        bio: data.bio,
+        age_bracket: data.age_bracket,
+        continent: data.continent,
+        country: data.country,
+        updated_at: new Date().toISOString()
+      }, { merge: true });
 
       // Update local state
       setProfile({
@@ -114,14 +111,10 @@ const ProfileForm = ({ profile, setProfile }: { profile: any; setProfile: (profi
     try {
       setUpdatingGradient(true);
 
-      const { error } = await supabase
-        .from("user_profiles")
-        .update({
-          avatar_url: gradientClass
-        })
-        .eq("id", profile.id);
-
-      if (error) throw error;
+      await setDoc(doc(db, "user_profiles", profile.id), {
+        avatar_url: gradientClass,
+        updated_at: new Date().toISOString()
+      }, { merge: true });
 
       // Update local state
       setProfile({

@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check authentication
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check document ownership
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper function for user_id field check
+    function isDataOwner() {
+      return isAuthenticated() && (
+        (resource != null && resource.data.user_id == request.auth.uid) ||
+        (request.resource != null && request.resource.data.user_id == request.auth.uid)
+      );
+    }
+
+    // User profiles collection
+    match /user_profiles/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User settings collection
+    match /user_settings/{userId} {
+      allow read, write: if isOwner(userId) || isDataOwner();
+    }
+
+    // User streaks collection
+    match /user_streaks/{userId} {
+      allow read, write: if isOwner(userId) || isDataOwner();
+    }
+
+    // Transactions collection
+    match /transactions/{transactionId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // Budget categories collection
+    match /budget_categories/{budgetId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // Savings goals collection
+    match /savings_goals/{goalId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // User subscriptions collection
+    match /user_subscriptions/{subId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // User categories collection
+    match /user_categories/{catId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // Recurring templates collection
+    match /recurring_templates/{templateId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // Alerts collection
+    match /alerts/{alertId} {
+      allow read, write: if isDataOwner();
+    }
+
+    // Feedback collection
+    match /feedback/{feedbackId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isDataOwner();
+    }
+
+    // Banners collection (Public read, admin write)
+    match /banners/{bannerId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Slideshows collection (Public read, admin write)
+    match /slideshows/{slideshowId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Fallback: deny all other unmatched paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

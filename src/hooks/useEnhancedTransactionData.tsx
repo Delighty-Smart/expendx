@@ -1,14 +1,8 @@
-﻿
+
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Transaction, TransactionType } from "@/types/transactions";
-import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
-import { useToast } from "@/hooks/use-toast";
-import { useSubscriptionIntegration } from './useSubscriptionIntegration';
-import { normalizeDate } from "@/lib/utils";
-
+import { db } from "@/lib/firebase";
+import { collection, query, where, orderBy, getDocs, limit, startAfter, QueryConstraint } from "firebase/firestore";
 
 export function useEnhancedTransactionData(filter?: {
   type?: TransactionType | "all",
@@ -50,49 +44,44 @@ export function useEnhancedTransactionData(filter?: {
 
       const pageSize = 20;
       const from = pageParam * pageSize;
-      const to = from + pageSize - 1;
 
       if (navigator.onLine) {
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-          let query = supabase.from("transactions")
-            .select("*", { count: 'exact' })
-            .eq("user_id", user.id);
+          const constraints: QueryConstraint[] = [
+            where("user_id", "==", user.id)
+          ];
 
           if (!filter?.includeArchived) {
-            query = query.eq("archived", false);
+            constraints.push(where("archived", "==", false));
           }
 
           if (filter) {
             if (filter.type && filter.type !== "all") {
-              query = query.eq("type", filter.type);
+              constraints.push(where("type", "==", filter.type));
             }
             if (normalizedStartDate) {
-              query = query.gte("date", normalizedStartDate);
+              constraints.push(where("date", ">=", normalizedStartDate));
             }
             if (normalizedEndDate) {
-              query = query.lte("date", normalizedEndDate);
+              constraints.push(where("date", "<=", normalizedEndDate));
             }
             if (filter.category && filter.category !== "All") {
-              query = query.eq("category", filter.category);
+              constraints.push(where("category", "==", filter.category));
             }
           }
 
-          const { data, error } = await query
-            .order("date", { ascending: false })
-            .range(from, to)
-            .abortSignal(controller.signal);
+          constraints.push(orderBy("date", "desc"));
 
-          clearTimeout(timeoutId);
+          const q = query(collection(db, "transactions"), ...constraints);
+          const snap = await getDocs(q);
 
-          if (error) throw error;
+          const allFetched = snap.docs.map(docSnap => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+            type: docSnap.data().type as TransactionType
+          })) as Transaction[];
 
-          return (data || []).map(item => ({
-            ...item,
-            type: item.type as TransactionType
-          }));
+          return allFetched.slice(from, from + pageSize);
         } catch (fetchError) {
           const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
           return allTransactions.slice(from, from + pageSize);

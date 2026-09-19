@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, query, where, orderBy, getDocs, QueryConstraint } from "firebase/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
@@ -27,45 +28,50 @@ export function useTransactionData(filter?: {
       // If online, fetch from database
       if (navigator.onLine) {
         try {
-          let query = supabase.from("transactions")
-            .select("*")
-            .eq("user_id", user!.id);
+          const constraints: QueryConstraint[] = [
+            where("user_id", "==", user!.id)
+          ];
 
           if (!filter?.includeArchived) {
-            query = query.eq("archived", false);
+            constraints.push(where("archived", "==", false));
           }
 
           if (filter) {
             if (filter.type && filter.type !== "all") {
-              query = query.eq("type", filter.type);
+              constraints.push(where("type", "==", filter.type));
             }
             if (filter.startDate) {
-              query = query.gte("date", filter.startDate);
+              constraints.push(where("date", ">=", filter.startDate));
             }
             if (filter.endDate) {
-              query = query.lte("date", filter.endDate);
+              constraints.push(where("date", "<=", filter.endDate));
             }
             if (filter.category && filter.category !== "All") {
-              query = query.eq("category", filter.category);
+              constraints.push(where("category", "==", filter.category));
             }
           }
 
-          const { data, error } = await query.order("date", { ascending: false });
+          constraints.push(orderBy("date", "desc"));
 
-          if (error) throw error;
+          const q = query(collection(db, "transactions"), ...constraints);
+          const snap = await getDocs(q);
 
-          return (data || []).map(item => ({
-            ...item,
-            type: item.type as TransactionType
-          })) as Transaction[];
+          return snap.docs.map(docSnap => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              ...data,
+              type: data.type as TransactionType
+            } as Transaction;
+          });
         } catch (fetchError) {
           console.error("useTransactionData: Fallback to cache", fetchError);
-          return enhancedOfflineManager.getTransactions();
+          return enhancedOfflineManager.getTransactions(filter);
         }
       }
 
       // If offline, get from cache
-      return enhancedOfflineManager.getTransactions();
+      return enhancedOfflineManager.getTransactions(filter);
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
   });

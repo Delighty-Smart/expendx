@@ -13,102 +13,8 @@ import type {
 import { capabilityRegistry } from '@/services/ai/capability-registry';
 import { lucentEventBus } from '@/services/ai/event-bus';
 import { enhancedOfflineManager } from '@/services/enhancedOfflineManager';
-import { supabase } from '@/integrations/supabase/client';
-
-// ─── Service Functions ───────────────────────────────────────────────────────
-
-function getGoals(
-  _params: Record<string, any>,
-  _ctx: ExecutionContext,
-): Promise<ToolResult<GoalProgress[]>> {
-  const savings = enhancedOfflineManager.getSavings();
-
-  const goals: GoalProgress[] = savings.map((g: any) => {
-    const target = Number(g.target_amount || 0);
-    const current = Number(g.current_amount || 0);
-    const percentComplete = target > 0 ? Math.round((current / target) * 100) : 0;
-
-    const allTxns = enhancedOfflineManager.getTransactions();
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const monthlySavings = allTxns
-      .filter(t => t.date?.startsWith(currentMonth) && t.type === 'savings')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const remaining = Math.max(0, target - current);
-    const monthsToGoal = monthlySavings > 0 ? Math.ceil(remaining / monthlySavings) : null;
-
-    return {
-      id: g.id,
-      category: g.category || 'General Savings',
-      targetAmount: target,
-      currentAmount: current,
-      percentComplete,
-      monthsToGoal,
-    };
-  });
-
-  return Promise.resolve({
-    success: true,
-    data: goals,
-    source: 'goals',
-    timestamp: Date.now(),
-  });
-}
-
-function getGoalProgress(
-  params: Record<string, any>,
-  ctx: ExecutionContext,
-): Promise<ToolResult<GoalProgress | null>> {
-  return getGoals({}, ctx).then(result => {
-    const match = result.data?.find(g =>
-      g.category.toLowerCase().includes((params.goalName || '').toLowerCase()) ||
-      g.id === params.id
-    );
-    return {
-      success: true,
-      data: match || null,
-      source: 'goals',
-      timestamp: Date.now(),
-    };
-  });
-}
-
-function forecastGoal(
-  params: Record<string, any>,
-  _ctx: ExecutionContext,
-): Promise<ToolResult<{ targetAmount: number; currentAmount: number; monthlySavingsRate: number; monthsToGoal: number | null; projectedDate: string | null }>> {
-  const { targetAmount, monthlySavingsRate } = params;
-  const target = Number(targetAmount || 0);
-  const monthlyRate = Number(monthlySavingsRate || 0);
-
-  const allTxns = enhancedOfflineManager.getTransactions();
-  const totalSavings = allTxns
-    .filter(t => t.type === 'savings')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const remaining = Math.max(0, target - totalSavings);
-  const monthsToGoal = monthlyRate > 0 ? Math.ceil(remaining / monthlyRate) : null;
-
-  let projectedDate: string | null = null;
-  if (monthsToGoal !== null) {
-    const d = new Date();
-    d.setMonth(d.getMonth() + monthsToGoal);
-    projectedDate = d.toISOString().split('T')[0];
-  }
-
-  return Promise.resolve({
-    success: true,
-    data: {
-      targetAmount: target,
-      currentAmount: totalSavings,
-      monthlySavingsRate: monthlyRate,
-      monthsToGoal,
-      projectedDate,
-    },
-    source: 'goals',
-    timestamp: Date.now(),
-  });
-}
+import { db } from '@/lib/firebase';
+import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 async function createGoal(
   params: Record<string, any>,
@@ -116,24 +22,26 @@ async function createGoal(
 ): Promise<ToolResult<{ created: boolean }>> {
   const { category, targetAmount, targetDate } = params;
 
-  const { error } = await supabase
-    .from('savings_goals' as any)
-    .insert({
+  try {
+    const docRef = doc(collection(db, 'savings_goals'));
+    await setDoc(docRef, {
+      id: docRef.id,
       category: category || 'General Savings',
       target_amount: Number(targetAmount),
       current_amount: 0,
       target_date: targetDate || null,
       user_id: ctx.userId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
 
-  if (error) {
-    return { success: false, error: error.message, source: 'goals', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['savings_goals']);
+    lucentEventBus.emit('goal:created', { category, targetAmount: Number(targetAmount) }, 'goal-service');
+
+    return { success: true, data: { created: true }, source: 'goals', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'goals', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['savings_goals']);
-  lucentEventBus.emit('goal:created', { category, targetAmount: Number(targetAmount) }, 'goal-service');
-
-  return { success: true, data: { created: true }, source: 'goals', timestamp: Date.now() };
 }
 
 async function addToGoal(
@@ -151,20 +59,19 @@ async function addToGoal(
   }
 
   const newAmount = Number(goal.current_amount || 0) + Number(amount);
-  const { error } = await supabase
-    .from('savings_goals' as any)
-    .update({ current_amount: newAmount })
-    .eq('id', goal.id)
-    .eq('user_id', ctx.userId);
+  try {
+    await updateDoc(doc(db, 'savings_goals', goal.id), {
+      current_amount: newAmount,
+      updated_at: new Date().toISOString()
+    });
 
-  if (error) {
-    return { success: false, error: error.message, source: 'goals', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['savings_goals']);
+    lucentEventBus.emit('goal:updated', { id: goal.id, current_amount: newAmount }, 'goal-service');
+
+    return { success: true, data: { updated: true, newCurrentAmount: newAmount }, source: 'goals', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'goals', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['savings_goals']);
-  lucentEventBus.emit('goal:updated', { id: goal.id, current_amount: newAmount }, 'goal-service');
-
-  return { success: true, data: { updated: true, newCurrentAmount: newAmount }, source: 'goals', timestamp: Date.now() };
 }
 
 async function withdrawFromGoal(
@@ -182,20 +89,19 @@ async function withdrawFromGoal(
   }
 
   const newAmount = Math.max(0, Number(goal.current_amount || 0) - Number(amount));
-  const { error } = await supabase
-    .from('savings_goals' as any)
-    .update({ current_amount: newAmount })
-    .eq('id', goal.id)
-    .eq('user_id', ctx.userId);
+  try {
+    await updateDoc(doc(db, 'savings_goals', goal.id), {
+      current_amount: newAmount,
+      updated_at: new Date().toISOString()
+    });
 
-  if (error) {
-    return { success: false, error: error.message, source: 'goals', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['savings_goals']);
+    lucentEventBus.emit('goal:updated', { id: goal.id, current_amount: newAmount }, 'goal-service');
+
+    return { success: true, data: { updated: true, newCurrentAmount: newAmount }, source: 'goals', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'goals', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['savings_goals']);
-  lucentEventBus.emit('goal:updated', { id: goal.id, current_amount: newAmount }, 'goal-service');
-
-  return { success: true, data: { updated: true, newCurrentAmount: newAmount }, source: 'goals', timestamp: Date.now() };
 }
 
 async function deleteGoal(
@@ -204,20 +110,16 @@ async function deleteGoal(
 ): Promise<ToolResult<{ deleted: boolean }>> {
   const { id } = params;
 
-  const { error } = await supabase
-    .from('savings_goals' as any)
-    .delete()
-    .eq('id', id)
-    .eq('user_id', ctx.userId);
+  try {
+    await deleteDoc(doc(db, 'savings_goals', id));
 
-  if (error) {
-    return { success: false, error: error.message, source: 'goals', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['savings_goals']);
+    lucentEventBus.emit('goal:deleted', { id }, 'goal-service');
+
+    return { success: true, data: { deleted: true }, source: 'goals', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'goals', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['savings_goals']);
-  lucentEventBus.emit('goal:deleted', { id }, 'goal-service');
-
-  return { success: true, data: { deleted: true }, source: 'goals', timestamp: Date.now() };
 }
 
 async function updateGoal(
@@ -225,24 +127,20 @@ async function updateGoal(
   ctx: ExecutionContext,
 ): Promise<ToolResult<{ updated: boolean }>> {
   const { id, targetAmount, currentAmount } = params;
-  const updates: Record<string, any> = {};
+  const updates: Record<string, any> = { updated_at: new Date().toISOString() };
   if (targetAmount !== undefined) updates.target_amount = Number(targetAmount);
   if (currentAmount !== undefined) updates.current_amount = Number(currentAmount);
 
-  const { error } = await supabase
-    .from('savings_goals' as any)
-    .update(updates)
-    .eq('id', id)
-    .eq('user_id', ctx.userId);
+  try {
+    await updateDoc(doc(db, 'savings_goals', id), updates);
 
-  if (error) {
-    return { success: false, error: error.message, source: 'goals', timestamp: Date.now() };
+    ctx.invalidateQueries?.(['savings_goals']);
+    lucentEventBus.emit('goal:updated', { id, ...updates }, 'goal-service');
+
+    return { success: true, data: { updated: true }, source: 'goals', timestamp: Date.now() };
+  } catch (err: any) {
+    return { success: false, error: err.message, source: 'goals', timestamp: Date.now() };
   }
-
-  ctx.invalidateQueries?.(['savings_goals']);
-  lucentEventBus.emit('goal:updated', { id, ...updates }, 'goal-service');
-
-  return { success: true, data: { updated: true }, source: 'goals', timestamp: Date.now() };
 }
 
 // ─── Registration ────────────────────────────────────────────────────────────

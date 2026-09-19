@@ -1,7 +1,7 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/lib/firebase";
+import { collection, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
 
@@ -45,16 +45,18 @@ export function useEnhancedBudgetData() {
 
   const addBudgetOffline = useCallback(async (budgetData: { category: string; monthly_limit: number }) => {
     try {
-      // Add to sync queue since budgets aren't fully implemented in offline manager yet
       if (navigator.onLine) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) throw new Error("No user found");
 
-        const { error } = await supabase
-          .from("budget_categories")
-          .insert({ ...budgetData, user_id: user.id });
-
-        if (error) throw error;
+        const docRef = doc(collection(db, "budget_categories"));
+        await setDoc(docRef, {
+          id: docRef.id,
+          ...budgetData,
+          user_id: user.uid,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
 
         // Refresh data
         queryClient.invalidateQueries({ queryKey: ['enhanced_budgets'] });
@@ -85,16 +87,13 @@ export function useEnhancedBudgetData() {
   const updateBudgetOffline = useCallback(async (id: string, updates: Partial<Budget>) => {
     try {
       if (navigator.onLine) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) throw new Error("No user found");
 
-        const { error } = await supabase
-          .from("budget_categories")
-          .update(updates)
-          .eq('id', id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
+        await updateDoc(doc(db, "budget_categories", id), {
+          ...updates,
+          updated_at: new Date().toISOString()
+        });
 
         queryClient.invalidateQueries({ queryKey: ['enhanced_budgets'] });
         queryClient.invalidateQueries({ queryKey: ['budgets'] });
@@ -124,16 +123,10 @@ export function useEnhancedBudgetData() {
   const deleteBudgetOffline = useCallback(async (id: string) => {
     try {
       if (navigator.onLine) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = auth.currentUser;
         if (!user) throw new Error("No user found");
 
-        const { error } = await supabase
-          .from("budget_categories")
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
+        await deleteDoc(doc(db, "budget_categories", id));
 
         queryClient.invalidateQueries({ queryKey: ['enhanced_budgets'] });
         queryClient.invalidateQueries({ queryKey: ['budgets'] });
