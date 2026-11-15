@@ -7,13 +7,16 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
+  updateProfile,
   User as FirebaseUser
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import { Capacitor } from '@capacitor/core';
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 
 import { updateUserStreak, getUserProfile } from '@/lib/streak';
+import { ONBOARDING_PENDING_KEY, ONBOARDING_SEEN_KEY } from '@/lib/auth-constants';
 
 export interface AppUser {
   id: string;
@@ -179,11 +182,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const appUser = formatUser(userCredential.user);
+      const fbUser = userCredential.user;
 
+      const firstName = (metadata?.firstName as string)?.trim() || '';
+      const lastName = (metadata?.lastName as string)?.trim() || '';
+      const username = fbUser.email?.split('@')[0] || 'user';
+      const displayName = [firstName, lastName].filter(Boolean).join(' ') || username;
+
+      // Keep the Firebase Auth display name in sync with the profile
+      if (fbUser.displayName !== displayName) {
+        await updateProfile(fbUser, { displayName }).catch((err) =>
+          console.error('Failed to update display name:', err)
+        );
+      }
+
+      // Flag this session so the Auth page can route the user through onboarding
+      try {
+        localStorage.setItem(ONBOARDING_PENDING_KEY, fbUser.uid);
+      } catch {
+        // Storage can be unavailable in private mode — onboarding still works without the flag
+      }
+
+      // Create the Firestore profile document up-front so the rest of the app has a record immediately
+      const now = new Date().toISOString();
+      const newProfile = {
+        id: fbUser.uid,
+        email: fbUser.email || '',
+        username,
+        first_name: firstName || null,
+        last_name: lastName || null,
+        display_name: displayName,
+        avatar_url: null,
+        role: 'free',
+        created_at: now,
+        updated_at: now,
+      };
+
+      await setDoc(doc(db, 'user_profiles', fbUser.uid), newProfile).catch((err) =>
+        console.error('Failed to create user profile:', err)
+      );
+
+      const appUser = formatUser(fbUser);
       if (appUser) {
-        cacheUserData(appUser.id);
-        await fetchProfile(appUser.id);
+        cacheUserData(appUser.id, newProfile);
+        setProfile(newProfile);
       }
 
       showToast({
@@ -247,11 +289,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setIsAdmin(false);
       cacheUserData(null);
-      sessionStorage.removeItem('expendx_onboarding_seen');
+      sessionStorage.removeItem(ONBOARDING_SEEN_KEY);
+      try { localStorage.removeItem(ONBOARDING_PENDING_KEY); } catch {
+        // Ignore storage failures on sign out
+      }
 
       await firebaseSignOut(auth);
       if (Capacitor.isNativePlatform()) {
-        try { await GoogleSignIn.signOut(); } catch (e) { }
+        try { await GoogleSignIn.signOut(); } catch {
+          // Native sign-out is best effort
+        }
       }
 
       showToast({

@@ -88,7 +88,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       reader.onload = async (event) => {
         const rawBase64 = event.target?.result as string;
         if (rawBase64 && rawBase64.startsWith('data:image')) {
-          // Canvas compression to stay under Supabase payload limits
+          // Canvas compression to stay under Firestore payload limits
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');

@@ -13,28 +13,16 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     const location = useLocation();
 
     useEffect(() => {
-        // If we are still loading the session, do nothing yet
+        // Wait for Firebase Auth to restore the session before deciding
         if (isLoading) return;
 
-        // If there's no user, redirect to /auth
-        // BUT hold the redirect if we are currently parsing an OAuth hash/search code
-        // because the user IS authenticated, Supabase just hasn't updated its React state yet
-        const urlParams = new URLSearchParams(window.location.search);
-        const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-        const processingOAuth = urlParams.has('code') || hashParams.has('access_token');
-
-        if (!user && !processingOAuth) {
+        if (!user) {
             navigate('/auth', { replace: true, state: { from: location } });
         }
     }, [user, isLoading, navigate, location]);
 
-    // Show a loading spinner until auth state is confirmed
-    // or if we are momentarily waiting for an OAuth callback to finish
-    const urlParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-    const processingOAuth = urlParams.has('code') || hashParams.has('access_token');
-
-    if (isLoading || (!user && processingOAuth)) {
+    // Show a loading spinner until the Firebase auth state is confirmed
+    if (isLoading) {
         return (
             <div className="flex h-screen w-screen items-center justify-center bg-background rounded-xl p-8">
                 <LoadingState size="lg" message="Restoring session..." />

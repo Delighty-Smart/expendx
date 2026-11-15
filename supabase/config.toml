@@ -1,7 +1,0 @@
-project_id = "wulhjbwijgbticuslygm"
-
-[functions.upload-feedback-image]
-verify_jwt = false
-
-[functions.extract-receipt-data]
-verify_jwt = true

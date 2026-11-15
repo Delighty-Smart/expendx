@@ -5,6 +5,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { Toaster } from "@/components/ui/toaster";
 import { Onboarding } from "@/components/Onboarding";
 import { useAuth } from "@/hooks/useAuth";
+import { ONBOARDING_PENDING_KEY, ONBOARDING_SEEN_KEY } from "@/lib/auth-constants";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,7 +20,8 @@ const Auth = () => {
 
     if (!isLoading) {
       if (user) {
-        const isNewUser = !!user.user_metadata?.isNewUser;
+        // Accounts created in this session are flagged at signup (Firebase-native, no user_metadata)
+        const isNewUser = localStorage.getItem(ONBOARDING_PENDING_KEY) === user.id;
         console.log("User authenticated, is new user:", isNewUser);
 
         if (isNewUser) {
@@ -31,7 +33,7 @@ const Auth = () => {
         }
       } else {
         // User not logged in, check if they've already seen onboarding in this sessions
-        const hasSeenOnboarding = sessionStorage.getItem('expendx_onboarding_seen');
+        const hasSeenOnboarding = sessionStorage.getItem(ONBOARDING_SEEN_KEY);
         if (hasSeenOnboarding) {
           setView('auth');
         } else {
@@ -59,16 +61,14 @@ const Auth = () => {
       console.log("Handling signup for:", email, "firstName:", firstName, "lastName:", lastName);
 
       const metadata = {
-        first_name: firstName,
-        last_name: lastName,
-        isNewUser: true
+        firstName,
+        lastName
       };
 
       console.log("Signup metadata:", metadata);
       await signUp(email, password, metadata);
-      // signUp handles session creation automatically.
-      // If email confirmation is enabled, user will need to verify first.
-      // If disabled, the onAuthStateChange listener will pick up the new session.
+      // signUp creates the Firebase Auth user, the Firestore profile and flags the
+      // session for onboarding; the onAuthStateChanged listener picks up the session.
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
@@ -88,10 +88,13 @@ const Auth = () => {
   };
 
   const handleOnboardingComplete = async () => {
-    sessionStorage.setItem('expendx_onboarding_seen', 'true');
+    sessionStorage.setItem(ONBOARDING_SEEN_KEY, 'true');
+    try { localStorage.removeItem(ONBOARDING_PENDING_KEY); } catch {
+      // Ignore storage failures
+    }
     if (user) {
-      // If they were already authenticated (e.g. just signed up), go to dashboard
-      navigate('/dashboard');
+      // If they were already authenticated (e.g. just signed up), go to chat
+      navigate('/chat');
     } else {
       // Go to login form
       setView('auth');

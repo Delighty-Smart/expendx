@@ -2,7 +2,7 @@
  * Budget Service
  *
  * Wraps all budget operations and registers them as tools.
- * Data source: enhancedOfflineManager + Supabase budget_categories table.
+ * Data source: enhancedOfflineManager + Firestore budget_categories collection.
  */
 
 import type {

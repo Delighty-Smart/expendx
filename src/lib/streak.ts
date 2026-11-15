@@ -262,9 +262,11 @@ export async function getUserProfile() {
       return { id: profileSnap.id, ...profileSnap.data() };
     }
 
-    // If profile doesn't exist, create one
+    // If profile doesn't exist, create one from the Firebase Auth account.
+    // Only include fields we actually know so a concurrent write (e.g. signup)
+    // is merged rather than clobbered.
     console.log("Creating new profile for user:", user.uid);
-    const newProfile = {
+    const newProfile: Record<string, any> = {
       id: user.uid,
       email: user.email || "",
       username: user.email?.split('@')[0] || 'user',
@@ -273,7 +275,19 @@ export async function getUserProfile() {
       updated_at: new Date().toISOString()
     };
 
-    await setDoc(profileRef, newProfile);
+    const nameParts = (user.displayName || '').trim().split(/\s+/).filter(Boolean);
+    if (nameParts.length > 0) {
+      newProfile.first_name = nameParts[0];
+      newProfile.last_name = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
+    }
+    if (user.displayName) {
+      newProfile.display_name = user.displayName;
+    }
+    if (user.photoURL) {
+      newProfile.avatar_url = user.photoURL;
+    }
+
+    await setDoc(profileRef, newProfile, { merge: true });
     return newProfile;
   } catch (error) {
     console.error("Error in getUserProfile:", error);

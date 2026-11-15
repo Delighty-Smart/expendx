@@ -59,10 +59,12 @@ const isHashedAsset = (url) => {
 
 // Helper: is this an API/auth request that should never be cached?
 const isApiOrAuthRequest = (url) => {
-  return url.includes('/rest/v1/') ||
-    url.includes('/auth/') ||
+  return url.includes('/auth/') ||
     url.includes('/token') ||
-    url.includes('/supabase.co/') ||
+    url.includes('/identitytoolkit.googleapis.com/') ||
+    url.includes('/securetoken.googleapis.com/') ||
+    url.includes('/firestore.googleapis.com/') ||
+    url.includes('/firebaseapp.com/__/auth/') ||
     url.includes('/graphql') ||
     url.includes('/api/') ||
     url.includes('/realtime/');

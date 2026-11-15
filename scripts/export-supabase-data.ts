@@ -26,11 +26,9 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-// Supabase URL & Key (ALWAYS prioritize SUPABASE_SERVICE_ROLE_KEY over public keys)
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://wulhjbwijgbticuslygm.supabase.co";
-const SUPABASE_KEY = 
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1bGhqYndpamdidGljdXNseWdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNzExNDk4MiwiZXhwIjoyMDUyNjkwOTgyfQ.-LtWEKQfoSLCcyaJhVRhUTFDv7oiIVdv4B8HnkK1jtw";
+// Supabase URL & Key — the service role key must be provided at runtime, never hardcoded
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const TABLES_TO_EXPORT = [
   "user_profiles",
@@ -84,9 +82,11 @@ async function runExport() {
     console.warn("To export all user data, please set SUPABASE_SERVICE_ROLE_KEY in .env or pass it to the script.\n");
   }
 
-  if (!SUPABASE_KEY) {
-    console.error("❌ Error: SUPABASE_KEY (VITE_SUPABASE_ANON_KEY or SUPABASE_SERVICE_ROLE_KEY) is missing.");
-    console.log("Please pass your key or set VITE_SUPABASE_ANON_KEY in .env");
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error("❌ Error: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
+    console.log("Set them in your shell before running, e.g.:");
+    console.log("  $env:VITE_SUPABASE_URL=\"https://<project>.supabase.co\"");
+    console.log("  $env:SUPABASE_SERVICE_ROLE_KEY=\"<service-role-key>\"");
     return;
   }
 

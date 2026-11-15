@@ -2,7 +2,7 @@
  * Goal Service
  *
  * Wraps savings goal operations and registers them as tools.
- * Data source: enhancedOfflineManager.getSavings() + Supabase savings_goals table.
+ * Data source: enhancedOfflineManager.getSavings() + Firestore savings_goals collection.
  */
 
 import type {

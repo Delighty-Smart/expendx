@@ -5,7 +5,7 @@
  * in the Capability Registry. The AI invokes these tools through
  * the orchestrator — it never touches enhancedOfflineManager directly.
  *
- * Data source: enhancedOfflineManager (which handles Supabase + IndexedDB)
+ * Data source: enhancedOfflineManager (which handles Firestore + IndexedDB)
  */
 
 import type {

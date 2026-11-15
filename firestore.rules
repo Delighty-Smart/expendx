@@ -1,18 +1,17 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check authentication
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to check document ownership
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Helper function for user_id field check
+    // Matches docs that carry a `user_id` field (transactions, budgets, alerts, ...)
     function isDataOwner() {
       return isAuthenticated() && (
         (resource != null && resource.data.user_id == request.auth.uid) ||
@@ -20,75 +19,89 @@ service cloud.firestore {
       );
     }
 
-    // User profiles collection
+    // Admin is derived from the caller's own user_profiles document
+    function isAdmin() {
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/user_profiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/user_profiles/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ─── Identity & preferences ─────────────────────────────────────────────
     match /user_profiles/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
-    // User settings collection
     match /user_settings/{userId} {
-      allow read, write: if isOwner(userId) || isDataOwner();
+      allow read, write: if isOwner(userId) || isDataOwner() || isAdmin();
     }
 
-    // User streaks collection
     match /user_streaks/{userId} {
-      allow read, write: if isOwner(userId) || isDataOwner();
+      allow read, write: if isOwner(userId) || isDataOwner() || isAdmin();
     }
 
-    // Transactions collection
+    match /user_categories/{categoryId} {
+      allow read, write: if isDataOwner() || isAdmin();
+    }
+
+    match /monthly_income_estimates/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /notification_preferences/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /push_subscriptions/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ─── Financial data ─────────────────────────────────────────────────────
     match /transactions/{transactionId} {
-      allow read, write: if isDataOwner();
+      allow read, write: if isDataOwner() || isAdmin();
     }
 
-    // Budget categories collection
     match /budget_categories/{budgetId} {
-      allow read, write: if isDataOwner();
+      allow read, write: if isDataOwner() || isAdmin();
     }
 
-    // Savings goals collection
     match /savings_goals/{goalId} {
-      allow read, write: if isDataOwner();
+      allow read, write: if isDataOwner() || isAdmin();
     }
 
-    // User subscriptions collection
-    match /user_subscriptions/{subId} {
-      allow read, write: if isDataOwner();
+    match /subscriptions/{subscriptionId} {
+      allow read, write: if isDataOwner() || isAdmin();
     }
 
-    // User categories collection
-    match /user_categories/{catId} {
-      allow read, write: if isDataOwner();
-    }
-
-    // Recurring templates collection
     match /recurring_templates/{templateId} {
-      allow read, write: if isDataOwner();
+      allow read, write: if isDataOwner() || isAdmin();
     }
 
-    // Alerts collection
     match /alerts/{alertId} {
-      allow read, write: if isDataOwner();
+      allow read, write: if isDataOwner() || isAdmin();
     }
 
-    // Feedback collection
-    match /feedback/{feedbackId} {
+    // ─── Feedback ───────────────────────────────────────────────────────────
+    match /user_feedback/{feedbackId} {
       allow create: if isAuthenticated();
-      allow read, update, delete: if isDataOwner();
+      allow read, update, delete: if isAdmin() || isDataOwner();
     }
 
-    // Banners collection (Public read, admin write)
-    match /banners/{bannerId} {
+    match /feedback_responses/{responseId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ─── Admin-managed content ──────────────────────────────────────────────
+    match /admin_banners/{bannerId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
-    // Slideshows collection (Public read, admin write)
-    match /slideshows/{slideshowId} {
+    match /slideshow_banners/{bannerId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
-    // Fallback: deny all other unmatched paths
+    // ─── Fallback: deny everything else ─────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
