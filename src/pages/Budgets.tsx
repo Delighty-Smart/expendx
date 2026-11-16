@@ -13,7 +13,7 @@ import PageHeader from "@/components/ui/page-header";
 import { PlusCircle, Edit, Trash2, TrendingUp, DollarSign, MoreVertical } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc, query, where } from "firebase/firestore";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -140,13 +140,10 @@ const BudgetsPage = () => {
       const userId = user?.uid || user?.id;
       if (!userId) return [] as Budget[];
 
-      const snap = await getDocs(collection(db, 'budget_categories'));
+      const snap = await getDocs(query(collection(db, 'budget_categories'), where('user_id', '==', userId)));
       const list: Budget[] = [];
       snap.forEach(d => {
-        const data = d.data();
-        if (data.user_id === userId) {
-          list.push({ id: d.id, ...data } as Budget);
-        }
+        list.push({ id: d.id, ...d.data() } as Budget);
       });
       return list.sort((a, b) => (a.category || '').localeCompare(b.category || ''));
     },

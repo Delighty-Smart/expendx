@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Maximize2, ArrowUpRight, ArrowDownRight, PlusCircle, Plus, TrendingUp, Target, PiggyBank, Wallet, TrendingDown, BarChart3, AreaChart, LineChart, PieChart, ChevronLeft, ChevronRight, Flame, Eye, EyeOff, DollarSign, User, Bell, Receipt, CreditCard, ArrowUp, ArrowDown, ArrowDownToLine, ArrowUpFromLine, Repeat, Landmark, Banknote, CirclePlus, Hourglass } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, query, where } from "firebase/firestore";
 import { Capacitor } from "@capacitor/core";
 import { BudgetProgress } from "@/components/BudgetProgress";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -92,11 +92,11 @@ const IndexPage = () => {
     enabled: !!user,
     queryFn: async () => {
       const userId = user?.uid || user?.id;
-      const snap = await getDocs(collection(db, 'alerts'));
+      if (!userId) return 0;
+      const snap = await getDocs(query(collection(db, 'alerts'), where('user_id', '==', userId)));
       let unreadCount = 0;
       snap.forEach(d => {
-        const data = d.data();
-        if (data.user_id === userId && !data.read) {
+        if (!d.data().read) {
           unreadCount++;
         }
       });
@@ -406,13 +406,11 @@ const IndexPage = () => {
     queryFn: async () => {
       const userId = user?.uid || user?.id;
       if (!userId) return 0;
-      const snap = await getDocs(collection(db, "budget_categories"));
+      const snap = await getDocs(query(collection(db, "budget_categories"), where("user_id", "==", userId)));
       let total = 0;
       snap.forEach(d => {
         const data = d.data();
-        if (data.user_id === userId) {
-          total += Number(data.monthly_limit || 0);
-        }
+        total += Number(data.monthly_limit || 0);
       });
       return total;
     },

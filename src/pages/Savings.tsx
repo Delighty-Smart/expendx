@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTransactionData } from "@/hooks/useTransactionData";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc, query, where } from "firebase/firestore";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { SavingsGoalForm } from "@/components/SavingsGoalForm";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -43,14 +43,11 @@ const SavingsPage = () => {
     enabled: !!user,
     queryFn: async () => {
       if (!user) return [] as SavingsGoal[];
-      const snap = await getDocs(collection(db, "savings_goals"));
-      const goals: SavingsGoal[] = [];
       const userId = user.uid || user.id;
+      const snap = await getDocs(query(collection(db, "savings_goals"), where("user_id", "==", userId)));
+      const goals: SavingsGoal[] = [];
       snap.forEach(d => {
-        const data = d.data();
-        if (data.user_id === userId) {
-          goals.push({ id: d.id, ...data } as SavingsGoal);
-        }
+        goals.push({ id: d.id, ...d.data() } as SavingsGoal);
       });
       return goals.sort((a, b) => (a.category || "").localeCompare(b.category || ""));
     }

@@ -1,8 +1,15 @@
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, orderBy, getDocs, limit, startAfter, QueryConstraint } from "firebase/firestore";
+import { collection, where, orderBy, QueryConstraint } from "firebase/firestore";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionIntegration } from "@/hooks/useSubscriptionIntegration";
+import { useToast } from "@/hooks/use-toast";
+import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
+import { normalizeDate } from "@/lib/utils";
+import { getDocsWithIndexFallback, sortByDateDesc, filterTransactions } from "@/lib/query-fallback";
+import type { Transaction, TransactionType } from "@/types/transactions";
 
 export function useEnhancedTransactionData(filter?: {
   type?: TransactionType | "all",
@@ -70,10 +77,18 @@ export function useEnhancedTransactionData(filter?: {
             }
           }
 
-          constraints.push(orderBy("date", "desc"));
+          // Only `user_id` is guaranteed to be indexed; every other filter is
+          // also applied in memory so the list renders even before the
+          // composite indexes exist.
+          const fallbackConstraints: QueryConstraint[] = [where("user_id", "==", user.id)];
 
-          const q = query(collection(db, "transactions"), ...constraints);
-          const snap = await getDocs(q);
+          const snap = await getDocsWithIndexFallback(
+            db,
+            "transactions",
+            constraints,
+            orderBy("date", "desc"),
+            fallbackConstraints
+          );
 
           const allFetched = snap.docs.map(docSnap => ({
             id: docSnap.id,
@@ -81,7 +96,8 @@ export function useEnhancedTransactionData(filter?: {
             type: docSnap.data().type as TransactionType
           })) as Transaction[];
 
-          return allFetched.slice(from, from + pageSize);
+          const filtered = filterTransactions(allFetched, filter, normalizedStartDate, normalizedEndDate);
+          return sortByDateDesc(filtered).slice(from, from + pageSize);
         } catch (fetchError) {
           const allTransactions = await enhancedOfflineManager.getTransactions(effectiveFilter);
           return allTransactions.slice(from, from + pageSize);
@@ -98,8 +114,8 @@ export function useEnhancedTransactionData(filter?: {
     gcTime: 1000 * 60 * 10,   // 10 minutes
   });
 
-  // Flatten the pages for consumption
-  const transactions = data?.pages.flatMap(page => page) || [];
+  // Flatten the pages for consumption (ordered newest-first)
+  const transactions = sortByDateDesc(data?.pages.flatMap(page => page) || []);
 
   // Enhanced add transaction - handles online/offline automatically
   const addTransactionOffline = useCallback(async (transactionData: Omit<Transaction, 'id'>) => {

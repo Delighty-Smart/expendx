@@ -6,7 +6,7 @@ import { useLucentChat } from '@/contexts/ChatContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import type { SavingsGoal } from '@/types/transactions';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,13 +23,10 @@ export const Missions: React.FC = () => {
     queryFn: async () => {
       if (!user) return [] as SavingsGoal[];
       const userId = user.uid || user.id;
-      const snap = await getDocs(collection(db, 'savings_goals'));
+      const snap = await getDocs(query(collection(db, 'savings_goals'), where('user_id', '==', userId)));
       const goals: SavingsGoal[] = [];
       snap.forEach(d => {
-        const data = d.data();
-        if (data.user_id === userId) {
-          goals.push({ id: d.id, ...data } as SavingsGoal);
-        }
+        goals.push({ id: d.id, ...d.data() } as SavingsGoal);
       });
       return goals;
     },

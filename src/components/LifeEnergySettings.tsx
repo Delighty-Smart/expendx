@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, Clock, HelpCircle, Activity, ChevronDown, ChevronUp, Sparkles, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { userScopedKey, LIFE_ENERGY_KEY_BASE, HOURLY_RATE_KEY_BASE } from "@/lib/user-storage";
 
 export interface LifeEnergyData {
   grossSalary: number;
@@ -36,8 +38,11 @@ export const defaultLifeEnergyData: LifeEnergyData = {
 
 export const LifeEnergySettings: React.FC = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const LIFE_ENERGY_KEY = userScopedKey(LIFE_ENERGY_KEY_BASE, user?.id);
+  const HOURLY_RATE_KEY = userScopedKey(HOURLY_RATE_KEY_BASE, user?.id);
   const [data, setData] = useState<LifeEnergyData>(() => {
-    const saved = localStorage.getItem("lucent_life_energy_data") || localStorage.getItem("expendx_life_energy_data");
+    const saved = localStorage.getItem(LIFE_ENERGY_KEY);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -88,10 +93,8 @@ export const LifeEnergySettings: React.FC = () => {
       ...data,
       trueHourlyRate: Number(computedTrueRate.toFixed(2)),
     };
-    localStorage.setItem("lucent_life_energy_data", JSON.stringify(updatedData));
-    localStorage.setItem("expendx_life_energy_data", JSON.stringify(updatedData));
-    localStorage.setItem("lucent_true_hourly_rate", updatedData.trueHourlyRate.toString());
-    localStorage.setItem("expendx_true_hourly_rate", updatedData.trueHourlyRate.toString());
+        localStorage.setItem(LIFE_ENERGY_KEY, JSON.stringify(updatedData));
+        localStorage.setItem(HOURLY_RATE_KEY, updatedData.trueHourlyRate.toString());
     
     // Sync to Firestore user_profiles
     const user = auth.currentUser;

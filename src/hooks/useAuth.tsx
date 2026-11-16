@@ -49,9 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Hydrate profile from localStorage for immediate display
   const [profile, setProfile] = useState<any | null>(() => {
     try {
+      const cachedUserId = localStorage.getItem('cached_user_id');
       const cachedData = localStorage.getItem('cached_user_profile');
       if (cachedData) {
-        return JSON.parse(cachedData);
+        const parsed = JSON.parse(cachedData);
+        // Only trust a cached profile that belongs to the cached user id
+        if (!cachedUserId || parsed?.id === cachedUserId) {
+          return parsed;
+        }
       }
     } catch (e) {
       console.error("Error hydrating profile from localStorage:", e);
@@ -65,16 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Helper function to cache user data (ID and profile)
   const cacheUserData = (userId: string | null, profileData: any | null = null) => {
     try {
+      const previousId = localStorage.getItem('cached_user_id');
+
+      // Switching accounts must never leave the previous user's profile behind
+      if (userId && previousId && previousId !== userId) {
+        localStorage.removeItem('cached_user_profile');
+      }
+
       if (userId) {
         localStorage.setItem('cached_user_id', userId);
       } else if (userId === null) {
         localStorage.removeItem('cached_user_id');
+        localStorage.removeItem('cached_user_profile');
       }
 
       if (profileData) {
         localStorage.setItem('cached_user_profile', JSON.stringify(profileData));
-      } else if (userId === null) {
-        localStorage.removeItem('cached_user_profile');
       }
     } catch (error) {
       console.error("Error managing cached user data:", error);
@@ -131,9 +142,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Set up Firebase Auth state listener
+    let lastUid: string | null = (() => {
+      try {
+        return localStorage.getItem('cached_user_id');
+      } catch {
+        return null;
+      }
+    })();
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       const appUser = formatUser(fbUser);
       console.log(`Auth state change:`, appUser?.id || 'No user');
+
+      const nextUid = appUser?.id ?? null;
+
+      // A different account is signing in — drop the previous user's profile first
+      if (nextUid !== lastUid) {
+        setProfile(null);
+        setIsAdmin(false);
+        try {
+          localStorage.removeItem('cached_user_profile');
+        } catch {
+          // Ignore storage failures
+        }
+      }
+      lastUid = nextUid;
 
       setUser(appUser);
       setSession(appUser ? { user: appUser } : null);

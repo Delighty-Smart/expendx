@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/lib/firebase";
-import { collection, query, where, orderBy, getDocs, QueryConstraint } from "firebase/firestore";
+import { where, orderBy, QueryConstraint } from "firebase/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { Transaction, TransactionType } from "@/types/transactions";
 import { enhancedOfflineManager } from "@/services/enhancedOfflineManager";
+import { getDocsWithIndexFallback, sortByDateDesc, filterTransactions } from "@/lib/query-fallback";
 import { useCallback } from "react";
 
 export function useTransactionData(filter?: {
@@ -51,12 +52,20 @@ export function useTransactionData(filter?: {
             }
           }
 
-          constraints.push(orderBy("date", "desc"));
+          // Only `user_id` is guaranteed to be indexed; every other filter is
+          // also applied in memory so the list renders even before the
+          // composite indexes exist.
+          const fallbackConstraints: QueryConstraint[] = [where("user_id", "==", user!.id)];
 
-          const q = query(collection(db, "transactions"), ...constraints);
-          const snap = await getDocs(q);
+          const snap = await getDocsWithIndexFallback(
+            db,
+            "transactions",
+            constraints,
+            orderBy("date", "desc"),
+            fallbackConstraints
+          );
 
-          return snap.docs.map(docSnap => {
+          const rows = snap.docs.map(docSnap => {
             const data = docSnap.data();
             return {
               id: docSnap.id,
@@ -64,6 +73,10 @@ export function useTransactionData(filter?: {
               type: data.type as TransactionType
             } as Transaction;
           });
+
+          return sortByDateDesc(
+            filterTransactions(rows, filter, filter?.startDate, filter?.endDate)
+          );
         } catch (fetchError) {
           console.error("useTransactionData: Fallback to cache", fetchError);
           return enhancedOfflineManager.getTransactions(filter);

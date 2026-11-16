@@ -69,6 +69,40 @@ async function fetchTableData(tableName: string) {
   return data;
 }
 
+async function fetchAuthUsers() {
+  const users: any[] = [];
+  const perPage = 200;
+  let page = 1;
+
+  console.log("Fetching auth users (paginated)...");
+
+  while (page <= 200) {
+    const url = `${SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=${perPage}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "apikey": SUPABASE_KEY!,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status} ${response.statusText}: ${errorText}`);
+    }
+
+    const payload = await response.json();
+    const batch = Array.isArray(payload) ? payload : (payload.users || []);
+    users.push(...batch);
+
+    if (batch.length < perPage) break;
+    page += 1;
+  }
+
+  return users;
+}
+
 async function runExport() {
   console.log("==================================================");
   console.log("   SUPABASE AUTOMATED TABLE EXPORT UTILITY");
@@ -106,9 +140,21 @@ async function runExport() {
     }
   }
 
+  // Auth users are required to recreate accounts in Firebase Auth
+  try {
+    const authUsers = await fetchAuthUsers();
+    const filePath = path.join(exportDir, "auth_users.json");
+    fs.writeFileSync(filePath, JSON.stringify(authUsers, null, 2), "utf-8");
+    console.log(`✅ Exported ${authUsers.length} auth users to ${filePath}`);
+  } catch (err: any) {
+    console.warn(`⚠️ Could not export auth users: ${err.message}`);
+  }
+
   console.log("\n==================================================");
   console.log("🎉 Export Complete! Exported files are ready in scripts/export_data/");
-  console.log("Next step: Run `npx tsx scripts/migrate-supabase-to-firebase.ts` to import into Firestore.");
+  console.log("Next steps:");
+  console.log("  1. npx tsx scripts/migrate-supabase-to-firebase.ts   (Firestore data)");
+  console.log("  2. node scripts/migrate-supabase-auth-to-firebase.mjs (Firebase Auth users)");
   console.log("==================================================");
 }
 

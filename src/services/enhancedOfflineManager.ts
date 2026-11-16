@@ -9,10 +9,10 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  where,
-  orderBy
+  where
 } from 'firebase/firestore';
 import { Transaction, TransactionType } from '@/types/transactions';
+import { getDocsWithIndexFallback, sortByDateDesc } from '@/lib/query-fallback';
 
 // Enhanced offline storage with full data caching
 const CACHE_VERSION = '1.0';
@@ -49,6 +49,9 @@ class EnhancedOfflineManager {
   private syncStatusCallbacks: ((status: any) => void)[] = [];
   private dataCache: CachedData | null = null;
   private cachedUserId: string | null = null;
+  // Owner the current in-memory cache belongs to. Guards against showing one
+  // user's data to another when the auth session changes.
+  private cacheOwnerId: string | null = null;
 
   constructor() {
     this.initializeManager();
@@ -56,17 +59,68 @@ class EnhancedOfflineManager {
 
     // Keep cached user id in sync with auth state
     onAuthStateChanged(auth, (fbUser) => {
+      const previousUid = this.cachedUserId;
       this.cachedUserId = fbUser?.uid ?? null;
+
       try {
         if (this.cachedUserId) {
           localStorage.setItem('cached_user_id', this.cachedUserId);
         } else {
           localStorage.removeItem('cached_user_id');
         }
-      } catch { }
+      } catch {
+        // Storage can be unavailable in private mode
+      }
+
+      // A different user is now signed in — drop every cached byte so the
+      // previous user's data can never be served to the new session.
+      if (previousUid && this.cachedUserId && previousUid !== this.cachedUserId) {
+        this.resetCachedData();
+        if (this.isOnline) {
+          void this.performFullDataSync();
+        }
+      } else if (!this.cachedUserId && previousUid) {
+        this.resetCachedData();
+      }
     });
 
     this.startPeriodicSync();
+  }
+
+  private resetCachedData() {
+    this.dataCache = null;
+    this.cacheOwnerId = null;
+    try {
+      localStorage.removeItem(`${CACHE_PREFIX}metadata`);
+    } catch {
+      // Ignore storage failures when clearing the cache
+    }
+    void this.clearIndexedDataCache();
+  }
+
+  private async clearIndexedDataCache(): Promise<void> {
+    try {
+      const db = await this.getDB();
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('transactions', 'readwrite');
+        tx.objectStore('transactions').clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch (error) {
+      console.warn('Failed to clear cached transactions:', error);
+    }
+  }
+
+  // The cache is only usable when it belongs to the signed-in user.
+  private canUseCache(): boolean {
+    if (!this.dataCache) return false;
+
+    const currentUid = auth.currentUser?.uid ?? null;
+    if (currentUid && this.cacheOwnerId && currentUid !== this.cacheOwnerId) return false;
+    if (currentUid && this.cachedUserId && currentUid !== this.cachedUserId) return false;
+
+    return true;
   }
 
   private async initializeManager() {
@@ -102,22 +156,24 @@ class EnhancedOfflineManager {
   }
 
   private async getCurrentUserId(): Promise<string> {
-    if (this.cachedUserId) return this.cachedUserId;
+    // Firebase Auth is the source of truth — never trust a cached id over it.
+    const fbUser = auth.currentUser;
+    if (fbUser) {
+      this.cachedUserId = fbUser.uid;
+      try {
+        localStorage.setItem('cached_user_id', fbUser.uid);
+      } catch {
+        // Ignore storage failures
+      }
+      return fbUser.uid;
+    }
 
+    // Fall back to the last known id only while auth is still restoring.
     try {
-      // 1. Try localStorage first
       const cached = localStorage.getItem('cached_user_id');
       if (cached) {
         this.cachedUserId = cached;
         return cached;
-      }
-
-      // 2. Try Firebase Auth currentUser
-      const user = auth.currentUser;
-      if (user) {
-        this.cachedUserId = user.uid;
-        localStorage.setItem('cached_user_id', user.uid);
-        return user.uid;
       }
     } catch (error) {
       console.warn('Failed to retrieve user ID for sync:', error);
@@ -156,6 +212,7 @@ class EnhancedOfflineManager {
         timestamp: Date.now(),
         version: CACHE_VERSION
       };
+      this.cacheOwnerId = userId;
 
       await this.saveDataCache();
 
@@ -174,21 +231,19 @@ class EnhancedOfflineManager {
   }
 
   private async fetchTransactions(userId: string): Promise<Transaction[]> {
-    const q = query(
-      collection(db, 'transactions'),
+    const snapshot = await getDocsWithIndexFallback(db, 'transactions', [
       where('user_id', '==', userId),
-      where('archived', '==', false),
-      orderBy('date', 'desc')
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(docSnap => {
+      where('archived', '==', false)
+    ]);
+
+    return sortByDateDesc(snapshot.docs.map(docSnap => {
       const data = docSnap.data();
       return {
         id: docSnap.id,
         ...data,
         type: data.type as TransactionType
       } as Transaction;
-    });
+    }));
   }
 
   private async fetchBudgets(userId: string) {
@@ -223,9 +278,9 @@ class EnhancedOfflineManager {
 
   // Local data access methods with sync status
   getTransactions(filters?: any): Transaction[] {
-    if (!this.dataCache) return [];
+    if (!this.canUseCache()) return [];
 
-    let transactions = this.dataCache.transactions;
+    let transactions = this.dataCache!.transactions;
 
     // Apply filters if provided
     if (filters) {
@@ -254,9 +309,9 @@ class EnhancedOfflineManager {
 
   // Get summary of all transactions (for balance calculations)
   getTransactionSummary(): { totalCredits: number; totalDebits: number; totalSavings: number; balance: number } {
-    if (!this.dataCache) return { totalCredits: 0, totalDebits: 0, totalSavings: 0, balance: 0 };
+    if (!this.canUseCache()) return { totalCredits: 0, totalDebits: 0, totalSavings: 0, balance: 0 };
 
-    const transactions = this.dataCache.transactions.filter(t => !t.archived);
+    const transactions = this.dataCache!.transactions.filter(t => !t.archived);
 
     const totalCredits = transactions
       .filter(t => t.type === 'credit')
@@ -279,19 +334,19 @@ class EnhancedOfflineManager {
   }
 
   getBudgets(): any[] {
-    return this.dataCache?.budgets || [];
+    return this.canUseCache() ? this.dataCache!.budgets : [];
   }
 
   getSavings(): any[] {
-    return this.dataCache?.savings || [];
+    return this.canUseCache() ? this.dataCache!.savings : [];
   }
 
   getProfile(): any {
-    return this.dataCache?.profile;
+    return this.canUseCache() ? this.dataCache!.profile : null;
   }
 
   getSettings(): any {
-    return this.dataCache?.settings;
+    return this.canUseCache() ? this.dataCache!.settings : null;
   }
 
   // Enhanced offline operations - ONLY queue when offline
@@ -307,7 +362,7 @@ class EnhancedOfflineManager {
       id: tempId
     };
 
-    if (this.dataCache) {
+    if (this.canUseCache() && this.dataCache) {
       this.dataCache.transactions.unshift(transaction);
       await this.saveDataCache();
     }
@@ -344,7 +399,7 @@ class EnhancedOfflineManager {
 
     await setDoc(newDocRef, newTxData);
 
-    if (this.dataCache) {
+    if (this.canUseCache() && this.dataCache) {
       this.dataCache.transactions.unshift(newTxData as Transaction);
       await this.saveDataCache();
     }
@@ -358,7 +413,7 @@ class EnhancedOfflineManager {
       return await this.updateTransactionOnline(id, updates);
     }
 
-    if (this.dataCache) {
+    if (this.canUseCache() && this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
         this.dataCache.transactions[index] = {
@@ -389,7 +444,7 @@ class EnhancedOfflineManager {
       updated_at: new Date().toISOString()
     });
 
-    if (this.dataCache) {
+    if (this.canUseCache() && this.dataCache) {
       const index = this.dataCache.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
         this.dataCache.transactions[index] = {
@@ -408,7 +463,7 @@ class EnhancedOfflineManager {
       return await this.deleteTransactionOnline(id);
     }
 
-    if (this.dataCache) {
+    if (this.canUseCache() && this.dataCache) {
       this.dataCache.transactions = this.dataCache.transactions.filter(t => t.id !== id);
       await this.saveDataCache();
     }
@@ -431,7 +486,7 @@ class EnhancedOfflineManager {
   private async deleteTransactionOnline(id: string): Promise<void> {
     await deleteDoc(doc(db, 'transactions', id));
 
-    if (this.dataCache) {
+    if (this.canUseCache() && this.dataCache) {
       this.dataCache.transactions = this.dataCache.transactions.filter(t => t.id !== id);
       await this.saveDataCache();
     }
@@ -549,7 +604,7 @@ class EnhancedOfflineManager {
         };
         await setDoc(docRef, newTx);
 
-        if (this.dataCache && item.tempId) {
+        if (this.canUseCache() && this.dataCache && item.tempId) {
           const tempIndex = this.dataCache.transactions.findIndex(t => t.id === item.tempId);
           if (tempIndex !== -1) {
             this.dataCache.transactions[tempIndex] = newTx as Transaction;
@@ -613,7 +668,10 @@ class EnhancedOfflineManager {
       if (!this.dataCache) return;
 
       const { transactions, ...metadata } = this.dataCache;
-      localStorage.setItem(`${CACHE_PREFIX}metadata`, JSON.stringify(metadata));
+      localStorage.setItem(`${CACHE_PREFIX}metadata`, JSON.stringify({
+        ...metadata,
+        ownerId: this.cacheOwnerId,
+      }));
 
       const db = await this.getDB();
       const tx = db.transaction('transactions', 'readwrite');
@@ -648,6 +706,18 @@ class EnhancedOfflineManager {
 
       const metadata = JSON.parse(metaStr);
 
+      // Caches from older versions carry no owner id, and a cache written for a
+      // different user must never be loaded. In both cases, drop it.
+      const currentUid = auth.currentUser?.uid ?? null;
+      if (!metadata.ownerId || (currentUid && metadata.ownerId !== currentUid)) {
+        console.warn('Discarding offline cache that cannot be tied to the signed-in user');
+        this.dataCache = null;
+        this.cacheOwnerId = null;
+        localStorage.removeItem(`${CACHE_PREFIX}metadata`);
+        await this.clearIndexedDataCache();
+        return;
+      }
+
       const db = await this.getDB();
       const tx = db.transaction('transactions', 'readonly');
       const store = tx.objectStore('transactions');
@@ -662,6 +732,7 @@ class EnhancedOfflineManager {
         ...metadata,
         transactions: transactions || []
       };
+      this.cacheOwnerId = metadata.ownerId ?? null;
 
       console.log('Loaded data cache from IndexedDB:', this.dataCache?.transactions?.length, 'transactions');
     } catch (error) {
@@ -709,7 +780,7 @@ class EnhancedOfflineManager {
       queueCount: this.syncQueue.filter(item => item.status === 'pending').length,
       failedCount: this.syncQueue.filter(item => item.status === 'failed').length,
       lastSync: localStorage.getItem(LAST_SYNC_KEY) ? new Date(parseInt(localStorage.getItem(LAST_SYNC_KEY)!)) : null,
-      hasData: !!this.dataCache,
+      hasData: this.canUseCache(),
       syncQueue: this.syncQueue
     };
   }
@@ -763,7 +834,7 @@ class EnhancedOfflineManager {
   }
 
   getCacheAge(): number | null {
-    if (!this.dataCache) return null;
+    if (!this.canUseCache() || !this.dataCache) return null;
     return Date.now() - this.dataCache.timestamp;
   }
 }

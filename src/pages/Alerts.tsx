@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Bell, Check, CheckCheck, AlertTriangle, User, DollarSign, Award, Calendar, Target, TrendingUp, Clock, Moon, BarChart, MessageSquare, Settings, Briefcase, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { auth, db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore";
 import { useAuth } from "@/hooks/useAuth";
 
 type Alert = {
@@ -57,13 +57,10 @@ const Alerts = () => {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const snap = await getDocs(collection(db, 'alerts'));
+      const snap = await getDocs(query(collection(db, 'alerts'), where('user_id', '==', currentUser.uid)));
       const list: Alert[] = [];
       snap.forEach(d => {
-        const data = d.data();
-        if (data.user_id === currentUser.uid) {
-          list.push({ id: d.id, ...data } as Alert);
-        }
+        list.push({ id: d.id, ...d.data() } as Alert);
       });
 
       list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());

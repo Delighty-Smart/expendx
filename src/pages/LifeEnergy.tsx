@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { userScopedKey, LIFE_ENERGY_KEY_BASE, HOURLY_RATE_KEY_BASE } from "@/lib/user-storage";
 import PageHeader from "@/components/ui/page-header";
 
 interface TxRow {
@@ -39,9 +40,11 @@ const LifeEnergy = () => {
   const { user } = useAuth();
   const { currency } = useSettings();
   const { toast } = useToast();
+  const LIFE_ENERGY_KEY = userScopedKey(LIFE_ENERGY_KEY_BASE, user?.id);
+  const HOURLY_RATE_KEY = userScopedKey(HOURLY_RATE_KEY_BASE, user?.id);
   const [activeTab, setActiveTab] = useState<"crossover" | "fulfillment" | "concept">("crossover");
   const [showSetup, setShowSetup] = useState(() => {
-    return !localStorage.getItem("lucent_life_energy_data") && !localStorage.getItem("expendx_life_energy_data");
+    return !localStorage.getItem(LIFE_ENERGY_KEY);
   });
   const [setupStep, setSetupStep] = useState(1);
 
@@ -61,7 +64,7 @@ const LifeEnergy = () => {
   // Load existing values into form if present
   const loadSavedData = React.useCallback(() => {
     try {
-      const saved = localStorage.getItem("lucent_life_energy_data") || localStorage.getItem("expendx_life_energy_data");
+      const saved = localStorage.getItem(LIFE_ENERGY_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         setFormData(prev => ({
@@ -130,10 +133,8 @@ const LifeEnergy = () => {
         passiveMonthlyIncome: formData.passiveMonthlyIncome,
         trueHourlyRate: wizardCalculations.trueHourly,
       };
-      localStorage.setItem("lucent_life_energy_data", JSON.stringify(savedData));
-      localStorage.setItem("expendx_life_energy_data", JSON.stringify(savedData));
-      localStorage.setItem("lucent_true_hourly_rate", wizardCalculations.trueHourly.toString());
-      localStorage.setItem("expendx_true_hourly_rate", wizardCalculations.trueHourly.toString());
+      localStorage.setItem(LIFE_ENERGY_KEY, JSON.stringify(savedData));
+      localStorage.setItem(HOURLY_RATE_KEY, wizardCalculations.trueHourly.toString());
       
       // Sync to Firestore user profile for cloud persistence per user
       if (user) {

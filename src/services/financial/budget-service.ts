@@ -112,6 +112,86 @@ function recommendBudget(
   });
 }
 
+// ─── Read tools ──────────────────────────────────────────────────────────────
+
+function getBudgets(
+  _params: Record<string, any>,
+  _ctx: ExecutionContext,
+): Promise<ToolResult<BudgetStatus[]>> {
+  try {
+    const budgets = enhancedOfflineManager.getBudgets() as any[];
+    const allTxns = enhancedOfflineManager.getTransactions();
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthDebits = allTxns.filter(t => t.date?.startsWith(currentMonth) && t.type === 'debit');
+
+    const spentByCategory: Record<string, number> = {};
+    monthDebits.forEach(t => {
+      spentByCategory[t.category] = (spentByCategory[t.category] || 0) + Number(t.amount);
+    });
+
+    const data: BudgetStatus[] = budgets.map(b => {
+      const limit = Number(b.monthly_limit ?? b.limit ?? 0);
+      const spent = spentByCategory[b.category] || 0;
+      const percentUsed = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+      return {
+        category: b.category,
+        limit,
+        spent,
+        percentUsed,
+        remaining: limit - spent,
+        status: percentUsed > 100 ? 'over' : percentUsed >= 80 ? 'warning' : 'ok',
+      };
+    });
+
+    return Promise.resolve({ success: true, data, source: 'budgets', timestamp: Date.now() });
+  } catch (err: any) {
+    return Promise.resolve({ success: false, error: err.message, source: 'budgets', timestamp: Date.now() });
+  }
+}
+
+async function getBudgetStatus(
+  params: Record<string, any>,
+  ctx: ExecutionContext,
+): Promise<ToolResult<BudgetStatus | null>> {
+  const result = await getBudgets(params, ctx);
+
+  if (!result.success) {
+    return { success: false, error: result.error, source: 'budgets', timestamp: Date.now() };
+  }
+
+  const wanted = String(params.category || '').toLowerCase();
+  const match = (result.data || []).find(b => b.category.toLowerCase() === wanted) || null;
+
+  return { success: true, data: match, source: 'budgets', timestamp: Date.now() };
+}
+
+async function getBudgetHealth(
+  _params: Record<string, any>,
+  ctx: ExecutionContext,
+): Promise<ToolResult<{ score: number; overBudgetCount: number; onTrackCount: number; totalBudgeted: number; totalSpent: number }>> {
+  const result = await getBudgets(_params, ctx);
+
+  if (!result.success) {
+    return { success: false, error: result.error, source: 'budgets', timestamp: Date.now() };
+  }
+
+  const data = result.data || [];
+  const overBudgetCount = data.filter(b => b.status === 'over').length;
+  const onTrackCount = data.filter(b => b.status === 'ok').length;
+  const totalBudgeted = data.reduce((sum, b) => sum + b.limit, 0);
+  const totalSpent = data.reduce((sum, b) => sum + b.spent, 0);
+  const score = totalBudgeted > 0
+    ? Math.max(0, Math.round(100 - (totalSpent / totalBudgeted) * 100))
+    : 0;
+
+  return {
+    success: true,
+    data: { score, overBudgetCount, onTrackCount, totalBudgeted, totalSpent },
+    source: 'budgets',
+    timestamp: Date.now(),
+  };
+}
+
 // ─── Registration ────────────────────────────────────────────────────────────
 
 export function registerBudgetService(): void {

@@ -18,7 +18,7 @@ const SelectTrigger = React.forwardRef<React.ElementRef<typeof SelectPrimitive.T
     ref={ref}
 
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex h-11 w-full items-center justify-between rounded-m3-sm border border-m3-outline bg-m3-surface-container-lowest px-4 py-2 text-sm text-m3-on-surface ring-offset-bg-base placeholder:text-m3-on-surface-variant focus:outline-none focus:border-m3-primary focus:ring-1 focus:ring-m3-primary focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-38 [&>span]:line-clamp-1 hover:border-m3-on-surface",
       // Enhanced for mobile
       "active:outline-none focus:outline-none",
       className
@@ -75,7 +75,7 @@ const SelectContent = React.forwardRef<React.ElementRef<typeof SelectPrimitive.C
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-[200] min-w-[8rem] overflow-hidden rounded-md border bg-background text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "relative z-[200] min-w-[8rem] overflow-hidden rounded-m3-sm border border-m3-outline-variant bg-m3-surface-container text-m3-on-surface shadow-m3-2 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1",
         // Non-transparent background + larger mobile height
         className
@@ -138,14 +138,13 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
     ref={ref}
 
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-md py-2 px-3 text-sm outline-none transition-colors duration-200",
-      // Modern selection styling - no checkmark overlap
-      "hover:bg-accent/50 hover:text-accent-foreground",
-      "focus:bg-accent focus:text-accent-foreground",
-      "data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary data-[state=checked]:font-medium data-[state=checked]:border-l-2 data-[state=checked]:border-primary",
-      "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center rounded-m3-xs py-2.5 px-3 text-sm outline-none transition-colors duration-m3-short ease-m3-standard",
+      // M3 menu item: hover/focus state layer, checked item uses secondary container
+      "hover:bg-[color-mix(in_srgb,var(--m3-on-surface)_8%,transparent)] focus:bg-[color-mix(in_srgb,var(--m3-on-surface)_10%,transparent)]",
+      "data-[state=checked]:bg-m3-secondary-container data-[state=checked]:text-m3-on-secondary-container data-[state=checked]:font-semibold",
+      "data-[disabled]:pointer-events-none data-[disabled]:opacity-38",
       // Enhanced for mobile touch targets
-      "py-2.5 text-base sm:py-2 sm:text-sm",
+      "py-2.5 text-base sm:py-2.5 sm:text-sm",
       className
 
     )}

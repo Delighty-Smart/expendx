@@ -73,11 +73,19 @@ export const useDataExport = () => {
                 "user_profiles"
             ] as const;
 
+            // These collections are keyed by the user's uid instead of a user_id field,
+            // so they must be fetched by document id (a filtered list would be denied).
+            const uidKeyedTables = new Set<string>([
+                "user_profiles",
+                "user_settings",
+                "notification_preferences"
+            ]);
+
             const results = await Promise.all(
                 tables.map(async (table) => {
                     try {
-                        if (table === "user_profiles") {
-                            const docSnap = await getDoc(doc(db, "user_profiles", user.id));
+                        if (uidKeyedTables.has(table)) {
+                            const docSnap = await getDoc(doc(db, table, user.id));
                             return docSnap.exists() ? [{ id: docSnap.id, ...docSnap.data() }] : [];
                         } else {
                             const q = query(collection(db, table), where("user_id", "==", user.id));

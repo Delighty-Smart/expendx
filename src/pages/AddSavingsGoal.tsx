@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { auth, db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, updateDoc, query, where } from "firebase/firestore";
 import { getCategoriesForType, SavingsGoal } from "@/types/transactions";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -90,13 +90,10 @@ const AddSavingsGoalPage = () => {
         });
       } else {
         // Check if a goal for this category already exists
-        const snap = await getDocs(collection(db, "savings_goals"));
+        const snap = await getDocs(query(collection(db, "savings_goals"), where("user_id", "==", user.uid), where("category", "==", values.category)));
         let existingGoal: any = null;
         snap.forEach(d => {
-          const data = d.data();
-          if (data.user_id === user.uid && data.category === values.category) {
-            existingGoal = { id: d.id, ...data };
-          }
+          existingGoal = { id: d.id, ...d.data() };
         });
 
         if (existingGoal) {

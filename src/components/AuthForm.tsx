@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, User } from "lucide-react";
 import { ButtonLoading } from "@/components/ui/loading-state";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface AuthFormProps {
   onLogin: (email: string, password: string) => Promise<void>;
@@ -18,7 +20,74 @@ interface AuthFormProps {
 
 export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = false }: AuthFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const { toast } = useToast();
+
+  const openReset = () => {
+    const emailField = document.getElementById("email") as HTMLInputElement | null;
+    setResetEmail(emailField?.value?.trim() ?? "");
+    setResetSent(false);
+    setShowReset(true);
+  };
+
+  const closeReset = () => {
+    setShowReset(false);
+    setResetSent(false);
+    setResetLoading(false);
+  };
+
+  const handleSendReset = async () => {
+    const email = resetEmail.trim();
+
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Enter the email address associated with your account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+      toast({
+        title: "Reset link sent",
+        description: `If an account exists for ${email}, you will receive an email with reset instructions.`,
+      });
+    } catch (error: any) {
+      const code = error?.code as string | undefined;
+
+      if (code === "auth/user-not-found") {
+        setResetSent(true);
+      } else if (code === "auth/invalid-email") {
+        toast({
+          title: "Invalid email",
+          description: "Enter a valid email address.",
+          variant: "destructive",
+        });
+      } else if (code === "auth/too-many-requests") {
+        toast({
+          title: "Too many attempts",
+          description: "Please wait a few minutes before trying again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Couldn't send reset link",
+          description: error?.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, mode: 'login' | 'signup') => {
     e.preventDefault();
@@ -80,6 +149,97 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
 
           <TabsContent value="login" className="mt-0">
             <CardContent className="p-0">
+              {showReset ? (
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <h2 className="text-xl font-semibold text-foreground">Reset your password</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your account email and we will send you a link to choose a new password.
+                    </p>
+                  </div>
+
+                  {resetSent ? (
+                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
+                      <p className="text-sm font-medium text-foreground">Check your inbox</p>
+                      <p className="text-sm text-muted-foreground">
+                        If an account exists for <span className="font-medium text-foreground">{resetEmail.trim()}</span>,
+                        a password reset link is on its way. The link expires after a short period.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Check your spam or junk folder if you do not see it within a few minutes.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email" className="text-sm font-medium text-foreground">
+                        Email Address
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="you@example.com"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !resetLoading) {
+                              e.preventDefault();
+                              handleSendReset();
+                            }
+                          }}
+                          className="pl-10 h-12 bg-background border-border focus:border-primary/50 focus:ring-primary/20 rounded-lg transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 h-12 border-border hover:bg-muted/50 text-foreground font-medium rounded-lg transition-all duration-200"
+                      onClick={closeReset}
+                      disabled={resetLoading}
+                    >
+                      Back
+                    </Button>
+
+                    {resetSent ? (
+                      <Button
+                        type="button"
+                        className="flex-1 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                        onClick={closeReset}
+                      >
+                        Done
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        className="flex-1 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                        onClick={handleSendReset}
+                        disabled={resetLoading || !resetEmail.trim()}
+                      >
+                        <ButtonLoading isLoading={resetLoading} loadingText="Sending...">
+                          Send reset link
+                        </ButtonLoading>
+                      </Button>
+                    )}
+                  </div>
+
+                  <p className="text-center text-xs text-muted-foreground">
+                    Changed your mind?{" "}
+                    <button
+                      type="button"
+                      onClick={closeReset}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Sign in instead
+                    </button>
+                  </p>
+                </div>
+              ) : (
               <form onSubmit={(e) => handleSubmit(e, 'login')} className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -100,9 +260,18 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                      Password
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                        Password
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={openReset}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -168,6 +337,7 @@ export const AuthForm = ({ onLogin, onSignup, onGoogleSignIn, isProcessing = fal
                   Continue with Google
                 </Button>
               </form>
+              )}
             </CardContent>
           </TabsContent>
 

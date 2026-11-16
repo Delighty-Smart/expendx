@@ -1,5 +1,7 @@
 import type { ParsedIntent, ActionResult, ChatAttachment, FinancialContext } from '@/types/ai-types';
 import { capabilityRegistry } from '@/services/ai/capability-registry';
+import { enhancedOfflineManager } from '@/services/enhancedOfflineManager';
+import type { Transaction } from '@/types/transactions';
 
 interface DispatchDeps {
   userId: string;

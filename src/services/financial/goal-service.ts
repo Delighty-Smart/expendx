@@ -143,6 +143,116 @@ async function updateGoal(
   }
 }
 
+// ─── Read tools ──────────────────────────────────────────────────────────────
+
+// Average monthly amount the user has moved into savings over the last 3 months
+function getMonthlySavingsRate(): number {
+  const allTxns = enhancedOfflineManager.getTransactions();
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - 3);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+  const savingsTxns = allTxns.filter(t => t.type === 'savings' && t.date >= cutoffStr);
+  const total = savingsTxns.reduce((sum, t) => sum + Number(t.amount), 0);
+
+  return total / 3;
+}
+
+function buildGoalProgress(): GoalProgress[] {
+  const goals = enhancedOfflineManager.getSavings() as any[];
+  const monthlySavingsRate = getMonthlySavingsRate();
+
+  return goals.map(g => {
+    const targetAmount = Number(g.target_amount ?? g.targetAmount ?? 0);
+    const currentAmount = Number(g.current_amount ?? g.currentAmount ?? 0);
+    const percentComplete = targetAmount > 0
+      ? Math.min(100, Math.round((currentAmount / targetAmount) * 100))
+      : 0;
+    const remaining = Math.max(0, targetAmount - currentAmount);
+    const monthsToGoal = remaining === 0
+      ? 0
+      : monthlySavingsRate > 0
+        ? Math.ceil(remaining / monthlySavingsRate)
+        : null;
+
+    return {
+      id: g.id,
+      category: g.category,
+      targetAmount,
+      currentAmount,
+      percentComplete,
+      monthsToGoal,
+    };
+  });
+}
+
+function getGoals(
+  _params: Record<string, any>,
+  _ctx: ExecutionContext,
+): Promise<ToolResult<GoalProgress[]>> {
+  try {
+    return Promise.resolve({
+      success: true,
+      data: buildGoalProgress(),
+      source: 'goals',
+      timestamp: Date.now(),
+    });
+  } catch (err: any) {
+    return Promise.resolve({ success: false, error: err.message, source: 'goals', timestamp: Date.now() });
+  }
+}
+
+async function getGoalProgress(
+  params: Record<string, any>,
+  ctx: ExecutionContext,
+): Promise<ToolResult<GoalProgress | null>> {
+  const result = await getGoals(params, ctx);
+
+  if (!result.success) {
+    return { success: false, error: result.error, source: 'goals', timestamp: Date.now() };
+  }
+
+  const goalName = String(params.goalName || '').toLowerCase();
+  const id = params.id ? String(params.id) : null;
+
+  const match = (result.data || []).find(g =>
+    (id && g.id === id) || (goalName && g.category.toLowerCase().includes(goalName))
+  ) || null;
+
+  return { success: true, data: match, source: 'goals', timestamp: Date.now() };
+}
+
+function forecastGoal(
+  params: Record<string, any>,
+  _ctx: ExecutionContext,
+): Promise<ToolResult<{ targetAmount: number; currentAmount: number; monthlySavingsRate: number; monthsToGoal: number | null; projectedDate: string | null }>> {
+  try {
+    const targetAmount = Number(params.targetAmount) || 0;
+    const monthlySavingsRate = Number(params.monthlySavingsRate) || 0;
+    const goals = enhancedOfflineManager.getSavings() as any[];
+    const currentAmount = goals.reduce((sum, g) => sum + Number(g.current_amount ?? g.currentAmount ?? 0), 0);
+
+    const remaining = Math.max(0, targetAmount - currentAmount);
+    const monthsToGoal = monthlySavingsRate > 0 ? Math.ceil(remaining / monthlySavingsRate) : null;
+
+    let projectedDate: string | null = null;
+    if (monthsToGoal !== null) {
+      const projected = new Date();
+      projected.setMonth(projected.getMonth() + monthsToGoal);
+      projectedDate = projected.toISOString();
+    }
+
+    return Promise.resolve({
+      success: true,
+      data: { targetAmount, currentAmount, monthlySavingsRate, monthsToGoal, projectedDate },
+      source: 'goals',
+      timestamp: Date.now(),
+    });
+  } catch (err: any) {
+    return Promise.resolve({ success: false, error: err.message, source: 'goals', timestamp: Date.now() });
+  }
+}
+
 // ─── Registration ────────────────────────────────────────────────────────────
 
 export function registerGoalService(): void {

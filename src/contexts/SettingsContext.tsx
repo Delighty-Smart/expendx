@@ -33,7 +33,7 @@ export async function syncStatusBarTheme(themeOverride?: string) {
         (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
       ));
 
-    const targetColor = isDark ? '#111315' : '#F5F4F0';
+    const targetColor = isDark ? '#131211' : '#FBF9F4';
 
     // Style.Light = white text/icons
     // Style.Dark  = black/dark text/icons
@@ -125,8 +125,15 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         return localStorage.getItem('expendx_show_life_hours') === 'true';
     });
 
+    const { user } = useAuth();
+
+    // Per-user keys: income and life-energy data must never cross accounts
+    const uid = user?.id ?? 'anon';
+    const HOURLY_RATE_KEY = `lucent_true_hourly_rate_${uid}`;
+    const LIFE_ENERGY_KEY = `lucent_life_energy_data_${uid}`;
+
     const [trueHourlyRate, setTrueHourlyRate] = useState<number>(() => {
-        const saved = localStorage.getItem('lucent_true_hourly_rate') || localStorage.getItem('expendx_true_hourly_rate');
+        const saved = localStorage.getItem(HOURLY_RATE_KEY);
         const rate = parseFloat(saved || '');
         return isNaN(rate) || rate <= 0 ? 15.63 : rate;
     });
@@ -134,23 +141,21 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
     const updateTrueHourlyRate = (newRate: number) => {
         const validRate = isNaN(newRate) || newRate <= 0 ? 15.63 : newRate;
         setTrueHourlyRate(validRate);
-        localStorage.setItem('lucent_true_hourly_rate', validRate.toString());
-        localStorage.setItem('expendx_true_hourly_rate', validRate.toString());
+        localStorage.setItem(HOURLY_RATE_KEY, validRate.toString());
         window.dispatchEvent(new Event('storage'));
     };
 
     useEffect(() => {
         const handleRateSync = () => {
-            const saved = localStorage.getItem('lucent_true_hourly_rate') || localStorage.getItem('expendx_true_hourly_rate');
+            const saved = localStorage.getItem(HOURLY_RATE_KEY);
             const rate = parseFloat(saved || '');
             setTrueHourlyRate(isNaN(rate) || rate <= 0 ? 15.63 : rate);
         };
         window.addEventListener('storage', handleRateSync);
         return () => window.removeEventListener('storage', handleRateSync);
-    }, []);
+    }, [uid]);
 
     const isInitialized = useRef<boolean>(false);
-    const { user } = useAuth();
 
     // Initialize settings on mount and fetch when user changes
     useEffect(() => {
@@ -193,7 +198,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         syncStatusBarTheme(theme);
 
         // Update theme-color meta tag for PWA/Mobile
-        const themeColor = theme === 'dark' ? '#111315' : '#F5F4F0';
+        const themeColor = theme === 'dark' ? '#131211' : '#FBF9F4';
 
         // Update all theme-color meta tags (including those with media queries)
         const metaTags = document.querySelectorAll('meta[name="theme-color"]');
@@ -260,14 +265,12 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
                     const dataStr = typeof profileData.life_energy_data === 'string' 
                         ? profileData.life_energy_data 
                         : JSON.stringify(profileData.life_energy_data);
-                    localStorage.setItem('lucent_life_energy_data', dataStr);
-                    localStorage.setItem('expendx_life_energy_data', dataStr);
+                    localStorage.setItem(LIFE_ENERGY_KEY, dataStr);
                     try {
                         const parsed = typeof profileData.life_energy_data === 'string' ? JSON.parse(profileData.life_energy_data) : profileData.life_energy_data;
                         if (parsed.trueHourlyRate) {
                             setTrueHourlyRate(parsed.trueHourlyRate);
-                            localStorage.setItem('lucent_true_hourly_rate', parsed.trueHourlyRate.toString());
-                            localStorage.setItem('expendx_true_hourly_rate', parsed.trueHourlyRate.toString());
+                            localStorage.setItem(HOURLY_RATE_KEY, parsed.trueHourlyRate.toString());
                         }
                     } catch (e) {}
                     window.dispatchEvent(new Event('storage'));
@@ -305,7 +308,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
             }, { merge: true });
 
             // Sync Theme, Visibility & Life Energy (user_profiles doc)
-            const savedLifeEnergy = localStorage.getItem('lucent_life_energy_data') || localStorage.getItem('expendx_life_energy_data');
+            const savedLifeEnergy = localStorage.getItem(LIFE_ENERGY_KEY);
             const profileRef = doc(db, 'user_profiles', currentUser.uid);
             await setDoc(profileRef, {
                 theme: theme,

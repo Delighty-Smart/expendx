@@ -1,5 +1,6 @@
 import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
+import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -19,7 +20,9 @@ const Switch = React.forwardRef<
       className={cn(
         "switch-thumb"
       )}
-    />
+    >
+      <Check strokeWidth={3} />
+    </SwitchPrimitives.Thumb>
   </SwitchPrimitives.Root>
 ))
 Switch.displayName = SwitchPrimitives.Root.displayName

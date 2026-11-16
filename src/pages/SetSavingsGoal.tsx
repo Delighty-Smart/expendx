@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { auth, db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, updateDoc, query, where } from "firebase/firestore";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, PiggyBank } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -29,7 +29,9 @@ const SetSavingsGoalPage = () => {
   const { data: budgetCategories } = useQuery({
     queryKey: ["budgets"],
     queryFn: async () => {
-      const snap = await getDocs(collection(db, "budget_categories"));
+      const userId = auth.currentUser?.uid;
+      if (!userId) return [] as any[];
+      const snap = await getDocs(query(collection(db, "budget_categories"), where("user_id", "==", userId)));
       const categories: any[] = [];
       snap.forEach(d => categories.push({ id: d.id, ...d.data() }));
       return categories.sort((a, b) => (a.category || "").localeCompare(b.category || ""));

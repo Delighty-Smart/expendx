@@ -63,8 +63,22 @@ const DeleteAccountSection = () => {
       'user_categories'
     ];
 
+    // These collections are keyed by the user's uid instead of a user_id field,
+    // so they must be deleted by document id (a filtered list would be denied).
+    const uidKeyedCollections = new Set([
+      'user_settings',
+      'push_subscriptions',
+      'user_streaks',
+      'notification_preferences'
+    ]);
+
     for (const colName of userCollections) {
       try {
+        if (uidKeyedCollections.has(colName)) {
+          await deleteDoc(doc(db, colName, userId)).catch(() => {});
+          continue;
+        }
+
         const q = query(collection(db, colName), where("user_id", "==", userId));
         const snapshot = await getDocs(q);
         for (const docSnap of snapshot.docs) {

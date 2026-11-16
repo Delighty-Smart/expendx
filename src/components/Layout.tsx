@@ -213,10 +213,10 @@ const Layout = ({
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-m3-full transition-all duration-m3-short ease-m3-standard ${
                       isActive
-                        ? "bg-bg-sidebar-active text-text-primary font-semibold"
-                        : "text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary"
+                        ? "bg-m3-secondary-container text-m3-on-secondary-container font-semibold"
+                        : "text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
                     }`}
                   >
                     <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${isActive ? "text-text-primary" : ""}`} strokeWidth={1.8} />
@@ -246,10 +246,10 @@ const Layout = ({
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-m3-full transition-all duration-m3-short ease-m3-standard ${
                       isActive
-                        ? "bg-bg-sidebar-active text-text-primary font-semibold"
-                        : "text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary"
+                        ? "bg-m3-secondary-container text-m3-on-secondary-container font-semibold"
+                        : "text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
                     }`}
                   >
                     <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${isActive ? "text-text-primary" : ""}`} strokeWidth={1.8} />
@@ -279,10 +279,10 @@ const Layout = ({
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center gap-3 px-3 py-2 rounded-m3-full transition-all duration-m3-short ease-m3-standard ${
                       isActive
-                        ? "bg-bg-sidebar-active text-text-primary font-semibold"
-                        : "text-text-secondary hover:bg-bg-sidebar-hover hover:text-text-primary"
+                        ? "bg-m3-secondary-container text-m3-on-secondary-container font-semibold"
+                        : "text-m3-on-surface-variant hover:bg-m3-surface-container-high hover:text-m3-on-surface"
                     }`}
                   >
                     <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${isActive ? "text-text-primary" : ""}`} strokeWidth={1.8} />

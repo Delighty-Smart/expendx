@@ -6,98 +6,178 @@
 
 @layer base {
   :root {
-    /* Brand Foundation - Image 2 Charcoal & Warm White */
-    --brand-primary: #111315;
-    --brand-primary-hover: #1F2226;
-    --brand-primary-active: #2D3137;
-    --brand-primary-subtle: #EBEAE5;
+    /* ═══════════════════════════════════════════════════════════════════
+       MATERIAL 3 COLOR ROLES — light scheme
+       Warm-neutral charcoal primary (brand DNA), teal secondary,
+       deep-blue tertiary. Every role below is an M3 role name.
+       ═══════════════════════════════════════════════════════════════════ */
+    --m3-primary: #1D1B19;
+    --m3-on-primary: #FFFFFF;
+    --m3-primary-container: #E8E2D8;
+    --m3-on-primary-container: #1D1B19;
+    --m3-primary-fixed: #E8E2D8;
+    --m3-on-primary-fixed: #1D1B19;
 
-    /* Light Mode Tokens - Image 2 Warm White (#F5F4F0) */
-    --bg-base: #F5F4F0; /* Warm white background */
-    --bg-surface: #FFFFFF; /* Pure white header/navigation surfaces */
-    --bg-elevated: #FFFFFF;
-    --bg-overlay: #EAE9E4;
-    --bg-modal: #FFFFFF;
-    --bg-tooltip: #111315;
-    --bg-input: #FFFFFF;
-    --bg-input-focus: #FFFFFF;
-    --bg-sidebar: #FFFFFF;
-    --bg-sidebar-hover: #F5F4F0;
-    --bg-sidebar-active: #EBEAE5;
-    --bg-card: #FFFFFF;
-    --bg-card-hover: #FAF9F5;
-    --bg-header: #FFFFFF;
-    --bg-skeleton: #EBEAE5;
-    --bg-skeleton-shimmer: #F5F4F0;
+    --m3-secondary: #00696B;
+    --m3-on-secondary: #FFFFFF;
+    --m3-secondary-container: #CFF2F1;
+    --m3-on-secondary-container: #002020;
+    --m3-secondary-fixed: #9CF1F0;
+    --m3-on-secondary-fixed: #002020;
 
-    --text-primary: #111315;
-    --text-secondary: #525866;
-    --text-tertiary: #8C94A6;
-    --text-disabled: #C2C7D0;
-    --text-inverse: #FFFFFF;
-    --text-on-brand: #FFFFFF;
-    --text-link: #111315;
-    --text-link-hover: #2FA8A0;
-    --text-placeholder: #8C94A6;
-    --text-heading: #111315;
+    --m3-tertiary: #1F5C82;
+    --m3-on-tertiary: #FFFFFF;
+    --m3-tertiary-container: #CFE5F7;
+    --m3-on-tertiary-container: #001D33;
 
-    --border-default: #E5E4DF;
-    --border-subtle: #F0EFEA;
-    --border-strong: #C8C7C2;
-    --border-focus: #111315;
-    --border-divider: #E5E4DF;
+    --m3-error: #BA1A1A;
+    --m3-on-error: #FFFFFF;
+    --m3-error-container: #FFDAD6;
+    --m3-on-error-container: #410002;
 
-    --icon-default: #525866;
-    --icon-muted: #8C94A6;
-    --icon-strong: #111315;
-    --icon-brand: #111315;
+    --m3-surface: #FBF9F4;
+    --m3-on-surface: #1D1B19;
+    --m3-surface-variant: #E7E1D8;
+    --m3-on-surface-variant: #4B4744;
+    --m3-surface-dim: #DDD7CE;
+    --m3-surface-bright: #FBF9F4;
+    --m3-surface-container-lowest: #FFFFFF;
+    --m3-surface-container-low: #F5F1EA;
+    --m3-surface-container: #EFEAE2;
+    --m3-surface-container-high: #E9E4DB;
+    --m3-surface-container-highest: #E3DED5;
+    --m3-surface-tint: #1D1B19;
+    --m3-outline: #7C7772;
+    --m3-outline-variant: #CEC8C0;
+    --m3-inverse-surface: #32302E;
+    --m3-inverse-on-surface: #F5F0E8;
+    --m3-inverse-primary: #C8C6C1;
+    --m3-scrim: #000000;
+    --m3-shadow: #000000;
 
-    /* Semantic - Light (Teal & Lime & Deep Blue from Image 2) */
-    --semantic-success-bg: #E6F6F5;
-    --semantic-success-bgSubtle: #F0FAF9;
-    --semantic-success-text: #2FA8A0; /* Image 2 Teal */
-    --semantic-success-textStrong: #1C6B66;
-    --semantic-success-border: #B2E5E2;
-    --semantic-success-icon: #2FA8A0;
+    /* M3 state-layer opacities */
+    --m3-state-hover: 0.08;
+    --m3-state-focus: 0.10;
+    --m3-state-press: 0.10;
+    --m3-state-drag: 0.16;
 
-    --semantic-warning-bg: #F5FBEA;
-    --semantic-warning-bgSubtle: #FAFDFA;
-    --semantic-warning-text: #6A992A;
-    --semantic-warning-textStrong: #4A6B1D;
-    --semantic-warning-border: #D1F099;
-    --semantic-warning-icon: #8DC63F; /* Image 2 Lime */
+    /* M3 shape scale */
+    --m3-shape-xs: 4px;
+    --m3-shape-sm: 8px;
+    --m3-shape-md: 12px;
+    --m3-shape-lg: 16px;
+    --m3-shape-xl: 28px;
+    --m3-shape-full: 9999px;
 
-    --semantic-danger-bg: #FEF2F2;
-    --semantic-danger-bgSubtle: #FFFDFD;
-    --semantic-danger-text: #DC2626;
-    --semantic-danger-textStrong: #991B1B;
-    --semantic-danger-border: #FEE2E2;
-    --semantic-danger-icon: #EF4444;
+    /* M3 elevation levels */
+    --m3-elevation-0: none;
+    --m3-elevation-1: 0 1px 2px rgba(0,0,0,0.30), 0 1px 3px 1px rgba(0,0,0,0.15);
+    --m3-elevation-2: 0 1px 2px rgba(0,0,0,0.30), 0 2px 6px 2px rgba(0,0,0,0.15);
+    --m3-elevation-3: 0 1px 3px rgba(0,0,0,0.30), 0 4px 8px 3px rgba(0,0,0,0.15);
+    --m3-elevation-4: 0 2px 3px rgba(0,0,0,0.30), 0 6px 10px 4px rgba(0,0,0,0.15);
+    --m3-elevation-5: 0 4px 4px rgba(0,0,0,0.30), 0 8px 12px 6px rgba(0,0,0,0.15);
 
-    --semantic-info-bg: #EBF3F8;
-    --semantic-info-bgSubtle: #F4F8FA;
-    --semantic-info-text: #1F5C82; /* Image 2 Deep Blue */
-    --semantic-info-textStrong: #143C55;
-    --semantic-info-border: #BCD4E3;
-    --semantic-info-icon: #1F5C82;
+    /* M3 motion */
+    --m3-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+    --m3-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+    --m3-easing-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --m3-easing-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+    --m3-duration-short: 150ms;
+    --m3-duration-medium: 300ms;
+    --m3-duration-long: 500ms;
 
-    --semantic-neutral-bg: #EBEAE5;
-    --semantic-neutral-text: #525866;
-    --semantic-neutral-border: #E5E4DF;
+    /* Brand Foundation — mapped onto M3 roles (warm-neutral charcoal) */
+    --brand-primary: var(--m3-primary);
+    --brand-primary-hover: #2A2724;
+    --brand-primary-active: #33302B;
+    --brand-primary-subtle: var(--m3-primary-container);
 
-    /* Finance - Light */
-    --finance-income: #2FA8A0; /* Image 2 Teal */
-    --finance-expense: #DC2626;
-    --finance-savings: #1F5C82; /* Image 2 Deep Blue */
-    --finance-debt: #8DC63F; /* Image 2 Lime */
-    --finance-neutral: #525866;
-    --finance-positive: #2FA8A0;
-    --finance-negative: #DC2626;
+    /* Light Mode Tokens — M3 surface containers */
+    --bg-base: var(--m3-surface); /* Warm white background */
+    --bg-surface: var(--m3-surface-container-lowest); /* Pure white header/navigation surfaces */
+    --bg-elevated: var(--m3-surface-container-lowest);
+    --bg-overlay: var(--m3-surface-container);
+    --bg-modal: var(--m3-surface-container-lowest);
+    --bg-tooltip: var(--m3-inverse-surface);
+    --bg-input: var(--m3-surface-container-lowest);
+    --bg-input-focus: var(--m3-surface-container-lowest);
+    --bg-sidebar: var(--m3-surface-container-low);
+    --bg-sidebar-hover: var(--m3-surface-container);
+    --bg-sidebar-active: var(--m3-surface-container-high);
+    --bg-card: var(--m3-surface-container-low);
+    --bg-card-hover: var(--m3-surface-container);
+    --bg-header: var(--m3-surface);
+    --bg-skeleton: var(--m3-surface-container-high);
+    --bg-skeleton-shimmer: var(--m3-surface-container-low);
+
+    --text-primary: var(--m3-on-surface);
+    --text-secondary: var(--m3-on-surface-variant);
+    --text-tertiary: var(--m3-outline);
+    --text-disabled: var(--m3-outline-variant);
+    --text-inverse: var(--m3-on-primary);
+    --text-on-brand: var(--m3-on-primary);
+    --text-link: var(--m3-primary);
+    --text-link-hover: var(--m3-secondary);
+    --text-placeholder: var(--m3-on-surface-variant);
+    --text-heading: var(--m3-on-surface);
+
+    --border-default: var(--m3-outline-variant);
+    --border-subtle: #E1DCD3;
+    --border-strong: var(--m3-outline);
+    --border-focus: var(--m3-primary);
+    --border-divider: var(--m3-outline-variant);
+
+    --icon-default: var(--m3-on-surface-variant);
+    --icon-muted: var(--m3-outline);
+    --icon-strong: var(--m3-on-surface);
+    --icon-brand: var(--m3-primary);
+
+    /* Semantic — M3 tonal containers (teal / olive-lime / error / blue) */
+    --semantic-success-bg: #D9F4F2;
+    --semantic-success-bgSubtle: #EFFAF9;
+    --semantic-success-text: #00696B;
+    --semantic-success-textStrong: #00504F;
+    --semantic-success-border: #A9DEDC;
+    --semantic-success-icon: #00696B;
+
+    --semantic-warning-bg: #EDF4DC;
+    --semantic-warning-bgSubtle: #F7FBEF;
+    --semantic-warning-text: #4C6600;
+    --semantic-warning-textStrong: #364A00;
+    --semantic-warning-border: #C9DC9E;
+    --semantic-warning-icon: #6A8F1F;
+
+    --semantic-danger-bg: var(--m3-error-container);
+    --semantic-danger-bgSubtle: #FFF5F4;
+    --semantic-danger-text: var(--m3-error);
+    --semantic-danger-textStrong: #93000A;
+    --semantic-danger-border: #FFB4AB;
+    --semantic-danger-icon: #BA1A1A;
+
+    --semantic-info-bg: var(--m3-tertiary-container);
+    --semantic-info-bgSubtle: #F3F8FD;
+    --semantic-info-text: var(--m3-tertiary);
+    --semantic-info-textStrong: #003A5C;
+    --semantic-info-border: #A9CBE8;
+    --semantic-info-icon: var(--m3-tertiary);
+
+    --semantic-neutral-bg: var(--m3-surface-container);
+    --semantic-neutral-text: var(--m3-on-surface-variant);
+    --semantic-neutral-border: var(--m3-outline-variant);
+
+    /* Finance - Light (M3 roles) */
+    --finance-income: var(--m3-secondary);
+    --finance-expense: var(--m3-error);
+    --finance-savings: var(--m3-tertiary);
+    --finance-debt: #6A8F1F;
+    --finance-neutral: var(--m3-on-surface-variant);
+    --finance-positive: var(--m3-secondary);
+    --finance-negative: var(--m3-error);
 
     /* Chart - Light */
-    --chart-grid: #E5E4DF;
-    --chart-axis: #8C94A6;
-    --chart-label: #525866;
+    --chart-grid: var(--m3-outline-variant);
+    --chart-axis: var(--m3-outline);
+    --chart-label: var(--m3-on-surface-variant);
     /* Spacing Scale (8pt base grid) */
     --space-1: 4px;
     --space-2: 8px;
@@ -107,18 +187,35 @@
     --space-6: 32px;
     --space-7: 48px;
 
-    /* Corner Radius Scale */
-    --radius-xs: 8px;
-    --radius-sm: 12px;
-    --radius-md: 16px;
-    --radius-lg: 20px;
-    --radius-full: 9999px;
+    /* Corner Radius Scale — mapped to M3 shape scale */
+    --radius-xs: var(--m3-shape-xs);
+    --radius-sm: var(--m3-shape-sm);
+    --radius-md: var(--m3-shape-md);
+    --radius-lg: var(--m3-shape-lg);
+    --radius-full: var(--m3-shape-full);
 
-    /* Elevation Scale */
-    --elevation-0: none;
-    --elevation-1: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
-    --elevation-2: 0 4px 12px rgba(0,0,0,0.08);
-    --elevation-3: 0 8px 24px rgba(0,0,0,0.12);
+    /* Elevation Scale — mapped to M3 tonal elevation */
+    --elevation-0: var(--m3-elevation-0);
+    --elevation-1: var(--m3-elevation-1);
+    --elevation-2: var(--m3-elevation-2);
+    --elevation-3: var(--m3-elevation-3);
+
+    /* ── Material 3 type scale (fonts unchanged: Plus Jakarta Sans / Inter / Manrope) ── */
+    --m3-display-large: 57px/64px;
+    --m3-display-medium: 45px/52px;
+    --m3-display-small: 36px/44px;
+    --m3-headline-large: 32px/40px;
+    --m3-headline-medium: 28px/36px;
+    --m3-headline-small: 24px/32px;
+    --m3-title-large: 22px/28px;
+    --m3-title-medium: 16px/24px;
+    --m3-title-small: 14px/20px;
+    --m3-body-large: 16px/24px;
+    --m3-body-medium: 14px/20px;
+    --m3-body-small: 12px/16px;
+    --m3-label-large: 14px/20px;
+    --m3-label-medium: 12px/16px;
+    --m3-label-small: 11px/16px;
 
     /* Typography Scale */
     --font-display-size: 32px;
@@ -142,103 +239,168 @@
   }
 
   .dark {
-    /* Brand Foundation - Pure Minimalist Carbon Dark (Charcoal #111315) */
-    --brand-primary: #F5F4F0;
-    --brand-primary-hover: #EBEAE5;
-    --brand-primary-active: #D1D0C9;
-    --brand-primary-subtle: #1E2126;
+    /* ═══════════════════════════════════════════════════════════════════
+       MATERIAL 3 COLOR ROLES — dark scheme
+       ═══════════════════════════════════════════════════════════════════ */
+    --m3-primary: #E8E2D8;
+    --m3-on-primary: #1D1B19;
+    --m3-primary-container: #3B3833;
+    --m3-on-primary-container: #E8E2D8;
+    --m3-primary-fixed: #E8E2D8;
+    --m3-on-primary-fixed: #1D1B19;
 
-    /* Dark Mode Tokens - Image 2 Charcoal (#111315) */
-    --bg-base: #111315; /* Image 2 Charcoal background */
-    --bg-surface: #17191C;
-    --bg-elevated: #1F2226;
-    --bg-overlay: #272A30;
-    --bg-modal: #17191C;
-    --bg-tooltip: #F5F4F0;
-    --bg-input: #1B1E22;
-    --bg-input-focus: #24282E;
-    --bg-sidebar: #141618;
-    --bg-sidebar-hover: #1E2125;
-    --bg-sidebar-active: #272A30;
-    --bg-card: #17191C;
-    --bg-card-hover: #1D2024;
-    --bg-header: #111315;
-    --bg-skeleton: #1F2226;
-    --bg-skeleton-shimmer: #272A30;
+    --m3-secondary: #4CDAD8;
+    --m3-on-secondary: #003738;
+    --m3-secondary-container: #00504F;
+    --m3-on-secondary-container: #9CF1F0;
+    --m3-secondary-fixed: #9CF1F0;
+    --m3-on-secondary-fixed: #002020;
 
-    --text-primary: #F5F4F0;
-    --text-secondary: #9DA3B0;
-    --text-tertiary: #6E7585;
-    --text-disabled: #474D58;
-    --text-inverse: #111315;
-    --text-on-brand: #111315;
-    --text-link: #F5F4F0;
-    --text-link-hover: #2FA8A0;
-    --text-placeholder: #6E7585;
-    --text-heading: #F5F4F0;
+    --m3-tertiary: #A6CBE8;
+    --m3-on-tertiary: #00344F;
+    --m3-tertiary-container: #164A66;
+    --m3-on-tertiary-container: #CFE5F7;
 
-    --border-default: rgba(255, 255, 255, 0.05);
-    --border-subtle: rgba(255, 255, 255, 0.02);
-    --border-strong: #2D3138;
-    --border-focus: #F5F4F0;
-    --border-divider: rgba(255, 255, 255, 0.05);
+    --m3-error: #FFB4AB;
+    --m3-on-error: #690005;
+    --m3-error-container: #93000A;
+    --m3-on-error-container: #FFDAD6;
 
-    --icon-default: #9DA3B0;
-    --icon-muted: #6E7585;
-    --icon-strong: #F5F4F0;
-    --icon-brand: #F5F4F0;
+    --m3-surface: #131211;
+    --m3-on-surface: #E6E2DC;
+    --m3-surface-variant: #3F3E3B;
+    --m3-on-surface-variant: #C8C6C1;
+    --m3-surface-dim: #131211;
+    --m3-surface-bright: #3A3937;
+    --m3-surface-container-lowest: #0E0D0C;
+    --m3-surface-container-low: #1B1B1A;
+    --m3-surface-container: #1F1F1E;
+    --m3-surface-container-high: #2A2927;
+    --m3-surface-container-highest: #353431;
+    --m3-surface-tint: #E8E2D8;
+    --m3-outline: #928F8B;
+    --m3-outline-variant: #4B4845;
+    --m3-inverse-surface: #E6E2DC;
+    --m3-inverse-on-surface: #1D1B19;
+    --m3-inverse-primary: #4A4845;
+    --m3-scrim: #000000;
+    --m3-shadow: #000000;
 
-    /* Semantic - Dark (Image 2 Teal, Deep Blue, Lime) */
-    --semantic-success-bg: #0C3835;
-    --semantic-success-bgSubtle: #072624;
-    --semantic-success-text: #2FA8A0; /* Image 2 Teal */
-    --semantic-success-textStrong: #5CE0D7;
-    --semantic-success-border: #185E5A;
-    --semantic-success-icon: #2FA8A0;
+    /* M3 elevation in dark mode is subtler */
+    --m3-elevation-1: 0 1px 2px rgba(0,0,0,0.50), 0 1px 3px 1px rgba(0,0,0,0.30);
+    --m3-elevation-2: 0 1px 2px rgba(0,0,0,0.50), 0 2px 6px 2px rgba(0,0,0,0.30);
+    --m3-elevation-3: 0 1px 3px rgba(0,0,0,0.50), 0 4px 8px 3px rgba(0,0,0,0.30);
+    --m3-elevation-4: 0 2px 3px rgba(0,0,0,0.50), 0 6px 10px 4px rgba(0,0,0,0.30);
+    --m3-elevation-5: 0 4px 4px rgba(0,0,0,0.50), 0 8px 12px 6px rgba(0,0,0,0.30);
 
-    --semantic-warning-bg: #2B3D14;
-    --semantic-warning-bgSubtle: #1C2B0A;
-    --semantic-warning-text: #8DC63F; /* Image 2 Lime */
-    --semantic-warning-textStrong: #B2E56B;
-    --semantic-warning-border: #4B6E1F;
-    --semantic-warning-icon: #8DC63F;
+    /* Brand Foundation — mapped onto M3 roles (dark) */
+    --brand-primary: var(--m3-primary);
+    --brand-primary-hover: #D5D0C7;
+    --brand-primary-active: #C2BDB4;
+    --brand-primary-subtle: var(--m3-primary-container);
 
-    --semantic-danger-bg: #4C1010;
-    --semantic-danger-bgSubtle: #2E0A0A;
-    --semantic-danger-text: #F87171;
-    --semantic-danger-textStrong: #FCA5A5;
-    --semantic-danger-border: #801E1E;
-    --semantic-danger-icon: #F87171;
+    /* Dark Mode Tokens — M3 surface containers */
+    --bg-base: var(--m3-surface); /* M3 surface */
+    --bg-surface: var(--m3-surface-container-low);
+    --bg-elevated: var(--m3-surface-container-high);
+    --bg-overlay: var(--m3-surface-container-high);
+    --bg-modal: var(--m3-surface-container-low);
+    --bg-tooltip: var(--m3-inverse-surface);
+    --bg-input: var(--m3-surface-container-lowest);
+    --bg-input-focus: var(--m3-surface-container-high);
+    --bg-sidebar: var(--m3-surface-container-low);
+    --bg-sidebar-hover: var(--m3-surface-container);
+    --bg-sidebar-active: var(--m3-surface-container-high);
+    --bg-card: var(--m3-surface-container-low);
+    --bg-card-hover: var(--m3-surface-container);
+    --bg-header: var(--m3-surface);
+    --bg-skeleton: var(--m3-surface-container-high);
+    --bg-skeleton-shimmer: var(--m3-surface-container);
 
-    --semantic-info-bg: #0E293A;
-    --semantic-info-bgSubtle: #081B27;
-    --semantic-info-text: #3D88B8; /* Image 2 Deep Blue tint */
-    --semantic-info-textStrong: #6BB5E3;
+    --text-primary: var(--m3-on-surface);
+    --text-secondary: var(--m3-on-surface-variant);
+    --text-tertiary: var(--m3-outline);
+    --text-disabled: #5A5854;
+    --text-inverse: var(--m3-on-primary);
+    --text-on-brand: var(--m3-on-primary);
+    --text-link: var(--m3-primary);
+    --text-link-hover: var(--m3-secondary);
+    --text-placeholder: var(--m3-on-surface-variant);
+    --text-heading: var(--m3-on-surface);
+
+    --border-default: var(--m3-outline-variant);
+    --border-subtle: #2E2C29;
+    --border-strong: var(--m3-outline);
+    --border-focus: var(--m3-primary);
+    --border-divider: var(--m3-outline-variant);
+
+    --icon-default: var(--m3-on-surface-variant);
+    --icon-muted: var(--m3-outline);
+    --icon-strong: var(--m3-on-surface);
+    --icon-brand: var(--m3-primary);
+
+    /* Semantic — M3 tonal containers (dark) */
+    --semantic-success-bg: #00504F;
+    --semantic-success-bgSubtle: #003B3A;
+    --semantic-success-text: #4CDAD8;
+    --semantic-success-textStrong: #9CF1F0;
+    --semantic-success-border: #1A6E6C;
+    --semantic-success-icon: #4CDAD8;
+
+    --semantic-warning-bg: #3A4A00;
+    --semantic-warning-bgSubtle: #2A3600;
+    --semantic-warning-text: #C9DC9E;
+    --semantic-warning-textStrong: #E4F2C4;
+    --semantic-warning-border: #5F7300;
+    --semantic-warning-icon: #B9D46B;
+
+    --semantic-danger-bg: #93000A;
+    --semantic-danger-bgSubtle: #690005;
+    --semantic-danger-text: #FFB4AB;
+    --semantic-danger-textStrong: #FFDAD6;
+    --semantic-danger-border: #BA1A1A;
+    --semantic-danger-icon: #FFB4AB;
+
+    --semantic-info-bg: #164A66;
+    --semantic-info-bgSubtle: #0C354C;
+    --semantic-info-text: #A6CBE8;
+    --semantic-info-textStrong: #CFE5F7;
     --semantic-info-border: #1F5C82;
-    --semantic-info-icon: #3D88B8;
+    --semantic-info-icon: #A6CBE8;
 
-    --semantic-neutral-bg: #272A30;
-    --semantic-neutral-text: #9DA3B0;
-    --semantic-neutral-border: #383D47;
+    --semantic-neutral-bg: var(--m3-surface-container-high);
+    --semantic-neutral-text: var(--m3-on-surface-variant);
+    --semantic-neutral-border: var(--m3-outline-variant);
 
-    /* Finance - Dark */
-    --finance-income: #2FA8A0; /* Image 2 Teal */
-    --finance-expense: #F87171;
-    --finance-savings: #3D88B8; /* Image 2 Deep Blue */
-    --finance-debt: #8DC63F; /* Image 2 Lime */
-    --finance-neutral: #9DA3B0;
-    --finance-positive: #2FA8A0;
-    --finance-negative: #F87171;
+    --semantic-info-bg: var(--m3-tertiary-container);
+    --semantic-info-bgSubtle: #0C354C;
+    --semantic-info-text: var(--m3-tertiary);
+    --semantic-info-textStrong: #CFE5F7;
+    --semantic-info-border: var(--m3-tertiary);
+    --semantic-info-icon: var(--m3-tertiary);
+
+    --semantic-neutral-bg: var(--m3-surface-container-high);
+    --semantic-neutral-text: var(--m3-on-surface-variant);
+    --semantic-neutral-border: var(--m3-outline-variant);
+
+    /* Finance - Dark (M3 roles) */
+    --finance-income: var(--m3-secondary);
+    --finance-expense: var(--m3-error);
+    --finance-savings: var(--m3-tertiary);
+    --finance-debt: #B9D46B;
+    --finance-neutral: var(--m3-on-surface-variant);
+    --finance-positive: var(--m3-secondary);
+    --finance-negative: var(--m3-error);
 
     /* Chart - Dark */
-    --chart-grid: #1D2025;
-    --chart-axis: #474D58;
-    --chart-label: #9DA3B0;
-    /* Elevation Scale Dark Mode Overrides (reduced opacity + border reliance) */
-    --elevation-0: none;
-    --elevation-1: 0 1px 2px rgba(0,0,0,0.02), 0 1px 3px rgba(0,0,0,0.03);
-    --elevation-2: 0 4px 12px rgba(0,0,0,0.05);
-    --elevation-3: 0 8px 24px rgba(0,0,0,0.07);
+    --chart-grid: var(--m3-outline-variant);
+    --chart-axis: var(--m3-outline);
+    --chart-label: var(--m3-on-surface-variant);
+    /* Elevation Scale — M3 tonal elevation */
+    --elevation-0: var(--m3-elevation-0);
+    --elevation-1: var(--m3-elevation-1);
+    --elevation-2: var(--m3-elevation-2);
+    --elevation-3: var(--m3-elevation-3);
   }
 }
 
@@ -252,21 +414,48 @@
   body {
     background-color: var(--bg-base);
     color: var(--text-primary);
-    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    font-family: 'Plus Jakarta Sans', 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
     overscroll-behavior-y: contain;
     line-height: 20px;
     font-size: 14px;
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Typography Roles - Premium Geometric Fintech Tracking & Spacing */
-  h1, .h1 { font-size: 24px; line-height: 32px; font-weight: 700; letter-spacing: -0.035em; color: var(--text-heading); }
-  h2, .h2 { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.025em; color: var(--text-heading); }
-  h3, .h3 { font-size: 15px; line-height: 22px; font-weight: 600; letter-spacing: -0.015em; color: var(--text-heading); }
-  h4, .h4 { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: -0.01em; color: var(--text-heading); }
-  p { font-size: 14px; line-height: 20px; font-weight: 400; margin-bottom: 12px; }
+  /* ── Material 3 type scale applied to semantic headings ──
+     Fonts stay exactly as chosen: Plus Jakarta Sans (UI), Inter (fallback),
+     Space Grotesk (numerals), Manrope (display accents). */
+  h1, .h1 {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-heading);
+  }
+  h2, .h2 {
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-heading);
+  }
+  h3, .h3 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--text-heading);
+  }
+  h4, .h4 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--text-heading);
+  }
+  p { font-size: 14px; line-height: 20px; font-weight: 400; margin-bottom: 12px; letter-spacing: 0; }
   p:last-child { margin-bottom: 0; }
-  small, .text-sm { font-size: 13px; line-height: 18px; font-weight: 400; }
+  small, .text-sm { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0; }
 
   /* Accessibility */
   *:focus-visible {
@@ -286,183 +475,312 @@
 }
 
 @layer components {
-  /* Buttons */
+  /* ═══ Material 3 buttons ═══
+     Filled / tonal / outlined / text / elevated, all with M3 shape (full),
+     M3 state layers and M3 motion. */
   .btn {
-    @apply inline-flex items-center justify-center font-semibold transition-all duration-200 select-none whitespace-nowrap;
+    @apply inline-flex items-center justify-center font-semibold transition-all select-none whitespace-nowrap;
     font-size: 14px;
     line-height: 20px;
+    font-weight: 600;
+    letter-spacing: 0;
     gap: 8px;
     cursor: pointer;
     border: 1px solid transparent;
-    border-radius: 9999px !important; /* Capsule/pill shape override */
+    border-radius: var(--m3-shape-full) !important;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition-duration: var(--m3-duration-short);
+    transition-timing-function: var(--m3-easing-standard);
   }
   .btn:disabled {
-    opacity: 0.4;
+    opacity: 0.38;
     cursor: not-allowed;
     pointer-events: none;
   }
   
-  /* Sizes */
+  /* Sizes — M3 control heights (40 default, 32 compact, 48 large) */
   .btn-xs { height: 28px; padding: 0 12px; font-size: 12px; }
-  .btn-sm { height: 34px; padding: 0 16px; font-size: 13px; }
-  .btn-md { height: 42px; padding: 0 20px; font-size: 14px; }
-  .btn-lg { height: 48px; padding: 0 24px; font-size: 15px; }
-  .btn-xl { height: 54px; padding: 0 32px; font-size: 16px; }
+  .btn-sm { height: 32px; padding: 0 16px; font-size: 13px; }
+  .btn-md { height: 40px; padding: 0 24px; font-size: 14px; }
+  .btn-lg { height: 48px; padding: 0 28px; font-size: 15px; }
+  .btn-xl { height: 56px; padding: 0 32px; font-size: 16px; }
 
-  /* Variants */
+  /* M3 state layer (hover / focus / pressed) */
+  .btn::after,
+  .icon-button::after,
+  .m3-state-layer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--m3-duration-short) var(--m3-easing-standard);
+  }
+  .btn:hover::after,
+  .icon-button:hover::after,
+  .m3-state-layer:hover::after { opacity: var(--m3-state-hover); }
+  .btn:focus-visible::after,
+  .icon-button:focus-visible::after,
+  .m3-state-layer:focus-visible::after { opacity: var(--m3-state-focus); }
+  .btn:active::after,
+  .icon-button:active::after,
+  .m3-state-layer:active::after { opacity: var(--m3-state-press); }
+
+  /* ── Filled (primary) ── */
   .btn-primary {
-    background-color: var(--brand-primary);
-    color: var(--text-on-brand);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background-color: var(--m3-primary);
+    color: var(--m3-on-primary);
   }
   .btn-primary:hover { background-color: var(--brand-primary-hover); }
   .btn-primary:active { background-color: var(--brand-primary-active); }
 
+  /* ── Tonal (secondary container) ── */
   .btn-secondary {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border-color: var(--border-default);
+    background-color: var(--m3-secondary-container);
+    color: var(--m3-on-secondary-container);
+    border-color: transparent;
   }
-  .btn-secondary:hover { background-color: var(--bg-overlay); border-color: var(--border-strong); }
+  .btn-secondary:hover { background-color: var(--m3-secondary-container); filter: brightness(0.97); }
 
+  /* ── Outlined ── */
+  .btn-outline {
+    background-color: transparent;
+    color: var(--m3-primary);
+    border-color: var(--m3-outline);
+  }
+  .btn-outline:hover { background-color: color-mix(in srgb, var(--m3-primary) 8%, transparent); }
+
+  /* ── Text ── */
   .btn-ghost {
     background-color: transparent;
-    color: var(--text-secondary);
+    color: var(--m3-primary);
   }
-  .btn-ghost:hover { background-color: var(--bg-sidebar-hover); color: var(--text-primary); }
+  .btn-ghost:hover { background-color: color-mix(in srgb, var(--m3-primary) 8%, transparent); }
 
+  /* ── Elevated ── */
+  .btn-elevated {
+    background-color: var(--m3-surface-container-low);
+    color: var(--m3-primary);
+    box-shadow: var(--m3-elevation-1);
+  }
+  .btn-elevated:hover { box-shadow: var(--m3-elevation-2); }
+
+  /* ── Danger (error container) ── */
   .btn-danger {
-    background-color: var(--semantic-danger-bg);
-    color: var(--semantic-danger-text);
-    border-color: var(--semantic-danger-border);
+    background-color: var(--m3-error-container);
+    color: var(--m3-on-error-container);
+    border-color: transparent;
   }
 
   .btn-create {
-    background-color: var(--brand-primary);
-    color: var(--text-on-brand);
-    border-radius: 9999px !important;
+    background-color: var(--m3-primary);
+    color: var(--m3-on-primary);
+    border-radius: var(--m3-shape-full) !important;
     font-weight: 600;
   }
   
   .icon-button {
-    @apply inline-flex items-center justify-center bg-transparent transition-colors rounded-full;
-    color: var(--text-secondary);
+    @apply inline-flex items-center justify-center bg-transparent transition-colors;
+    border-radius: var(--m3-shape-full) !important;
+    color: var(--m3-on-surface-variant);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
   }
-  .icon-button:hover { background-color: var(--bg-sidebar-hover); color: var(--text-primary); }
+  .icon-button:hover { color: var(--m3-on-surface); }
   .icon-button-sm { width: 32px; height: 32px; }
-  .icon-button-md { width: 38px; height: 38px; }
-  .icon-button-lg { width: 44px; height: 44px; }
+  .icon-button-md { width: 40px; height: 40px; }
+  .icon-button-lg { width: 48px; height: 48px; }
 
-  /* Inputs */
+  /* ── M3 text fields (outlined) ── */
   .input {
-    @apply block w-full outline-none transition-all duration-200;
-    height: 44px;
+    @apply block w-full outline-none;
+    height: 48px;
     padding: 0 16px;
     font-size: 14px;
-    border-radius: 12px;
-    border: 1px solid var(--border-strong);
-    background-color: var(--bg-input);
-    color: var(--text-primary);
+    line-height: 20px;
+    border-radius: var(--m3-shape-sm);
+    border: 1px solid var(--m3-outline);
+    background-color: var(--m3-surface-container-lowest);
+    color: var(--m3-on-surface);
+    transition: border-color var(--m3-duration-short) var(--m3-easing-standard),
+                box-shadow var(--m3-duration-short) var(--m3-easing-standard);
   }
-  .input::placeholder { color: var(--text-placeholder); }
+  .input::placeholder { color: var(--m3-on-surface-variant); opacity: 1; }
+  .input:hover:not(:focus):not(:disabled) { border-color: var(--m3-on-surface); }
   .input:focus {
-    border-color: var(--brand-primary);
-    box-shadow: 0 0 0 2px var(--brand-primary-subtle);
+    border-color: var(--m3-primary);
+    box-shadow: inset 0 0 0 1px var(--m3-primary);
   }
-  .input:hover:not(:focus):not(:disabled) { border-color: var(--brand-primary); }
-  .input:disabled { background-color: var(--bg-base); color: var(--text-disabled); }
+  .input:disabled { background-color: var(--m3-surface-container); color: var(--text-disabled); }
   /* Enforce dark-mode compatible background and text colors on all native form elements */
   input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
   select,
   textarea {
-    background-color: var(--bg-input) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid var(--border-default) !important;
+    background-color: var(--m3-surface-container-lowest) !important;
+    color: var(--m3-on-surface) !important;
+    border: 1px solid var(--m3-outline) !important;
   }
 
   /* Focus rings styling compatibility */
   input:focus,
   select:focus,
   textarea:focus {
-    border-color: var(--border-focus) !important;
-    background-color: var(--bg-surface) !important;
+    border-color: var(--m3-primary) !important;
+    background-color: var(--m3-surface-container-lowest) !important;
     outline: none !important;
+    box-shadow: inset 0 0 0 1px var(--m3-primary) !important;
   }
-  /* Cards — flat, no shadow, seamless borderless contrast layout */
+  /* Cards — M3 filled card: tonal surface, no border, 12dp corners */
   .card {
-    @apply overflow-hidden transition-colors duration-200 ease-out;
-    border-radius: 24px !important;
+    @apply overflow-hidden transition-colors ease-out;
+    border-radius: var(--m3-shape-md) !important;
     border: none !important;
-    background-color: var(--bg-card) !important;
+    background-color: var(--m3-surface-container-low) !important;
     box-shadow: none !important;
+    transition-duration: var(--m3-duration-medium);
+    transition-timing-function: var(--m3-easing-standard);
   }
   .card:hover {
-    background-color: var(--bg-card-hover) !important;
+    background-color: var(--m3-surface-container) !important;
   }
+  /* M3 elevated card variant */
+  .card-elevated,
+  .card.card-elevated {
+    background-color: var(--m3-surface-container-low) !important;
+    box-shadow: var(--m3-elevation-1) !important;
+  }
+  .card-elevated:hover { box-shadow: var(--m3-elevation-2) !important; }
 
-  /* Badges */
+  /* Badges — M3 tonal chips (8dp corners, container/on-container pairs) */
   .badge {
     @apply inline-flex items-center;
     gap: 4px;
-    border-radius: 9999px;
+    border-radius: var(--m3-shape-sm);
     font-size: 11px;
     font-weight: 600;
     line-height: 16px;
+    letter-spacing: 0.01em;
     padding: 2px 10px;
     border: 1px solid transparent;
   }
-  .badge-positive { background-color: var(--semantic-success-bg); color: var(--semantic-success-text); border-color: var(--semantic-success-border); }
-  .badge-negative { background-color: var(--semantic-danger-bg); color: var(--semantic-danger-text); border-color: var(--semantic-danger-border); }
-  .badge-warning { background-color: var(--semantic-warning-bg); color: var(--semantic-warning-text); border-color: var(--semantic-warning-border); }
-  .badge-info { background-color: var(--semantic-info-bg); color: var(--semantic-info-text); border-color: var(--semantic-info-border); }
-  .badge-neutral { background-color: var(--semantic-neutral-bg); color: var(--semantic-neutral-text); border-color: var(--semantic-neutral-border); }
-  .badge-brand { background-color: var(--brand-primary-subtle); color: var(--text-primary); }
-  .badge-upgrade { background-color: var(--brand-primary-subtle); color: var(--text-primary); font-weight: 700; border-radius: 6px; }
+  .badge-positive { background-color: var(--semantic-success-bg); color: var(--semantic-success-text); border-color: transparent; }
+  .badge-negative { background-color: var(--semantic-danger-bg); color: var(--semantic-danger-text); border-color: transparent; }
+  .badge-warning { background-color: var(--semantic-warning-bg); color: var(--semantic-warning-text); border-color: transparent; }
+  .badge-info { background-color: var(--semantic-info-bg); color: var(--semantic-info-text); border-color: transparent; }
+  .badge-neutral { background-color: var(--semantic-neutral-bg); color: var(--semantic-neutral-text); border-color: transparent; }
+  .badge-brand { background-color: var(--m3-primary-container); color: var(--m3-on-primary-container); }
+  .badge-upgrade { background-color: var(--m3-primary-container); color: var(--m3-on-primary-container); font-weight: 700; border-radius: var(--m3-shape-sm); }
 
+  /* ── M3 switch: 52×32 track, 24dp checked thumb with check icon ── */
   .switch-root {
-    @apply inline-flex shrink-0 cursor-pointer items-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 relative;
-    height: 24px !important;
-    width: 44px !important;
-    min-height: 24px !important;
-    min-width: 44px !important;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-strong);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+    @apply inline-flex shrink-0 cursor-pointer items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 relative;
+    width: 52px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    min-width: 52px !important;
+    padding: 2px !important;
+    background-color: transparent !important;
+    border: 2px solid var(--m3-outline) !important;
+    border-radius: var(--m3-shape-full) !important;
+    box-shadow: none !important;
+    transition-duration: var(--m3-duration-short);
+    transition-timing-function: var(--m3-easing-standard);
   }
   .switch-root[data-state="checked"] {
-    background-color: var(--brand-primary);
-    border-color: var(--brand-primary);
+    background-color: var(--m3-primary) !important;
+    border-color: var(--m3-primary) !important;
   }
   .switch-root:focus-visible {
-    --tw-ring-color: var(--border-focus);
-    --tw-ring-offset-color: var(--bg-base);
+    --tw-ring-color: var(--m3-primary);
+    --tw-ring-offset-color: var(--m3-surface);
   }
   .switch-root:disabled {
-    opacity: 0.5;
+    opacity: 0.38;
     cursor: not-allowed;
   }
   
   .switch-thumb {
-    @apply pointer-events-none block rounded-full shadow-sm ring-0 transition-transform duration-200;
-    height: 18px !important;
-    width: 18px !important;
-    background-color: var(--text-primary);
+    @apply pointer-events-none flex items-center justify-center transition-all;
+    width: 16px !important;
+    height: 16px !important;
+    background-color: var(--m3-outline) !important;
+    color: var(--m3-on-primary) !important;
+    transform: translateX(4px) !important;
+    box-shadow: none !important;
+    transition-duration: var(--m3-duration-medium);
+    transition-timing-function: var(--m3-easing-emphasized);
+  }
+  .switch-thumb svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    transition: opacity var(--m3-duration-short) var(--m3-easing-standard);
   }
   .switch-root[data-state="checked"] .switch-thumb {
-    background-color: var(--bg-surface);
-    transform: translateX(24px) !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-color: var(--m3-on-primary) !important;
+    color: var(--m3-primary) !important;
+    transform: translateX(16px) !important;
   }
+  .switch-root[data-state="checked"] .switch-thumb svg { opacity: 1; }
   .switch-root[data-state="unchecked"] .switch-thumb {
-    background-color: var(--text-secondary);
-    transform: translateX(2px) !important;
+    background-color: var(--m3-outline) !important;
+    transform: translateX(4px) !important;
   }
 }
 
 @layer utilities {
   .touch-friendly {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px;
+    min-width: 48px;
   }
+
+  /* ── Material 3 type scale utilities (fonts preserved) ── */
+  .m3-display-large { font-size: 57px; line-height: 64px; font-weight: 400; letter-spacing: -0.25px; }
+  .m3-display-medium { font-size: 45px; line-height: 52px; font-weight: 400; letter-spacing: 0; }
+  .m3-display-small { font-size: 36px; line-height: 44px; font-weight: 400; letter-spacing: 0; }
+  .m3-headline-large { font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: 0; }
+  .m3-headline-medium { font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: 0; }
+  .m3-headline-small { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: 0; }
+  .m3-title-large { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: 0; }
+  .m3-title-medium { font-size: 16px; line-height: 24px; font-weight: 500; letter-spacing: 0.15px; }
+  .m3-title-small { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; }
+  .m3-body-large { font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: 0.5px; }
+  .m3-body-medium { font-size: 14px; line-height: 20px; font-weight: 400; letter-spacing: 0.25px; }
+  .m3-body-small { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0.4px; }
+  .m3-label-large { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.1px; }
+  .m3-label-medium { font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; }
+  .m3-label-small { font-size: 11px; line-height: 16px; font-weight: 500; letter-spacing: 0.5px; }
+
+  /* ── Material 3 state layer (hover / focus / pressed overlay) ── */
+  .m3-state-layer { position: relative; isolation: isolate; }
+  .m3-state-layer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--m3-duration-short) var(--m3-easing-standard);
+  }
+  .m3-state-layer:hover::after { opacity: var(--m3-state-hover); }
+  .m3-state-layer:focus-visible::after { opacity: var(--m3-state-focus); }
+  .m3-state-layer:active::after { opacity: var(--m3-state-press); }
+
+  /* ── Material 3 elevation ── */
+  .m3-elevation-0 { box-shadow: var(--m3-elevation-0) !important; }
+  .m3-elevation-1 { box-shadow: var(--m3-elevation-1) !important; }
+  .m3-elevation-2 { box-shadow: var(--m3-elevation-2) !important; }
+  .m3-elevation-3 { box-shadow: var(--m3-elevation-3) !important; }
+  .m3-elevation-4 { box-shadow: var(--m3-elevation-4) !important; }
+  .m3-elevation-5 { box-shadow: var(--m3-elevation-5) !important; }
 }
 
 /* Base custom styles to handle layout rendering */
@@ -483,38 +801,38 @@
   color: var(--text-inverse) !important;
 }
 
-/* Force all Shadcn and custom button shapes into beautiful capsules */
+/* Force all Shadcn and custom button shapes into M3 full-shape capsules */
 button,
 [role="button"],
 .inline-flex.items-center.justify-center.whitespace-nowrap.rounded-xl,
 .btn-create,
 .btn {
-  border-radius: 9999px !important;
+  border-radius: var(--m3-shape-full) !important;
 }
 
 
 
 
-/* Progress bar thickness & pill updates */
+/* Progress bar — M3 linear progress is 4dp with full caps */
 progress,
 [role="progressbar"],
 .bg-primary\/20,
 .h-2.w-full.bg-secondary {
-  height: 8px !important;
-  border-radius: 9999px !important;
+  height: 4px !important;
+  border-radius: var(--m3-shape-full) !important;
   overflow: hidden !important;
 }
 
-/* Top mobile header backdrop styling - harmonized with native status bar colors */
+/* Top mobile header — M3 surface with tonal scrim */
 header.lg\:hidden.fixed {
-  background-color: rgba(245, 244, 240, 0.95) !important;
+  background-color: color-mix(in srgb, var(--m3-surface) 88%, transparent) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid var(--border-default) !important;
+  border-bottom: 1px solid var(--m3-outline-variant) !important;
 }
 .dark header.lg\:hidden.fixed {
-  background-color: rgba(17, 19, 21, 0.95) !important;
-  border-bottom: 1px solid var(--border-default) !important;
+  background-color: color-mix(in srgb, var(--m3-surface) 88%, transparent) !important;
+  border-bottom: 1px solid var(--m3-outline-variant) !important;
 }
 
 /* --- Premium Sleek Docked Mobile Bottom Navigation --- */
@@ -683,37 +1001,37 @@ header.lg\:hidden.fixed .container {
   margin-top: 4px !important;
 }
 
-/* --- Global Premium Modal & Dialog Enhancements --- */
+/* --- Material 3 dialogs & sheets (28dp corners, tonal surface, elevation 3) --- */
 [role="dialog"] {
-  border-radius: 28px !important;
-  border: 1px solid var(--border-default) !important;
-  background-color: var(--bg-surface) !important;
-  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.08) !important;
-  animation: modal-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-radius: var(--m3-shape-xl) !important;
+  border: none !important;
+  background-color: var(--m3-surface-container-high) !important;
+  box-shadow: var(--m3-elevation-3) !important;
+  animation: m3-dialog-enter var(--m3-duration-medium) var(--m3-easing-emphasized) !important;
 }
 
 .dark [role="dialog"] {
-  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: var(--m3-elevation-3) !important;
 }
 
-/* Matted glassmorphic backdrop for all modals */
+/* M3 scrim */
 .fixed.inset-0.z-50.bg-black\/80,
 .fixed.inset-0.z-50.bg-background\/80 {
-  background-color: rgba(0, 0, 0, 0.25) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  animation: backdrop-fade-in 0.3s ease-out !important;
+  background-color: color-mix(in srgb, var(--m3-scrim) 32%, transparent) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  animation: m3-scrim-enter var(--m3-duration-medium) var(--m3-easing-standard) !important;
 }
 
 .dark .fixed.inset-0.z-50.bg-black\/80,
 .dark .fixed.inset-0.z-50.bg-background\/80 {
-  background-color: rgba(0, 0, 0, 0.5) !important;
+  background-color: color-mix(in srgb, var(--m3-scrim) 55%, transparent) !important;
 }
 
-@keyframes modal-slide-up {
+@keyframes m3-dialog-enter {
   from {
     opacity: 0;
-    transform: translate(-50%, -46%) scale(0.98);
+    transform: translate(-50%, -46%) scale(0.92);
   }
   to {
     opacity: 1;
@@ -721,21 +1039,17 @@ header.lg\:hidden.fixed .container {
   }
 }
 
-@keyframes backdrop-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes m3-scrim-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* --- Mobile Viewport and Design System Standardization --- */
 @media (max-width: 768px) {
-  h1, .h1 { font-size: 20px !important; line-height: 26px !important; }
-  h2, .h2 { font-size: 18px !important; line-height: 24px !important; }
-  h3, .h3 { font-size: 15px !important; line-height: 20px !important; }
-  p, .text-sm, .text-xs { font-size: 12.5px !important; line-height: 17px !important; }
+  h1, .h1 { font-size: 22px !important; line-height: 28px !important; }
+  h2, .h2 { font-size: 20px !important; line-height: 26px !important; }
+  h3, .h3 { font-size: 16px !important; line-height: 22px !important; }
+  p, .text-sm, .text-xs { font-size: 13px !important; line-height: 19px !important; }
   
   /* Form elements standard sizing */
   input:not([type="checkbox"]):not([type="radio"]):not([type="time"]), select {
@@ -845,18 +1159,19 @@ div.p-3.rounded-lg.bg-white.dark\:bg-card.border:not(.border-none):not(.bg-trans
   color: var(--text-heading) !important;
 }
 
-/* 1. Muted Uppercase Small Titles */
+/* 1. M3 label-small uppercase card titles */
 .card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) h3,
 .bg-card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) h3,
 .card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="CardTitle"],
 .card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="CardHeader"] [class*="CardTitle"],
 .bg-card:not(.border-none):not([class*="bg-card/25"]):not(.hero-card) [class*="CardHeader"] [class*="CardTitle"] {
-  font-size: 9.5px !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  color: var(--text-secondary) !important;
-  opacity: 0.75 !important;
+  letter-spacing: 0.06em !important;
+  color: var(--m3-on-surface-variant) !important;
+  opacity: 0.8 !important;
 }
 
 /* 2. Prominent Stand-out Amounts */

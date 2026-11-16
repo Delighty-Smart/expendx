@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { notificationScheduler } from '@/services/notificationScheduler';
 import { ToastAction } from "@/components/ui/toast";
 import { enhancedOfflineManager } from '@/services/enhancedOfflineManager';
+import { userScopedKey } from '@/lib/user-storage';
 
 interface BudgetStatus {
   category: string;
@@ -68,14 +69,16 @@ export function useBudgetAlerts() {
 
     const getPreferences = (): Record<string, AlertPreference> => {
       try {
-        return JSON.parse(localStorage.getItem('budgetAlertPreferences') || '{}');
+        const key = userScopedKey('budgetAlertPreferences', auth.currentUser?.uid);
+        return JSON.parse(localStorage.getItem(key) || '{}');
       } catch {
         return {};
       }
     };
 
     const savePreferences = (prefs: Record<string, AlertPreference>) => {
-      localStorage.setItem('budgetAlertPreferences', JSON.stringify(prefs));
+      const key = userScopedKey('budgetAlertPreferences', auth.currentUser?.uid);
+      localStorage.setItem(key, JSON.stringify(prefs));
     };
 
     const triggerAlert = async (status: BudgetStatus, title: string, message: string, threshold: number) => {

@@ -25,3 +25,8 @@ dist-ssr
 
 .vercel
 .env*.local
+
+# Secrets & exported user data (never commit)
+.env
+scripts/serviceAccountKey.json
+scripts/export_data/

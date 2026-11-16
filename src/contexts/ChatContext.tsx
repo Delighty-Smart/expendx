@@ -63,12 +63,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { currency } = useSettings();
   const queryClient = useQueryClient();
 
+  // Chat history is private to the signed-in user — never share one key across accounts
+  const uid = user?.id ?? 'anon';
+  const CONVERSATIONS_KEY = `lucent_chat_conversations_${uid}`;
+  const ACTIVE_CHAT_KEY = `lucent_active_chat_id_${uid}`;
+  const MESSAGES_KEY = `lucent_chat_messages_${uid}`;
+
   const { transactions } = useTransactionData();
   const { budgets: budgetCategories } = useEnhancedBudgetData();
 
   const [conversations, setConversations] = useState<SavedConversation[]>(() => {
     try {
-      const saved = localStorage.getItem('lucent_chat_conversations');
+      const saved = localStorage.getItem(CONVERSATIONS_KEY);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.warn('Failed to load saved chat conversations', e);
@@ -93,7 +99,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [activeConversationId, setActiveConversationId] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('lucent_active_chat_id');
+      return localStorage.getItem(ACTIVE_CHAT_KEY);
     } catch (e) {
       return null;
     }
@@ -101,7 +107,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const cached = sessionStorage.getItem('lucent_chat_messages');
+      const cached = sessionStorage.getItem(MESSAGES_KEY);
       if (cached) return JSON.parse(cached);
     } catch (e) {
       console.warn('Failed to parse cached chat messages', e);
@@ -112,7 +118,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Save conversation list to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('lucent_chat_conversations', JSON.stringify(conversations));
+      localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
     } catch (e) {
       console.warn('Failed to save chat conversations list', e);
     }
@@ -121,7 +127,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Persist messages of current session
   useEffect(() => {
     try {
-      sessionStorage.setItem('lucent_chat_messages', JSON.stringify(messages.slice(-50)));
+      sessionStorage.setItem(MESSAGES_KEY, JSON.stringify(messages.slice(-50)));
     } catch (e) {
       console.warn('Failed to cache chat messages', e);
     }
@@ -137,7 +143,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const idToUse = activeConversationId || `session_${Date.now()}`;
         if (!activeConversationId) {
           setActiveConversationId(idToUse);
-          try { localStorage.setItem('lucent_active_chat_id', idToUse); } catch (e) {}
+          try { localStorage.setItem(ACTIVE_CHAT_KEY, idToUse); } catch (e) {}
         }
         const existingIdx = prev.findIndex(c => c.id === idToUse);
         const updatedItem: SavedConversation = {
@@ -163,7 +169,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const target = conversations.find(c => c.id === id);
     if (target) {
       setActiveConversationId(id);
-      try { localStorage.setItem('lucent_active_chat_id', id); } catch (e) {}
+      try { localStorage.setItem(ACTIVE_CHAT_KEY, id); } catch (e) {}
       setMessages(target.messages || []);
     }
   }, [conversations]);
@@ -173,7 +179,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (activeConversationId === id) {
       setActiveConversationId(null);
       setMessages([]);
-      try { localStorage.removeItem('lucent_active_chat_id'); } catch (e) {}
+      try { localStorage.removeItem(ACTIVE_CHAT_KEY); } catch (e) {}
     }
   }, [activeConversationId]);
 
@@ -206,7 +212,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Persist messages to session storage
   useEffect(() => {
     try {
-      sessionStorage.setItem('lucent_chat_messages', JSON.stringify(messages.slice(-50)));
+      sessionStorage.setItem(MESSAGES_KEY, JSON.stringify(messages.slice(-50)));
     } catch (e) {
       console.warn('Failed to cache chat messages', e);
     }
@@ -366,7 +372,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAwaitingFields([]);
     setLastQuestion(undefined);
     try {
-      sessionStorage.removeItem('lucent_chat_messages');
+      sessionStorage.removeItem(MESSAGES_KEY);
     } catch (e) {
       console.warn('Failed to clear chat storage', e);
     }

@@ -27,16 +27,33 @@ service cloud.firestore {
     }
 
     // ─── Identity & preferences ─────────────────────────────────────────────
+    // user_profiles doubles as the leaderboard source, so reads are open to any
+    // signed-in user. Writes are owner/admin only, and a non-admin can never
+    // change their own `role` (which would grant isAdmin() everywhere).
     match /user_profiles/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read: if isAuthenticated();
+
+      // Self-signup: role is forced to a non-privileged value.
+      allow create: if isOwner(userId)
+        && request.resource.data.role in ['free', 'user'];
+
+      // Self-update: any field except `role`.
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+
+      // Admins may create, promote, and delete any profile.
+      allow create, update, delete: if isAdmin();
     }
 
     match /user_settings/{userId} {
-      allow read, write: if isOwner(userId) || isDataOwner() || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
+    // user_streaks doubles as a leaderboard source, so reads are open to any
+    // signed-in user; writes stay owner/admin only.
     match /user_streaks/{userId} {
-      allow read, write: if isOwner(userId) || isDataOwner() || isAdmin();
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isAdmin();
     }
 
     match /user_categories/{categoryId} {

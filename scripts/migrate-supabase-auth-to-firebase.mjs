@@ -18,12 +18,13 @@
  *   Optional: encrypted_password (bcrypt), email_confirmed_at, banned_until, user_metadata
  *
  * Usage
- *   node scripts/migrate-supabase-auth-to-firebase.mjs --dry-run
- *   node scripts/migrate-supabase-auth-to-firebase.mjs
- *   node scripts/migrate-supabase-auth-to-firebase.mjs --import-bcrypt --reset-links
+ *   node scripts/migrate-supabase-auth-to-firebase.mjs                    # dry run (default)
+ *   node scripts/migrate-supabase-auth-to-firebase.mjs --apply
+ *   node scripts/migrate-supabase-auth-to-firebase.mjs --apply --import-bcrypt --reset-links
  *
  * Flags
- *   --dry-run          Parse and report only, never write.
+ *   --apply            Write to Firebase Auth (without this the script is a dry run).
+ *   --dry-run          Force dry run even when --apply is present.
  *   --import-bcrypt    Import Supabase bcrypt password hashes (Firebase password hash
  *                      policy must be set to bcrypt in the console first).
  *   --reset-links      Write scripts/export_data/password_reset_links.csv so users can
@@ -33,7 +34,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import admin from 'firebase-admin';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 const args = process.argv.slice(2);
 const hasFlag = (name) => args.includes(`--${name}`);
@@ -42,7 +44,8 @@ const getArg = (name) => {
   return i >= 0 && i < args.length - 1 ? args[i + 1] : undefined;
 };
 
-const DRY_RUN = hasFlag('dry-run');
+const APPLY = hasFlag('apply');
+const DRY_RUN = !APPLY || hasFlag('dry-run');
 const IMPORT_BCRYPT = hasFlag('import-bcrypt');
 const RESET_LINKS = hasFlag('reset-links');
 const USERS_FILE = path.resolve(getArg('users') || 'scripts/export_data/auth_users.json');
@@ -66,20 +69,43 @@ function loadServiceAccount() {
 }
 
 function loadUsers() {
-  if (!fs.existsSync(USERS_FILE)) {
-    throw new Error(
-      `Users file not found: ${USERS_FILE}\n` +
-        'Export your Supabase auth users first, e.g.:\n' +
-        `  GET ${process.env.VITE_SUPABASE_URL || '<project>.supabase.co'}/auth/v1/admin/users\n` +
-        'with the service role key, and save the array of user records.'
-    );
+  if (fs.existsSync(USERS_FILE)) {
+    const raw = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const users = Array.isArray(raw) ? raw : raw.users;
+    if (!Array.isArray(users)) {
+      throw new Error(`${USERS_FILE} must contain an array of users (or an object with a "users" array).`);
+    }
+    return users;
   }
-  const raw = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-  const users = Array.isArray(raw) ? raw : raw.users;
-  if (!Array.isArray(users)) {
-    throw new Error(`${USERS_FILE} must contain an array of users (or an object with a "users" array).`);
+
+  // Fallback: build accounts from the exported profiles. This preserves UIDs (so the
+  // migrated Firestore data resolves) but cannot carry passwords — users must reset them.
+  const profilesFile = path.resolve('scripts/export_data/user_profiles.json');
+  if (fs.existsSync(profilesFile)) {
+    console.warn(`⚠ ${path.basename(USERS_FILE)} not found — using ${path.basename(profilesFile)} instead.`);
+    console.warn('⚠ Passwords cannot be migrated from profiles. Run with --reset-links so users can set one.\n');
+
+    const profiles = JSON.parse(fs.readFileSync(profilesFile, 'utf8'));
+    return profiles
+      .filter((p) => p && p.id && p.email)
+      .map((p) => ({
+        id: p.id,
+        email: p.email,
+        email_confirmed_at: p.email_confirmed_at || null,
+        user_metadata: {
+          first_name: p.first_name || undefined,
+          last_name: p.last_name || undefined,
+          full_name: [p.first_name, p.last_name].filter(Boolean).join(' ') || undefined,
+        },
+      }));
   }
-  return users;
+
+  throw new Error(
+    `Users file not found: ${USERS_FILE}\n` +
+      'Export your Supabase auth users first, e.g.:\n' +
+      `  GET ${process.env.VITE_SUPABASE_URL || '<project>.supabase.co'}/auth/v1/admin/users\n` +
+      'with the service role key, and save the array of user records.'
+  );
 }
 
 function buildRecord(supabaseUser) {
@@ -109,40 +135,66 @@ function chunk(list, size) {
 
 async function main() {
   if (!DRY_RUN) {
-    admin.initializeApp({ credential: admin.credential.cert(loadServiceAccount()) });
+    initializeApp({ credential: cert(loadServiceAccount()) });
   }
 
   const users = loadUsers();
   const records = users.map(buildRecord).filter((r) => r.uid && r.email);
+
+  // Existing Firebase accounts must never be overwritten — skip them by uid or email.
+  const existingUids = new Set();
+  const existingEmails = new Set();
+  if (!DRY_RUN) {
+    const auth = getAuth();
+    let pageToken;
+    do {
+      const result = await auth.listUsers(1000, pageToken);
+      for (const user of result.users) {
+        existingUids.add(user.uid);
+        if (user.email) existingEmails.add(user.email.toLowerCase());
+      }
+      pageToken = result.pageToken;
+    } while (pageToken);
+  }
+
+  const pending = records.filter(
+    (r) => !existingUids.has(r.uid) && !existingEmails.has(r.email.toLowerCase())
+  );
+  const alreadyPresent = records.length - pending.length;
 
   console.log('==================================================');
   console.log('   SUPABASE -> FIREBASE AUTH MIGRATION');
   console.log('==================================================');
   console.log(`Users in export file : ${users.length}`);
   console.log(`Importable records   : ${records.length}`);
+  console.log(`Already in Firebase  : ${alreadyPresent}`);
+  console.log(`To create            : ${pending.length}`);
   console.log(`Mode                 : ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE'}`);
   console.log(`Password strategy    : ${IMPORT_BCRYPT ? 'import bcrypt hashes' : 'no passwords (reset required)'}`);
   console.log('');
 
   if (DRY_RUN) {
-    records.slice(0, 5).forEach((r) =>
+    pending.slice(0, 5).forEach((r) =>
       console.log(`  ${r.uid}  ${r.email}  verified=${r.emailVerified}  disabled=${r.disabled}`)
     );
-    if (records.length > 5) console.log(`  ... and ${records.length - 5} more`);
+    if (pending.length > 5) console.log(`  ... and ${pending.length - 5} more`);
+    if (alreadyPresent > 0) {
+      console.log(`\n${alreadyPresent} account(s) already exist in Firebase and will be left untouched.`);
+    }
     console.log('\nDry run complete. Re-run without --dry-run to apply.');
     return;
   }
 
-  const auth = admin.auth();
+  const auth = getAuth();
   let created = 0;
   let updated = 0;
   let failed = 0;
-  let skipped = 0;
+  let skipped = alreadyPresent;
   const failures = [];
 
   if (IMPORT_BCRYPT) {
     console.log('Importing users with bcrypt password hashes...');
-    for (const batch of chunk(records, 900)) {
+    for (const batch of chunk(pending, 900)) {
       const parsed = batch.map((r) => ({
         uid: r.uid,
         email: r.email,
@@ -155,12 +207,20 @@ async function main() {
         await auth.importUsers(parsed);
         created += parsed.length;
       } catch (err) {
-        failed += parsed.length;
-        failures.push({ batch: parsed.map((p) => p.email), error: err.message });
+        // Import is retried one-by-one so a single conflict doesn't sink the batch
+        for (const entry of parsed) {
+          try {
+            await auth.importUsers([entry]);
+            created += 1;
+          } catch (entryErr) {
+            failed += 1;
+            failures.push({ email: entry.email, error: entryErr.message });
+          }
+        }
       }
     }
   } else {
-    for (const record of records) {
+    for (const record of pending) {
       try {
         await auth.createUser({
           uid: record.uid,
@@ -196,6 +256,8 @@ async function main() {
     fs.mkdirSync(OUT_DIR, { recursive: true });
     const csvPath = path.join(OUT_DIR, 'password_reset_links.csv');
     const lines = ['email,reset_link'];
+    // Generate links for every account that exists in Firebase — including ones that
+    // were created by a previous run (they are skipped as "already present").
     for (const record of records) {
       try {
         const link = await auth.generatePasswordResetLink(record.email);
@@ -210,10 +272,11 @@ async function main() {
   }
 
   console.log('');
-  console.log(`Created : ${created}`);
-  console.log(`Updated : ${updated}`);
-  console.log(`Failed  : ${failed}`);
-  if (skipped) console.log(`No link: ${skipped}`);
+  console.log(`Created            : ${created}`);
+  console.log(`Updated            : ${updated}`);
+  console.log(`Already existed    : ${alreadyPresent}`);
+  console.log(`Failed             : ${failed}`);
+  if (skipped) console.log(`No reset link      : ${skipped}`);
   if (failures.length) {
     console.log('\nFailures:');
     failures.slice(0, 20).forEach((f) => console.log(`  ${f.email || '(batch)'}: ${f.error}`));
